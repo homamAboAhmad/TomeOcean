@@ -13,7 +13,7 @@ late SharedPreferences prefs;
 // WordDocument wordDocument = WordDocument();
 List<WordDocument> openedBooks  =[WordDocument()];
 Archive docArchive = Archive();
-
+//
  main()async {
    WidgetsFlutterBinding.ensureInitialized();
   prefs = await SharedPreferences.getInstance();
