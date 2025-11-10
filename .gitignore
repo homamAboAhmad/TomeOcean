@@ -1,43 +1,58 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.buildlog/
-.history
-.svn/
-migrate_working_dir/
+# Standard ignore patterns for Flutter projects
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Build artifacts
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
 /build/
+**/.packages
+.metadata
 
-# Symbolication related
+# IDE-specific files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Android-specific
+android/.gradle/
+android/local.properties
+android/key.properties
+android/app/debug/
+android/app/profile/
+android/app/release/
+
+# iOS-specific
+ios/.symlinks/
+ios/.generated/
+
+# Windows-specific
+windows/build/
+
+# Linux-specific
+linux/build/
+
+# macOS-specific
+macos/build/
+
+# Web-specific
+web/build/
+
+# Generated files
+**/doc/api/
+**/ios/Flutter/.last_build_id
 app.*.symbols
-
-# Obfuscation related
 app.*.map.json
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Project-specific temporary or generated files
+~$*.docx # Temporary Word files
+sa.rar # Archive, likely temporary
+test.xml # Likely temporary test data
+testH.html # Likely temporary test data
