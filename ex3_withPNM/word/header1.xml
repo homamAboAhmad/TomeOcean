@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:hdr xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 w16se wp14">
+	<w:p w14:paraId="400A228D" w14:textId="77777777" w:rsidR="00502FED" w:rsidRPr="00376D64" w:rsidRDefault="00502FED" w:rsidP="00CC6D5D">
+		<w:pPr>
+			<w:pStyle w:val="Header"/>
+			<w:pBdr>
+				<w:bottom w:val="single" w:sz="6" w:space="1" w:color="auto"/>
+			</w:pBdr>
+			<w:jc w:val="center"/>
+			<w:rPr>
+				<w:rFonts w:ascii="Al-Jazeera-Arabic-Bold" w:hAnsi="Al-Jazeera-Arabic-Bold" w:cs="Al-Jazeera-Arabic-Bold"/>
+			</w:rPr>
+		</w:pPr>
+		<w:r w:rsidRPr="00FC76F3">
+			<w:rPr>
+				<w:rFonts w:ascii="Al-Jazeera-Arabic-Bold" w:hAnsi="Al-Jazeera-Arabic-Bold" w:cs="AL-Qairwan" w:hint="cs"/>
+				<w:sz w:val="40"/>
+				<w:szCs w:val="40"/>
+				<w:rtl/>
+			</w:rPr>
+			<w:t>أعمال</w:t>
+		</w:r>
+		<w:r w:rsidRPr="00FD1FAE">
+			<w:rPr>
+				<w:rFonts w:ascii="Al-Jazeera-Arabic-Bold" w:hAnsi="Al-Jazeera-Arabic-Bold" w:cs="Al-Jazeera-Arabic-Bold" w:hint="cs"/>
+				<w:sz w:val="26"/>
+				<w:szCs w:val="26"/>
+				<w:rtl/>
+			</w:rPr>
+			<w:t xml:space="preserve"> </w:t>
+		</w:r>
+		<w:r>
+			<w:rPr>
+				<w:rFonts w:ascii="Al-Jazeera-Arabic-Bold" w:hAnsi="Al-Jazeera-Arabic-Bold" w:cs="Al-Jazeera-Arabic-Bold"/>
+				<w:color w:val="365F91" w:themeColor="accent1" w:themeShade="BF"/>
+				<w:rtl/>
+			</w:rPr>
+			<w:tab/>
+		</w:r>
+		<w:r w:rsidRPr="00204905">
+			<w:rPr>
+				<w:rFonts w:cs="Traditional Arabic" w:hint="cs"/>
+				<w:sz w:val="40"/>
+				<w:szCs w:val="40"/>
+			</w:rPr>
+			<w:sym w:font="AGA Arabesque" w:char="F060"/>
+		</w:r>
+		<w:r>
+			<w:rPr>
+				<w:rFonts w:ascii="Al-Jazeera-Arabic-Bold" w:hAnsi="Al-Jazeera-Arabic-Bold" w:cs="Al-Jazeera-Arabic-Bold"/>
+				<w:rtl/>
+			</w:rPr>
+			<w:tab/>
+		</w:r>
+		<w:r w:rsidRPr="00FC76F3">
+			<w:rPr>
+				<w:rFonts w:ascii="Al-Jazeera-Arabic-Bold" w:hAnsi="Al-Jazeera-Arabic-Bold" w:cs="AL-Qairwan" w:hint="cs"/>
+				<w:sz w:val="40"/>
+				<w:szCs w:val="40"/>
+				<w:rtl/>
+			</w:rPr>
+			<w:t>الرافعي</w:t>
+		</w:r>
+	</w:p>
+</w:hdr>

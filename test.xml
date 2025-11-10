@@ -1,0 +1,3149 @@
+<w:sdt>
+    <w:sdtPr>
+        <w:rPr>
+            <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+            <w:noProof/>
+            <w:kern w:val="2"/>
+            <w:rtl/>
+            <w:lang w:val="ar-SA"/>
+            <w14:ligatures w14:val="standardContextual"/>
+        </w:rPr>
+        <w:id w:val="1702826165"/>
+        <w:docPartObj>
+            <w:docPartGallery w:val="Table of Contents"/>
+            <w:docPartUnique/>
+        </w:docPartObj>
+    </w:sdtPr>
+    <w:sdtEndPr>
+        <w:rPr>
+            <w:lang w:val="en-US"/>
+        </w:rPr>
+    </w:sdtEndPr>
+    <w:sdtContent>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:keepNext/>
+                <w:keepLines/>
+                <w:spacing w:before="240" w:line="259" w:lineRule="auto"/>
+                <w:rPr>
+                    <w:rFonts w:asciiTheme="majorHAnsi" w:eastAsiaTheme="majorEastAsia" w:hAnsiTheme="majorHAnsi" w:cstheme="majorBidi"/>
+                    <w:color w:val="2F5496" w:themeColor="accent1" w:themeShade="BF"/>
+                    <w:sz w:val="2"/>
+                    <w:szCs w:val="2"/>
+                </w:rPr>
+            </w:pPr>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:b/>
+                    <w:bCs/>
+                    <w:noProof/>
+                    <w:color w:val="FF0000"/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00735A7B">
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:b/>
+                    <w:bCs/>
+                    <w:noProof/>
+                    <w:color w:val="FF0000"/>
+                    <w:kern w:val="2"/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+                <w:fldChar w:fldCharType="begin"/>
+            </w:r>
+            <w:r w:rsidRPr="00735A7B">
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:b/>
+                    <w:bCs/>
+                    <w:noProof/>
+                    <w:color w:val="FF0000"/>
+                    <w:kern w:val="2"/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+                <w:instrText xml:space="preserve">TOC \o "1-3" \h \z \u</w:instrText>
+            </w:r>
+            <w:r w:rsidRPr="00735A7B">
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:b/>
+                    <w:bCs/>
+                    <w:noProof/>
+                    <w:color w:val="FF0000"/>
+                    <w:kern w:val="2"/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+                <w:fldChar w:fldCharType="separate"/>
+            </w:r>
+            <w:hyperlink w:anchor="_Toc145920843" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>معالم في الولاء وا</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>ل</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>براء</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920843 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>2</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920844" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>معنى الولاء و</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>ا</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>لبراء</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920844 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>4</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920845" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>الولاء والبراء في القرآن الكريم</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920845 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>5</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920846" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t xml:space="preserve">الولاء والبراء</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>ف</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>ي السنة النبوية</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920846 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>10</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920847" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>صور من الولاء والبراء في حياة الصحابة</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920847 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>16</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920848" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>موقف المسلم من الكفر وأهله</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920848 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>19</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920849" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>معاملة الكفار والفرق بين الموالاة وحسن المعاملة</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920849 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>21</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:b/>
+                    <w:bCs/>
+                    <w:noProof/>
+                    <w:color w:val="FF0000"/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920850" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>التمسك بالثوابت</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920850 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:color w:val="FF0000"/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>26</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:b/>
+                        <w:bCs/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920851" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>مقدمة</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920851 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>26</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920852" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>أسباب طرق مثل هذا الموضوع</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920852 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>27</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920853" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>دعوة النبي صلى الله عليه وسلم</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920853 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>28</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="640" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920854" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>موقف الكفار من دعوة النبي صلى الله عليه وسلم</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920854 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>28</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="640" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920855" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>كيف تعامل النبي صلى الله عليه وسلم مع ذلك المجتمع الجاهلي</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920855 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>28</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="640" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920856" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>التمسك بالثوابت أمر إلهي ومنهج نبوي</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920856 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>29</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920857" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>الخلاصة</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920857 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>34</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="640" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920858" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>نظرة في واقعنا</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920858 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>34</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="640" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920859" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>إفرازات مسلسل التنازلات</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920859 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>36</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920860" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>واجبنا</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920860 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>37</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:tabs>
+                    <w:tab w:val="right" w:leader="dot" w:pos="8296"/>
+                </w:tabs>
+                <w:spacing w:after="100" w:line="259" w:lineRule="auto"/>
+                <w:ind w:left="320" w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:rtl/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:hyperlink w:anchor="_Toc145920861" w:history="1">
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>الخاتمة</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:tab/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="begin"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>PAGEREF</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve">_</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText>Toc145920861 \h</w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:instrText xml:space="preserve"></w:instrText>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="separate"/>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:webHidden/>
+                        <w:kern w:val="2"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:t>38</w:t>
+                </w:r>
+                <w:r w:rsidRPr="00735A7B">
+                    <w:rPr>
+                        <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                        <w:noProof/>
+                        <w:color w:val="0563C1" w:themeColor="hyperlink"/>
+                        <w:kern w:val="2"/>
+                        <w:u w:val="single"/>
+                        <w:rtl/>
+                        <w14:ligatures w14:val="standardContextual"/>
+                    </w:rPr>
+                    <w:fldChar w:fldCharType="end"/>
+                </w:r>
+            </w:hyperlink>
+        </w:p>
+        <w:p w:rsidR="00735A7B" w:rsidRPr="00735A7B" w:rsidRDefault="00735A7B" w:rsidP="00735A7B">
+            <w:pPr>
+                <w:spacing w:after="160" w:line="259" w:lineRule="auto"/>
+                <w:ind w:firstLine="284"/>
+                <w:jc w:val="both"/>
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+            </w:pPr>
+            <w:r w:rsidRPr="00735A7B">
+                <w:rPr>
+                    <w:rFonts w:ascii="Traditional Arabic" w:eastAsiaTheme="minorHAnsi" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+                    <w:b/>
+                    <w:bCs/>
+                    <w:noProof/>
+                    <w:kern w:val="2"/>
+                    <w:lang w:val="ar-SA"/>
+                    <w14:ligatures w14:val="standardContextual"/>
+                </w:rPr>
+                <w:fldChar w:fldCharType="end"/>
+            </w:r>
+        </w:p>
+    </w:sdtContent>
+</w:sdt>
