@@ -34,53 +34,9 @@ class _WordPageScreenState extends State<WordPageScreen> {
   @override
   Widget build(BuildContext context) {
     wordDocument =widget.wordDocument;
-    // return CustomInteractiveViewer(
-    //   child: SizedBox(
-    //     height: (wordDocument.getPageSectPr().height ?? 1000),
-    //     width: wordDocument.getPageSectPr().width ?? 800,
-    //     child: GestureDetector(
-    //       onLongPress: () {
-    //         print("<wordPage>");
-    //         widget.wordPage.ps.forEach((p) {
-    //           print(p.pXml?.toXmlString(pretty: true));
-    //         });
-    //         print("</wordPage>");
-    //       },
-    //       child: Container(
-    //         decoration: BoxDecoration(color: Colors.white),
-    //         child: Stack(
-    //           children: [
-    //             pageHeaderW(),
-    //             widget.wordPage.getPageIamgesWiLi(),
-    //             Container(
-    //               margin: getSectionMargins(),
-    //               child: SelectionArea(
-    //                 child: Column(
-    //                   textDirection: TextDirection.rtl,
-    //                   mainAxisAlignment: MainAxisAlignment.start,
-    //                   crossAxisAlignment: CrossAxisAlignment.start,
-    //                   mainAxisSize: MainAxisSize.min,
-    //                   children: [
-    //                     // ...widget.wordPage.ps
-    //                     //     .map((e) => e.toWidget())
-    //                     //     .toList(),
-    //                     pageContentW(),
-    //                     getSeperator(widget.wordPage.fns.isNotEmpty),
-    //                     footerW()
-    //                   ],
-    //                 ),
-    //               ),
-    //             ),
-    //           ],
-    //         ),
-    //       ),
-    //     ),
-    //   ),
-    // );
     return Center(
       child: CustomInteractiveViewer(
         child: SizedBox(
-          // height: 2000,
           height: wordDocument.getPageSectPr().height ?? 1000,
           width: wordDocument.getPageSectPr().width ?? 800,
           child: GestureDetector(
@@ -100,21 +56,16 @@ class _WordPageScreenState extends State<WordPageScreen> {
                   Container(
                     margin: getSectionMargins(),
                     child: SingleChildScrollView(
-                      child: SelectionArea(
-                        child: Column(
-                          textDirection: TextDirection.rtl,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // ...widget.wordPage.ps
-                            //     .map((e) => e.toWidget())
-                            //     .toList(),
-                            pageContentW(),
-                            getSeperator(widget.wordPage.fns.isNotEmpty),
-                            footerW()
-                          ],
-                        ),
+                      child: Column(
+                        textDirection: TextDirection.rtl,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          pageContentW(),
+                          getSeperator(widget.wordPage.fns.isNotEmpty),
+                          footerW()
+                        ],
                       ),
                     ),
                   ),

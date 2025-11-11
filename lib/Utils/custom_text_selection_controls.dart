@@ -5,6 +5,49 @@ import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// This is the layout delegate that positions the menu.
+class _ContextMenuLayoutDelegate extends SingleChildLayoutDelegate {
+  _ContextMenuLayoutDelegate({required this.anchor});
+
+  final Offset anchor;
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    return constraints.loosen();
+  }
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    // size is the size of the overlay.
+    // childSize is the size of the menu.
+    // anchor is the position of the right-click.
+
+    double x = anchor.dx;
+    double y = anchor.dy;
+
+    // Avoid overflowing the right edge.
+    if (x + childSize.width > size.width) {
+      x = size.width - childSize.width;
+    }
+    // Avoid overflowing the left edge.
+    if (x < 0) {
+      x = 0;
+    }
+    // Avoid overflowing the bottom edge.
+    if (y + childSize.height > size.height) {
+      y = y - childSize.height;
+    }
+
+    return Offset(x, y);
+  }
+
+  @override
+  bool shouldRelayout(_ContextMenuLayoutDelegate oldDelegate) {
+    return anchor != oldDelegate.anchor;
+  }
+}
+
+
 class CustomTextSelectionControls extends MaterialTextSelectionControls {
   CustomTextSelectionControls({
     required this.bookTitle,
@@ -13,16 +56,6 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
 
   final String bookTitle;
   final int pageNumber;
-
-  @override
-  bool canCopy(TextSelectionDelegate delegate) {
-    return super.canCopy(delegate) && delegate.textEditingValue.selection.isValid;
-  }
-
-  @override
-  bool canSelectAll(TextSelectionDelegate delegate) {
-    return super.canSelectAll(delegate);
-  }
 
   void _handleCopyReference(TextSelectionDelegate delegate) {
     final String selectedText =
@@ -97,7 +130,7 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
       ),
       _buildMenuItem(
         label: 'بحث في جوجل',
-        onPressed: () => _handleGoogleSearch(delegate),
+        onPressed: isCopyEnabled ? () => _handleGoogleSearch(delegate) : null,
       ),
       _buildMenuItem(
         label: 'تحديد الكل',
@@ -105,6 +138,7 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
       ),
     ];
 
+    // If there's no specific tap position, fallback to the default toolbar.
     if (lastSecondaryTapDownPosition == null) {
       return TextSelectionToolbar(
         anchorAbove: endpoints.first.point,
@@ -113,35 +147,31 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
       );
     }
 
-    return Stack(
-      children: <Widget>[
-        Positioned(
-          top: lastSecondaryTapDownPosition.dy,
-          left: lastSecondaryTapDownPosition.dx,
-          child: Material(
-            color: Colors.transparent,
-            child: Container(
-              decoration: BoxDecoration(
-                color: primaryColor,
-                borderRadius: BorderRadius.circular(8.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 4.0,
-                    offset: const Offset(2, 2),
-                  ),
-                ],
+    return CustomSingleChildLayout(
+      delegate: _ContextMenuLayoutDelegate(
+        anchor: lastSecondaryTapDownPosition,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          decoration: BoxDecoration(
+            color: primaryColor,
+            borderRadius: BorderRadius.circular(8.0),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 4.0,
+                offset: const Offset(2, 2),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: menuItems,
-              ),
-            ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: menuItems,
           ),
         ),
-      ],
+      ),
     );
   }
 }
-
