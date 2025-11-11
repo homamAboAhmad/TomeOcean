@@ -10,6 +10,8 @@ import 'package:golden_shamela/UI/DocViewer.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Utils/SnackBar.dart';
 
+import 'package:golden_shamela/UI/TestScreen.dart'; // Add this import
+
 import '../Helpers/FileHelper.dart';
 import '../Styles/TextSyles.dart';
 import '../Utils/FileToArchive.dart';
@@ -59,6 +61,17 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
+          actions: [ // Add this actions block
+            IconButton(
+              icon: Icon(Icons.bug_report, color: secondaryColor),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) =>  TestScreen()),
+                );
+              },
+            ),
+          ],
         ),
 
         drawer: BooksDrawer(

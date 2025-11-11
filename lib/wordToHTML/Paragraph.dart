@@ -1,5 +1,4 @@
 import 'package:extended_text/extended_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Extensions/TextAlignExtensios.dart';
 import 'package:golden_shamela/TestApp2.dart';
@@ -8,7 +7,11 @@ import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
 import 'package:xml/xml.dart';
 
+import 'package:golden_shamela/Utils/TestXmlWriter.dart'; // Add this import
+import 'package:golden_shamela/Utils/custom_text_selection_controls.dart';
+
 import '../WordToWidget/ImageToWidget.dart';
+import '../main.dart';
 import 'PPr.dart';
 import 'RPr.dart';
 
@@ -71,7 +74,11 @@ class Paragraph {
   Widget toWidget() {
      List<InlineSpan> spans = getPSpans();
      return GestureDetector(
-       onLongPress: () => print("pxml:\n ${pXml?.toXmlString(pretty: true)}"),
+       onLongPress: () { // Modify onLongPress
+         if (pXml != null) {
+           writeParagraphXmlToTestAsset(navigatorKey.currentContext!, pXml!);
+         }
+       },
        child: Padding(
          padding: _getPPaddings(),
          child: Stack(
@@ -158,20 +165,14 @@ class Paragraph {
     return Align(
       alignment: textAlign.toAlignment(pPr?.rtl),
       child: SelectableText.rich(
-        TextSpan(
-            style: prPr?.getTextStyle(),
-            children: spans),
+        TextSpan(style: prPr?.getTextStyle(), children: spans),
         textAlign: textAlign,
         textDirection: textDirection,
-
+        selectionControls: CustomTextSelectionControls(
+          bookTitle: parent.parent.title,
+          pageNumber: parent.parent.currentPage + 1,
+        ),
       ),
     );
-    // return  Align(
-    //   alignment: textAlign.toAlignment(pPr?.rtl),
-    //   child: RichText(
-    //       textAlign: textAlign,
-    //       textDirection: textDirection,
-    //       text: TextSpan(style: prPr?.getTextStyle(), children: spans)),
-    // );
   }
 }

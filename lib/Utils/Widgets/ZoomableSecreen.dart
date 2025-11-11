@@ -21,7 +21,7 @@ class _CustomInteractiveViewerState extends State<CustomInteractiveViewer> {
         scaleEnabled: true,
         minScale: 0.5,
         maxScale: 4.0,
-        boundaryMargin: const EdgeInsets.only(bottom: 300), // يسمح بالسحب من البداية
+        boundaryMargin: const EdgeInsets.only(bottom: 500), // يسمح بالسحب من البداية
         child: widget.child,
       ),
     );

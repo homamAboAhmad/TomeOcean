@@ -110,7 +110,7 @@ class _WordPageScreenState extends State<WordPageScreen> {
                             // ...widget.wordPage.ps
                             //     .map((e) => e.toWidget())
                             //     .toList(),
-                             pageContentW(),
+                            pageContentW(),
                             getSeperator(widget.wordPage.fns.isNotEmpty),
                             footerW()
                           ],
