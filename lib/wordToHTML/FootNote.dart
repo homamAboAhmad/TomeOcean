@@ -3,16 +3,33 @@
 
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+import '../Models/WordPage.dart';
+
+part 'FootNote.g.dart';
+
+@JsonSerializable(explicitToJson: true, constructor: 'empty')
 class FootNote{
   Paragraph p;
   String id;
-  String? _displayNumber;
+  String? displayNumber;
 
   FootNote(this.p, this.id);
 
+  FootNote.empty() : p = Paragraph.empty(), id = '';
+
+  factory FootNote.fromJson(Map<String, dynamic> json) => _$FootNoteFromJson(json);
+  Map<String, dynamic> toJson() => _$FootNoteToJson(this);
+
+  static FootNote fromMap(Map<String, dynamic> json, WordPage parent) {
+    final footNote = _$FootNoteFromJson(json);
+    footNote.p = Paragraph.fromMap(json['p'] as Map<String, dynamic>, parent);
+    return footNote;
+  }
+
   updateDisplayNumber(String dn){
-    _displayNumber =dn;
+    displayNumber =dn;
     int i = 0;
     runT r = p.runs[0];
     if(r.rpr?.rPr?.getElement("w:rStyle")?.getAttribute("w:val")=="FootnoteReference") {

@@ -9,14 +9,20 @@ import 'package:golden_shamela/wordToHTML/RPr.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/wordToHTML/abstractNum.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
 import '../Utils/DiplayWordNumber.dart';
 
+part 'PPr.g.dart';
+
 double twipsToPx = 0.0667;
 
+@JsonSerializable(explicitToJson: true, constructor: 'empty')
 class PPr {
+  @JsonKey(ignore: true)
   XmlElement? xmlpPr;
+  @JsonKey(ignore: true)
   XmlElement? xmlprPr;
   String? textAlign;
   bool? rtl;
@@ -26,12 +32,27 @@ class PPr {
   int? numId;
   int? paragraphNumber;
   int? ilvl; // padding level if has numbering
+  @JsonKey(ignore: true)
   List<String> doneElements = ["numPr", "pStyle", "rPr", "ind", "jc"];
   String? numberingH;
+  @JsonKey(ignore: true)
   Paragraph parent;
+  @JsonKey(ignore: true)
   late WordDocument wordDocument = parent.parent.parent;
 
   PPr(this.parent);
+
+  PPr.empty() : parent = Paragraph.empty();
+
+  factory PPr.fromJson(Map<String, dynamic> json) => _$PPrFromJson(json);
+  Map<String, dynamic> toJson() => _$PPrToJson(this);
+
+  static PPr fromMap(Map<String, dynamic> json, Paragraph parent) {
+    final pPr = _$PPrFromJson(json);
+    pPr.parent = parent;
+    pPr.wordDocument = parent.parent.parent;
+    return pPr;
+  }
 
   PPr fromXml(XmlElement? xmlpPr0) {
     xmlpPr0?.childElements.forEach((xmlElement) {

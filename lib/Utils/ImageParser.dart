@@ -4,15 +4,19 @@ import 'package:golden_shamela/main.dart';
 import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 import 'package:golden_shamela/wordToHTML/MyInt.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:xml/xml.dart';
 
 import '../wordToHTML/ExtractWordImages.dart';
+import 'json_converters.dart';
+
+part 'ImageParser.g.dart';
 
 ImageData _imageData = ImageData();
 late XmlElement _drawingElement;
 
-ImageData? parseImageData(runT run ) {
+ImageData? parseImageData(runT run) {
   xml.XmlElement document = run.xmlRun!;
   // docImages
   _imageData = ImageData();
@@ -34,7 +38,7 @@ ImageData? parseImageData(runT run ) {
 void setDemenisions() {
   setWidth();
   setHeight();
- // fixMaxes();
+  // fixMaxes();
 }
 
 // void fixMaxes() {
@@ -47,21 +51,22 @@ void setDemenisions() {
 // }
 
 void setOffsets() {
-  _imageData.posX = getPosOffset( "H");
-  _imageData.posY = getPosOffset( "V");
-  _imageData.alignH = setPosAlign( "H") ?? "left";
-  _imageData.alingV = setPosAlign( "V") ?? "top";
+  _imageData.posX = getPosOffset("H");
+  _imageData.posY = getPosOffset("V");
+  _imageData.alignH = setPosAlign("H") ?? "left";
+  _imageData.alingV = setPosAlign("V") ?? "top";
 }
 
 setRelativeHeight() {
   String s =
       _drawingElement.getElement("wp:anchor")?.getAttribute("relativeHeight") ??
           "0";
-  bool aboveDoc =_drawingElement.getElement("wp:anchor")?.getAttribute("behindDoc") =="0";
+  bool aboveDoc =
+      _drawingElement.getElement("wp:anchor")?.getAttribute("behindDoc") == "0";
   _imageData.relativeHeight = double.parse(s);
 
-  if(aboveDoc) {
-    _imageData.relativeHeight= _imageData.relativeHeight*2;
+  if (aboveDoc) {
+    _imageData.relativeHeight = _imageData.relativeHeight * 2;
   }
 }
 
@@ -92,24 +97,26 @@ setRId() {
             (element) => element.getAttribute('r:embed') != null,
           );
   _imageData.rId = blipElement.getAttribute('r:embed')!;
-
 }
 
 checkFromPage() {
   _imageData.relativeFromH = _drawingElement
           .getElement("wp:anchor")
           ?.getElement("wp:positionH")
-          ?.getAttribute("relativeFrom")??"margin";
+          ?.getAttribute("relativeFrom") ??
+      "margin";
 }
-checkRelativeFromV(){
+
+checkRelativeFromV() {
   _imageData.relativeFromV = _drawingElement
-      .getElement("wp:anchor")
-      ?.getElement("wp:positionV")
-      ?.getAttribute("relativeFrom")??"margin";
+          .getElement("wp:anchor")
+          ?.getElement("wp:positionV")
+          ?.getAttribute("relativeFrom") ??
+      "margin";
   // print("relativeFromV: ${_imageData.relativeFromV} ");
 }
 
-double getPosOffset( String orientation) {
+double getPosOffset(String orientation) {
   final posElement =
       _drawingElement.findAllElements('wp:position' + orientation).firstOrNull;
   if (posElement == null) return 0;
@@ -127,6 +134,7 @@ String? setPosAlign(String orientation) {
   return posElement?.getElement("wp:align")?.text;
 }
 
+@JsonSerializable(explicitToJson: true)
 class ImageData {
   String rId = "";
   double width = -1; // بالبيكسل أو الوحدة المناسبة
@@ -135,24 +143,35 @@ class ImageData {
   String alignH = "left";
   String alingV = "top";
   double relativeHeight = 0;
+  @JsonKey(ignore: true)
   runT? parent;
   double posY = -1;
   //String image64 = "";
   String relativeFromH = "margin";
   String relativeFromV = "margin";
-  Uint8List imageMemory = Uint8List(0);
+  @JsonKey(fromJson: uint8ListFromJson, toJson: uint8ListToJson)
+  Uint8List? imageMemory;
+  @JsonKey(ignore: true)
+  dynamic image; // Changed from ui.Image? to dynamic to avoid import
 
   ImageData();
-  setImageMemory(runT run){
-    String imgName = getImageFrmRel(rId);
-   // image64 = getImageByName(imgName);
-    Map<String, Uint8List>? docImages2 = run.parent?.parent?.parent?.docImages;
-    imageMemory = docImages2?[imgName]??Uint8List(0);
 
+  factory ImageData.fromJson(Map<String, dynamic> json) =>
+      _$ImageDataFromJson(json);
+  Map<String, dynamic> toJson() => _$ImageDataToJson(this);
+
+  static ImageData fromMap(Map<String, dynamic> json, runT parent) {
+    final imageData = _$ImageDataFromJson(json);
+    imageData.parent = parent;
+    return imageData;
   }
 
-
-
+  setImageMemory(runT run) {
+    String imgName = getImageFrmRel(rId);
+    // image64 = getImageByName(imgName);
+    Map<String, Uint8List>? docImages2 = run.parent?.parent?.parent?.docImages;
+    imageMemory = docImages2?[imgName] ?? Uint8List(0);
+  }
 }
 
 bool isImageRun(xml.XmlElement? xmlRun) {

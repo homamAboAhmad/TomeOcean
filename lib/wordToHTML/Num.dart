@@ -1,12 +1,16 @@
 // كلاس Num لتمثيل عنصر الترقيم (w:num) في مستند Word
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
 import 'abstractNum.dart';
 
+part 'Num.g.dart';
+
+@JsonSerializable(explicitToJson: true)
 class Num {
   final int numId; // معرف الترقيم
   final int abstractNumId; // معرف الترقيم المجرد المرتبط
-  final List<Override>
+   List<Override>
       overrides; // قائمة من الكائنات Override لتمثيل المستويات المخصصة
 
   // مُنشئ الكلاس الذي يأخذ المعرف وقائمة الاستبدالات (overrides)
@@ -15,6 +19,19 @@ class Num {
     required this.abstractNumId,
     required this.overrides,
   });
+
+  Num.empty() : numId = 0, abstractNumId = 0, overrides = [];
+
+  factory Num.fromJson(Map<String, dynamic> json) => _$NumFromJson(json);
+  Map<String, dynamic> toJson() => _$NumToJson(this);
+
+  static Num fromMap(Map<String, dynamic> json) {
+    final num = _$NumFromJson(json);
+    num.overrides = (json['overrides'] as List<dynamic>)
+        .map((e) => Override.fromMap(e as Map<String, dynamic>))
+        .toList();
+    return num;
+  }
 
   // ميثود لتحويل عنصر XML إلى كائن Dart من نوع Num
   factory Num.fromXml(XmlElement xml) {
@@ -38,23 +55,14 @@ class Num {
       overrides: overrides,
     );
   }
-
-  // ميثود لتحويل كائن Num إلى JSON
-  Map<String, dynamic> toJson() => {
-        'numId': numId,
-        // معرف الترقيم
-        'abstractNumId': abstractNumId,
-        // معرف الترقيم المجرد المرتبط
-        'overrides': overrides.map((override) => override.toJson()).toList(),
-        // قائمة الاستبدالات كـ JSON
-      };
 }
 
 // كلاس Override لتمثيل مستوى مخصص (Override) في قائمة الترقيم
+@JsonSerializable(explicitToJson: true)
 class Override {
   final int ilvl; // مستوى القائمة المخصص
-  final int? startOverride; // قيمة البداية المخصصة (إن وجدت)
-  final Level? level; // الكائن Level لتمثيل تفاصيل المستوى
+  int? startOverride; // قيمة البداية المخصصة (إن وجدت)
+  Level? level; // الكائن Level لتمثيل تفاصيل المستوى
 
   // مُنشئ الكلاس الذي يأخذ جميع الخصائص كمدخلات
   Override({
@@ -62,6 +70,19 @@ class Override {
     this.startOverride,
     this.level,
   });
+
+  Override.empty() : ilvl = 0;
+
+  factory Override.fromJson(Map<String, dynamic> json) => _$OverrideFromJson(json);
+  Map<String, dynamic> toJson() => _$OverrideToJson(this);
+
+  static Override fromMap(Map<String, dynamic> json) {
+    final override = _$OverrideFromJson(json);
+    if (json['level'] != null) {
+      override.level = Level.fromMap(json['level'] as Map<String, dynamic>);
+    }
+    return override;
+  }
 
   // ميثود لتحويل عنصر XML إلى كائن Dart من نوع Override
   factory Override.fromXml(XmlElement xml) {
@@ -89,11 +110,4 @@ class Override {
       level: level,
     );
   }
-
-  // ميثود لتحويل كائن Override إلى JSON
-  Map<String, dynamic> toJson() => {
-        'ilvl': ilvl, // مستوى القائمة المخصص
-        'startOverride': startOverride, // قيمة البداية المخصصة (إن وجدت)
-        'level': level?.toJson(), // تفاصيل المستوى كـ JSON (إن وجدت)
-      };
 }

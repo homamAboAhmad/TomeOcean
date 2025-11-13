@@ -5,29 +5,63 @@ import 'package:golden_shamela/TestApp2.dart';
 import 'package:golden_shamela/wordToHTML/ParagraphHyperLink.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
 import 'package:golden_shamela/Utils/TestXmlWriter.dart'; // Add this import
 import 'package:golden_shamela/Utils/custom_text_selection_controls.dart';
+import 'package:golden_shamela/Utils/json_converters.dart';
 
 import '../WordToWidget/ImageToWidget.dart';
 import '../main.dart';
 import 'PPr.dart';
 import 'RPr.dart';
 
+part 'Paragraph.g.dart';
+
+@JsonSerializable(explicitToJson: true, constructor: 'empty')
 class Paragraph {
   PPr? pPr;
   RPr? prPr;
   List<runT> runs = [];
   String text = "";
+  @JsonKey(ignore: true)
   XmlElement? pXml;
   String pageNum = "";
   List<runT> imageRunTs = [];
   List<runT> textRunTs = [];
+  @TextAlignConverter()
   TextAlign textAlign = TextAlign.start;
+  @JsonKey(ignore: true)
   WordPage parent;
+  @TextDirectionConverter()
   TextDirection textDirection = TextDirection.rtl;
+
   Paragraph(this.parent);
+
+  Paragraph.empty() : parent = WordPage.empty();
+
+  factory Paragraph.fromJson(Map<String, dynamic> json) => _$ParagraphFromJson(json);
+  Map<String, dynamic> toJson() => _$ParagraphToJson(this);
+
+  static Paragraph fromMap(Map<String, dynamic> json, WordPage parent) {
+    final paragraph = _$ParagraphFromJson(json);
+    paragraph.parent = parent;
+
+    if (json['pPr'] != null) {
+      paragraph.pPr = PPr.fromMap(json['pPr'] as Map<String, dynamic>, paragraph);
+    }
+    if (json['prPr'] != null) {
+      // prPr's parent is runT, which is not available here. It will be set when runT is deserialized.
+      paragraph.prPr = RPr.fromMap(json['prPr'] as Map<String, dynamic>, null);
+    }
+    paragraph.runs = (json['runs'] as List<dynamic>)
+        .map((e) => runT.fromMap(e as Map<String, dynamic>, paragraph))
+        .toList();
+
+    return paragraph;
+  }
+
   Paragraph fromXml(XmlElement paragraphXml) {
     pXml = paragraphXml;
     XmlElement? xmlpPr = paragraphXml.getElement("w:pPr");
@@ -171,8 +205,10 @@ class Paragraph {
         selectionControls: CustomTextSelectionControls(
           bookTitle: parent.parent.title,
           pageNumber: parent.parent.currentPage + 1,
+          wordPage: parent,
         ),
       ),
     );
   }
 }
+

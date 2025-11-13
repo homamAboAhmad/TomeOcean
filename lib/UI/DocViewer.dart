@@ -16,6 +16,7 @@ import '../Utils/Widgets/ZoomableSecreen.dart';
 import '../main.dart';
 import '../wordToHTML/AddDocData.dart';
 import '../Models/WordDocument.dart';
+import '../Models/WordPage.dart'; // Import WordPage
 import 'BookSideBar/AuthorBookSideBar.dart';
 import 'BookSideBar/BookIndexUI.dart';
 import 'BookSideBar/BookSearchUI.dart';
@@ -34,14 +35,31 @@ class DocViewer extends StatefulWidget {
   State<DocViewer> createState() => _DocViewerState();
 }
 
-class _DocViewerState extends State<DocViewer> {
+class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixin {
   late BookSideBarController _bookSideBarController;
   late List<Widget> _bookSideBarList;
+  Future<WordPage>? _currentPageFuture;
+
+  // New state variables
+  final List<int> _pageHistory = [];
+  int _historyIndex = -1;
+  late final TextEditingController _pageNumberController;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
+    _pageNumberController = TextEditingController();
     _initControllerAndSidebar();
+    _jumpToPage(widget.wordDocument.currentPage);
+  }
+
+  @override
+  void dispose() {
+    _pageNumberController.dispose();
+    super.dispose();
   }
 
   @override
@@ -49,6 +67,7 @@ class _DocViewerState extends State<DocViewer> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.wordDocument != widget.wordDocument) {
       _initControllerAndSidebar();
+      _loadPage(widget.wordDocument.currentPage);
     }
   }
 
@@ -72,30 +91,44 @@ class _DocViewerState extends State<DocViewer> {
     ];
   }
 
-  void _goTo(int page) {
-    widget.wordDocument.currentPage = page - 1;
-    setState(() {});
+  void _loadPage(int pageIndex) {
+    setState(() {
+      _currentPageFuture = widget.wordDocument.getPage(pageIndex);
+    });
   }
 
-  void _goNext() => _updatePage(
-      (current) => (current + 1) % widget.wordDocument.pages.length);
+  void _goTo(int page) {
+    widget.wordDocument.currentPage = page - 1;
+    _loadPage(widget.wordDocument.currentPage);
+  }
 
-  void _goPrevious() => _updatePage((current) =>
-      (current - 1 + widget.wordDocument.pages.length) %
-      widget.wordDocument.pages.length);
+  void _goNext() {
+    if (widget.wordDocument.currentPage < widget.wordDocument.pageFilePaths.length - 1) {
+      widget.wordDocument.currentPage++;
+      _loadPage(widget.wordDocument.currentPage);
+    }
+  }
 
-  void _goStart() => _updatePage((_) => 0);
+  void _goPrevious() {
+    if (widget.wordDocument.currentPage > 0) {
+      widget.wordDocument.currentPage--;
+      _loadPage(widget.wordDocument.currentPage);
+    }
+  }
 
-  void _goEnd() => _updatePage((_) => widget.wordDocument.pages.length - 1);
+  void _goStart() {
+    widget.wordDocument.currentPage = 0;
+    _loadPage(widget.wordDocument.currentPage);
+  }
 
-  void _updatePage(int Function(int) newPageCalculator) {
-    widget.wordDocument.currentPage =
-        newPageCalculator(widget.wordDocument.currentPage);
-    setState(() {});
+  void _goEnd() {
+    widget.wordDocument.currentPage = widget.wordDocument.pageFilePaths.length - 1;
+    _loadPage(widget.wordDocument.currentPage);
   }
 
   Future<void> _copyPage() async {
-    final text = widget.wordDocument.getCurrentPage().text();
+    final WordPage page = await _currentPageFuture!;
+    final text = page.text();
     await copyText(text);
     if (mounted) {
       ShowSnackBar(context, "تم النسخ");
@@ -253,9 +286,22 @@ class _DocViewerState extends State<DocViewer> {
               if (showBookSideBar)
                 _bookSideBarList[_bookSideBarController.selecteSideBarP],
               Expanded(
-                child: WordPageScreen(
-                  widget.wordDocument.getCurrentPage(),
-                  wordDocument: widget.wordDocument,
+                child: FutureBuilder<WordPage>(
+                  future: _currentPageFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (snapshot.hasData) {
+                      return WordPageScreen(
+                        snapshot.data!,
+                        wordDocument: widget.wordDocument,
+                      );
+                    } else {
+                      return const Center(child: Text('No page selected'));
+                    }
+                  },
                 ),
               ),
             ],

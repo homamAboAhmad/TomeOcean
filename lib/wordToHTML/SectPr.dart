@@ -6,14 +6,19 @@ import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 import 'package:golden_shamela/wordToHTML/MyInt.dart';
 import 'package:golden_shamela/wordToHTML/PPr.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
 import '../Utils/ImageParser.dart';
+import '../Utils/json_converters.dart';
 import '../main.dart';
 import 'DocFooter.dart';
 import '../Models/WordDocument.dart';
 import '../Models/WordPage.dart';
 
+part 'SectPr.g.dart';
+
+@JsonSerializable(explicitToJson: true, constructor: 'emptyJson')
 class SectPr {
   double? width; // Page width in twips (1/20th of a point)
   double? height; // Page height in twips
@@ -23,9 +28,19 @@ class SectPr {
   double rightMargin = 8;
   int firstRange = 0;
   int lastRange = 0;
+  @JsonKey(ignore: true)
   WordDocument parent;
+  @XmlElementConverter()
   XmlElement? footer;
-  XmlElement? headerFirst, headerEven, headerOdd, headerDefault;
+  @XmlElementConverter()
+  XmlElement? headerFirst;
+  @XmlElementConverter()
+  XmlElement? headerEven;
+  @XmlElementConverter()
+  XmlElement? headerOdd;
+  @XmlElementConverter()
+  XmlElement? headerDefault;
+  @XmlElementConverter()
   XmlElement? sectPrElement;
 
   SectPr(
@@ -43,6 +58,17 @@ class SectPr {
 
   SectPr.empty(this.parent) {
     getHeaders();
+  }
+
+  SectPr.emptyJson() : parent = WordDocument.empty(); // Constructor for JSON deserialization
+
+  factory SectPr.fromJson(Map<String, dynamic> json) => _$SectPrFromJson(json);
+  Map<String, dynamic> toJson() => _$SectPrToJson(this);
+
+  static SectPr fromMap(Map<String, dynamic> json, WordDocument parent) {
+    final sectPr = _$SectPrFromJson(json);
+    sectPr.parent = parent;
+    return sectPr;
   }
 
   @override
@@ -127,7 +153,7 @@ class SectPr {
     // print("currentHeader: ${currentHeader.toXmlString(pretty: true)}");
     List<Widget> psWidgets = [];
     List<Paragraph> ps = [];
-    print("current header:${currentHeader.toXmlString()}");
+    // print("current header:${currentHeader.toXmlString()}");
     currentHeader.childElements.forEach((e) {
       Paragraph p = Paragraph(wordPage).fromXml(e);
       ps.add(p);

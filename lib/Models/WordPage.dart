@@ -3,17 +3,41 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/wordToHTML/FootNote.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
 import '../WordToWidget/ImageToWidget.dart';
 import '../wordToHTML/Paragraph.dart';
 
+part 'WordPage.g.dart';
+
+@JsonSerializable(explicitToJson: true, constructor: 'empty')
 class WordPage {
   List<Paragraph> ps = [];
   List<FootNote> fns = [];
   String pageNum = "";
+  @JsonKey(ignore: true)
   WordDocument parent;
+
   WordPage(this.parent);
+
+  WordPage.empty() : parent = WordDocument.empty();
+
+  factory WordPage.fromJson(Map<String, dynamic> json) => _$WordPageFromJson(json);
+  Map<String, dynamic> toJson() => _$WordPageToJson(this);
+
+  static WordPage fromMap(Map<String, dynamic> json, WordDocument parent) {
+    final wordPage = _$WordPageFromJson(json);
+    wordPage.parent = parent;
+    wordPage.ps = (json['ps'] as List<dynamic>)
+        .map((e) => Paragraph.fromMap(e as Map<String, dynamic>, wordPage))
+        .toList();
+    for (var fn in wordPage.fns) {
+      fn.p.parent = wordPage; // Re-establish parent for footnote paragraphs
+    }
+    return wordPage;
+  }
+
   String text() {
     String text = "";
     ps.forEach((paragraph) {

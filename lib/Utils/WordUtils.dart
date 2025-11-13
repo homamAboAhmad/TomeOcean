@@ -21,18 +21,19 @@ class WordUtils {
     return document.getElement("w:document")?.getElement("w:body");
   }
 
-  addParagraphToDocument(XmlElement? body) async {
-    wordDocument.pages.clear();
+  Future<List<WordPage>> addParagraphToDocument(XmlElement? body) async {
+    List<WordPage> pages = [];
     List<XmlElement> allPs = getAllXmlParagraphs(body);
 
     int j = 1;
     while (allPs.isNotEmpty) {
       WordPage wordPage = await getPage(allPs, pageNum: j);
-      wordDocument.pages.add(wordPage);
+      pages.add(wordPage);
       // print("pageNumber $j");
 
       j++;
     }
+    return pages;
   }
 
   getPage(List<XmlElement> allPs, { required int pageNum}) async {

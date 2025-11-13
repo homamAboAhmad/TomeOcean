@@ -7,11 +7,14 @@ import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/wordToHTML/PPr.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
+part 'runT.g.dart';
 
 const BLANK = "*#&&#*";
 
+@JsonSerializable(explicitToJson: true, constructor: 'empty')
 class runT {
   RPr? prPr;
   PPr? pPr;
@@ -19,14 +22,34 @@ class runT {
   RPr? rpr;
   bool hasBrBefore = false;
   bool hasBrAfter = false;
+  @JsonKey(ignore: true)
   XmlElement? xmlRun;
   String? footNoteId;
   String? fnDisplayNum;
   ImageData? image;
   String? toc;
+  @JsonKey(ignore: true)
   Paragraph parent;
 
   runT(this.parent, {required this.prPr, required this.pPr});
+
+  runT.empty() : parent = Paragraph.empty();
+
+  factory runT.fromJson(Map<String, dynamic> json) => _$runTFromJson(json);
+  Map<String, dynamic> toJson() => _$runTToJson(this);
+
+  static runT fromMap(Map<String, dynamic> json, Paragraph parent) {
+    final runT = _$runTFromJson(json);
+    runT.parent = parent;
+
+    if (json['rpr'] != null) {
+      runT.rpr = RPr.fromMap(json['rpr'] as Map<String, dynamic>, runT);
+    }
+    if (json['image'] != null) {
+      runT.image = ImageData.fromMap(json['image'] as Map<String, dynamic>, runT);
+    }
+    return runT;
+  }
 
   fromXml(XmlElement? xmlRun) {
     this.xmlRun = xmlRun;

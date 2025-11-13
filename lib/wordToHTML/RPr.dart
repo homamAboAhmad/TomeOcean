@@ -5,11 +5,16 @@ import 'package:golden_shamela/Utils/XmlElementClone.dart';
 import 'package:golden_shamela/main.dart';
 import 'package:golden_shamela/wordToHTML/DocumentStyles.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
 import '../Models/WordDocument.dart';
 
+part 'RPr.g.dart';
+
+@JsonSerializable(explicitToJson: true, constructor: 'empty')
 class RPr {
+  @JsonKey(ignore: true)
   XmlElement? rPr;
   String? color;
   String? uColor;
@@ -24,9 +29,27 @@ class RPr {
   String? enFont,uniqueFont;
   String? vertAlign;
   String? rStyle;
+  @JsonKey(ignore: true)
   runT parent;
+  @JsonKey(ignore: true)
   late WordDocument wordDocument = parent.parent.parent.parent;
   RPr(this.parent);
+
+  RPr.empty() : parent = runT.empty();
+
+  factory RPr.fromJson(Map<String, dynamic> json) => _$RPrFromJson(json);
+  Map<String, dynamic> toJson() => _$RPrToJson(this);
+
+  static RPr fromMap(Map<String, dynamic> json, runT? parent) {
+    final rPr = _$RPrFromJson(json);
+    if (parent != null) {
+      rPr.parent = parent;
+      rPr.wordDocument = parent.parent.parent.parent;
+    }
+    return rPr;
+  }
+
+  @JsonKey(ignore: true)
   List<String> doneElements = [
     "b",
     "i",

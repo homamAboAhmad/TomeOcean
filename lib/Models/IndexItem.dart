@@ -1,52 +1,28 @@
 import 'package:golden_shamela/Utils/NumberUtils.dart';
+import 'package:json_annotation/json_annotation.dart';
 
+part 'IndexItem.g.dart';
+
+@JsonSerializable(explicitToJson: true)
 class IndexItem {
-  String _title;
-  int _page;
-  String _type;
-  String id = generateRandomKey();
+  String title;
+  int page;
+  String type;
+  String id;
 
   IndexItem({
-    required String title,
-    required int page,
-    required String type,
-  })  : _title = title,
-        _page = page,
-        _type = type;
+    required this.title,
+    required this.page,
+    required this.type,
+    this.id = "", // Initialize id with an empty string or a default value
+  });
 
-  // getters
-  String get title => _title;
-  int get page => _page;
-  String get type => _type;
+  IndexItem.empty() : title = '', page = 0, type = '', id = '';
 
-  // setters
-  set title(String value) {
-    _title = value;
-  }
+  factory IndexItem.fromJson(Map<String, dynamic> json) => _$IndexItemFromJson(json);
+  Map<String, dynamic> toJson() => _$IndexItemToJson(this);
 
-  set page(int value) {
-    _page = value;
-  }
-
-  set type(String value) {
-    _type = value;
-  }
-
-  // fromJson
-  factory IndexItem.fromJson(Map<String, dynamic> json) {
-    return IndexItem(
-      title: json['title'] ?? '',
-      page: json['page'] ?? 0,
-      type: json['type'] ?? '',
-    );
-  }
-
-  // toJson
-  Map<String, dynamic> toJson() {
-    return {
-      'title': _title,
-      'page': _page,
-      'type': _type,
-    };
+  static IndexItem fromMap(Map<String, dynamic> json) {
+    return _$IndexItemFromJson(json);
   }
 }

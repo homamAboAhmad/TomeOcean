@@ -1,20 +1,25 @@
 import 'dart:io';
 import 'dart:math';
+import 'dart:convert'; // Added for JSON encoding/decoding
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/UI/BookTitleRow.dart';
 import 'package:golden_shamela/UI/DocViewer.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Utils/SnackBar.dart';
+import 'package:path_provider/path_provider.dart'; // Added for cache directory
 
 import 'package:golden_shamela/UI/TestScreen.dart'; // Add this import
+
+import 'package:path/path.dart' as p; // Import the path package
 
 import '../Helpers/FileHelper.dart';
 import '../Styles/TextSyles.dart';
 import '../Utils/FileToArchive.dart';
+import '../Utils/SnackBar.dart';
 import '../main.dart';
 import '../wordToHTML/AddDocData.dart';
 import 'BooksDrawer.dart';
@@ -164,13 +169,90 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _readDocxFile(String? filePath) async {
     if (filePath == null) return;
-    // if (result != null) filePath = result!.files.single.path!;
+
     WordDocument wordDocument = WordDocument();
     wordDocument.title = getFileName(filePath);
+
+    // 1. Generate Cache Path
+    final appDocsDir = await getApplicationDocumentsDirectory();
+    final tomeOceanDir = Directory('${appDocsDir.path}/tome_ocean');
+    final bookCacheDir = Directory('${tomeOceanDir.path}/${wordDocument.title}');
+    final metadataFile = File('${bookCacheDir.path}/metadata.json');
+    final pagesDir = Directory('${bookCacheDir.path}/pages');
+
+    print("Book cache path ${bookCacheDir.path}");
+    bool loadedFromCache = false;
+
+    // try {
+      // 2. Check for existing, valid cache
+      if (await bookCacheDir.exists()) {
+        final docxFile = File(filePath);
+        final docxLastModified = await docxFile.lastModified();
+        final cacheLastModified = await metadataFile.lastModified();
+
+        if (cacheLastModified.isAfter(docxLastModified)) {
+          // Cache is valid, load from split files
+          final jsonString = await metadataFile.readAsString();
+          final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
+          wordDocument = WordDocument.fromCacheJson(jsonMap);
+          wordDocument.pagesDirectory = pagesDir.path;
+
+          // Load page file paths
+          final pageFiles = await pagesDir.list().toList();
+          pageFiles.sort((a, b) {
+            final aNum = int.parse(p.basenameWithoutExtension(a.path));
+            final bNum = int.parse(p.basenameWithoutExtension(b.path));
+            return aNum.compareTo(bNum);
+          });
+          wordDocument.pageFilePaths = pageFiles.map((file) => p.basename(file.path)).toList();
+          wordDocument.initLoadedPages();
+
+          ShowSnackBar(context, "Loaded from cache: ${wordDocument.title}");
+          loadedFromCache = true;
+        }
+      }
+    // } catch (e) {
+    //   print("Error loading from cache: $e");
+    //   ShowSnackBar(context, "Error loading from cache, re-parsing: $e");
+    //   if (await bookCacheDir.exists()) {
+    //     await bookCacheDir.delete(recursive: true);
+    //   }
+    //   loadedFromCache = false;
+    // }
+
+    if (!loadedFromCache) {
+      // 3. Parse and Save to Cache
+      try {
+        docArchive = await FileToArchive(filePath);
+        List<WordPage> parsedPages = await AddDocData(docArchive, wordDocument);
+        wordDocument.setLoadedPages(parsedPages);
+
+        // Save to cache (split files)
+        await bookCacheDir.create(recursive: true);
+        await pagesDir.create(recursive: true);
+
+        // Save metadata
+        final metadataJsonMap = wordDocument.toMetadataJson();
+        final metadataJsonString = jsonEncode(metadataJsonMap);
+        await metadataFile.writeAsString(metadataJsonString);
+
+        // Save pages
+        wordDocument.pagesDirectory = pagesDir.path;
+        for (int i = 0; i < parsedPages.length; i++) {
+          final pageFile = File('${pagesDir.path}/$i.json');
+          await pageFile.writeAsString(jsonEncode(parsedPages[i].toJson()));
+        }
+
+        ShowSnackBar(context, "Parsed and saved to cache: ${wordDocument.title}");
+      } catch (e) {
+        print("Error parsing docx or saving to cache: $e");
+        ShowSnackBar(context, "Error parsing docx: $e");
+        return; // Stop if parsing fails
+      }
+    }
+
     openedBooks.add(wordDocument);
     selectedBookP = openedBooks.length - 1;
-    docArchive = await FileToArchive(filePath);
-    AddDocData(docArchive, wordDocument);
     await Future.delayed(Duration(milliseconds: 1500), () {});
   }
 }

@@ -39,6 +39,9 @@ getImageWidget(ImageData? imageData) {
   // }
 
   print("image ${image.rId} $left $top ${image.relativeFromH} ${image.relativeFromV}");
+  if (image.imageMemory == null) {
+    return Container(); // Return an empty container if image data is null
+  }
   return Align(
     alignment: getImageALign(image),
     child: Container(
@@ -48,7 +51,7 @@ getImageWidget(ImageData? imageData) {
           right: 0,
           bottom: 0),
       child: Image.memory(
-        image.imageMemory,
+        image.imageMemory!,
         width: image.width,
         height: image.height,
         fit: BoxFit.contain,

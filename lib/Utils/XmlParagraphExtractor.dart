@@ -35,8 +35,8 @@ List<XmlElement> getAllXmlParagraphs(XmlElement? body) {
       // print("this is SectPr");
       allPs.add(element);
     } else {
-      print("addParagraphToPage: new Type:" + element.name.local);
-      print("addParagraphToPage: new Type:" + element.toXmlString(pretty: true));
+      // print("addParagraphToPage: new Type:" + element.name.local);
+      // print("addParagraphToPage: new Type:" + element.toXmlString(pretty: true));
     }
     // if(k>41&&k<45) {
     //   print("$k"+element.text);
@@ -48,7 +48,7 @@ List<XmlElement> getAllXmlParagraphs(XmlElement? body) {
   //
   //
   // });
-  print("foundHeadings $foundHeadings");
+  // print("foundHeadings $foundHeadings");
   return allPs;
 }
 

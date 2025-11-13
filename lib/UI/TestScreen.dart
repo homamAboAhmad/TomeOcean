@@ -59,20 +59,20 @@ class _TestScreenState extends State<TestScreen> {
 
       _wordDocument = WordDocument();
       _wordDocument!.title = "Test Document";
-      _wordDocument!.pages.add(WordPage(_wordDocument!)); // Ensure a page exists
+      final WordPage testPage = WordPage(_wordDocument!); // Create a single page for testing
 
       // Attempt to render based on the root element type
       if (rootElement.name.local == "p") {
-        final Paragraph paragraph = Paragraph(_wordDocument!.pages.first).fromXml(rootElement);
+        final Paragraph paragraph = Paragraph(testPage).fromXml(rootElement);
         _renderedContent = paragraph.toWidget();
       } else if (rootElement.name.local == "r") {
         // For a run, we need a dummy paragraph to create it
-        final Paragraph dummyParagraph = Paragraph(_wordDocument!.pages.first);
+        final Paragraph dummyParagraph = Paragraph(testPage);
         final runT run = runT(dummyParagraph, prPr: null, pPr: null).fromXml(rootElement);
         _renderedContent = Text.rich(run.toWidget()); // Render run as rich text
       } else if (rootElement.name.local == "drawing") { // Assuming w:drawing is the root
         // For a drawing, we need a dummy run to parse it
-        final Paragraph dummyParagraph = Paragraph(_wordDocument!.pages.first);
+        final Paragraph dummyParagraph = Paragraph(testPage);
         final runT dummyRun = runT(dummyParagraph, prPr: null, pPr: null);
         dummyRun.xmlRun = xml.XmlElement(xml.XmlName('w:r'), [], [rootElement]); // Wrap drawing in a dummy run
         final ImageData? imageData = parseImageData(dummyRun);
@@ -87,7 +87,7 @@ class _TestScreenState extends State<TestScreen> {
           final List<Widget> childrenWidgets = [];
           for (final xml.XmlElement childElement in sdtContent.children.whereType<xml.XmlElement>()) {
             if (childElement.name.local == "p") {
-              final Paragraph paragraph = Paragraph(_wordDocument!.pages.first).fromXml(childElement);
+              final Paragraph paragraph = Paragraph(testPage).fromXml(childElement);
               childrenWidgets.add(paragraph.toWidget());
             }
             else {

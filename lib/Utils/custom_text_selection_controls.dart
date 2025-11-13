@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -52,10 +53,12 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
   CustomTextSelectionControls({
     required this.bookTitle,
     required this.pageNumber,
+    required this.wordPage,
   });
 
   final String bookTitle;
   final int pageNumber;
+  final WordPage wordPage;
 
   void _handleCopyReference(TextSelectionDelegate delegate) {
     final String selectedText =
@@ -65,6 +68,12 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
       Clipboard.setData(ClipboardData(text: textToCopy));
       delegate.hideToolbar();
     }
+  }
+
+  void _handleCopyPage(TextSelectionDelegate delegate) {
+    final String pageText = wordPage.text();
+    Clipboard.setData(ClipboardData(text: pageText));
+    delegate.hideToolbar();
   }
 
   void _handleGoogleSearch(TextSelectionDelegate delegate) async {
@@ -122,6 +131,10 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
         onPressed: isCopyEnabled ? () => _handleCopyReference(delegate) : null,
       ),
       _buildMenuItem(
+        label: 'نسخ الصفحة',
+        onPressed: () => _handleCopyPage(delegate),
+      ),
+      _buildMenuItem(
         label: 'بحث',
         onPressed: () {
           debugPrint("Search action triggered");
@@ -133,7 +146,7 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
         onPressed: isCopyEnabled ? () => _handleGoogleSearch(delegate) : null,
       ),
       _buildMenuItem(
-        label: 'تحديد الكل',
+        label: 'تحديد الفقرة',
         onPressed: isSelectAllEnabled ? () => handleSelectAll(delegate) : null,
       ),
     ];

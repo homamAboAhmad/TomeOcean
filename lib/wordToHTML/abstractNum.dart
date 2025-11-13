@@ -1,13 +1,29 @@
 // كلاس AbstractNum لتمثيل تعريف الترقيم في مستند Word
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
+part 'abstractNum.g.dart';
+
+@JsonSerializable(explicitToJson: true)
 class AbstractNum {
   final int abstractNumId; // معرف الترقيم
-  final Map<int, Level>
+   Map<int, Level>
       levelsMap; // قائمة من الكائنات Level التي تمثل مستويات القائمة
 
   // مُنشئ الكلاس الذي يأخذ المعرف وقائمة المستويات
   AbstractNum({required this.abstractNumId, required this.levelsMap});
+
+  AbstractNum.empty() : abstractNumId = 0, levelsMap = {};
+
+  factory AbstractNum.fromJson(Map<String, dynamic> json) => _$AbstractNumFromJson(json);
+  Map<String, dynamic> toJson() => _$AbstractNumToJson(this);
+
+  static AbstractNum fromMap(Map<String, dynamic> json) {
+    final abstractNum = _$AbstractNumFromJson(json);
+    abstractNum.levelsMap = (json['levelsMap'] as Map<String, dynamic>).map(
+            (k, e) => MapEntry(int.parse(k), Level.fromMap(e as Map<String, dynamic>)));
+    return abstractNum;
+  }
 
   // ميثود لتحويل عنصر XML إلى كائن Dart من نوع AbstractNum
   factory AbstractNum.fromXml(XmlElement xml) {
@@ -26,17 +42,10 @@ class AbstractNum {
       levelsMap: levelsMap,
     );
   }
-
-  // ميثود لتحويل كائن AbstractNum إلى JSON
-  Map<String, dynamic> toJson() => {
-        'abstractNumId': abstractNumId,
-        // المعرف
-        'levels': levelsMap.values.map((lvl) => lvl.toJson()).toList(),
-        // قائمة المستويات كـ JSON
-      };
 }
 
 // كلاس Level لتمثيل مستوى فردي في قائمة الترقيم
+@JsonSerializable(explicitToJson: true)
 class Level {
   final int
       ilvl; // مستوى القائمة (0 يمثل المستوى الأول، 1 يمثل المستوى الثاني، إلخ)
@@ -57,6 +66,15 @@ class Level {
     required this.indentLeft,
     required this.indentHanging,
   });
+
+  Level.empty() : ilvl = 0, startVal = 0, numFmt = '', lvlText = '', lvlJc = '', indentLeft = 0, indentHanging = 0;
+
+  factory Level.fromJson(Map<String, dynamic> json) => _$LevelFromJson(json);
+  Map<String, dynamic> toJson() => _$LevelToJson(this);
+
+  static Level fromMap(Map<String, dynamic> json) {
+    return _$LevelFromJson(json);
+  }
 
   // ميثود لتحويل عنصر XML إلى كائن Dart من نوع Level
   factory Level.fromXml(XmlElement xml) {
@@ -99,15 +117,4 @@ class Level {
       indentHanging: indentHanging,
     );
   }
-
-  // ميثود لتحويل كائن Level إلى JSON
-  Map<String, dynamic> toJson() => {
-        'ilvl': ilvl, // مستوى القائمة
-        'startVal': startVal, // قيمة بداية الترقيم
-        'numFmt': numFmt, // تنسيق الترقيم
-        'lvlText': lvlText, // النص المرتبط بالتنقيط
-        'lvlJc': lvlJc, // المحاذاة الأفقية
-        'indentLeft': indentLeft, // المسافة البادئة اليسرى
-        'indentHanging': indentHanging, // المسافة المعلقة
-      };
 }

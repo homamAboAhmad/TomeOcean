@@ -1,10 +1,13 @@
 import 'package:archive/archive.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
 import '../Utils/ArchiveToXml.dart';
 import '../Utils/WordUtils.dart';
 import '../main.dart';
+
+part 'DocRelations.g.dart';
 
 // const WORD_DOCUMENT_RELS = "word/_rels/document.xml.rels";
 // Map<String, RelId> relIdList = {};
@@ -46,8 +49,18 @@ String getImageFrmRel(String rId) {
   return _relIdList[rId]?.Target ?? "";
 }
 
+@JsonSerializable(explicitToJson: true)
 class RelId {
   String Id, Type, Target;
 
   RelId(this.Id, this.Type, this.Target);
+
+  RelId.empty() : Id = '', Type = '', Target = '';
+
+  factory RelId.fromJson(Map<String, dynamic> json) => _$RelIdFromJson(json);
+  Map<String, dynamic> toJson() => _$RelIdToJson(this);
+
+  static RelId fromMap(Map<String, dynamic> json) {
+    return _$RelIdFromJson(json);
+  }
 }
