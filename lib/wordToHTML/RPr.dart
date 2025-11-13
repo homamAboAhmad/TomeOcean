@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:golden_shamela/Utils/XmlElementClone.dart';
@@ -11,6 +10,36 @@ import 'package:xml/xml.dart';
 import '../Models/WordDocument.dart';
 
 part 'RPr.g.dart';
+
+const Map<String, String> _wordColorMap = {
+  "black": "000000",
+  "blue": "0000FF",
+  "cyan": "00FFFF",
+  "green": "008000",
+  "magenta": "FF00FF",
+  "red": "FF0000",
+  "yellow": "FFFF00",
+  "white": "FFFFFF",
+  "darkBlue": "00008B",
+  "darkCyan": "008B8B",
+  "darkGreen": "006400",
+  "darkMagenta": "8B008B",
+  "darkRed": "8B0000",
+  "darkYellow": "808000",
+  "darkGray": "A9A9A9",
+  "lightGray": "D3D3D3",
+};
+
+String? _normalizeColor(String? color) {
+  if (color == null) return null;
+  // Check if it's a named color
+  if (_wordColorMap.containsKey(color)) {
+    return _wordColorMap[color];
+  }
+  // Otherwise, just sanitize it
+  return color.replaceAll("#", "");
+}
+
 
 @JsonSerializable(explicitToJson: true, constructor: 'empty')
 class RPr {
@@ -97,21 +126,21 @@ class RPr {
   }
 
   TextStyle getTextStyle() {
-    Paint paint = Paint()..color = Color(int.parse("0xFF${highlightColor??"000000"}"));
-
+    String? finalHlColor = _normalizeColor(highlightColor);
+    Paint paint = Paint()..color = Color(int.parse("0xFF${finalHlColor ?? "000000"}"));
 
     Paint? hlColor = highlightColor != null ? paint : null;
+    String? finalColor = _normalizeColor(color);
+
     return TextStyle(
       fontWeight: b == true ? FontWeight.bold : null,
       fontStyle: i == true ? FontStyle.italic : FontStyle.normal,
-      decoration:getTextDecoration(),
-      color: color != null ? Color(int.parse("0xFF$color")) : Colors.black,
+      decoration: getTextDecoration(),
+      color: finalColor != null ? Color(int.parse("0xFF$finalColor")) : Colors.black,
       background: hlColor, // لون خلفية النص
-      fontSize: fontSize??14,
+      fontSize: fontSize ?? 14,
       fontFamily: font,
-
     );
-
   }
 
   String toHTML() {

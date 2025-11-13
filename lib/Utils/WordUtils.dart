@@ -24,9 +24,15 @@ class WordUtils {
   Future<List<WordPage>> addParagraphToDocument(XmlElement? body) async {
     List<WordPage> pages = [];
     List<XmlElement> allPs = getAllXmlParagraphs(body);
+    print("addParagraphToDocument: Found ${allPs.length} total paragraph elements.");
+
+    if (allPs.isEmpty) {
+      throw Exception("No paragraphs found in document body. The document might be empty or structured in an unexpected way (e.g., all content is inside a textbox).");
+    }
 
     int j = 1;
     while (allPs.isNotEmpty) {
+      print("addParagraphToDocument: Loop $j, allPs.length = ${allPs.length}");
       WordPage wordPage = await getPage(allPs, pageNum: j);
       pages.add(wordPage);
       // print("pageNumber $j");
@@ -36,14 +42,26 @@ class WordUtils {
     return pages;
   }
 
-  getPage(List<XmlElement> allPs, { required int pageNum}) async {
-    List<XmlElement> pagePs = getPageXmlPs(allPs);
-    WordPage wordPage = WordPage(wordDocument);
-    wordPage.parent = wordDocument;
-    addPsToPage(wordPage, pagePs,pageNum: pageNum);
-    addFnToPage(wordPage);
-    await Future.delayed(Duration(milliseconds: 200), () {});
-    return wordPage;
+  getPage(List<XmlElement> allPs, {required int pageNum}) async {
+    try {
+      print("getPage: Starting for page $pageNum");
+      List<XmlElement> pagePs = getPageXmlPs(allPs);
+      print("getPage: pagePs created with length ${pagePs.length}");
+      WordPage wordPage = WordPage(wordDocument);
+      print("getPage: WordPage object created");
+      wordPage.parent = wordDocument;
+      addPsToPage(wordPage, pagePs, pageNum: pageNum);
+      print("getPage: addPsToPage completed");
+      addFnToPage(wordPage);
+      print("getPage: addFnToPage completed");
+      await Future.delayed(Duration(milliseconds: 200), () {});
+      return wordPage;
+    } catch (e, s) {
+      print("!!! CRASH inside getPage for page #${pageNum} !!!");
+      print("!!! Error: $e");
+      print("!!! StackTrace: $s");
+      rethrow;
+    }
   }
 
   void addFnToPage(WordPage wordPage) {
@@ -62,7 +80,7 @@ class WordUtils {
     }
   }
 
-  addPsToPage(WordPage wordPage, List<XmlElement> pagePs,{required int pageNum}) {
+  addPsToPage(WordPage wordPage, List<XmlElement> pagePs, {required int pageNum}) {
     for (XmlElement element in pagePs) {
       if (isSectPr(element)) {
         wordDocument.addSectPr(element);
@@ -76,6 +94,7 @@ class WordUtils {
   }
 
   List<XmlElement> getPageXmlPs(List<XmlElement> allPs) {
+    print("getPageXmlPs: Received allPs.length = ${allPs.length}");
     XmlElement? element2;
     int k = 0;
     List<XmlElement> pagePs = [];
@@ -89,20 +108,14 @@ class WordUtils {
       k++;
       if (hasBrPage(element, nextElement: nextElement)) break;
     }
-    // for (XmlElement element in allPs) {
-    //   // print(hasBr(element));
-    //   // print("addElement $k");
-    //   if (hasBr(element,)) brs++;
-    //   if (brs > 1) break;
-    //   pagePs.add(element);
-    //   k++;
-    // }
+    print("getPageXmlPs: Loop finished. Paragraphs for this page (k) = $k");
     updateAllPs(allPs, k, element2);
 
     return pagePs;
   }
 
   void updateAllPs(List<XmlElement> allPs, int i, XmlElement? element2) {
+    print("updateAllPs: Removing range 0..$i from allPs of length ${allPs.length}");
     allPs.removeRange(0, i);
     if (element2 != null) {
       allPs.insert(0, element2);

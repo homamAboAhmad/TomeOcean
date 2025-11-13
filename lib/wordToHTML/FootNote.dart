@@ -30,7 +30,10 @@ class FootNote{
 
   updateDisplayNumber(String dn){
     displayNumber =dn;
-    int i = 0;
+    if (p.runs.isEmpty) {
+      print("Warning: Footnote with ID ${id} has no runs in its paragraph.");
+      return;
+    }
     runT r = p.runs[0];
     if(r.rpr?.rPr?.getElement("w:rStyle")?.getAttribute("w:val")=="FootnoteReference") {
       r.fnDisplayNum=dn;

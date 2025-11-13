@@ -23,6 +23,8 @@ import 'BookSideBar/BookSearchUI.dart';
 import 'BookSideBar/BooksSideBarIcons.dart';
 import 'BookSideBar/SectionBookSideBar.dart';
 import 'BooksDrawer.dart';
+import 'DocViewer/doc_viewer_bottom_toolbar.dart';
+import 'DocViewer/doc_viewer_top_toolbar.dart';
 import 'WordPageScreen.dart';
 
 class DocViewer extends StatefulWidget {
@@ -40,9 +42,8 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
   late List<Widget> _bookSideBarList;
   Future<WordPage>? _currentPageFuture;
 
-  // New state variables
-  final List<int> _pageHistory = [];
-  int _historyIndex = -1;
+  // New state variables for numerically sorted history
+  final Set<int> _visitedPagesSet = {};
   late final TextEditingController _pageNumberController;
 
   @override
@@ -67,7 +68,8 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
     super.didUpdateWidget(oldWidget);
     if (oldWidget.wordDocument != widget.wordDocument) {
       _initControllerAndSidebar();
-      _loadPage(widget.wordDocument.currentPage);
+      _visitedPagesSet.clear();
+      _jumpToPage(widget.wordDocument.currentPage);
     }
   }
 
@@ -91,39 +93,71 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
     ];
   }
 
-  void _loadPage(int pageIndex) {
+  void _jumpToPage(int pageIndex) {
+    final int totalPages = widget.wordDocument.pageFilePaths.length;
+
+    if (pageIndex < 0) {
+      pageIndex = 0; // Clamp to first page
+    } else if (pageIndex >= totalPages) {
+      pageIndex = totalPages - 1; // Clamp to last page
+    }
+
+    widget.wordDocument.currentPage = pageIndex;
+    _pageNumberController.text = (pageIndex + 1).toString();
+    _visitedPagesSet.add(pageIndex);
+
     setState(() {
       _currentPageFuture = widget.wordDocument.getPage(pageIndex);
     });
   }
 
+  int? _findPreviousVisited() {
+    final sortedVisited = _visitedPagesSet.toList()..sort();
+    return sortedVisited.lastWhere((p) => p < widget.wordDocument.currentPage, orElse: () => -1);
+  }
+
+  int? _findNextVisited() {
+    final sortedVisited = _visitedPagesSet.toList()..sort();
+    final nextPage = sortedVisited.firstWhere((p) => p > widget.wordDocument.currentPage, orElse: () => -1);
+    return nextPage == -1 ? null : nextPage;
+  }
+
+  void _goToPreviousVisitedPage() {
+    final page = _findPreviousVisited();
+    if (page != null && page != -1) {
+      _jumpToPage(page);
+    }
+  }
+
+  void _goToNextVisitedPage() {
+    final page = _findNextVisited();
+    if (page != null) {
+      _jumpToPage(page);
+    }
+  }
+
   void _goTo(int page) {
-    widget.wordDocument.currentPage = page - 1;
-    _loadPage(widget.wordDocument.currentPage);
+    _jumpToPage(page - 1);
   }
 
   void _goNext() {
     if (widget.wordDocument.currentPage < widget.wordDocument.pageFilePaths.length - 1) {
-      widget.wordDocument.currentPage++;
-      _loadPage(widget.wordDocument.currentPage);
+      _jumpToPage(widget.wordDocument.currentPage + 1);
     }
   }
 
   void _goPrevious() {
     if (widget.wordDocument.currentPage > 0) {
-      widget.wordDocument.currentPage--;
-      _loadPage(widget.wordDocument.currentPage);
+      _jumpToPage(widget.wordDocument.currentPage - 1);
     }
   }
 
   void _goStart() {
-    widget.wordDocument.currentPage = 0;
-    _loadPage(widget.wordDocument.currentPage);
+    _jumpToPage(0);
   }
 
   void _goEnd() {
-    widget.wordDocument.currentPage = widget.wordDocument.pageFilePaths.length - 1;
-    _loadPage(widget.wordDocument.currentPage);
+    _jumpToPage(widget.wordDocument.pageFilePaths.length - 1);
   }
 
   Future<void> _copyPage() async {
@@ -135,151 +169,39 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
     }
   }
 
-  Widget _buildToolbarButton({
-    required VoidCallback onTap,
-    required IconData icon,
-    bool isSpecial = false,
-    Widget? specialWidget,
-    Color color = Colors.black,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: isSpecial
-          ? specialWidget
-          : Icon(
-              icon,
-              color: color,
-              textDirection: TextDirection.rtl,
-              size: iconSize,
-            ),
-    );
+  void _onToggleDiacritics() {
+    setState(() {
+      widget.wordDocument.withDiacritics = !widget.wordDocument.withDiacritics;
+    });
   }
 
-  Widget _buildDiacriticsButton() {
-    return InkWell(
-      onTap: () => setState(() {
-        widget.wordDocument.withDiacritics =
-            !widget.wordDocument.withDiacritics;
-      }),
-      child: Material(
-        elevation: widget.wordDocument.withDiacritics ? 2 : 0,
-        color: widget.wordDocument.withDiacritics ? Colors.grey : bgColor,
-        child: Container(
-          height: 36,
-          width: 36,
-          padding: EdgeInsets.all(widget.wordDocument.withDiacritics ? 4 : 0),
-          child: Image.asset("assets/icons/ic_diacritics.png"),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBookCardButton() {
-    return InkWell(
-      onTap: () async {
-        final bks = BookCardStorage();
-        final bookCard = bks.getBookCardByTitle(widget.wordDocument.title);
-        final updated = await showBookCardDialog(context, bookCard);
-        if (updated != null) {
-          await bks.editBookCard(updated);
-        }
-      },
-      child: const SizedBox(
-        height: 36,
-        width: 36,
-        child: Icon(Icons.note, color: Colors.blueGrey),
-      ),
-    );
-  }
-
-  Widget _buildPageNumberCard() {
-    return Card(
-      child: SizedBox(
-        width: 64,
-        child: Center(
-          child: Text(
-            "${widget.wordDocument.currentPage + 1}",
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, color: Colors.black),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBookTitle() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Text(widget.wordDocument.title,
-          style: normalStyle(color: Colors.black)),
-    );
-  }
-
-  Widget _buildTopToolbar() {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Container(
-        height: 30,
-        width: double.infinity,
-        color: bgColor,
-        child: Stack(
-          children: [
-            _bookSideBarController.booksSideBarIconsW(),
-            Center(
-              child: Row(
-                textDirection: TextDirection.rtl,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildToolbarButton(
-                      onTap: _duplicateBook, icon: Icons.new_label),
-                  const SizedBox(width: 8),
-                  _buildToolbarButton(onTap: _goStart, icon: Icons.skip_next),
-                  const SizedBox(width: 8),
-                  _buildToolbarButton(
-                      onTap: _goPrevious, icon: Icons.navigate_before),
-                  const SizedBox(width: 8),
-                  _buildToolbarButton(
-                      onTap: _goNext, icon: Icons.navigate_next),
-                  const SizedBox(width: 8),
-                  _buildToolbarButton(onTap: _goEnd, icon: Icons.skip_previous),
-                  const SizedBox(width: 8),
-                  _buildBookTitle(),
-                  const SizedBox(width: 8),
-                  _buildToolbarButton(onTap: _copyPage, icon: Icons.copy),
-                  const SizedBox(width: 8),
-                  _buildDiacriticsButton(),
-                  const SizedBox(width: 8),
-                  _buildBookCardButton(),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomToolbar() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Container(
-        width: double.infinity,
-        height: 30,
-        color: bgColor,
-        child: Center(
-          child: _buildPageNumberCard(),
-        ),
-      ),
-    );
+  void _onShowBookCard() async {
+    final bks = BookCardStorage();
+    final bookCard = bks.getBookCardByTitle(widget.wordDocument.title);
+    final updated = await showBookCardDialog(context, bookCard);
+    if (updated != null) {
+      await bks.editBookCard(updated);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        _buildTopToolbar(),
+        DocViewerTopToolbar(
+          wordDocument: widget.wordDocument,
+          sideBarIcons: _bookSideBarController.booksSideBarIconsW(),
+          onDuplicateBook: _duplicateBook,
+          onGoStart: _goStart,
+          onGoPrevious: _goPrevious,
+          onGoNext: _goNext,
+          onGoEnd: _goEnd,
+          onCopyPage: _copyPage,
+          onToggleDiacritics: _onToggleDiacritics,
+          onShowBookCard: _onShowBookCard,
+        ),
         Padding(
-          padding: const EdgeInsets.only(top: 30.0, bottom: 30),
+          padding: const EdgeInsets.only(top: 30.0, bottom: 40.0),
           child: Row(
             textDirection: TextDirection.rtl,
             children: [
@@ -307,7 +229,16 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
             ],
           ),
         ),
-        _buildBottomToolbar(),
+        DocViewerBottomToolbar(
+          wordDocument: widget.wordDocument,
+          pageNumberController: _pageNumberController,
+          findPreviousVisited: _findPreviousVisited,
+          findNextVisited: _findNextVisited,
+          goToPreviousVisitedPage: _goToPreviousVisitedPage,
+          goToNextVisitedPage: _goToNextVisitedPage,
+          jumpToPage: _jumpToPage,
+          onSliderChanged: () => setState(() {}),
+        ),
       ],
     );
   }
