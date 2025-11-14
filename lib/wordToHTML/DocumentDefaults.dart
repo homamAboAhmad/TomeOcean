@@ -11,19 +11,15 @@ import '../Utils/ArchiveToXml.dart';
 
 void addDefaults(ArchiveFile? archiveFile, WordDocument wordDocument) {
   if (archiveFile == null) return;
-
-  // تحويل ArchiveFile إلى XmlDocument
   XmlDocument document = ArchiveToXml(archiveFile);
   XmlElement? docDefaults =
       document.getElement("w:styles")?.getElement("w:docDefaults");
   if (docDefaults == null) return;
-  XmlElement? rPrDefault =
-      docDefaults.getElement("w:rPrDefault")?.getElement("w:rPr");
-  XmlElement? pPrDefault =
-      docDefaults.getElement("w:pPrDefault")?.getElement("w:pPr");
-  runT defaltRun = createEmpty(wordDocument);
-  wordDocument.defaultRPr = RPr(defaltRun).fromXml(rPrDefault);
-  wordDocument.defaultPPr = PPr(defaltRun.parent).fromXml(pPrDefault);
+
+  wordDocument.defaultPPr = PPr(Paragraph.empty())
+    ..fromXml(docDefaults.getElement("w:pPrDefault")?.getElement("w:pPr"));
+  wordDocument.defaultRPr = RPr(wordDocument.defaultPPr!.getEmptyRun())
+    ..fromXml(docDefaults.getElement("w:rPrDefault")?.getElement("w:rPr"));
 }
 
 runT createEmpty(WordDocument wordDocument) {
