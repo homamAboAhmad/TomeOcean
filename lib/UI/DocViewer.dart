@@ -13,10 +13,12 @@ import '../Styles/AppResourses.dart';
 import '../Utils/CopyPasteText.dart';
 import '../Utils/FileToArchive.dart';
 import '../Utils/Widgets/ZoomableSecreen.dart';
+import '../database/search_database_helper.dart';
 import '../main.dart';
 import '../wordToHTML/AddDocData.dart';
 import '../Models/WordDocument.dart';
 import '../Models/WordPage.dart'; // Import WordPage
+
 import 'BookSideBar/AuthorBookSideBar.dart';
 import 'BookSideBar/BookIndexUI.dart';
 import 'BookSideBar/BookSearchUI.dart';
@@ -184,10 +186,21 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
     }
   }
 
+  void _onSearchResultTapped(SearchResult result) {
+    // Check if the result is in the current book
+    if (getFileName(result.bookPath) == widget.wordDocument.title) {
+      _jumpToPage(result.pageNumber);
+    } else {
+      // TODO: Handle opening a different book from search results
+      print("Need to switch to book: ${result.bookPath}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // The original content structure
         DocViewerTopToolbar(
           wordDocument: widget.wordDocument,
           sideBarIcons: _bookSideBarController.booksSideBarIconsW(),

@@ -13,6 +13,9 @@ import 'package:golden_shamela/Utils/SnackBar.dart';
 import 'package:path_provider/path_provider.dart'; // Added for cache directory
 
 import 'package:golden_shamela/UI/TestScreen.dart'; // Add this import
+import 'package:golden_shamela/UI/IndexingScreen.dart'; // Add this import
+import 'package:golden_shamela/UI/Search/search_dialog.dart'; // Import SearchDialog
+import 'package:golden_shamela/database/search_database_helper.dart'; // Import SearchResult
 
 import 'package:path/path.dart' as p; // Import the path package
 
@@ -68,6 +71,24 @@ class _HomePageState extends State<HomePage> {
           ),
           actions: [ // Add this actions block
             IconButton(
+              icon: Icon(Icons.search, color: secondaryColor),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => SearchDialog(onResultTapped: _handleSearchResultNavigation),
+                );
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.storage, color: secondaryColor),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) =>  IndexingScreen()),
+                );
+              },
+            ),
+            IconButton(
               icon: Icon(Icons.bug_report, color: secondaryColor),
               onPressed: () {
                 Navigator.push(
@@ -99,10 +120,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _onBookSelected(File book) async {
+  _onBookSelected(File book, {int? pageNumber}) async {
     filePath = book.path;
     await _readDocxFile(filePath);
+    if (pageNumber != null) {
+      openedBooks[selectedBookP].currentPage = pageNumber;
+    }
     setState(() {});
+  }
+
+  void _handleSearchResultNavigation(SearchResult result) {
+    _onBookSelected(File(result.bookPath), pageNumber: result.pageNumber);
+    setState(() {}); // Update UI to reflect new book/page
   }
 
   // هذه هي الدالة المعدلة باستخدام LongPressDraggable
