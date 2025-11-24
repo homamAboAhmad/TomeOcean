@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:golden_shamela/Helpers/ShamelaSearchIndexer.dart';
 import 'package:golden_shamela/Models/indexing_progress.dart';
-import 'package:golden_shamela/database/search_indexer.dart';
-import 'package:golden_shamela/database/search_database_helper.dart';
 import 'package:path/path.dart' as p;
 
 class IndexingScreen extends StatefulWidget {
@@ -14,17 +13,10 @@ class IndexingScreen extends StatefulWidget {
 }
 
 class _IndexingScreenState extends State<IndexingScreen> {
-  IndexingProgress _progress = IndexingProgress(message: 'Ready to index.');
+  IndexingProgress _progress = IndexingProgress(message: 'جاهز للفهرسة.');
   bool _isIndexing = false;
-  final SearchIndexer _indexer = SearchIndexer();
+  final ShamelaSearchIndexer _indexer = ShamelaSearchIndexer();
   final ValueNotifier<bool> _cancellationNotifier = ValueNotifier(false);
-  List<Map<String, dynamic>> _indexedBooks = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadIndexedBooks();
-  }
 
   @override
   void dispose() {
@@ -32,33 +24,25 @@ class _IndexingScreenState extends State<IndexingScreen> {
     super.dispose();
   }
 
-  Future<void> _loadIndexedBooks() async {
-    final books = await SearchDatabaseHelper.instance.getAllIndexedBooksMetadata();
-    setState(() {
-      _indexedBooks = books;
-    });
-  }
-
   Future<void> _startIndexing() async {
     setState(() {
       _isIndexing = true;
-      _progress = IndexingProgress(message: 'Selecting books folder...');
+      _progress = IndexingProgress(message: 'جارٍ بدء الفهرسة...');
     });
     _cancellationNotifier.value = false; // Reset cancellation flag
 
     try {
       String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
-
       if (selectedDirectory == null) {
         setState(() {
-          _progress = IndexingProgress(message: 'Folder selection cancelled.');
+          _progress = IndexingProgress(message: 'تم إلغاء اختيار المجلد.');
           _isIndexing = false;
         });
         return;
       }
 
       setState(() {
-        _progress = IndexingProgress(message: 'Finding .docx files...');
+        _progress = IndexingProgress(message: 'جارٍ البحث عن ملفات .docx...');
       });
 
       final dir = Directory(selectedDirectory);
@@ -71,7 +55,7 @@ class _IndexingScreenState extends State<IndexingScreen> {
 
       if (bookPaths.isEmpty) {
         setState(() {
-          _progress = IndexingProgress(message: 'No .docx files found.');
+          _progress = IndexingProgress(message: 'لم يتم العثور على ملفات .docx.');
           _isIndexing = false;
         });
         return;
@@ -79,7 +63,8 @@ class _IndexingScreenState extends State<IndexingScreen> {
 
       setState(() {
         _progress = IndexingProgress(
-            message: 'Found ${bookPaths.length} books. Starting indexing...');
+          message: 'تم العثور على ${bookPaths.length} كتاب. جارٍ بدء الفهرسة...'
+        );
       });
 
       await _indexer.indexBooks(bookPaths, (progressUpdate) {
@@ -88,14 +73,16 @@ class _IndexingScreenState extends State<IndexingScreen> {
         });
       }, _cancellationNotifier);
 
+      setState(() {
+        _progress = IndexingProgress(message: 'اكتملت الفهرسة بنجاح!');
+      });
     } catch (e) {
       setState(() {
-        _progress = IndexingProgress(message: 'An error occurred: $e');
+        _progress = IndexingProgress(message: 'حدث خطأ أثناء الفهرسة: $e');
       });
     } finally {
       setState(() {
         _isIndexing = false;
-        _loadIndexedBooks(); // Reload the list of indexed books
       });
     }
   }
@@ -115,7 +102,7 @@ class _IndexingScreenState extends State<IndexingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search Indexing'),
+        title: Text('فهرسة الكتب'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -128,22 +115,22 @@ class _IndexingScreenState extends State<IndexingScreen> {
                   if (!_isIndexing)
                     ElevatedButton(
                       onPressed: _startIndexing,
-                      child: const Text('Select Books Folder and Index'),
+                      child: const Text('اختر مجلد الكتب وابدأ الفهرسة'),
                     ),
                   if (_isIndexing)
                     ElevatedButton(
                       onPressed: _cancelIndexing,
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                      child: const Text('Cancel Indexing'),
+                      child: const Text('إلغاء الفهرسة'),
                     ),
                   const SizedBox(height: 20),
                   if (_isIndexing) ...[
-                    const Text('Overall Progress:'),
+                    const Text('التقدم الإجمالي:'),
                     LinearProgressIndicator(value: _progress.overallProgress),
                     const SizedBox(height: 10),
-                    Text('${_progress.currentBookNum} / ${_progress.totalBooks} books'),
+                    Text('${_progress.currentBookNum} / ${_progress.totalBooks} كتاب'),
                     const SizedBox(height: 20),
-                    const Text('Current Book Progress:'),
+                    const Text('تقدم الكتاب الحالي:'),
                     LinearProgressIndicator(value: _progress.currentBookProgress),
                     const SizedBox(height: 10),
                   ],
@@ -153,25 +140,6 @@ class _IndexingScreenState extends State<IndexingScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Indexed Books (${_indexedBooks.length}):',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: _indexedBooks.length,
-                itemBuilder: (context, index) {
-                  final book = _indexedBooks[index];
-                  final bookName = p.basename(book['book_path']);
-                  final indexedDate = DateTime.fromMillisecondsSinceEpoch(book['indexed_date']).toLocal().toString().split(' ')[0];
-                  return ListTile(
-                    title: Text(bookName),
-                    subtitle: Text('Pages: ${book['page_count']} | Indexed: $indexedDate'),
-                  );
-                },
               ),
             ),
           ],

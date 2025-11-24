@@ -43,8 +43,8 @@ class _SectionBookSideBarState extends State<SectionBookSideBar> {
   }
 
   // تحميل الكتب الخاصة بالقسم المحدد
-  void _loadBooksForSection() {
-    final allBooks = _storage.getBookCardList();
+   _loadBooksForSection()async {
+    final allBooks =await  _storage.getBookCardList();
     _allBooks = allBooks
         .where(
           (book) => book.sectionId == widget.sectionId,

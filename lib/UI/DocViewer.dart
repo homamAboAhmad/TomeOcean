@@ -9,11 +9,11 @@ import 'package:golden_shamela/Utils/SnackBar.dart';
 import '../Dialogs/BookCard/book_card_dialog.dart';
 import '../Helpers/BookCardStorage.dart';
 import '../Helpers/BookFilesHelper.dart';
+import '../Controllers/PathController.dart';
 import '../Styles/AppResourses.dart';
 import '../Utils/CopyPasteText.dart';
 import '../Utils/FileToArchive.dart';
 import '../Utils/Widgets/ZoomableSecreen.dart';
-import '../database/search_database_helper.dart';
 import '../main.dart';
 import '../wordToHTML/AddDocData.dart';
 import '../Models/WordDocument.dart';
@@ -75,12 +75,11 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
     }
   }
 
-  void _initControllerAndSidebar() {
+  Future<void> _initControllerAndSidebar() async {
     _bookSideBarController =
         BookSideBarController(widget.wordDocument, setState: setState);
-    final bookCard =
-        BookCardStorage().getBookCardByTitle(widget.wordDocument.title) ??
-            BookCard();
+    final bookCard = await BookCardStorage().getBookCardByTitle(widget.wordDocument.title) ??
+            BookCard(title: widget.wordDocument.title);
     _bookSideBarList = [
       BookIndexUI(widget.wordDocument, goTo: _goTo),
       const BookSearchUI(),
@@ -179,20 +178,24 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
 
   void _onShowBookCard() async {
     final bks = BookCardStorage();
-    final bookCard = bks.getBookCardByTitle(widget.wordDocument.title);
+    final bookCard = await bks.getBookCardByTitle(widget.wordDocument.title) ??
+        BookCard(title: widget.wordDocument.title);
+    
     final updated = await showBookCardDialog(context, bookCard);
     if (updated != null) {
-      await bks.editBookCard(updated);
-    }
-  }
-
-  void _onSearchResultTapped(SearchResult result) {
-    // Check if the result is in the current book
-    if (getFileName(result.bookPath) == widget.wordDocument.title) {
-      _jumpToPage(result.pageNumber);
-    } else {
-      // TODO: Handle opening a different book from search results
-      print("Need to switch to book: ${result.bookPath}");
+      // Get book path from title (try to find the actual file)
+      String? bookPath;
+      try {
+        final bookFile = await loadBookByName(widget.wordDocument.title);
+        bookPath = bookFile?.path;
+      } catch (e) {
+        print("Error getting book path: $e");
+      }
+      
+      // If bookPath not found, use title as placeholder (will be updated when book is indexed)
+      bookPath ??= '${BOOKS_FOLDER_PATH}\\${widget.wordDocument.title}.docx';
+      
+      await bks.editBookCard(updated, bookPath);
     }
   }
 

@@ -253,7 +253,7 @@ class WordDocument {
   }
 
   addSectPr(XmlElement element) {
-    print("sectPr Found into p");
+    // print("sectPr Found into p");
     SectPr sectpr = getSectPrFrmXml(element,this);
     SectPr? lastSectPr = sectPrList.lastOrNull;
     sectpr.firstRange = lastSectPr != null ? lastSectPr.lastRange + 1 : 0;

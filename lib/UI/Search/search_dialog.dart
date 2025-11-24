@@ -48,15 +48,17 @@ class _SearchDialogState extends State<SearchDialog> {
   }
 
   Future<void> _loadFilterData() async {
+    final authors = await AuthorStorage().getAuthorsAsync(limit: 1000);
+    final sections = await SectionStorage().getSectionsAsync(limit: 1000);
     setState(() {
-      _allAuthors = AuthorStorage().getAuthors();
-      _allSections = SectionStorage().getSections();
-      _updateFilteredBooks(); // Initial load
+      _allAuthors = authors;
+      _allSections = sections;
     });
+    _updateFilteredBooks(); // Initial load
   }
 
-  void _updateFilteredBooks() {
-    final allBookCards = BookCardStorage().getBookCardList();
+  Future<void> _updateFilteredBooks() async {
+    final allBookCards = await BookCardStorage().getBookCardList();
     Iterable<BookCard> filtered = allBookCards;
 
     if (_selectedAuthorId != null) {
@@ -245,8 +247,8 @@ class _SearchDialogState extends State<SearchDialog> {
       onChanged: (String? newValue) {
         setState(() {
           _selectedAuthorId = newValue;
-          _updateFilteredBooks();
         });
+        _updateFilteredBooks();
       },
       items: [
         DropdownMenuItem<String>(
@@ -271,8 +273,8 @@ class _SearchDialogState extends State<SearchDialog> {
       onChanged: (String? newValue) {
         setState(() {
           _selectedSectionId = newValue;
-          _updateFilteredBooks();
         });
+        _updateFilteredBooks();
       },
       items: [
         DropdownMenuItem<String>(

@@ -50,12 +50,12 @@ class _BookCardDialogState extends State<BookCardDialog> {
   }
 
   Future<void> _loadData() async {
-    _sections = _sectionStorage.getSections();
-    _authors = _authorStorage.getAuthors();
+    _sections = await _sectionStorage.getSectionsAsync(limit: 1000);
+    _authors = await _authorStorage.getAuthorsAsync(limit: 1000);
 
     // جلب اسم القسم والمؤلف بناءً على المعرفات
-    final section = _sectionStorage.getSectionById(widget.book.sectionId);
-    final author = AuthorStorage.getAuthorById(widget.book.authorId);
+    final section = await _sectionStorage.getSectionById(widget.book.sectionId);
+    final author = await AuthorStorage.getAuthorById(widget.book.authorId);
 
     setState(() {
       _sectionTitle = section?.title ?? 'غير محدد';

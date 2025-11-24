@@ -26,6 +26,7 @@ Map<String, FootNote> addFootNotes(ArchiveFile? archiveFile,WordDocument wordDoc
       XmlElement xmlPar = fn.getElement("w:p")!;
       WordPage wordPage = WordPage(wordDocument);
       Paragraph paragraph = Paragraph(wordPage).fromXml(xmlPar);
+      paragraph.sectionType = 'footnote'; // Set the section type for footnotes
       FootNote footNote = FootNote(paragraph, id);
       docFootNotes[id]= footNote;
   });

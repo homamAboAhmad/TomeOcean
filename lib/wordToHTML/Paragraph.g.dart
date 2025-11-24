@@ -25,7 +25,8 @@ Paragraph _$ParagraphFromJson(Map<String, dynamic> json) => Paragraph.empty()
       .map((e) => runT.fromJson(e as Map<String, dynamic>))
       .toList()
   ..textAlign = $enumDecode(_$TextAlignEnumMap, json['textAlign'])
-  ..textDirection = $enumDecode(_$TextDirectionEnumMap, json['textDirection']);
+  ..textDirection = $enumDecode(_$TextDirectionEnumMap, json['textDirection'])
+  ..sectionType = json['sectionType'] as String;
 
 Map<String, dynamic> _$ParagraphToJson(Paragraph instance) => <String, dynamic>{
   'pPr': instance.pPr?.toJson(),
@@ -37,6 +38,7 @@ Map<String, dynamic> _$ParagraphToJson(Paragraph instance) => <String, dynamic>{
   'textRunTs': instance.textRunTs.map((e) => e.toJson()).toList(),
   'textAlign': _$TextAlignEnumMap[instance.textAlign]!,
   'textDirection': _$TextDirectionEnumMap[instance.textDirection]!,
+  'sectionType': instance.sectionType,
 };
 
 const _$TextAlignEnumMap = {

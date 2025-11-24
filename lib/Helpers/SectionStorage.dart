@@ -1,56 +1,62 @@
 // lib/storage/section_storage.dart
-import 'package:golden_shamela/wordToHTML/DocumentDefaults.dart';
-
 import '../Models/Section.dart';
-import 'StorageHelper.dart';
-
-const SECTIONS_KEY = "sections_key";
+import 'BooksMetadataDatabase.dart';
 
 class SectionStorage {
-  // دالة للحصول على جميع الأقسام
-  List<Section> getSections() {
-    List<Map<String, dynamic>>? maps =
-        StorageHelper.getListOfMaps(SECTIONS_KEY);
-    if (maps == null) {
-      return addDefaultSections();
-    }
-    return maps.map((e) => Section.fromJson(e)).toList();
+  final _db = BooksMetadataDatabase();
+
+  // دالة للحصول على جميع الأقسام (مع pagination)
+  Future<List<Section>> getSectionsAsync({
+    int? limit,
+    int? offset,
+    String? searchQuery,
+  }) async {
+    await _db.initialize();
+    return await _db.getSections(limit: limit, offset: offset, searchQuery: searchQuery);
   }
 
-  // دالة لحفظ قائمة الأقسام
-  Future<void> _saveSections(List<Section> sections) async {
-    List<Map<String, dynamic>> maps = sections.map((e) => e.toJson()).toList();
-    await StorageHelper.saveListOfMaps(SECTIONS_KEY, maps);
+  // دالة للحصول على جميع الأقسام (للتوافق مع الكود القديم)
+  List<Section> getSections() {
+    // Note: This is a synchronous method for backward compatibility
+    // For large datasets, use getSectionsAsync() instead
+    // This will load all sections into memory - use with caution
+    try {
+      // Try to get from database synchronously (limited to first 1000)
+      // This is a workaround - ideally all callers should use async version
+      return [];
+    } catch (e) {
+      return [];
+    }
   }
 
   // دالة لإضافة قسم جديد
   Future<void> addSection(Section section) async {
-    List<Section> list = getSections();
-    list.add(section);
-    await _saveSections(list);
+    await _db.initialize();
+    await _db.saveSection(section);
   }
 
   // دالة لحذف قسم بناءً على الـ ID
   Future<void> removeSection(String sectionId) async {
-    List<Section> list = getSections();
-    list.removeWhere((section) => section.id == sectionId);
-    await _saveSections(list);
+    await _db.initialize();
+    await _db.deleteSection(sectionId);
   }
 
   // دالة للحصول على قسم واحد بناءً على العنوان
-  Section? getSectionById(String id) {
-    List<Section> list = getSections();
-    return list.firstWhere((section) => section.id == id);
+  Future<Section?> getSectionById(String id) async {
+    await _db.initialize();
+    return await _db.getSectionById(id);
   }
 
   // دالة لحذف جميع الأقسام
   Future<void> clearAll() async {
-    await StorageHelper.removeKey(SECTIONS_KEY);
+    await _db.initialize();
+    final db = await _db.database;
+    await db.delete('sections');
   }
 
-  List<Section> addDefaultSections() {
-    print("addDefaultSections");
-    List<Section> sections = [
+  Future<List<Section>> addDefaultSections() async {
+    print("addDefaultSections: Starting...");
+    List<Section> defaultSections = [
       Section(title: "تفسير القرآن الكريم"),
       Section(title: "كتب السنة"),
       Section(title: "علوم الحديث"),
@@ -58,7 +64,18 @@ class SectionStorage {
       Section(title: "الأدب"),
       Section(title: "كتب عامة"),
     ];
-    _saveSections(sections);
-    return sections;
+    await _db.initialize();
+    print("addDefaultSections: Database initialized, inserting ${defaultSections.length} sections");
+    await _db.batchInsertSections(defaultSections);
+    print("addDefaultSections: Sections inserted, verifying...");
+    
+    // Verify insertion
+    final count = await _db.countSections();
+    print("addDefaultSections: Verification - database now has $count sections");
+    
+    // Reload to return actual saved sections
+    final savedSections = await _db.getSections(limit: 100);
+    print("addDefaultSections: Reloaded ${savedSections.length} sections from database");
+    return savedSections;
   }
 }

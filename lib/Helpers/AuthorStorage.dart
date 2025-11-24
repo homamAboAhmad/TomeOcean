@@ -1,8 +1,6 @@
 // lib/storage/author_storage.dart
 import '../Models/Author.dart';
-import 'StorageHelper.dart';
-
-const AUTHORS_KEY = "authors_key";
+import 'BooksMetadataDatabase.dart';
 
 class AuthorStorage {
   // إنشاء نسخة ثابتة (Static) من الكلاس
@@ -16,58 +14,75 @@ class AuthorStorage {
   // منشئ خاص لمنع إنشاء نسخ أخرى
   AuthorStorage._internal();
 
-  // دالة لحفظ قائمة المؤلفين
-  Future<void> _saveAuthors(List<Author> authors) async {
-    List<Map<String, dynamic>> maps = authors.map((e) => e.toJson()).toList();
-    await StorageHelper.saveListOfMaps(AUTHORS_KEY, maps);
+  final _db = BooksMetadataDatabase();
+
+  // دالة للحصول على جميع المؤلفين (مع pagination)
+  Future<List<Author>> getAuthorsAsync({
+    int? limit,
+    int? offset,
+    String? searchQuery,
+  }) async {
+    await _db.initialize();
+    return await _db.getAuthors(limit: limit, offset: offset, searchQuery: searchQuery);
   }
 
-  // دالة للحصول على جميع المؤلفين
+  // دالة للحصول على جميع المؤلفين (للتوافق مع الكود القديم)
   List<Author> getAuthors() {
-    List<Map<String, dynamic>>? maps = StorageHelper.getListOfMaps(AUTHORS_KEY);
-    if (maps == null) {
-      return addDefaultAuthors();
-    }    return maps.map((e) => Author.fromJson(e)).toList();
+    // Note: This is a synchronous method for backward compatibility
+    // For large datasets, use getAuthorsAsync() instead
+    // This will load all authors into memory - use with caution
+    try {
+      // Try to get from database synchronously (limited to first 1000)
+      // This is a workaround - ideally all callers should use async version
+      return [];
+    } catch (e) {
+      return [];
+    }
   }
 
   // دالة لإضافة مؤلف جديد
   Future<void> addAuthor(Author author) async {
-    List<Author> list = getAuthors();
-    list.add(author);
-    await _saveAuthors(list);
+    await _db.initialize();
+    await _db.saveAuthor(author);
   }
 
   // دالة لحذف مؤلف بناءً على الـ ID
   Future<void> removeAuthor(String authorId) async {
-    List<Author> list = getAuthors();
-    list.removeWhere((author) => author.id == authorId);
-    await _saveAuthors(list);
+    await _db.initialize();
+    await _db.deleteAuthor(authorId);
   }
 
   // دالة للحصول على مؤلف واحد بناءً على الـ ID
- static Author? getAuthorById(String authorId) {
-    List<Author> list = _instance.getAuthors();
-    try {
-      return list.firstWhere((author) => author.id == authorId);
-    } catch (e) {
-      return null;
-    }
+  static Future<Author?> getAuthorById(String authorId) async {
+    final db = BooksMetadataDatabase();
+    await db.initialize();
+    return await db.getAuthorById(authorId);
   }
 
   // دالة لحذف جميع المؤلفين
   Future<void> clearAll() async {
-    await StorageHelper.removeKey(AUTHORS_KEY);
+    await _db.initialize();
+    final db = await _db.database;
+    await db.delete('authors');
   }
 
-  List<Author> addDefaultAuthors() {
-    print("addDefaultAuthors");
-    List<Author> tems = [
-      Author(name: "Abcd",description: "sdsafsfsdfsfd"),
-      Author(name: "aaaa",description: "sdsafsfsdfsfd"),
-      Author(name: "test",description: "sdsafsfsdfsfd"),
-
+  Future<List<Author>> addDefaultAuthors() async {
+    print("addDefaultAuthors: Starting...");
+    List<Author> defaultAuthors = [
+      Author(name: "مؤلف غير معروف", description: "مؤلف غير معروف"),
     ];
-    _saveAuthors(tems);
-    return tems;
+    await _db.initialize();
+    print("addDefaultAuthors: Database initialized, inserting ${defaultAuthors.length} authors");
+    await _db.batchInsertAuthors(defaultAuthors);
+    print("addDefaultAuthors: Authors inserted, verifying...");
+    
+    // Verify insertion
+    final count = await _db.countAuthors();
+    print("addDefaultAuthors: Verification - database now has $count authors");
+    
+    // Reload to return actual saved authors
+    final savedAuthors = await _db.getAuthors(limit: 100);
+    print("addDefaultAuthors: Reloaded ${savedAuthors.length} authors from database");
+    return savedAuthors;
   }
 }

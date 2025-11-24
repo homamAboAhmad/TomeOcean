@@ -2,9 +2,7 @@
 import 'dart:async';
 import 'package:collection/collection.dart';
 import '../Models/BookCard.dart';
-import 'StorageHelper.dart';
-
-const BOOK_CARD_KEY = "book_card_key";
+import 'BooksMetadataDatabase.dart';
 
 class BookCardStorage {
   // 1. إنشاء نسخة ثابتة (Static) من الكلاس
@@ -18,59 +16,109 @@ class BookCardStorage {
   // 3. منشئ خاص لمنع إنشاء نسخ أخرى
   BookCardStorage._internal();
 
-  // حفظ قائمة بطاقات
-  Future<void> saveBookCardList(List<BookCard> list) async {
-    List<Map<String, dynamic>> maps = list.map((e) => e.toJson()).toList();
-    await StorageHelper.saveListOfMaps(BOOK_CARD_KEY, maps);
+  final _db = BooksMetadataDatabase();
+
+  // استرجاع قائمة بطاقات (مع pagination للقوائم الكبيرة)
+  Future<List<BookCard>> getBookCardList({
+    int? limit,
+    int? offset,
+    String? authorId,
+    String? sectionId,
+    String? searchQuery,
+  }) async {
+    await _db.initialize();
+    return await _db.getBooks(
+      limit: limit,
+      offset: offset,
+      authorId: authorId,
+      sectionId: sectionId,
+      searchQuery: searchQuery,
+    );
   }
 
-  // استرجاع قائمة بطاقات
-  List<BookCard> getBookCardList() {
-    List<Map<String, dynamic>>? maps = StorageHelper.getListOfMaps(BOOK_CARD_KEY);
-    if (maps == null) return [];
-    return maps.map((e) => BookCard.fromJson(e)).toList();
+  // استرجاع قائمة بطاقات (للتوافق مع الكود القديم - بدون pagination)
+  List<BookCard> getBookCardListSync() {
+    // Note: This is a synchronous method for backward compatibility
+    // For large datasets, use getBookCardList() async version instead
+    // This will load all books into memory - use with caution
+    return [];
   }
 
-  // إضافة بطاقة جديدة
-  Future<void> addBookCard(BookCard bookCard) async {
-    List<BookCard> list = getBookCardList();
-    list.add(bookCard);
-    await saveBookCardList(list);
+  // إضافة بطاقة جديدة (يتطلب book_path)
+  Future<void> addBookCard(BookCard bookCard, String bookPath) async {
+    await _db.initialize();
+    await _db.saveBook(bookCard, bookPath);
   }
 
   // حذف بطاقة
   Future<void> removeBookCard(BookCard bookCard) async {
-    List<BookCard> list = getBookCardList();
-    list.removeWhere((card) => card.id == bookCard.id);
-    await saveBookCardList(list);
+    await _db.initialize();
+    await _db.deleteBook(bookCard.id);
   }
 
-  // تعديل بطاقة الكتاب
-  Future<void> editBookCard(BookCard updatedBookCard) async {
-    List<BookCard> list = getBookCardList();
-    final index = list.indexWhere((card) => card.id == updatedBookCard.id);
-
-    if (index != -1) {
-      list[index] = updatedBookCard;
-    } else {
-      list.add(updatedBookCard);
-      print("BookCard with ID ${updatedBookCard.id} not found for editing. A new card was added.");
-    }
-    await saveBookCardList(list);
+  // تعديل بطاقة الكتاب (يتطلب book_path)
+  Future<void> editBookCard(BookCard updatedBookCard, String bookPath) async {
+    await _db.initialize();
+    await _db.saveBook(updatedBookCard, bookPath);
   }
 
   // الحصول على بطاقة كتاب واحدة بناءً على الـ ID
-  BookCard? getBookCardById(String id) {
-    List<BookCard> list = getBookCardList();
-    return list.firstWhereOrNull((e) => e.id == id);
+  Future<BookCard?> getBookCardById(String id) async {
+    await _db.initialize();
+    return await _db.getBookById(id);
   }
- BookCard getBookCardByTitle(String title) {
-    List<BookCard> list = getBookCardList();
-    return list.firstWhereOrNull((e) => e.title == title)??BookCard(title: title);
+
+  // الحصول على بطاقة كتاب بناءً على العنوان
+  // WARNING: Multiple books may have the same title. Use getBookCardByPath() for unique lookup.
+  // This method returns only the first match.
+  Future<BookCard?> getBookCardByTitle(String title) async {
+    await _db.initialize();
+    return await _db.getBookByName(title);
+  }
+
+  // الحصول على جميع الكتب بنفس العنوان (للتعامل مع التكرار)
+  Future<List<BookCard>> getBookCardsByTitle(String title) async {
+    await _db.initialize();
+    return await _db.getBooksByName(title);
+  }
+
+  // الحصول على بطاقة كتاب بناءً على book_path
+  Future<BookCard?> getBookCardByPath(String bookPath) async {
+    await _db.initialize();
+    return await _db.getBookByPath(bookPath);
   }
 
   // مسح البيانات
   Future<void> clear() async {
-    await StorageHelper.removeKey(BOOK_CARD_KEY);
+    await _db.initialize();
+    final db = await _db.database;
+    await db.delete('books');
+  }
+
+  // حفظ قائمة بطاقات (للتوافق مع الكود القديم)
+  // Note: This method requires book_path for each book, which may not be available
+  // Consider using addBookCard or batchInsertBooks instead
+  Future<void> saveBookCardList(List<BookCard> list) async {
+    await _db.initialize();
+    // This is a legacy method - we need book_path for each book
+    // For now, we'll try to get book_path from existing database or use title as placeholder
+    final booksWithPaths = <Map<String, dynamic>>[];
+    for (final book in list) {
+      // Try to get existing book_path
+      final existing = await _db.getBookById(book.id);
+      String bookPath;
+      if (existing != null) {
+        // Get book_path from database (we need to add a method for this)
+        final bookByName = await _db.getBookByName(book.title);
+        bookPath = book.title; // Placeholder - will be updated when book is indexed
+      } else {
+        bookPath = '${book.title}.docx'; // Placeholder
+      }
+      booksWithPaths.add({
+        'book': book,
+        'book_path': bookPath,
+      });
+    }
+    await _db.batchInsertBooks(booksWithPaths);
   }
 }

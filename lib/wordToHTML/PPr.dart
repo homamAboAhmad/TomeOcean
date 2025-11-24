@@ -67,9 +67,9 @@ class PPr {
     if (wordDocument.defaultPPr != null) {
       this.xmlpPr = mergePPr(this.xmlpPr, wordDocument.defaultPPr!.xmlpPr,
           wordDocument.defaultRPr!.rPr);
-      print("--- Merged pPr with Defaults ---");
-      print(this.xmlpPr?.toXmlString(pretty: true));
-      print("--- End Merged pPr ---");
+      // print("--- Merged pPr with Defaults ---");
+      // print(this.xmlpPr?.toXmlString(pretty: true));
+      // print("--- End Merged pPr ---");
     }
 
     this.xmlprPr = xmlpPr?.getElement("w:rPr");
@@ -199,11 +199,11 @@ class PPr {
     if (pStyle == null) return;
     WordDocument? wordDocument = parent.parent.parent;
     XmlElement? style = getDocumentStyle(pStyle!, wordDocument);
-    if (style != null) {
-      print("--- Found Style XML for style '$pStyle' ---");
-      print(style.toXmlString(pretty: true));
-      print("--- End Style XML ---");
-    }
+    // if (style != null) {
+      // print("--- Found Style XML for style '$pStyle' ---");
+      // print(style.toXmlString(pretty: true));
+      // print("--- End Style XML ---");
+    // }
     // print("pStyle ${style?.toXmlString()}");
     if (style == null) return;
     XmlElement? pStyleXml = style.getElement("w:pPr");

@@ -56,3 +56,6 @@ app.*.map.json
 sa.rar # Archive, likely temporary
 test.xml # Likely temporary test data
 testH.html # Likely temporary test data
+
+# Large binary files
+assets/exe/meilisearch.exe

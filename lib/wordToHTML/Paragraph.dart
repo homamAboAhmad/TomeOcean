@@ -24,7 +24,7 @@ class Paragraph {
   PPr? pPr;
   RPr? prPr;
   List<runT> runs = [];
-  String text = "";
+  String text = ""; // Reverted to field
   @JsonKey(ignore: true)
   XmlElement? pXml;
   String pageNum = "";
@@ -36,6 +36,7 @@ class Paragraph {
   WordPage parent;
   @TextDirectionConverter()
   TextDirection textDirection = TextDirection.rtl;
+  String sectionType = 'main'; // Default to 'main'
 
   Paragraph(this.parent);
 
@@ -58,6 +59,9 @@ class Paragraph {
     paragraph.runs = (json['runs'] as List<dynamic>)
         .map((e) => runT.fromMap(e as Map<String, dynamic>, paragraph))
         .toList();
+    
+    paragraph.sectionType = json['sectionType'] as String? ?? 'main';
+    paragraph.text = json['text'] as String? ?? ''; // Re-add text deserialization
 
     return paragraph;
   }
@@ -66,8 +70,11 @@ class Paragraph {
     pXml = paragraphXml;
     XmlElement? xmlpPr = paragraphXml.getElement("w:pPr");
     if (xmlpPr != null) pPr = PPr(this).fromXml(xmlpPr);
+    
+    _setSectionType();
+
     XmlElement? xmlprPr = pPr?.xmlprPr;
-    text = paragraphXml.text;
+    text = paragraphXml.text; // Re-add text assignment
 
     if (xmlprPr != null) prPr = RPr(pPr!.getEmptyRun()).fromXml(xmlprPr);
     runs = [];
@@ -89,6 +96,20 @@ class Paragraph {
     checkHyperLink();
     getPRunsByType();
     return this;
+  }
+
+  void _setSectionType() {
+    String? style = pPr?.pStyle?.toLowerCase();
+    if (style == null) {
+      sectionType = 'main';
+      return;
+    }
+
+    if (style.startsWith('heading') || style == 'title') {
+      sectionType = 'title';
+    } else {
+      sectionType = 'main';
+    }
   }
 
   getPRunsByType() {
@@ -211,4 +232,3 @@ class Paragraph {
     );
   }
 }
-

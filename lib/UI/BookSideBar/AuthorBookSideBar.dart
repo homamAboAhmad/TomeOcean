@@ -47,13 +47,13 @@ class _AuthorBooksSidebarState extends State<AuthorBooksSidebar> {
     super.dispose();
   }
 
-  void _loadAuthorAndBooks() {
-    _author = AuthorStorage.getAuthorById(widget.authorId);
+   _loadAuthorAndBooks() async{
+    _author = await AuthorStorage.getAuthorById(widget.authorId);
     if (_author == null) {
       setState(() {});
       return;
     }
-    final allBooks = _bookCardStorage.getBookCardList();
+    final allBooks = await _bookCardStorage.getBookCardList();
     _allBooks = allBooks.where((book) => book.authorId == widget.authorId).toList();
     _filterBooks();
   }

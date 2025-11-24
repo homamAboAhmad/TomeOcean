@@ -1,0 +1,10 @@
+# Core libraries (required)
+farasa>=0.0.1
+pyarabic>=0.6.2
+flask>=2.3.0
+flask-cors>=4.0.0
+
+# Optional: CAMeL Tools (requires torch ~500MB download)
+# Uncomment if you want to test CAMeL Tools
+# camel-tools>=1.5.0
+

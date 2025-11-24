@@ -14,10 +14,9 @@ import 'package:path_provider/path_provider.dart'; // Added for cache directory
 
 import 'package:golden_shamela/UI/TestScreen.dart'; // Add this import
 import 'package:golden_shamela/UI/IndexingScreen.dart'; // Add this import
-import 'package:golden_shamela/UI/Search/search_dialog.dart'; // Import SearchDialog
-import 'package:golden_shamela/database/search_database_helper.dart'; // Import SearchResult
-
-import 'package:path/path.dart' as p; // Import the path package
+import 'package:golden_shamela/UI/Search/shamela_search_dialog.dart';
+import 'package:golden_shamela/Helpers/ShamelaSearchIndexer.dart';
+import 'package:path/path.dart' as p;
 
 import '../Helpers/FileHelper.dart';
 import '../Styles/TextSyles.dart';
@@ -69,18 +68,32 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
-          actions: [ // Add this actions block
+          actions: [
             IconButton(
               icon: Icon(Icons.search, color: secondaryColor),
-              onPressed: () {
+              tooltip: 'بحث',
+              onPressed: () async {
+                try {
+                  final indexedBooks = await ShamelaSearchIndexer().getIndexedBooks();
+                  if (indexedBooks.isEmpty) {
+                    ShowSnackBar(context, "لا توجد كتب مفهرسة. يرجى فهرسة الكتب أولاً من شاشة الفهرسة.");
+                    return;
+                  }
                 showDialog(
                   context: context,
-                  builder: (context) => SearchDialog(onResultTapped: _handleSearchResultNavigation),
+                    builder: (context) => ShamelaSearchDialog(
+                    onResultTapped: _handleSearchResultNavigation,
+                    indexedBooks: indexedBooks,
+                  ),
                 );
+                } catch (e) {
+                  ShowSnackBar(context, "خطأ في فتح البحث: $e");
+                }
               },
             ),
             IconButton(
               icon: Icon(Icons.storage, color: secondaryColor),
+              tooltip: 'فهرسة الكتب',
               onPressed: () {
                 Navigator.push(
                   context,
@@ -129,8 +142,8 @@ class _HomePageState extends State<HomePage> {
     setState(() {});
   }
 
-  void _handleSearchResultNavigation(SearchResult result) {
-    _onBookSelected(File(result.bookPath), pageNumber: result.pageNumber);
+  void _handleSearchResultNavigation(String bookPath, int pageNumber) {
+    _onBookSelected(File(bookPath), pageNumber: pageNumber);
     setState(() {}); // Update UI to reflect new book/page
   }
 
@@ -212,7 +225,7 @@ class _HomePageState extends State<HomePage> {
     print("Book cache path ${bookCacheDir.path}");
     bool loadedFromCache = false;
 
-    // try {
+    try {
       // 2. Check for existing, valid cache
       if (await bookCacheDir.exists()) {
         final docxFile = File(filePath);
@@ -240,14 +253,14 @@ class _HomePageState extends State<HomePage> {
           loadedFromCache = true;
         }
       }
-    // } catch (e) {
-    //   print("Error loading from cache: $e");
-    //   ShowSnackBar(context, "Error loading from cache, re-parsing: $e");
-    //   if (await bookCacheDir.exists()) {
-    //     await bookCacheDir.delete(recursive: true);
-    //   }
-    //   loadedFromCache = false;
-    // }
+    } catch (e) {
+      print("Error loading from cache: $e");
+      ShowSnackBar(context, "Error loading from cache, re-parsing: $e");
+      if (await bookCacheDir.exists()) {
+        await bookCacheDir.delete(recursive: true);
+      }
+      loadedFromCache = false;
+    }
 
     if (!loadedFromCache) {
       // 3. Parse and Save to Cache

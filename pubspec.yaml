@@ -41,14 +41,15 @@ dependencies:
   shared_preferences: any
   url_launcher: any
   json_annotation: ^4.9.0
-  sqflite_common_ffi: any
-  sqflite_common: any # Explicitly add sqflite_common
+  http: any
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: any
   process_run: any
   path: ^1.8.3
+  sqflite: ^2.3.0
+  sqflite_common_ffi: ^2.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -81,6 +82,7 @@ flutter:
     - assets/exe/
     - assets/books/ # Add this line
     - test.xml # Add this line
+    - assets/arabic_roots_database.db
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
