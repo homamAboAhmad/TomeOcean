@@ -49,7 +49,10 @@ class BooksListPanel extends StatelessWidget {
             return bookTitle.contains(searchQuery);
           }).toList();
     
-    return Column(
+    return Focus(
+      autofocus: true,
+      canRequestFocus: true,
+      child: Column(
       children: [
         // Search bar with icons
         Container(
@@ -117,6 +120,7 @@ class BooksListPanel extends StatelessWidget {
           ),
         ),
       ],
+      ),
     );
   }
 

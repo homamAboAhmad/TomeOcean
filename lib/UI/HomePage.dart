@@ -15,7 +15,10 @@ import 'package:path_provider/path_provider.dart'; // Added for cache directory
 import 'package:golden_shamela/UI/TestScreen.dart'; // Add this import
 import 'package:golden_shamela/UI/IndexingScreen.dart'; // Add this import
 import 'package:golden_shamela/UI/Search/shamela_search_dialog.dart';
+import 'package:golden_shamela/UI/Search/shamela_search_window.dart';
 import 'package:golden_shamela/Helpers/ShamelaSearchIndexer.dart';
+import 'package:window_manager/window_manager.dart';
+import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import '../Helpers/FileHelper.dart';
@@ -79,13 +82,28 @@ class _HomePageState extends State<HomePage> {
                     ShowSnackBar(context, "لا توجد كتب مفهرسة. يرجى فهرسة الكتب أولاً من شاشة الفهرسة.");
                     return;
                   }
-                showDialog(
-                  context: context,
-                    builder: (context) => ShamelaSearchDialog(
-                    onResultTapped: _handleSearchResultNavigation,
-                    indexedBooks: indexedBooks,
-                  ),
-                );
+                  
+                  // Open search in separate window on Windows, otherwise use dialog
+                  if (Platform.isWindows) {
+                    await windowManager.createWindow(
+                      ShamelaSearchWindow(
+                        onResultTapped: _handleSearchResultNavigation,
+                        indexedBooks: indexedBooks,
+                      ),
+                      title: 'البحث',
+                      size: Size(1200, 800),
+                      minimumSize: Size(800, 600),
+                      center: true,
+                    );
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (context) => ShamelaSearchDialog(
+                        onResultTapped: _handleSearchResultNavigation,
+                        indexedBooks: indexedBooks,
+                      ),
+                    );
+                  }
                 } catch (e) {
                   ShowSnackBar(context, "خطأ في فتح البحث: $e");
                 }

@@ -36,7 +36,10 @@ class SectionsListPanel extends StatelessWidget {
       );
     }
     
-    return Column(
+    return Focus(
+      autofocus: true,
+      canRequestFocus: true,
+      child: Column(
       children: [
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -76,6 +79,7 @@ class SectionsListPanel extends StatelessWidget {
           ),
         ),
       ],
+      ),
     );
   }
 }

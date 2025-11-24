@@ -39,7 +39,10 @@ class AuthorsTablePanel extends StatelessWidget {
       );
     }
     
-    return Column(
+    return Focus(
+      autofocus: true,
+      canRequestFocus: true,
+      child: Column(
       children: [
         // Table header
         Container(
@@ -129,6 +132,7 @@ class AuthorsTablePanel extends StatelessWidget {
           ),
         ),
       ],
+      ),
     );
   }
 }
