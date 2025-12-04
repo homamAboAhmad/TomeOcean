@@ -13,7 +13,7 @@ import 'package:golden_shamela/Utils/custom_text_selection_controls.dart';
 import 'package:golden_shamela/Utils/json_converters.dart';
 
 import '../WordToWidget/ImageToWidget.dart';
-import '../main.dart';
+import '../core/app_state.dart';
 import 'PPr.dart';
 import 'RPr.dart';
 
@@ -129,11 +129,11 @@ class Paragraph {
   Widget toWidget() {
      List<InlineSpan> spans = getPSpans();
      return GestureDetector(
-       onLongPress: () { // Modify onLongPress
-         if (pXml != null) {
-           writeParagraphXmlToTestAsset(navigatorKey.currentContext!, pXml!);
-         }
-       },
+      onLongPress: () { // Modify onLongPress
+        if (pXml != null) {
+          writeParagraphXmlToTestAsset(AppState().navigatorKey.currentContext!, pXml!);
+        }
+      },
        child: Padding(
          padding: _getPPaddings(),
          child: Stack(

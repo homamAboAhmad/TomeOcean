@@ -69,6 +69,7 @@ class SearchOptionsPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.max,
         children: [
+          // Fixed height section for search scope and options
           _buildSearchScope(),
           SizedBox(height: 16),
           _buildSearchTypeOptions(),
@@ -76,16 +77,27 @@ class SearchOptionsPanel extends StatelessWidget {
           _buildAdvancedOptions(),
           SizedBox(height: 16),
           _buildSearchGrouping(),
-          _buildSearchGroups(),
-          SizedBox(height: 4),
-          _buildSelectedBooksSearchField(),
-          SizedBox(height: 4),
+          // Scrollable section for search groups
           Expanded(
-            child: _buildSelectedBooksList(),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSearchGroups(),
+                  SizedBox(height: 4),
+                  _buildSelectedBooksSearchField(),
+                  SizedBox(height: 4),
+                  SizedBox(
+                    height: 120,
+                    child: _buildSelectedBooksList(),
+                  ),
+                  SizedBox(height: 6),
+                  _buildResultsSummary(),
+                ],
+              ),
+            ),
           ),
-          SizedBox(height: 6),
-          _buildResultsSummary(),
-
         ],
       ),
     );

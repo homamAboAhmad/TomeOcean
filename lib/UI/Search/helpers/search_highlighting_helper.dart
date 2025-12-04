@@ -15,9 +15,27 @@ class SearchHighlightingHelper {
   ) async {
     if (text.isEmpty) return Text('', style: smallStyle());
     
-    // Get all words to highlight
-    Set<String> wordsToHighlight = {};
-    for (String query in searchQueries) {
+    final wordsToHighlight = _collectWordsToHighlight(searchQueries);
+    final matches = await _findAllMatches(text, searchQueries, wordsToHighlight);
+    
+    if (matches.isEmpty) {
+      final snippet = text.length > 100 ? '${text.substring(0, 100)}...' : text;
+      return Text(snippet, style: smallStyle(), maxLines: 2, overflow: TextOverflow.ellipsis);
+    }
+    
+    matches.sort((a, b) => (a['index'] as int).compareTo(b['index'] as int));
+    
+    final snippetRange = _calculateSnippetRange(text, matches.first);
+    final snippet = _extractSnippet(text, snippetRange);
+    final adjustedMatches = _adjustMatchPositions(matches, snippetRange, snippet.length);
+    
+    return _buildHighlightedTextFromMatches(snippet, adjustedMatches, wordsToHighlight);
+  }
+
+  /// Collect all words that should be highlighted
+  Set<String> _collectWordsToHighlight(List<String> searchQueries) {
+    final wordsToHighlight = <String>{};
+    for (final query in searchQueries) {
       wordsToHighlight.add(query);
       if (!query.startsWith('ال')) {
         wordsToHighlight.add('ال$query');
@@ -26,10 +44,18 @@ class SearchHighlightingHelper {
         wordsToHighlight.addAll(_getMorphologicalVariations(query));
       }
     }
+    return wordsToHighlight;
+  }
+
+  /// Find all matches in the text
+  Future<List<Map<String, dynamic>>> _findAllMatches(
+    String text,
+    List<String> searchQueries,
+    Set<String> wordsToHighlight,
+  ) async {
+    final matches = <Map<String, dynamic>>[];
     
-    // Find ALL occurrences of words to highlight
-    List<Map<String, dynamic>> matches = [];
-    for (String word in wordsToHighlight) {
+    for (final word in wordsToHighlight) {
       int index = 0;
       while (true) {
         index = _findWordInTextFromPosition(text, word, index);
@@ -43,63 +69,128 @@ class SearchHighlightingHelper {
       }
     }
     
-    // Also find morphological matches if enabled
     if (morphologicalSearch) {
-      String queryRoot = searchQueries.isNotEmpty 
-          ? await ArabicMorphologicalAnalyzer.stem(searchQueries.first)
-          : '';
-      if (queryRoot.isNotEmpty) {
-        List<Map<String, dynamic>> arabicWords = _extractArabicWordsWithPositions(text);
-        for (var wordInfo in arabicWords) {
-          String word = wordInfo['word'] as String;
-          String wordRoot = await ArabicMorphologicalAnalyzer.stem(word);
-          if (wordRoot == queryRoot) {
-            matches.add({
-              'word': word,
-              'index': wordInfo['start'] as int,
-              'length': word.length,
-            });
-          }
-        }
-      }
+      matches.addAll(await _findMorphologicalMatches(text, searchQueries));
     }
     
-    // If no matches found, show first 100 chars
-    if (matches.isEmpty) {
-      String snippet = text.length > 100 ? '${text.substring(0, 100)}...' : text;
-      return Text(snippet, style: smallStyle(), maxLines: 2, overflow: TextOverflow.ellipsis);
-    }
+    return matches;
+  }
+
+  /// Find morphological matches in the text
+  Future<List<Map<String, dynamic>>> _findMorphologicalMatches(
+    String text,
+    List<String> searchQueries,
+  ) async {
+    final matches = <Map<String, dynamic>>[];
     
-    // Sort matches by position
-    matches.sort((a, b) => (a['index'] as int).compareTo(b['index'] as int));
+    if (searchQueries.isEmpty) return matches;
     
-    // Use the first match to extract snippet
-    int firstMatchIndex = matches.first['index'] as int;
-    int firstMatchLength = matches.first['length'] as int;
+    final queryRoot = await ArabicMorphologicalAnalyzer.stem(searchQueries.first);
+    if (queryRoot.isEmpty) return matches;
     
-    // Extract context around the first match
-    const int contextLength = 100;
-    int start = (firstMatchIndex - contextLength).clamp(0, text.length);
-    int end = (firstMatchIndex + firstMatchLength + contextLength).clamp(0, text.length);
-    
-    String snippet = text.substring(start, end);
-    if (start > 0) snippet = '...$snippet';
-    if (end < text.length) snippet = '$snippet...';
-    
-    // Adjust match positions relative to snippet
-    List<Map<String, dynamic>> adjustedMatches = [];
-    for (var match in matches) {
-      int matchIndex = match['index'] as int;
-      if (matchIndex >= start && matchIndex < end) {
-        adjustedMatches.add({
-          'word': match['word'],
-          'index': matchIndex - start + (start > 0 ? 3 : 0),
-          'length': match['length'],
+    final arabicWords = _extractArabicWordsWithPositions(text);
+    for (final wordInfo in arabicWords) {
+      final word = wordInfo['word'] as String;
+      final wordRoot = await ArabicMorphologicalAnalyzer.stem(word);
+      if (wordRoot == queryRoot) {
+        matches.add({
+          'word': word,
+          'index': wordInfo['start'] as int,
+          'length': word.length,
         });
       }
     }
     
-    return _buildHighlightedTextFromMatches(snippet, adjustedMatches, wordsToHighlight);
+    return matches;
+  }
+
+  /// Calculate the snippet range around the first match
+  Map<String, int> _calculateSnippetRange(
+    String text,
+    Map<String, dynamic> firstMatch,
+  ) {
+    const contextLength = 100;
+    const maxSnippetLength = 250;
+    
+    final firstMatchIndex = firstMatch['index'] as int;
+    final firstMatchLength = firstMatch['length'] as int;
+    
+    int start = (firstMatchIndex - contextLength).clamp(0, text.length);
+    if (firstMatchIndex < contextLength) {
+      start = 0;
+    }
+    
+    int end = (firstMatchIndex + firstMatchLength + contextLength).clamp(0, text.length);
+    
+    if (firstMatchIndex + firstMatchLength + contextLength > text.length) {
+      final availableSpace = maxSnippetLength - (end - start);
+      if (availableSpace > 0) {
+        start = (start - availableSpace).clamp(0, text.length);
+      }
+    }
+    
+    if (end - start > maxSnippetLength) {
+      final matchCenter = firstMatchIndex + (firstMatchLength ~/ 2);
+      start = (matchCenter - maxSnippetLength ~/ 2).clamp(0, text.length);
+      end = (start + maxSnippetLength).clamp(0, text.length);
+    }
+    
+    if (firstMatchIndex < start) {
+      start = firstMatchIndex;
+    }
+    if (firstMatchIndex + firstMatchLength > end) {
+      end = firstMatchIndex + firstMatchLength;
+    }
+    
+    return {'start': start, 'end': end};
+  }
+
+  /// Extract snippet text with ellipsis
+  String _extractSnippet(String text, Map<String, int> range) {
+    final start = range['start']!;
+    final end = range['end']!;
+    String snippet = text.substring(start, end);
+    if (start > 0) snippet = '...$snippet';
+    if (end < text.length) snippet = '$snippet...';
+    return snippet;
+  }
+
+  /// Adjust match positions relative to snippet
+  List<Map<String, dynamic>> _adjustMatchPositions(
+    List<Map<String, dynamic>> matches,
+    Map<String, int> snippetRange,
+    int snippetLength,
+  ) {
+    final adjustedMatches = <Map<String, dynamic>>[];
+    final start = snippetRange['start']!;
+    final end = snippetRange['end']!;
+    
+    for (final match in matches) {
+      final matchIndex = match['index'] as int;
+      final matchLength = match['length'] as int;
+      final matchEnd = matchIndex + matchLength;
+      
+      if (matchIndex < end && matchEnd > start) {
+        int adjustedIndex = matchIndex - start;
+        if (matchIndex < start) {
+          adjustedIndex = 0;
+        }
+        if (start > 0) adjustedIndex += 3;
+        
+        int adjustedEnd = (matchEnd - start).clamp(0, snippetLength);
+        if (matchIndex < start) {
+          adjustedEnd = (matchLength - (start - matchIndex)).clamp(0, snippetLength);
+        }
+        
+        adjustedMatches.add({
+          'word': match['word'],
+          'index': adjustedIndex.clamp(0, snippetLength),
+          'length': (adjustedEnd - adjustedIndex).clamp(0, snippetLength - adjustedIndex),
+        });
+      }
+    }
+    
+    return adjustedMatches;
   }
 
   /// Build highlighted text widget from pre-calculated matches

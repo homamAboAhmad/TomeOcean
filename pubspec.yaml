@@ -51,6 +51,7 @@ dependencies:
   sqflite: ^2.3.0
   sqflite_common_ffi: ^2.3.0
   window_manager: ^0.3.7
+  desktop_multi_window: ^0.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

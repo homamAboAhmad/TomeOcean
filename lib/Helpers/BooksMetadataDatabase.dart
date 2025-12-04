@@ -16,7 +16,7 @@ class BooksMetadataDatabase {
 
   Database? _database;
   bool _isInitialized = false;
-  static const int _version = 1;
+  static const int _version = 2;
 
   /// Initialize the database
   Future<void> initialize() async {
@@ -30,79 +30,20 @@ class BooksMetadataDatabase {
       _database = await openDatabase(
         dbPath,
         version: _version,
+        singleInstance: false,
         onCreate: (db, version) async {
-          // Create authors table
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS authors (
-              id TEXT PRIMARY KEY,
-              name TEXT NOT NULL,
-              description TEXT DEFAULT '',
-              created_at INTEGER NOT NULL
-            );
-          ''');
-
-          // Create sections table
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS sections (
-              id TEXT PRIMARY KEY,
-              title TEXT NOT NULL,
-              created_at INTEGER NOT NULL
-            );
-          ''');
-
-          // Create books table
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS books (
-              id TEXT PRIMARY KEY,
-              book_path TEXT NOT NULL,
-              book_name TEXT NOT NULL,
-              author_id TEXT,
-              section_id TEXT,
-              description TEXT DEFAULT '',
-              created_at INTEGER NOT NULL,
-              FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL,
-              FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE SET NULL
-            );
-          ''');
-
-          // Create indexes for performance
-          await db.execute('''
-            CREATE INDEX IF NOT EXISTS idx_books_path ON books(book_path);
-          ''');
-
-          await db.execute('''
-            CREATE INDEX IF NOT EXISTS idx_books_name ON books(book_name);
-          ''');
-
-          await db.execute('''
-            CREATE INDEX IF NOT EXISTS idx_books_author ON books(author_id);
-          ''');
-
-          await db.execute('''
-            CREATE INDEX IF NOT EXISTS idx_books_section ON books(section_id);
-          ''');
-
-          await db.execute('''
-            CREATE INDEX IF NOT EXISTS idx_books_author_section ON books(author_id, section_id);
-          ''');
-
-          await db.execute('''
-            CREATE INDEX IF NOT EXISTS idx_authors_name ON authors(name);
-          ''');
-
-          await db.execute('''
-            CREATE INDEX IF NOT EXISTS idx_sections_title ON sections(title);
-          ''');
-
-          // Unique constraint on book_path
-          await db.execute('''
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_books_path_unique ON books(book_path);
-          ''');
+          await _createTables(db);
         },
         onUpgrade: (db, oldVersion, newVersion) async {
-          // Handle future migrations here
+          await _migrateDatabase(db, oldVersion, newVersion);
         },
       );
+
+      // Ensure tables exist even if database was created before
+      await _ensureTablesExist(_database!);
+      
+      // Run migrations for existing databases
+      await _migrateDatabase(_database!, 1, _version);
 
       _isInitialized = true;
       print("BooksMetadataDatabase: Database initialized successfully");
@@ -115,7 +56,157 @@ class BooksMetadataDatabase {
   /// Get database instance (initialize if needed)
   Future<Database> get database async {
     if (_database == null) await initialize();
+    // Only check tables if not already verified
+    if (!_isInitialized) {
+      await _ensureTablesExist(_database!);
+    }
     return _database!;
+  }
+
+  /// Create all tables
+  Future<void> _createTables(Database db) async {
+    // Create authors table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS authors (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        death_year TEXT,
+        created_at INTEGER NOT NULL
+      );
+    ''');
+
+    // Create sections table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS sections (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+    ''');
+
+    // Create books table
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS books (
+        id TEXT PRIMARY KEY,
+        book_path TEXT NOT NULL,
+        book_name TEXT NOT NULL,
+        author_id TEXT,
+        section_id TEXT,
+        description TEXT DEFAULT '',
+        created_at INTEGER NOT NULL,
+        FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL,
+        FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE SET NULL
+      );
+    ''');
+
+    // Create indexes for performance
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_books_path ON books(book_path);
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_books_name ON books(book_name);
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_books_author ON books(author_id);
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_books_section ON books(section_id);
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_books_author_section ON books(author_id, section_id);
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_authors_name ON authors(name);
+    ''');
+
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_sections_title ON sections(title);
+    ''');
+
+    // Unique constraint on book_path
+    await db.execute('''
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_books_path_unique ON books(book_path);
+    ''');
+  }
+
+  /// Ensure all tables exist (check and create if missing)
+  Future<void> _ensureTablesExist(Database db) async {
+    try {
+      // Check each table individually to avoid IN clause issues with sqflite_common_ffi
+      final requiredTables = ['authors', 'sections', 'books'];
+      final existingTables = <String>{};
+      
+      for (final tableName in requiredTables) {
+        try {
+          final result = await db.rawQuery(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
+            [tableName],
+          );
+          if (result.isNotEmpty) {
+            existingTables.add(tableName);
+          }
+        } catch (e) {
+          // If query fails, assume table doesn't exist
+          print("BooksMetadataDatabase: Error checking table $tableName: $e");
+        }
+      }
+      
+      final missingTables = requiredTables.where((t) => !existingTables.contains(t)).toList();
+      
+      if (missingTables.isNotEmpty) {
+        print("BooksMetadataDatabase: Missing tables: $missingTables, creating them...");
+        await _createTables(db);
+        print("BooksMetadataDatabase: Tables created successfully");
+      } else {
+        print("BooksMetadataDatabase: All required tables exist");
+      }
+    } catch (e, stackTrace) {
+      print("BooksMetadataDatabase: Error ensuring tables exist: $e");
+      print("Stack trace: $stackTrace");
+      // Try to create tables anyway (CREATE TABLE IF NOT EXISTS is safe)
+      try {
+        await _createTables(db);
+        print("BooksMetadataDatabase: Tables created after error");
+      } catch (e2) {
+        // If tables already exist, this is fine
+        if (!e2.toString().contains('already exists') && 
+            !e2.toString().contains('duplicate') &&
+            !e2.toString().contains('bad parameter')) {
+          print("BooksMetadataDatabase: Failed to create tables: $e2");
+        } else {
+          print("BooksMetadataDatabase: Tables may already exist, ignoring error");
+        }
+      }
+    }
+  }
+
+  /// Migrate database schema
+  Future<void> _migrateDatabase(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      // Migration to version 2: Add death_year column to authors table
+      try {
+        // Check if column already exists
+        final tableInfo = await db.rawQuery("PRAGMA table_info(authors)");
+        final hasDeathYear = tableInfo.any((column) => column['name'] == 'death_year');
+        
+        if (!hasDeathYear) {
+          print("BooksMetadataDatabase: Migrating to version 2 - adding death_year column");
+          await db.execute('ALTER TABLE authors ADD COLUMN death_year TEXT');
+          print("BooksMetadataDatabase: Migration to version 2 completed");
+        } else {
+          print("BooksMetadataDatabase: death_year column already exists, skipping migration");
+        }
+      } catch (e) {
+        print("BooksMetadataDatabase: Error during migration to version 2: $e");
+        // Continue even if migration fails (column might already exist)
+      }
+    }
   }
 
   // ==================== Authors ====================
@@ -147,6 +238,7 @@ class BooksMetadataDatabase {
       id: row['id'] as String,
       name: row['name'] as String,
       description: row['description'] as String? ?? '',
+      deathYear: row['death_year'] as String?,
     )).toList();
   }
 
@@ -165,6 +257,7 @@ class BooksMetadataDatabase {
       id: row['id'] as String,
       name: row['name'] as String,
       description: row['description'] as String? ?? '',
+      deathYear: row['death_year'] as String?,
     );
   }
 
@@ -177,6 +270,7 @@ class BooksMetadataDatabase {
         'id': author.id,
         'name': author.name,
         'description': author.description,
+        'death_year': author.deathYear,
         'created_at': DateTime.now().millisecondsSinceEpoch,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -196,6 +290,7 @@ class BooksMetadataDatabase {
           'id': author.id,
           'name': author.name,
           'description': author.description,
+          'death_year': author.deathYear,
           'created_at': now,
         },
         conflictAlgorithm: ConflictAlgorithm.replace,
@@ -376,22 +471,30 @@ class BooksMetadataDatabase {
   /// WARNING: Multiple books may have the same name. Use getBookByPath() for unique lookup.
   /// This method returns only the first match.
   Future<BookCard?> getBookByName(String bookName) async {
-    final db = await database;
-    final results = await db.query(
-      'books',
-      where: 'book_name = ?',
-      whereArgs: [bookName],
-      limit: 1,
-    );
-    if (results.isEmpty) return null;
-    final row = results.first;
-    return BookCard(
-      id: row['id'] as String,
-      title: row['book_name'] as String,
-      authorId: row['author_id'] as String? ?? '',
-      sectionId: row['section_id'] as String? ?? '',
-      description: row['description'] as String? ?? '',
-    );
+    try {
+      final db = await database;
+      
+      // Use rawQuery to avoid parameter binding issues
+      final results = await db.rawQuery(
+        'SELECT * FROM books WHERE book_name = ? LIMIT 1',
+        [bookName],
+      );
+      
+      if (results.isEmpty) return null;
+      final row = results.first;
+      return BookCard(
+        id: row['id'] as String,
+        title: row['book_name'] as String,
+        authorId: row['author_id'] as String? ?? '',
+        sectionId: row['section_id'] as String? ?? '',
+        description: row['description'] as String? ?? '',
+      );
+    } catch (e, stackTrace) {
+      print("BooksMetadataDatabase: Error in getBookByName: $e");
+      print("Stack trace: $stackTrace");
+      print("Book name: $bookName");
+      return null;
+    }
   }
 
   /// Get all books with the same name (for handling duplicates)
@@ -465,22 +568,40 @@ class BooksMetadataDatabase {
     String? authorId,
     String? sectionId,
   }) async {
+    print("===== [BooksMetadataDatabase.getBookPaths] ===== Called");
+    print("  authorId: $authorId (type: ${authorId.runtimeType})");
+    print("  sectionId: $sectionId (type: ${sectionId.runtimeType})");
+    
     final db = await database;
     String query = 'SELECT book_path FROM books WHERE 1=1';
     List<dynamic> args = [];
 
-    if (authorId != null && authorId.isNotEmpty) {
+    if (authorId != null && authorId.toString().trim().isNotEmpty) {
+      final authorIdStr = authorId.toString().trim();
       query += ' AND author_id = ?';
-      args.add(authorId);
+      args.add(authorIdStr);
+      print("===== [BooksMetadataDatabase.getBookPaths] ===== Added author_id filter: $authorIdStr");
     }
 
-    if (sectionId != null && sectionId.isNotEmpty) {
+    if (sectionId != null && sectionId.toString().trim().isNotEmpty) {
+      final sectionIdStr = sectionId.toString().trim();
       query += ' AND section_id = ?';
-      args.add(sectionId);
+      args.add(sectionIdStr);
+      print("===== [BooksMetadataDatabase.getBookPaths] ===== Added section_id filter: $sectionIdStr");
     }
 
-    final results = await db.rawQuery(query, args);
-    return results.map((row) => row['book_path'] as String).toList();
+    print("===== [BooksMetadataDatabase.getBookPaths] ===== Query: $query");
+    print("===== [BooksMetadataDatabase.getBookPaths] ===== Args: $args");
+    
+    try {
+      final results = await db.rawQuery(query, args);
+      print("===== [BooksMetadataDatabase.getBookPaths] ===== Found ${results.length} results");
+      return results.map((row) => row['book_path'] as String).toList();
+    } catch (e, stackTrace) {
+      print("===== [BooksMetadataDatabase.getBookPaths] ===== ERROR: $e");
+      print("Stack trace: $stackTrace");
+      rethrow;
+    }
   }
 
   /// Add or update book
@@ -588,6 +709,26 @@ class BooksMetadataDatabase {
       'author_id': row['author_id'] as String?,
       'section_id': row['section_id'] as String?,
     };
+  }
+
+  /// Get a map of all book paths to their author IDs
+  Future<Map<String, String>> getAllBookAuthorMappings() async {
+    final db = await database;
+    final results = await db.query(
+      'books',
+      columns: ['book_path', 'author_id'],
+      where: 'author_id IS NOT NULL',
+    );
+    
+    final Map<String, String> mapping = {};
+    for (final row in results) {
+      final path = row['book_path'] as String?;
+      final authorId = row['author_id'] as String?;
+      if (path != null && authorId != null) {
+        mapping[path] = authorId;
+      }
+    }
+    return mapping;
   }
 
   /// Migrate data from SharedPreferences to SQLite

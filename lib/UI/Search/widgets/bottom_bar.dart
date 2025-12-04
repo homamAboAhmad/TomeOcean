@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';  // Add this for primaryColor
 
-/// Bottom bar widget for search dialog
+/// Bottom bar widget for search dialog.
+/// 
+/// Displays action buttons for deselecting items and ignoring selections.
+/// Selection is handled directly in the panels, so only deselect buttons are shown here.
 class SearchBottomBar extends StatelessWidget {
   final String selectedTab;
   final Set<String> selectedAuthorIds;
@@ -10,11 +13,8 @@ class SearchBottomBar extends StatelessWidget {
   final Map<String, bool> selectedBooks;
   final List<Map<String, dynamic>> filteredIndexedBooks;
   final Function() onDeselectAllBooks;
-  final Function() onSelectAllBooks;
   final Function() onDeselectAllAuthors;
-  final Function() onSelectAllAuthors;
   final Function()? onDeselectAllSections;
-  final Function()? onSelectAllSections;
   final Function()? onIgnore;
   final int totalAuthors;
 
@@ -26,11 +26,8 @@ class SearchBottomBar extends StatelessWidget {
     required this.selectedBooks,
     required this.filteredIndexedBooks,
     required this.onDeselectAllBooks,
-    required this.onSelectAllBooks,
     required this.onDeselectAllAuthors,
-    required this.onSelectAllAuthors,
     this.onDeselectAllSections,
-    this.onSelectAllSections,
     this.onIgnore,
     required this.totalAuthors,
   }) : super(key: key);
@@ -66,20 +63,8 @@ class SearchBottomBar extends StatelessWidget {
     
     switch (selectedTab) {
       case 'الكتب':
-        // Books tab buttons
-        buttons.add(
-          ElevatedButton.icon(
-            onPressed: onSelectAllBooks,
-            icon: Icon(Icons.check, size: 16, color: Colors.green),
-            label: Text('اختيار الكتب المحددة', style: smallStyle(color: Colors.green)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade50,
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-          ),
-        );
+        // Books tab buttons - only show deselect if there are selected books
         if (selectedBooksCount > 0) {
-          buttons.add(SizedBox(width: 8));
           buttons.add(
             ElevatedButton.icon(
               onPressed: onDeselectAllBooks,
@@ -95,20 +80,8 @@ class SearchBottomBar extends StatelessWidget {
         break;
         
       case 'المؤلفون':
-        // Authors tab buttons
-        buttons.add(
-          ElevatedButton.icon(
-            onPressed: onSelectAllAuthors,
-            icon: Icon(Icons.check, size: 16, color: Colors.green),
-            label: Text('اختيار المؤلفين المحددين', style: smallStyle(color: Colors.green)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade50,
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-          ),
-        );
+        // Authors tab buttons - only show deselect if there are selected authors
         if (selectedAuthorIds.isNotEmpty) {
-          buttons.add(SizedBox(width: 8));
           buttons.add(
             ElevatedButton.icon(
               onPressed: onDeselectAllAuthors,
@@ -124,22 +97,8 @@ class SearchBottomBar extends StatelessWidget {
         break;
         
       case 'التصنيف':
-        // Sections tab buttons
-        if (onSelectAllSections != null) {
-          buttons.add(
-            ElevatedButton.icon(
-              onPressed: onSelectAllSections,
-              icon: Icon(Icons.check, size: 16, color: Colors.green),
-              label: Text('اختيار الأقسام المحددة', style: smallStyle(color: Colors.green)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green.shade50,
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              ),
-            ),
-          );
-        }
+        // Sections tab buttons - only show deselect if there are selected sections
         if (selectedSectionIds.isNotEmpty && onDeselectAllSections != null) {
-          buttons.add(SizedBox(width: 8));
           buttons.add(
             ElevatedButton.icon(
               onPressed: onDeselectAllSections,

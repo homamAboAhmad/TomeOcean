@@ -99,10 +99,31 @@ class _AuthorBooksSidebarState extends State<AuthorBooksSidebar> {
           // رأس الواجهة
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            child: Text(
-              _author!.name,
-              style: normalStyle(fontWeight: FontWeight.bold),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               textDirection: TextDirection.rtl,
+              children: [
+                Text(
+                  _author!.name,
+                  style: normalStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  textDirection: TextDirection.rtl,
+                ),
+                if (_author!.deathYear != null && _author!.deathYear!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    textDirection: TextDirection.rtl,
+                    children: [
+                      Icon(Icons.calendar_today, size: 14, color: Colors.grey.shade600),
+                      const SizedBox(width: 4),
+                      Text(
+                        _author!.deathYear!,
+                        style: normalStyle(fontSize: 12, color: Colors.grey.shade600),
+                        textDirection: TextDirection.rtl,
+                      ),
+                    ],
+                  ),
+                ],
+              ],
             ),
           ),
 

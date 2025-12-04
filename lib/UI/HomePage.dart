@@ -1,32 +1,20 @@
 import 'dart:io';
-import 'dart:math';
-import 'dart:convert'; // Added for JSON encoding/decoding
-
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:golden_shamela/Models/WordPage.dart';
-import 'package:golden_shamela/Styles/AppResourses.dart';
-import 'package:golden_shamela/UI/BookTitleRow.dart';
-import 'package:golden_shamela/UI/DocViewer.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
-import 'package:golden_shamela/Utils/SnackBar.dart';
-import 'package:path_provider/path_provider.dart'; // Added for cache directory
-
-import 'package:golden_shamela/UI/TestScreen.dart'; // Add this import
-import 'package:golden_shamela/UI/IndexingScreen.dart'; // Add this import
-import 'package:golden_shamela/UI/Search/shamela_search_dialog.dart';
-import 'package:golden_shamela/UI/Search/shamela_search_window.dart';
-import 'package:golden_shamela/Helpers/ShamelaSearchIndexer.dart';
-import 'package:window_manager/window_manager.dart';
-import 'dart:io';
-import 'package:path/path.dart' as p;
-
-import '../Helpers/FileHelper.dart';
-import '../Styles/TextSyles.dart';
-import '../Utils/FileToArchive.dart';
-import '../Utils/SnackBar.dart';
-import '../main.dart';
-import '../wordToHTML/AddDocData.dart';
+import 'package:golden_shamela/Styles/AppResourses.dart';
+import 'package:golden_shamela/UI/DocViewer.dart';
+import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/TestScreen.dart';
+import 'package:golden_shamela/UI/Widgets/IndexingDialog.dart';
+import 'package:golden_shamela/UI/SettingsScreen.dart';
+import 'package:golden_shamela/UI/AuthorsManagement/authors_management_screen.dart';
+import 'package:golden_shamela/UI/Search/search_results_tab_viewer.dart';
+import 'package:golden_shamela/UI/Search/models/search_results_tab.dart';
+import 'package:golden_shamela/Helpers/FileHelper.dart';
+import 'home_page/home_page_window_communication.dart';
+import 'home_page/home_page_search_handlers.dart';
+import 'home_page/home_page_book_management.dart';
+import 'home_page/home_page_ui_helpers.dart';
 import 'BooksDrawer.dart';
 
 class HomePage extends StatefulWidget {
@@ -41,9 +29,82 @@ class _HomePageState extends State<HomePage> {
   String? filePath;
   int selectedBookP = 0;
 
+  List<SearchResultsTab> _searchResultsTabs = [];
+
+  HomePageWindowCommunication? _windowCommunication;
+  HomePageSearchHandlers? _searchHandlers;
+  HomePageBookManagement? _bookManagement;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeHelpers();
+  }
+
+  int? _pendingPageNumber;
+  
+  void _initializeHelpers() {
+    _bookManagement = HomePageBookManagement(
+      context: context,
+      onBookAdded: (book) {
+        setState(() {
+          openedBooks.add(book);
+          selectedBookP = openedBooks.length - 1;
+          // Set page number if pending
+          if (_pendingPageNumber != null) {
+            openedBooks[selectedBookP].currentPage = _pendingPageNumber!;
+            _pendingPageNumber = null;
+          }
+        });
+      },
+    );
+
+    _searchHandlers = HomePageSearchHandlers(
+      context: context,
+      onResultTapped: _handleSearchResultNavigation,
+      onPerformSearch: _performSearchInMainWindow,
+      isMounted: () => mounted,
+      setState: () => setState(() {}),
+    );
+
+    _windowCommunication = HomePageWindowCommunication(
+      onBookSelected: (bookPath, pageNumber) {
+        _onBookSelected(File(bookPath), pageNumber: pageNumber);
+      },
+      onPerformSearch: _performSearchInMainWindow,
+      onSearchResults: _addSearchResultsTab,
+      isMounted: () => mounted,
+    );
+
+    _windowCommunication!.setup();
+  }
+
+  Widget _buildSearchResultsTabViewer() {
+    final tabIndex = selectedBookP - openedBooks.length;
+    if (tabIndex < 0 || tabIndex >= _searchResultsTabs.length) {
+      return Center(
+        child: Text('خطأ في عرض النتائج', style: normalStyle()),
+      );
+    }
+    
+    final tab = _searchResultsTabs[tabIndex];
+    return SearchResultsTabViewer(
+      results: tab.results,
+      totalCount: tab.totalCount,
+      onResultTapped: (bookPath, pageNumber) async {
+        await _onBookSelected(
+          File(bookPath),
+          pageNumber: pageNumber,
+          fromSearchResults: true,
+        );
+      },
+      searchQueries: tab.searchQueries,
+      morphologicalSearch: tab.morphologicalSearch,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    print("openedBooks.length ${openedBooks.length}");
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -52,98 +113,101 @@ class _HomePageState extends State<HomePage> {
           title: Container(
             child: Padding(
               padding: const EdgeInsets.all(4.0),
-              child: Text("البحر المحيط",
-                  style: normalStyle(
-                    fontSize: 24,
-                    color: secondaryColor
-                  )),
+              child: Text(
+                "البحر المحيط",
+                style: normalStyle(fontSize: 24, color: secondaryColor),
+              ),
             ),
           ),
           leading: Builder(
             builder: (context) => IconButton(
-              icon: Icon(
-                Icons.menu,
-                color: secondaryColor,
-              ),
-              // غير الأيقونة إذا بدك
-              onPressed: () {
-                Scaffold.of(context).openDrawer(); // هيك رح تشتغل
-              },
+              icon: Icon(Icons.menu, color: secondaryColor),
+              onPressed: () => Scaffold.of(context).openDrawer(),
             ),
           ),
           actions: [
             IconButton(
               icon: Icon(Icons.search, color: secondaryColor),
               tooltip: 'بحث',
-              onPressed: () async {
-                try {
-                  final indexedBooks = await ShamelaSearchIndexer().getIndexedBooks();
-                  if (indexedBooks.isEmpty) {
-                    ShowSnackBar(context, "لا توجد كتب مفهرسة. يرجى فهرسة الكتب أولاً من شاشة الفهرسة.");
-                    return;
-                  }
-                  
-                  // Open search in separate window on Windows, otherwise use dialog
-                  if (Platform.isWindows) {
-                    await windowManager.createWindow(
-                      ShamelaSearchWindow(
-                        onResultTapped: _handleSearchResultNavigation,
-                        indexedBooks: indexedBooks,
-                      ),
-                      title: 'البحث',
-                      size: Size(1200, 800),
-                      minimumSize: Size(800, 600),
-                      center: true,
-                    );
-                  } else {
-                    showDialog(
-                      context: context,
-                      builder: (context) => ShamelaSearchDialog(
-                        onResultTapped: _handleSearchResultNavigation,
-                        indexedBooks: indexedBooks,
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  ShowSnackBar(context, "خطأ في فتح البحث: $e");
-                }
-              },
+              onPressed: () => _searchHandlers!.openSearchWindow(),
             ),
             IconButton(
               icon: Icon(Icons.storage, color: secondaryColor),
               tooltip: 'فهرسة الكتب',
               onPressed: () {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const IndexingDialog(),
+                );
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.people, color: secondaryColor),
+              tooltip: 'إدارة المؤلفين',
+              onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) =>  IndexingScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const AuthorsManagementScreen(),
+                  ),
+                );
+              },
+            ),
+            IconButton(
+              icon: Icon(Icons.settings, color: secondaryColor),
+              tooltip: 'الإعدادات',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
                 );
               },
             ),
             IconButton(
               icon: Icon(Icons.bug_report, color: secondaryColor),
+              tooltip: 'اختبار',
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) =>  TestScreen()),
+                  MaterialPageRoute(builder: (context) => TestScreen()),
                 );
               },
             ),
           ],
         ),
-
-        drawer: BooksDrawer(
-          onBookSelected: _onBookSelected,
-        ),
-        // body: DocViewer(openedBooks[selectedBookP]),
-
+        drawer: BooksDrawer(onBookSelected: _onBookSelected),
         body: Stack(
           children: [
-            if (openedBooks.isNotEmpty) openedBooksTitlesList(),
-            if (openedBooks.isNotEmpty)
+            if (openedBooks.isNotEmpty || _searchResultsTabs.isNotEmpty)
+              HomePageUIHelpers.openedBooksTitlesList(
+                openedBooks: openedBooks,
+                searchResultsTabs: _searchResultsTabs,
+                selectedBookP: selectedBookP,
+                onSwitchToBook: _switchToBook,
+                onCloseBook: _closeBook,
+                onCloseSearchResultsTab: _closeSearchResultsTab,
+                onReorderBooks: (oldIndex, newIndex) {
+                  setState(() {
+                    final draggedBook = openedBooks.removeAt(oldIndex);
+                    openedBooks.insert(newIndex, draggedBook);
+                  });
+                },
+              ),
+            if (openedBooks.isNotEmpty && selectedBookP < openedBooks.length)
               Padding(
                 padding: const EdgeInsets.only(top: 48.0),
-                child: DocViewer(openedBooks[selectedBookP],
-                    onBookSelected: _onBookSelected),
+                child: DocViewer(
+                  openedBooks[selectedBookP],
+                  onBookSelected: _onBookSelected,
+                ),
+              ),
+            if (_searchResultsTabs.isNotEmpty && selectedBookP >= openedBooks.length)
+              Padding(
+                padding: const EdgeInsets.only(top: 48.0),
+                child: _buildSearchResultsTabViewer(),
               ),
           ],
         ),
@@ -151,168 +215,197 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  _onBookSelected(File book, {int? pageNumber}) async {
+  Future<void> _onBookSelected(File book, {int? pageNumber, bool fromSearchResults = false}) async {
     filePath = book.path;
-    await _readDocxFile(filePath);
-    if (pageNumber != null) {
-      openedBooks[selectedBookP].currentPage = pageNumber;
+    final bookTitle = getFileName(filePath!);
+    
+    // Always open a new instance of the book, even if it's already opened
+    // This allows users to have multiple tabs of the same book
+    
+    // Book is not opened (or opened from search results), read and add it
+    _pendingPageNumber = pageNumber;
+    await _bookManagement!.readDocxFile(filePath);
+    
+    // Ensure page number is set (in case onBookAdded didn't set it)
+    if (pageNumber != null && openedBooks.isNotEmpty && selectedBookP < openedBooks.length) {
+      if (openedBooks[selectedBookP].currentPage != pageNumber) {
+        openedBooks[selectedBookP].currentPage = pageNumber;
+        if (mounted) {
+          setState(() {});
+        }
+      }
+    }
+    
+    // Don't close search results tabs when opening a book
+    if (mounted && pageNumber == null) {
+      setState(() {});
+    }
+  }
+
+  void _handleSearchResultNavigation(String bookPath, int pageNumber) async {
+    await _onBookSelected(File(bookPath), pageNumber: pageNumber, fromSearchResults: true);
+  }
+
+  void _closeBook(int i) {
+    if (i >= openedBooks.length && _searchResultsTabs.isNotEmpty) {
+      final tabIndex = i - openedBooks.length;
+      if (tabIndex >= 0 && tabIndex < _searchResultsTabs.length) {
+        setState(() {
+          _searchResultsTabs.removeAt(tabIndex);
+          if (selectedBookP >= openedBooks.length + _searchResultsTabs.length) {
+            selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
+          }
+          if (selectedBookP < 0 && openedBooks.isNotEmpty) {
+            selectedBookP = 0;
+          }
+        });
+      }
+      return;
+    }
+
+    openedBooks.removeAt(i);
+    if (selectedBookP >= openedBooks.length) {
+      selectedBookP = openedBooks.length - 1;
+    }
+    if (selectedBookP < 0 && openedBooks.isNotEmpty) {
+      selectedBookP = 0;
     }
     setState(() {});
   }
 
-  void _handleSearchResultNavigation(String bookPath, int pageNumber) {
-    _onBookSelected(File(bookPath), pageNumber: pageNumber);
-    setState(() {}); // Update UI to reflect new book/page
+  void _closeSearchResultsTab(String tabId) {
+    setState(() {
+      _searchResultsTabs.removeWhere((tab) => tab.id == tabId);
+      if (selectedBookP >= openedBooks.length + _searchResultsTabs.length) {
+        selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
+      }
+      if (selectedBookP < 0 && openedBooks.isNotEmpty) {
+        selectedBookP = 0;
+      }
+    });
   }
 
-  // هذه هي الدالة المعدلة باستخدام LongPressDraggable
-  Widget openedBooksTitlesList() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8.0, right: 8, top: 24),
-      child: SizedBox(
-        height: 24,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          itemCount: openedBooks.length,
-          itemBuilder: (context, i) {
-            WordDocument book = openedBooks[i];
-
-            return DragTarget<int>(
-              onWillAccept: (data) => true,
-              onAccept: (oldIndex) {
-                setState(() {
-                  final newIndex = i;
-                  if (oldIndex != newIndex) {
-                    final WordDocument draggedBook = openedBooks.removeAt(oldIndex);
-                    openedBooks.insert(newIndex, draggedBook);
-                  }
-                });
-              },
-              builder: (context, candidateData, rejectedData) {
-                return LongPressDraggable(
-                  data: i, // نمرر فهرس العنصر الحالي
-                  delay: Duration(milliseconds: 300), // يبدأ السحب فوراً
-                  feedback: Material( // الشكل الذي يظهر أثناء السحب
-                    elevation: 4.0,
-                    child: BookTitleRow(
-                      title: book.title,
-                      isChoosed: true, // أثناء السحب يظهر كأنه محدد
-                      onTab: () {},
-                      onClose: () {},
-                    ),
-                  ),
-                  child: BookTitleRow(
-                    title: book.title,
-                    isChoosed: selectedBookP == i,
-                    onTab: () => _switchToBook(i),
-                    onClose: () => _closeBook(i),
-                    key: ValueKey(book.title), // استخدام مفتاح فريد وثابت
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ),
-    );
-  }  _closeBook(int i) {
-    print("remove $i");
-    openedBooks.removeAt(i);
-    selectedBookP = openedBooks.length - 1;
-    setState(() {});
-  }
-
-  _switchToBook(int i) {
+  void _switchToBook(int i) {
     selectedBookP = i;
     setState(() {});
   }
 
-  Future<void> _readDocxFile(String? filePath) async {
-    if (filePath == null) return;
+  void _addSearchResultsTab(
+    List<Map<String, dynamic>> results,
+    int totalCount,
+    List<String> searchQueries,
+    bool morphologicalSearch,
+  ) {
+    setState(() {
+      final tabId = DateTime.now().millisecondsSinceEpoch.toString();
+      final newTab = SearchResultsTab(
+        id: tabId,
+        results: results,
+        totalCount: totalCount,
+        searchQueries: searchQueries,
+        morphologicalSearch: morphologicalSearch,
+      );
+      _searchResultsTabs.add(newTab);
+      selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
+    });
+  }
 
-    WordDocument wordDocument = WordDocument();
-    wordDocument.title = getFileName(filePath);
+  void _performSearchInMainWindow(
+    Map<String, dynamic> groupControllersMap,
+    String searchGrouping,
+    List<Map<String, dynamic>> selectedBooksForSearch,
+    Map<String, bool> searchSections,
+    bool morphologicalSearch,
+    bool affixSearch,
+    bool considerHamzas,
+    bool considerDiacritics,
+    bool considerNumbers,
+    bool allPhrasesRequired,
+    bool ordered,
+    bool proximity,
+    List<Map<String, dynamic>> indexedBooks,
+  ) {
+    final searchQueries = _extractSearchQueries(groupControllersMap);
+    final tabId = DateTime.now().millisecondsSinceEpoch.toString();
 
-    // 1. Generate Cache Path
-    final appDocsDir = await getApplicationDocumentsDirectory();
-    final tomeOceanDir = Directory('${appDocsDir.path}/tome_ocean');
-    final bookCacheDir = Directory('${tomeOceanDir.path}/${wordDocument.title}');
-    final metadataFile = File('${bookCacheDir.path}/metadata.json');
-    final pagesDir = Directory('${bookCacheDir.path}/pages');
+    _searchHandlers!.performSearchInMainWindow(
+      groupControllersMap: groupControllersMap,
+      searchGrouping: searchGrouping,
+      selectedBooksForSearch: selectedBooksForSearch,
+      searchSections: searchSections,
+      morphologicalSearch: morphologicalSearch,
+      affixSearch: affixSearch,
+      considerHamzas: considerHamzas,
+      considerDiacritics: considerDiacritics,
+      considerNumbers: considerNumbers,
+      allPhrasesRequired: allPhrasesRequired,
+      ordered: ordered,
+      proximity: proximity,
+      indexedBooks: indexedBooks,
+      onSearchResultsUpdate: (results, totalCount, queries, morphological) {
+        if (mounted) {
+          _updateSearchResultsTab(
+            tabId,
+            results,
+            totalCount,
+            queries,
+            searchQueries,
+            morphological,
+          );
+        }
+      },
+    );
+  }
 
-    print("Book cache path ${bookCacheDir.path}");
-    bool loadedFromCache = false;
-
-    try {
-      // 2. Check for existing, valid cache
-      if (await bookCacheDir.exists()) {
-        final docxFile = File(filePath);
-        final docxLastModified = await docxFile.lastModified();
-        final cacheLastModified = await metadataFile.lastModified();
-
-        if (cacheLastModified.isAfter(docxLastModified)) {
-          // Cache is valid, load from split files
-          final jsonString = await metadataFile.readAsString();
-          final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-          wordDocument = WordDocument.fromCacheJson(jsonMap);
-          wordDocument.pagesDirectory = pagesDir.path;
-
-          // Load page file paths
-          final pageFiles = await pagesDir.list().toList();
-          pageFiles.sort((a, b) {
-            final aNum = int.parse(p.basenameWithoutExtension(a.path));
-            final bNum = int.parse(p.basenameWithoutExtension(b.path));
-            return aNum.compareTo(bNum);
-          });
-          wordDocument.pageFilePaths = pageFiles.map((file) => p.basename(file.path)).toList();
-          wordDocument.initLoadedPages();
-
-          ShowSnackBar(context, "Loaded from cache: ${wordDocument.title}");
-          loadedFromCache = true;
+  /// Extract search queries from group controllers map
+  List<String> _extractSearchQueries(Map<String, dynamic> groupControllersMap) {
+    final searchQueries = <String>[];
+    groupControllersMap.forEach((key, value) {
+      if (value is List) {
+        for (var text in value) {
+          final trimmedText = text.toString().trim();
+          if (trimmedText.isNotEmpty) {
+            searchQueries.add(trimmedText);
+          }
         }
       }
-    } catch (e) {
-      print("Error loading from cache: $e");
-      ShowSnackBar(context, "Error loading from cache, re-parsing: $e");
-      if (await bookCacheDir.exists()) {
-        await bookCacheDir.delete(recursive: true);
+    });
+    return searchQueries;
+  }
+
+  /// Update or create search results tab
+  void _updateSearchResultsTab(
+    String tabId,
+    List<Map<String, dynamic>> results,
+    int? totalCount,
+    List<String> queries,
+    List<String> fallbackQueries,
+    bool morphological,
+  ) {
+    setState(() {
+      final tabIndex = _searchResultsTabs.indexWhere((tab) => tab.id == tabId);
+      final searchQueries = queries.isNotEmpty ? queries : fallbackQueries;
+      
+      if (tabIndex == -1) {
+        final newTab = SearchResultsTab(
+          id: tabId,
+          results: List.from(results),
+          totalCount: totalCount ?? 0,
+          searchQueries: searchQueries,
+          morphologicalSearch: morphological,
+        );
+        _searchResultsTabs.add(newTab);
+      } else {
+        _searchResultsTabs[tabIndex] = SearchResultsTab(
+          id: tabId,
+          results: List.from(results),
+          totalCount: totalCount ?? 0,
+          searchQueries: searchQueries,
+          morphologicalSearch: morphological,
+        );
       }
-      loadedFromCache = false;
-    }
-
-    if (!loadedFromCache) {
-      // 3. Parse and Save to Cache
-      try {
-        docArchive = await FileToArchive(filePath);
-        List<WordPage> parsedPages = await AddDocData(docArchive, wordDocument);
-        wordDocument.setLoadedPages(parsedPages);
-
-        // Save to cache (split files)
-        await bookCacheDir.create(recursive: true);
-        await pagesDir.create(recursive: true);
-
-        // Save metadata
-        final metadataJsonMap = wordDocument.toMetadataJson();
-        final metadataJsonString = jsonEncode(metadataJsonMap);
-        await metadataFile.writeAsString(metadataJsonString);
-
-        // Save pages
-        wordDocument.pagesDirectory = pagesDir.path;
-        for (int i = 0; i < parsedPages.length; i++) {
-          final pageFile = File('${pagesDir.path}/$i.json');
-          await pageFile.writeAsString(jsonEncode(parsedPages[i].toJson()));
-        }
-
-        ShowSnackBar(context, "Parsed and saved to cache: ${wordDocument.title}");
-      } catch (e) {
-        print("Error parsing docx or saving to cache: $e");
-        ShowSnackBar(context, "Error parsing docx: $e");
-        return; // Stop if parsing fails
-      }
-    }
-
-    openedBooks.add(wordDocument);
-    selectedBookP = openedBooks.length - 1;
-    await Future.delayed(Duration(milliseconds: 1500), () {});
+      
+      selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
+    });
   }
 }

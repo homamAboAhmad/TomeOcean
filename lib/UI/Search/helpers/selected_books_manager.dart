@@ -25,7 +25,7 @@ class SelectedBooksManager {
             orElse: () => Author(id: '', name: '', description: ''),
           );
           if (author.id.isNotEmpty) {
-            deathYear = authorDeathYears[author.id];
+            deathYear = author.deathYear ?? authorDeathYears[author.id];
           }
         }
         

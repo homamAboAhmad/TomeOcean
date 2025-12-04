@@ -38,7 +38,7 @@ getImageWidget(ImageData? imageData) {
   //   print("from paragraph ${image.alingV} ${image.posY}"+top.toString());
   // }
 
-  print("image ${image.rId} $left $top ${image.relativeFromH} ${image.relativeFromV}");
+  // print("image ${image.rId} $left $top ${image.relativeFromH} ${image.relativeFromV}");
   if (image.imageMemory == null) {
     return Container(); // Return an empty container if image data is null
   }

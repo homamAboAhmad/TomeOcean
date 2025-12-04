@@ -17,10 +17,60 @@ class ShamelaSearchIndexer {
   ) async {
     await _engine.initialize();
 
+    // First, filter books that need indexing
+    onProgress(IndexingProgress(message: 'جارٍ فحص الكتب...'));
+    List<String> booksToIndex = [];
     int totalBooks = bookFilePaths.length;
-    int currentBookNum = 0;
+    int checkedBooks = 0;
 
     for (String bookPath in bookFilePaths) {
+      if (cancellationNotifier.value) {
+        onProgress(IndexingProgress(message: 'تم إلغاء الفهرسة.'));
+        return;
+      }
+
+      checkedBooks++;
+      String bookName = p.basenameWithoutExtension(bookPath);
+      
+      onProgress(IndexingProgress(
+        message: 'جارٍ فحص: $bookName ($checkedBooks/$totalBooks)',
+        totalBooks: totalBooks,
+        currentBookNum: checkedBooks,
+      ));
+
+      try {
+        bool needsIndexing = await _engine.needsIndexing(bookPath);
+        if (needsIndexing) {
+          booksToIndex.add(bookPath);
+          // print("ShamelaSearchIndexer: Book needs indexing: $bookName");
+        }
+        // else: Book is up to date, skip silently
+      } catch (e, stackTrace) {
+        // On error, add to list to be safe
+        print("Error checking if $bookName needs indexing: $e");
+        print("Stack trace: $stackTrace");
+        booksToIndex.add(bookPath);
+      }
+    }
+
+    if (booksToIndex.isEmpty) {
+      onProgress(IndexingProgress(
+        message: 'جميع الكتب محدثة. لا حاجة للفهرسة.',
+        totalBooks: totalBooks,
+        currentBookNum: totalBooks,
+      ));
+      return;
+    }
+
+    onProgress(IndexingProgress(
+      message: 'تم العثور على ${booksToIndex.length} كتاب يحتاج للفهرسة من أصل $totalBooks. جارٍ بدء الفهرسة...',
+      totalBooks: booksToIndex.length,
+      currentBookNum: 0,
+    ));
+
+    int currentBookNum = 0;
+
+    for (String bookPath in booksToIndex) {
       if (cancellationNotifier.value) {
         onProgress(IndexingProgress(message: 'تم إلغاء الفهرسة.'));
         return;
@@ -29,8 +79,8 @@ class ShamelaSearchIndexer {
       currentBookNum++;
       String bookName = p.basenameWithoutExtension(bookPath);
       onProgress(IndexingProgress(
-        message: 'جارٍ معالجة الكتاب: $bookName',
-        totalBooks: totalBooks,
+        message: 'جارٍ معالجة الكتاب: $bookName ($currentBookNum/${booksToIndex.length})',
+        totalBooks: booksToIndex.length,
         currentBookNum: currentBookNum,
       ));
 
@@ -73,7 +123,7 @@ class ShamelaSearchIndexer {
           onProgress: (current, total) {
             onProgress(IndexingProgress(
               message: 'جارٍ الفهرسة: $bookName',
-              totalBooks: totalBooks,
+              totalBooks: booksToIndex.length,
               currentBookNum: currentBookNum,
               totalPagesInBook: total,
               currentPageNum: current,
@@ -87,9 +137,9 @@ class ShamelaSearchIndexer {
     }
 
     onProgress(IndexingProgress(
-      message: 'اكتملت الفهرسة لجميع الكتب.',
-      totalBooks: totalBooks,
-      currentBookNum: totalBooks,
+      message: 'اكتملت الفهرسة لجميع الكتب. تم فهرسة ${booksToIndex.length} من أصل $totalBooks كتاب.',
+      totalBooks: booksToIndex.length,
+      currentBookNum: booksToIndex.length,
     ));
   }
 

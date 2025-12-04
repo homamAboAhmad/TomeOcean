@@ -15,6 +15,7 @@ class BookCardEditMode extends StatelessWidget {
 
   final ValueChanged<String?> onSectionChanged;
   final ValueChanged<String?> onAuthorChanged;
+  final VoidCallback? onAddNewAuthor;
 
   const BookCardEditMode({
     Key? key,
@@ -27,6 +28,7 @@ class BookCardEditMode extends StatelessWidget {
     required this.selectedAuthorId,
     required this.onSectionChanged,
     required this.onAuthorChanged,
+    this.onAddNewAuthor,
   }) : super(key: key);
 
   @override
@@ -62,8 +64,13 @@ class BookCardEditMode extends StatelessWidget {
           TextFormField(
             controller: titleCtrl,
             textDirection: TextDirection.rtl,
+            textAlign: TextAlign.right,
             enabled: false,
-            decoration: const InputDecoration(labelText: 'العنوان', border: OutlineInputBorder(), isDense: true),
+            decoration: const InputDecoration(
+              labelText: 'العنوان',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
             validator: (v) => (v == null || v.trim().isEmpty) ? 'يجب إدخال عنوان الكتاب' : null,
           ),
           const SizedBox(height: 10),
@@ -72,7 +79,12 @@ class BookCardEditMode extends StatelessWidget {
           TextFormField(
             controller: descCtrl,
             textDirection: TextDirection.rtl,
-            decoration: const InputDecoration(labelText: 'الوصف', border: OutlineInputBorder(), alignLabelWithHint: true),
+            textAlign: TextAlign.right,
+            decoration: const InputDecoration(
+              labelText: 'الوصف',
+              border: OutlineInputBorder(),
+              alignLabelWithHint: true,
+            ),
             maxLines: 6,
           ),
           const SizedBox(height: 12),
@@ -87,18 +99,34 @@ class BookCardEditMode extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constr) {
         final authorField = Expanded(
-          child: DropdownButtonFormField<String?>(
-            value: selectedAuthorId,
-            decoration: const InputDecoration(
-              labelText: 'المؤلف',
-              border: OutlineInputBorder(),
-              isDense: true,
-            ),
-            isExpanded: true,
-            hint: const Text('اختر مؤلفًا'),
-            items: authorItems,
-            onChanged: onAuthorChanged,
-            validator: (value) => (value == null || value.isEmpty) ? 'يجب اختيار مؤلف' : null,
+          child: Row(
+            textDirection: TextDirection.rtl,
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<String?>(
+                  value: selectedAuthorId,
+                  decoration: const InputDecoration(
+                    labelText: 'المؤلف',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  isExpanded: true,
+                  hint: const Text('اختر مؤلفًا'),
+                  items: authorItems,
+                  onChanged: onAuthorChanged,
+                  validator: (value) => (value == null || value.isEmpty) ? 'يجب اختيار مؤلف' : null,
+                ),
+              ),
+              if (onAddNewAuthor != null) ...[
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  tooltip: 'إضافة مؤلف جديد',
+                  onPressed: onAddNewAuthor,
+                  iconSize: 24,
+                ),
+              ],
+            ],
           ),
         );
 

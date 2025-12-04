@@ -55,6 +55,8 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
   List<Author> _allAuthors = [];
   List<Section> _allSections = [];
   Set<String> _selectedAuthorIds = {}, _selectedSectionIds = {};
+  String? _viewedAuthorId;
+  String? _viewedSectionId;
   bool _isLoadingFilters = false;
   Map<String, int> _authorBookCounts = {};
   Map<String, String> _authorDeathYears = {};
@@ -442,18 +444,10 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
           _selectedBooks[bookPath] = value;
         });
       },
-      onSelectAllBooks: () {
+      onClearBooks: () {
         setState(() {
           for (var book in _getFilteredBooks()) {
-            _selectedBooks[book['book_path'] as String] = true;
-          }
-        });
-      },
-      onInvertSelection: () {
-        setState(() {
-          for (var book in _getFilteredBooks()) {
-            final path = book['book_path'] as String;
-            _selectedBooks[path] = !(_selectedBooks[path] ?? false);
+            _selectedBooks[book['book_path'] as String] = false;
           }
         });
       },
@@ -465,35 +459,23 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
       authorBookCounts: _authorBookCounts,
       authorDeathYears: _authorDeathYears,
       isLoadingFilters: _isLoadingFilters,
-      onAuthorToggled: (authorId) {
-        setState(() {
-          if (_selectedAuthorIds.contains(authorId)) {
-            _selectedAuthorIds.remove(authorId);
-          } else {
-            _selectedAuthorIds.add(authorId);
-          }
-        });
-        _updateFilteredBooks();
+      onAuthorToggled: (id) {},
+      onClearAuthors: () {},
+      onClearSections: () {},
+      onAuthorClicked: (authorId) {
+        setState(() => _viewedAuthorId = authorId);
       },
-      onSelectAllAuthors: () {
-        final isAll = _selectedAuthorIds.length == _allAuthors.length;
-        setState(() => _selectedAuthorIds = isAll ? {} : _allAuthors.map((a) => a.id).toSet());
-        _updateFilteredBooks();
+      onSectionClicked: (sectionId) {
+        setState(() => _viewedSectionId = sectionId);
       },
-      onSectionToggled: (id) {
-        setState(() => _selectedSectionIds.contains(id) ? _selectedSectionIds.remove(id)
-            : _selectedSectionIds.add(id));
-        _updateFilteredBooks();
-      },
-      onSelectAllSections: () {
-        final isAll = _selectedSectionIds.length == _allSections.length;
-        setState(() => _selectedSectionIds = isAll ? {} : _allSections.map((s) => s.id).toSet());
-        _updateFilteredBooks();
-      },
-      onClearSections: () {
-        setState(() => _selectedSectionIds.clear());
-        _updateFilteredBooks();
-      },
+      onAuthorsAdded: (ids) {},
+      onAuthorsRemoved: (ids) {},
+      onBooksAdded: (paths) {},
+      onBooksRemoved: (paths) {},
+      onSectionsAdded: (ids) {},
+      onSectionsRemoved: (ids) {},
+      viewedAuthorId: _viewedAuthorId,
+      viewedSectionId: _viewedSectionId,
     );
   }
 
@@ -514,10 +496,6 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
           }
         });
       },
-      onSelectAllBooks: () {
-        final paths = _selectedBooks.entries.where((e) => e.value).map((e) => e.key).toList();
-        if (paths.isNotEmpty) _addBooksToSelectedList(paths);
-      },
       onDeselectAllAuthors: () {
         final ids = _selectedAuthorIds.toList();
         setState(() {
@@ -530,17 +508,9 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
         });
         _updateFilteredBooks();
       },
-      onSelectAllAuthors: () {
-        for (var id in _selectedAuthorIds) {
-          _addAuthorToSelectedList(id);
-        }
-      },
       onDeselectAllSections: () {
         setState(() => _selectedSectionIds.clear());
         _updateFilteredBooks();
-      },
-      onSelectAllSections: () {
-        _addSectionsToSelectedList();
       },
       onIgnore: () {
         _clearSelectedList();

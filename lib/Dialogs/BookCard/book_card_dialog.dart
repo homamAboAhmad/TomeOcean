@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/Author.dart';
 
-import '../../Helpers/AuthorStorage.dart';
-import '../../Helpers/SectionStorage.dart';
 import '../../Models/BookCard.dart';
 import '../../Models/Section.dart';
+import '../Author/author_dialog.dart';
+import 'book_card_dialog_controller.dart';
 import 'book_card_edit_mode.dart';
 import 'book_card_header.dart';
 import 'book_card_view_mode.dart';
@@ -30,13 +30,12 @@ class _BookCardDialogState extends State<BookCardDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+  final _controller = BookCardDialogController();
 
   String? _selectedSectionId;
   String? _selectedAuthorId;
   bool _isEditing = false;
 
-  final _sectionStorage = SectionStorage();
-  final _authorStorage = AuthorStorage();
   List<Section> _sections = [];
   List<Author> _authors = [];
   String _authorName = '';
@@ -50,18 +49,14 @@ class _BookCardDialogState extends State<BookCardDialog> {
   }
 
   Future<void> _loadData() async {
-    _sections = await _sectionStorage.getSectionsAsync(limit: 1000);
-    _authors = await _authorStorage.getAuthorsAsync(limit: 1000);
-
-    // جلب اسم القسم والمؤلف بناءً على المعرفات
-    final section = await _sectionStorage.getSectionById(widget.book.sectionId);
-    final author = await AuthorStorage.getAuthorById(widget.book.authorId);
-
+    final data = await _controller.loadDialogData(widget.book);
     setState(() {
-      _sectionTitle = section?.title ?? 'غير محدد';
-      _authorName = author?.name ?? 'غير محدد';
-      _selectedSectionId = widget.book.sectionId;
-      _selectedAuthorId = widget.book.authorId;
+      _sections = data.sections;
+      _authors = data.authors;
+      _sectionTitle = data.sectionTitle;
+      _authorName = data.authorName;
+      _selectedSectionId = data.selectedSectionId;
+      _selectedAuthorId = data.selectedAuthorId;
     });
   }
 
@@ -83,11 +78,12 @@ class _BookCardDialogState extends State<BookCardDialog> {
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    final updated = widget.book.copyWith(
-      title: _titleCtrl.text.trim(),
-      sectionId: _selectedSectionId ?? '',
-      authorId: _selectedAuthorId ?? '',
-      description: _descCtrl.text.trim(),
+    final updated = _controller.createUpdatedBookCard(
+      originalBook: widget.book,
+      title: _titleCtrl.text,
+      sectionId: _selectedSectionId,
+      authorId: _selectedAuthorId,
+      description: _descCtrl.text,
     );
     Navigator.of(context).pop(updated);
   }
@@ -99,6 +95,17 @@ class _BookCardDialogState extends State<BookCardDialog> {
       _selectedAuthorId = widget.book.authorId;
       _isEditing = false;
     });
+  }
+
+  Future<void> _addNewAuthor() async {
+    final newAuthor = await showAuthorDialog(context);
+    if (newAuthor != null) {
+      final updatedAuthors = await _controller.reloadAuthors();
+      setState(() {
+        _authors = updatedAuthors;
+        _selectedAuthorId = newAuthor.id;
+      });
+    }
   }
 
   @override
@@ -146,6 +153,7 @@ class _BookCardDialogState extends State<BookCardDialog> {
                       _selectedAuthorId = newId;
                     });
                   },
+                  onAddNewAuthor: _addNewAuthor,
                 )
                     : BookCardViewMode(
                   key: const ValueKey('viewMode'),

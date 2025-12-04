@@ -5,7 +5,7 @@ import 'package:golden_shamela/wordToHTML/runT.dart';
 import 'package:xml/xml.dart';
 
 import '../Utils/ArchiveToXml.dart';
-import '../main.dart';
+import '../core/app_state.dart';
 import 'DocRelations.dart';
 import 'FooterParagraph.dart';
 
@@ -14,7 +14,7 @@ XmlElement? getSectPrFooter(XmlElement sectPrElement,WordDocument? wordDocument)
       sectPrElement.getElement("w:footerReference")?.getAttribute("r:id");
   if (rId == null || wordDocument?.relIdList[rId] == null) return null;
       String footerPath = "word/${wordDocument?.relIdList[rId]?.Target}";
-      ArchiveFile? archiveFile = docArchive.toMap()[footerPath];
+      ArchiveFile? archiveFile = AppState().docArchive.toMap()[footerPath];
       if (archiveFile == null) return null;
       if (!archiveFile.name.endsWith(".xml")) return null; // Add this check
       XmlDocument document = ArchiveToXml(archiveFile);
@@ -32,7 +32,7 @@ XmlElement? getSectPrHeader(XmlElement sectPrElement,WordDocument? wordDoument, 
       headersMap[type]?.getAttribute("r:id");
   if (rId == null || wordDoument?.relIdList[rId] == null) return null;
   String footerPath = "word/${wordDoument?.relIdList[rId]?.Target}";
-  ArchiveFile? archiveFile = docArchive.toMap()[footerPath];
+  ArchiveFile? archiveFile = AppState().docArchive.toMap()[footerPath];
   if (archiveFile == null) return null;
   if (!archiveFile.name.endsWith(".xml")) return null; // Add this check
   XmlDocument document = ArchiveToXml(archiveFile);

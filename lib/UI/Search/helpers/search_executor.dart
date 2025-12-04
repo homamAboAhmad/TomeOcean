@@ -207,6 +207,160 @@ class SearchExecutor {
       totalCount: totalCount,
     );
   }
+
+  /// Perform page-level search with streaming support
+  /// Returns a stream that yields results in batches
+  Stream<SearchResult> performPageSearchStream({
+    required Map<String, List<TextEditingController>> groupControllers,
+    required String searchGrouping,
+    required List<String>? bookPaths,
+    required List<String>? sectionTypes,
+    required bool morphologicalSearch,
+    required bool affixSearch,
+    required bool considerHamzas,
+    required bool considerDiacritics,
+    required bool considerNumbers,
+    required bool allPhrasesRequired,
+    required bool ordered,
+    required bool proximity,
+    int proximityDistance = 5,
+    int batchSize = 10,
+    int? maxResults,
+  }) async* {
+    print("===== [SearchExecutor.performPageSearchStream] ===== Starting stream search");
+    print("  searchGrouping: $searchGrouping");
+    print("  bookPaths count: ${bookPaths?.length ?? 0}");
+    print("  sectionTypes: $sectionTypes");
+    print("  batchSize: $batchSize");
+    
+    await _engine.initialize();
+
+    // Process groups
+    final groups = _pageSearchLogic.processSearchGroups(groupControllers);
+    
+    print("===== [SearchExecutor.performPageSearchStream] ===== Processed groups:");
+    groups.forEach((key, value) {
+      print("  $key: ${value.length} queries");
+    });
+    
+    // Check if any group has queries
+    final hasQueries = groups.values.any((queries) => queries.isNotEmpty);
+    if (!hasQueries) {
+      print("===== [SearchExecutor.performPageSearchStream] ===== No queries found, returning empty result");
+      yield SearchResult(results: [], totalCount: 0);
+      return;
+    }
+
+    // Build FTS query
+    final ftsQuery = _pageSearchLogic.buildPageSearchQuery(
+      groups: groups,
+      searchGrouping: searchGrouping,
+      morphologicalSearch: morphologicalSearch,
+      considerDiacritics: considerDiacritics,
+      considerHamzas: considerHamzas,
+      ordered: ordered,
+      proximity: proximity,
+      proximityDistance: proximityDistance,
+    );
+
+    print("===== [SearchExecutor.performPageSearchStream] ===== Built FTS query: $ftsQuery");
+
+    if (ftsQuery.isEmpty) {
+      print("===== [SearchExecutor.performPageSearchStream] ===== Empty FTS query, returning empty result");
+      yield SearchResult(results: [], totalCount: 0);
+      return;
+    }
+
+    // Stream page results
+    final Set<String> processedPages = {};
+    int? totalCount;
+    int totalProcessed = 0;
+
+    await for (final pageBatch in _engine.searchPagesStream(
+      ftsQuery: ftsQuery,
+      bookPaths: bookPaths,
+      considerDiacritics: considerDiacritics,
+      considerHamzas: considerHamzas,
+      morphologicalSearch: morphologicalSearch,
+      batchSize: batchSize,
+      maxResults: maxResults,
+    )) {
+      print("===== [SearchExecutor.performPageSearchStream] ===== Received page batch: ${pageBatch.length} pages");
+      
+      // Get total count from first batch
+      if (totalCount == null && pageBatch.isNotEmpty) {
+        totalCount = pageBatch.first['estimatedTotalHits'] as int? ?? 0;
+        print("===== [SearchExecutor.performPageSearchStream] ===== Total count: $totalCount");
+      }
+
+      // Process batch and convert to paragraph-like format
+      final List<Map<String, dynamic>> batchResults = [];
+
+      for (var pageResult in pageBatch) {
+        final bookPath = pageResult['book_path'] as String;
+        final pageNumber = pageResult['page_number'] as int;
+        final pageKey = '$bookPath|$pageNumber';
+        
+        if (processedPages.contains(pageKey)) {
+          print("===== [SearchExecutor.performPageSearchStream] ===== Skipping duplicate page: $pageKey");
+          continue;
+        }
+        processedPages.add(pageKey);
+
+        try {
+          // Get all paragraphs from this page
+          final paragraphs = await _engine.getParagraphsByPage(bookPath, pageNumber);
+          
+          print("===== [SearchExecutor.performPageSearchStream] ===== Page $pageNumber in ${pageResult['book_name']}: ${paragraphs.length} paragraphs");
+          
+          // Filter by section types if specified
+          final filteredParagraphs = sectionTypes != null && sectionTypes.isNotEmpty
+              ? paragraphs.where((p) => sectionTypes.contains(p['section_type'])).toList()
+              : paragraphs;
+
+          if (filteredParagraphs.isNotEmpty) {
+            // Use first paragraph as representative of the page
+            final firstPara = filteredParagraphs.first;
+            
+            // Aggregate content from all paragraphs for better snippet
+            final aggregatedContent = filteredParagraphs
+                .map((p) => p['content'] as String? ?? '')
+                .where((c) => c.trim().isNotEmpty)
+                .join(' ');
+            
+            // Add one result per page with aggregated content
+            batchResults.add({
+              'id': firstPara['id'],
+              'book_path': bookPath,
+              'book_name': pageResult['book_name'] ?? firstPara['book_name'],
+              'page_number': pageNumber,
+              'section_type': firstPara['section_type'],
+              'content': aggregatedContent.length > 500 
+                  ? '${aggregatedContent.substring(0, 500)}...' 
+                  : aggregatedContent,
+              'raw_content': aggregatedContent,
+              'estimatedTotalHits': totalCount ?? 0,
+            });
+          }
+        } catch (e) {
+          print("===== [SearchExecutor.performPageSearchStream] ===== ERROR processing page $pageKey: $e");
+          // Continue with next page
+        }
+      }
+
+      totalProcessed += batchResults.length;
+      print("===== [SearchExecutor.performPageSearchStream] ===== Yielding batch: ${batchResults.length} results (total processed: $totalProcessed)");
+
+      if (batchResults.isNotEmpty) {
+        yield SearchResult(
+          results: batchResults,
+          totalCount: totalCount ?? totalProcessed,
+        );
+      }
+    }
+
+    print("===== [SearchExecutor.performPageSearchStream] ===== Stream completed. Total processed: $totalProcessed");
+  }
 }
 
 /// Data class for search result

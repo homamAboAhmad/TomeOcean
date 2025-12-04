@@ -48,6 +48,7 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
   final Set<int> _visitedPagesSet = {};
   late final TextEditingController _pageNumberController;
 
+
   @override
   bool get wantKeepAlive => true;
 
@@ -199,6 +200,7 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -232,10 +234,7 @@ class _DocViewerState extends State<DocViewer> with AutomaticKeepAliveClientMixi
                     } else if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     } else if (snapshot.hasData) {
-                      return WordPageScreen(
-                        snapshot.data!,
-                        wordDocument: widget.wordDocument,
-                      );
+                      return WordPageScreen(snapshot.data!, wordDocument: widget.wordDocument);
                     } else {
                       return const Center(child: Text('No page selected'));
                     }

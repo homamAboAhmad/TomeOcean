@@ -75,7 +75,7 @@ class SearchStateManager {
       bookCounts[author.id] = count;
     }
     
-    // Extract death years from author descriptions
+    // Extract death years from author deathYear field
     final deathYears = _extractDeathYears(authors);
     
     print("SearchStateManager: Final filter data loaded: ${authors.length} authors, ${sections.length} sections");
@@ -190,22 +190,13 @@ class SearchStateManager {
     }
   }
 
-  /// Extract death years from author descriptions
+  /// Extract death years from author deathYear field
   Map<String, String> _extractDeathYears(List<Author> authors) {
     final deathYears = <String, String>{};
     for (var author in authors) {
-      // Try to extract death year from description
-      // Common patterns: "ت 545 م", "ت 545", "545 م", etc.
-      final description = author.description;
-      if (description.isNotEmpty) {
-        final regex = RegExp(r'ت\s*(\d+)\s*م?|(\d+)\s*م');
-        final match = regex.firstMatch(description);
-        if (match != null) {
-          final year = match.group(1) ?? match.group(2);
-          if (year != null) {
-            deathYears[author.id] = year;
-          }
-        }
+      // Use deathYear field directly if available
+      if (author.deathYear != null && author.deathYear!.isNotEmpty) {
+        deathYears[author.id] = author.deathYear!;
       }
     }
     return deathYears;

@@ -114,7 +114,7 @@ class WordDocument {
   }
 
   static Map<String, Uint8List> _docImagesFromJson(Map<String, dynamic> json) {
-    print("_docImagesFromJson called with json: $json");
+    // print("_docImagesFromJson called with json keys: ${json.keys.toList()}");
     return json.map((key, value) => MapEntry(key, uint8ListFromJson(value as String?) ?? Uint8List(0)));
   }
 

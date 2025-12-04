@@ -12,7 +12,7 @@ List<String> addDocFonts(ArchiveFile? archiveFile) {
   if(archiveFile==null) return [];
   // تحويل ArchiveFile إلى XmlDocument
   XmlDocument document = ArchiveToXml(archiveFile);
-  print("document.toXmlString(pretty: true)");
+  // print("document.toXmlString(pretty: true)");
   int i =0;
   List<String> fonts = [];
   document.getElement("w:fonts")?.childElements.forEach((e){

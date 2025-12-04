@@ -14,17 +14,33 @@ import 'package:golden_shamela/UI/Search/helpers/search_executor.dart';
 import 'package:golden_shamela/UI/Search/helpers/selected_books_manager.dart';
 import 'package:golden_shamela/UI/Search/widgets/search_dialog_builder.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_callbacks_helper.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_operation_controller.dart';
+import 'package:golden_shamela/UI/Search/helpers/book_selection_logic.dart';
+import 'package:golden_shamela/UI/Search/widgets/no_results_bottom_sheet.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:flutter/services.dart';
-import 'package:window_manager/window_manager.dart';
 
+/// Main search window widget for Shamela search functionality.
+/// 
+/// This widget provides a comprehensive search interface with:
+/// - Multiple search query groups (AND, OR, NOT)
+/// - Advanced search options (morphological, affix, etc.)
+/// - Book/Author/Section filtering and selection
+/// - Results display and navigation
 class ShamelaSearchWindow extends StatefulWidget {
-  final Function(String, int) onResultTapped;
+  /// Callback invoked when a search result is tapped.
+  final Function(String, int)? onResultTapped;
+  
+  /// Callback invoked when a search is requested with parameters.
+  final Function(Map<String, dynamic>)? onSearchRequested;
+  
+  /// List of all indexed books available for search.
   final List<Map<String, dynamic>> indexedBooks;
   
   const ShamelaSearchWindow({
     Key? key,
-    required this.onResultTapped,
+    this.onResultTapped,
+    this.onSearchRequested,
     required this.indexedBooks,
   }) : super(key: key);
 
@@ -32,7 +48,7 @@ class ShamelaSearchWindow extends StatefulWidget {
   _ShamelaSearchWindowState createState() => _ShamelaSearchWindowState();
 }
 
-class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowListener {
+class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
   final Map<String, List<TextEditingController>> _groupControllers = {
     'and': List.generate(5, (_) => TextEditingController()),
     'or': List.generate(5, (_) => TextEditingController()),
@@ -47,18 +63,24 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
   List<Map<String, dynamic>> _results = [];
   int _totalCount = 0;
   String? _errorMessage;
+  bool _hasSearched = false;
   late Map<String, bool> _selectedBooks;
   List<Map<String, dynamic>> _filteredIndexedBooks = [];
   final SearchStateManager _stateManager = SearchStateManager();
   final SearchExecutor _searchExecutor = SearchExecutor();
   final SelectedBooksManager _selectedBooksManager = SelectedBooksManager();
   final BooksMetadataDatabase _metadataDb = BooksMetadataDatabase();
+  late final SearchOperationController _searchOperationController;
+  late final BookSelectionLogic _bookSelectionLogic;
   List<Author> _allAuthors = [];
   List<Section> _allSections = [];
   Set<String> _selectedAuthorIds = {}, _selectedSectionIds = {};
+  String? _viewedAuthorId;
+  String? _viewedSectionId;
   bool _isLoadingFilters = false;
   Map<String, int> _authorBookCounts = {};
   Map<String, String> _authorDeathYears = {};
+  Map<String, String> _bookAuthorMap = {};
   String _selectedSidebarTab = 'المؤلفون';
   final TextEditingController _booksSearchController = TextEditingController();
   final TextEditingController _selectedBooksSearchController = TextEditingController();
@@ -67,32 +89,21 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
   @override
   void initState() {
     super.initState();
-    windowManager.addListener(this);
     _filteredIndexedBooks = widget.indexedBooks;
     _selectedBooks = {for (var b in widget.indexedBooks) b['book_path'] as String: false};
-    _loadFilterData();
-    _initializeWindow();
-  }
-
-  Future<void> _initializeWindow() async {
-    await windowManager.ensureInitialized();
-    const windowOptions = WindowOptions(
-      size: Size(1200, 800),
-      minimumSize: Size(800, 600),
-      center: true,
-      backgroundColor: Colors.transparent,
-      skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.normal,
+    _searchOperationController = SearchOperationController(
+      searchExecutor: _searchExecutor,
+      metadataDb: _metadataDb,
     );
-    await windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-      await windowManager.focus();
-    });
+    _bookSelectionLogic = BookSelectionLogic(
+      searchExecutor: _searchExecutor,
+      metadataDb: _metadataDb,
+    );
+    _loadFilterData();
   }
 
   @override
   void dispose() {
-    windowManager.removeListener(this);
     for (var group in _groupControllers.values) {
       for (var c in group) c.dispose();
     }
@@ -101,12 +112,10 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     super.dispose();
   }
 
-  @override
-  void onWindowClose() async {
-    // Handle window close
-    super.onWindowClose();
-  }
-
+  /// Loads filter data including authors, sections, and book-author mappings.
+  /// 
+  /// Sets [_isLoadingFilters] to true during loading and false when complete.
+  /// Handles errors gracefully by setting loading state to false.
   Future<void> _loadFilterData() async {
     setState(() => _isLoadingFilters = true);
     try {
@@ -118,12 +127,26 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
         _authorDeathYears = filterData.authorDeathYears;
         _isLoadingFilters = false;
       });
+      
+      final bookAuthorMap = await _metadataDb.getAllBookAuthorMappings();
+      if (mounted) {
+        setState(() {
+          _bookAuthorMap = bookAuthorMap;
+        });
+      }
     } catch (e) {
-      print("ShamelaSearchWindow: Error loading filter data: $e");
-      setState(() => _isLoadingFilters = false);
+      // Error handling: Reset loading state and continue
+      // In production, consider showing an error message to the user
+      if (mounted) {
+        setState(() => _isLoadingFilters = false);
+      }
     }
   }
 
+  /// Updates the filtered books list based on selected authors and sections.
+  /// 
+  /// Syncs the selected books state and updates the UI accordingly.
+  /// Falls back to all indexed books if an error occurs.
   Future<void> _updateFilteredBooks() async {
     try {
       final result = await _stateManager.updateFilteredBooks(
@@ -142,12 +165,17 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
       });
       _syncSelectedBooksWithSearchList();
     } catch (e) {
-      print("ShamelaSearchWindow: Error updating filtered books: $e");
-      setState(() => _filteredIndexedBooks = widget.indexedBooks);
+      // Error handling: Fall back to all books
+      if (mounted) {
+        setState(() => _filteredIndexedBooks = widget.indexedBooks);
+      }
     }
   }
 
-  void _addBooksToSelectedList(List<String> bookPaths) async {
+  /// Adds books to the selected list for search.
+  /// 
+  /// Filters out books that are already in the selected list.
+  Future<void> _addBooksToSelectedList(List<String> bookPaths) async {
     final newItems = await _selectedBooksManager.addBooksToSelectedList(
       bookPaths, _allAuthors, _authorDeathYears);
     final filtered = newItems.where((item) => !_selectedBooksForSearch.any((e) => 
@@ -158,7 +186,10 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     }
   }
 
-  void _addAuthorToSelectedList(String authorId) async {
+  /// Adds an author and their books to the selected list for search.
+  /// 
+  /// Skips if the author is already in the selected list.
+  Future<void> _addAuthorToSelectedList(String authorId) async {
     if (_selectedBooksForSearch.any((item) => 
         item['type'] == 'author' && item['authorId'] == authorId)) return;
     final author = _allAuthors.firstWhere(
@@ -177,11 +208,14 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     }
   }
 
-  void _addSectionsToSelectedList() async {
-    if (_selectedSectionIds.isEmpty) return;
+  /// Adds sections to the selected list for search.
+  /// 
+  /// Skips sections that are already in the selected list.
+  Future<void> _addSectionsToSelectedList(List<String> sectionIds) async {
+    if (sectionIds.isEmpty) return;
     
     setState(() {
-      for (var sectionId in _selectedSectionIds) {
+      for (var sectionId in sectionIds) {
         if (_selectedBooksForSearch.any((item) => 
             item['type'] == 'section' && item['sectionId'] == sectionId)) {
           continue;
@@ -205,6 +239,45 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     });
   }
 
+  /// Adds multiple authors to the selected list.
+  /// 
+  /// Processes each author sequentially.
+  Future<void> _addAuthorsToSelectedList(List<String> authorIds) async {
+    for (var authorId in authorIds) {
+      await _addAuthorToSelectedList(authorId);
+    }
+  }
+
+  /// Removes authors from the selected list and syncs the book selection.
+  void _removeAuthorsFromSelectedList(List<String> authorIds) {
+    setState(() {
+      _selectedBooksForSearch.removeWhere((item) => 
+          item['type'] == 'author' && authorIds.contains(item['authorId']));
+    });
+    _syncSelectedBooksWithSearchList();
+  }
+
+  /// Removes sections from the selected list and syncs the book selection.
+  void _removeSectionsFromSelectedList(List<String> sectionIds) {
+    setState(() {
+      _selectedBooksForSearch.removeWhere((item) => 
+          item['type'] == 'section' && sectionIds.contains(item['sectionId']));
+    });
+    _syncSelectedBooksWithSearchList();
+  }
+
+  /// Removes books from the selected list and syncs the selection state.
+  void _removeBooksFromSelectedList(List<String> bookPaths) {
+    setState(() {
+      _selectedBooksForSearch.removeWhere((item) => 
+          item['type'] == 'book' && bookPaths.contains(item['bookPath']));
+    });
+    _syncSelectedBooksWithSearchList();
+  }
+
+  /// Removes items from the selected list by their indices.
+  /// 
+  /// Sorts indices in descending order to avoid index shifting issues.
   void _removeFromSelectedList(List<int> indices) {
     setState(() {
       indices.sort((a, b) => b.compareTo(a));
@@ -215,11 +288,16 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     _syncSelectedBooksWithSearchList();
   }
 
+  /// Clears the entire selected list and syncs the book selection state.
   void _clearSelectedList() {
     setState(() => _selectedBooksForSearch.clear());
     _syncSelectedBooksWithSearchList();
   }
 
+  /// Synchronizes the selected books state with the search list.
+  /// 
+  /// Updates [_selectedBooks] based on books in [_selectedBooksForSearch]
+  /// and books from selected authors.
   void _syncSelectedBooksWithSearchList() {
     setState(() {
       final bookPathsInSearch = _selectedBooksForSearch
@@ -256,91 +334,32 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     });
   }
 
-  void _performSearch() async {
-    bool hasQueries = false;
-    for (var group in _groupControllers.values) {
-      if (group.any((c) => c.text.trim().isNotEmpty)) {
-        hasQueries = true;
-        break;
-      }
+  /// Performs the search operation with current parameters.
+  /// 
+  /// Executes the search locally and updates results. Also sends search params
+  /// via [onSearchRequested] callback if provided. Returns early if no queries are provided.
+  /// Sets [_errorMessage] if an error occurs during the process.
+  Future<void> _performSearch() async {
+    if (!_searchOperationController.hasSearchQueries(_groupControllers)) {
+      return;
     }
-    if (!hasQueries) return;
 
-    setState(() {
-      _isLoading = true;
-      _results = [];
-      _totalCount = 0;
-      _errorMessage = null;
-    });
+    _initializeSearchState();
 
     try {
-      final sectionIdsFromSearch = _selectedBooksForSearch
-          .where((item) => item['type'] == 'section' && item['sectionId'] != null)
-          .map((item) => item['sectionId'] as String)
-          .toList();
-      
-      List<String>? booksFromSections;
-      if (sectionIdsFromSearch.isNotEmpty) {
-        await _metadataDb.initialize();
-        final allBookPaths = <String>[];
-        for (var sectionId in sectionIdsFromSearch) {
-          final bookPaths = await _metadataDb.getBookPaths(sectionId: sectionId);
-          allBookPaths.addAll(bookPaths);
-        }
-        booksFromSections = allBookPaths.where((bookPath) {
-          return _filteredIndexedBooks.any((book) => 
-              book['book_path'] == bookPath);
-        }).toList();
-      }
-      
-      final bookPathsFromSearch = _selectedBooksForSearch
-          .where((item) => item['type'] == 'book' && item['bookPath'] != null)
-          .map((item) => item['bookPath'] as String)
-          .toList();
-      
-      final authorIdsFromSearch = _selectedBooksForSearch
-          .where((item) => item['type'] == 'author' && item['authorId'] != null)
-          .map((item) => item['authorId'] as String)
-          .toSet();
-      
-      List<String>? booksFromAuthors;
-      if (authorIdsFromSearch.isNotEmpty) {
-        await _metadataDb.initialize();
-        final allBookPaths = <String>[];
-        for (var authorId in authorIdsFromSearch) {
-          final bookPaths = await _metadataDb.getBookPaths(authorId: authorId);
-          allBookPaths.addAll(bookPaths);
-        }
-        booksFromAuthors = allBookPaths.where((bookPath) {
-          return _filteredIndexedBooks.any((book) => 
-              book['book_path'] == bookPath);
-        }).toList();
-      }
-      
-      Set<String> allBooksToSearch = {};
-      if (booksFromSections != null) allBooksToSearch.addAll(booksFromSections);
-      if (bookPathsFromSearch.isNotEmpty) allBooksToSearch.addAll(bookPathsFromSearch);
-      if (booksFromAuthors != null) allBooksToSearch.addAll(booksFromAuthors);
-      
-      List<String>? booksToSearch;
-      if (allBooksToSearch.isNotEmpty) {
-        booksToSearch = allBooksToSearch.toList();
-      } else {
-        booksToSearch = _searchExecutor.determineBooksToSearch(
-          filteredIndexedBooks: _filteredIndexedBooks,
-          allIndexedBooks: widget.indexedBooks,
-          selectedBooks: _selectedBooks,
-        );
-      }
-      
-      final selectedSections = _searchSections.entries
-          .where((e) => e.value).map((e) => e.key).toList();
-      
-      final result = await _searchExecutor.performPageSearch(
+      final booksToSearch = await _bookSelectionLogic.determineBooksToSearch(
+        selectedBooksForSearch: _selectedBooksForSearch,
+        filteredIndexedBooks: _filteredIndexedBooks,
+        allIndexedBooks: widget.indexedBooks,
+        selectedBooks: _selectedBooks,
+      );
+      final selectedSections = _searchOperationController.getSelectedSections(_searchSections);
+      final result = await _searchOperationController.executeSearch(
         groupControllers: _groupControllers,
         searchGrouping: _searchGrouping,
-        bookPaths: booksToSearch,
-        sectionTypes: selectedSections.length < _searchSections.length ? selectedSections : null,
+        booksToSearch: booksToSearch,
+        selectedSections: selectedSections,
+        searchSections: _searchSections,
         morphologicalSearch: _morphologicalSearch,
         affixSearch: _affixSearch,
         considerHamzas: _considerHamzas,
@@ -350,24 +369,97 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
         ordered: _ordered,
         proximity: _proximity,
       );
-      setState(() {
-        _results = result.results;
-        _totalCount = result.totalCount;
-      });
+      
+      _updateSearchResults(result);
+      _handleNoResults(result);
+      _sendSearchParamsIfNeeded();
     } catch (e) {
-      print("خطأ في البحث: $e");
-      setState(() => _errorMessage = "خطأ في البحث: $e");
+      _handleSearchError(e);
     } finally {
-      setState(() => _isLoading = false);
-    }       
+      _finalizeSearchState();
+    }
   }
 
+  /// Initializes the search state before performing search.
+  void _initializeSearchState() {
+    setState(() {
+      _isLoading = true;
+      _results = [];
+      _totalCount = 0;
+      _errorMessage = null;
+      _hasSearched = true;
+    });
+  }
+
+
+  /// Updates the search results state.
+  void _updateSearchResults(SearchResult result) {
+    setState(() {
+      _results = result.results;
+      _totalCount = result.totalCount;
+    });
+  }
+
+  /// Handles the case when no results are found.
+  void _handleNoResults(SearchResult result) {
+    if (result.results.isEmpty && result.totalCount == 0 && mounted) {
+      NoResultsBottomSheet.show(context);
+    }
+  }
+
+  /// Sends search parameters via callback if results exist and callback is provided.
+  void _sendSearchParamsIfNeeded() {
+    if (widget.onSearchRequested == null || _results.isEmpty) {
+      return;
+    }
+    
+    final groupControllersMap = _searchOperationController.buildGroupControllersMap(_groupControllers);
+    final searchParams = _searchOperationController.buildSearchParams(
+      groupControllersMap: groupControllersMap,
+      searchGrouping: _searchGrouping,
+      selectedBooksForSearch: _selectedBooksForSearch,
+      searchSections: _searchSections,
+      morphologicalSearch: _morphologicalSearch,
+      affixSearch: _affixSearch,
+      considerHamzas: _considerHamzas,
+      considerDiacritics: _considerDiacritics,
+      considerNumbers: _considerNumbers,
+      allPhrasesRequired: _allPhrasesRequired,
+      ordered: _ordered,
+      proximity: _proximity,
+      indexedBooks: widget.indexedBooks,
+    );
+    widget.onSearchRequested!(searchParams);
+  }
+
+  /// Handles search errors.
+  void _handleSearchError(dynamic error) {
+    if (mounted) {
+      setState(() {
+        _errorMessage = "خطأ في البحث: $error";
+        _results = [];
+        _totalCount = 0;
+      });
+    }
+  }
+
+  /// Finalizes the search state after search completion.
+  void _finalizeSearchState() {
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  /// Adds a new query field to the specified group at the given index.
   void _addQueryField(String groupKey, int index) {
     setState(() {
       _groupControllers[groupKey]!.insert(index, TextEditingController());
     });
   }
 
+  /// Removes a query field from the specified group at the given index.
+  /// 
+  /// Ensures at least one field remains in each group.
   void _removeQueryField(String groupKey, int index) {
     setState(() {
       if (_groupControllers[groupKey]!.length > 1) {
@@ -377,6 +469,7 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     });
   }
 
+  /// Builds the search options panel widget.
   Widget _buildSearchOptionsPanel() {
     return SearchOptionsPanel(
       searchSections: _searchSections,
@@ -409,7 +502,11 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
         for (var group in _groupControllers.values) {
           for (var c in group) c.clear();
         }
-        setState(() { _results = []; _totalCount = 0; });
+        setState(() { 
+          _results = []; 
+          _totalCount = 0; 
+          _hasSearched = false;
+        });
       },
       isLoading: _isLoading,
       errorMessage: _errorMessage,
@@ -423,6 +520,10 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     );
   }
 
+  /// Gets the filtered books list based on the current search query.
+  /// 
+  /// Returns all filtered books if search query is empty,
+  /// otherwise filters by book title.
   List<Map<String, dynamic>> _getFilteredBooks() {
     final q = _booksSearchController.text.toLowerCase();
     return q.isEmpty ? _filteredIndexedBooks
@@ -430,6 +531,7 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
             p.basenameWithoutExtension(b['book_path'] as String).toLowerCase().contains(q)).toList();
   }
 
+  /// Builds the middle panel content widget (books/authors/sections).
   Widget _buildMiddlePanelContent() {
     return MiddlePanelContent(
       selectedTab: _selectedSidebarTab,
@@ -441,21 +543,14 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
           _selectedBooks[bookPath] = value;
         });
       },
-      onSelectAllBooks: () {
+      onClearBooks: () {
         setState(() {
           for (var book in _getFilteredBooks()) {
-            _selectedBooks[book['book_path'] as String] = true;
+            _selectedBooks[book['book_path'] as String] = false;
           }
         });
       },
-      onInvertSelection: () {
-        setState(() {
-          for (var book in _getFilteredBooks()) {
-            final path = book['book_path'] as String;
-            _selectedBooks[path] = !(_selectedBooks[path] ?? false);
-          }
-        });
-      },
+
       booksSearchController: _booksSearchController,
       selectedAuthorIds: _selectedAuthorIds,
       selectedSectionIds: _selectedSectionIds,
@@ -464,38 +559,62 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
       authorBookCounts: _authorBookCounts,
       authorDeathYears: _authorDeathYears,
       isLoadingFilters: _isLoadingFilters,
-      onAuthorToggled: (authorId) {
+      onAuthorToggled: (id) {
         setState(() {
-          if (_selectedAuthorIds.contains(authorId)) {
-            _selectedAuthorIds.remove(authorId);
+          // Handle both authors and sections (MiddlePanelContent reuses this for sections)
+          if (_selectedAuthorIds.contains(id)) {
+            _selectedAuthorIds.remove(id);
+          } else if (_selectedSectionIds.contains(id)) {
+            _selectedSectionIds.remove(id);
           } else {
-            _selectedAuthorIds.add(authorId);
+            // Check if it's an author ID or section ID by checking which list contains it
+            final isAuthor = _allAuthors.any((a) => a.id == id);
+            if (isAuthor) {
+              _selectedAuthorIds.add(id);
+            } else {
+              _selectedSectionIds.add(id);
+            }
           }
         });
         _updateFilteredBooks();
       },
-      onSelectAllAuthors: () {
-        final isAll = _selectedAuthorIds.length == _allAuthors.length;
-        setState(() => _selectedAuthorIds = isAll ? {} : _allAuthors.map((a) => a.id).toSet());
-        _updateFilteredBooks();
-      },
-      onSectionToggled: (id) {
-        setState(() => _selectedSectionIds.contains(id) ? _selectedSectionIds.remove(id)
-            : _selectedSectionIds.add(id));
-        _updateFilteredBooks();
-      },
-      onSelectAllSections: () {
-        final isAll = _selectedSectionIds.length == _allSections.length;
-        setState(() => _selectedSectionIds = isAll ? {} : _allSections.map((s) => s.id).toSet());
+
+      onClearAuthors: () {
+        setState(() => _selectedAuthorIds = {});
         _updateFilteredBooks();
       },
       onClearSections: () {
         setState(() => _selectedSectionIds.clear());
         _updateFilteredBooks();
       },
+      onAuthorClicked: (authorId) {
+        setState(() => _viewedAuthorId = authorId);
+      },
+      onSectionClicked: (sectionId) {
+        setState(() => _viewedSectionId = sectionId);
+      },
+      onAuthorsAdded: _addAuthorsToSelectedList,
+      onAuthorsRemoved: _removeAuthorsFromSelectedList,
+      onBooksAdded: _addBooksToSelectedList,
+      onBooksRemoved: _removeBooksFromSelectedList,
+      onSectionsAdded: _addSectionsToSelectedList,
+      onSectionsRemoved: _removeSectionsFromSelectedList,
+      viewedAuthorId: _viewedAuthorId,
+      viewedSectionId: _viewedSectionId,
+      bookAuthorMap: _bookAuthorMap,
+      onSelectAll: _handleSelectAll,
+      onSelectAllAuthors: _handleSelectAllAuthors,
+      onSelectAllBooks: () {
+        // This callback will be handled by AuthorsTablePanel/SectionsListPanel
+        // They know which books are visible
+      },
+      onSelectAllSections: _handleSelectAllSections,
     );
   }
 
+  /// Builds the bottom bar widget with selection actions.
+  /// 
+  /// Only shows deselect buttons since selection is handled in the panels.
   Widget _buildBottomBar() {
     return SearchBottomBar(
       selectedTab: _selectedSidebarTab,
@@ -513,10 +632,6 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
           }
         });
       },
-      onSelectAllBooks: () {
-        final paths = _selectedBooks.entries.where((e) => e.value).map((e) => e.key).toList();
-        if (paths.isNotEmpty) _addBooksToSelectedList(paths);
-      },
       onDeselectAllAuthors: () {
         final ids = _selectedAuthorIds.toList();
         setState(() {
@@ -529,17 +644,9 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
         });
         _updateFilteredBooks();
       },
-      onSelectAllAuthors: () {
-        for (var id in _selectedAuthorIds) {
-          _addAuthorToSelectedList(id);
-        }
-      },
       onDeselectAllSections: () {
         setState(() => _selectedSectionIds.clear());
         _updateFilteredBooks();
-      },
-      onSelectAllSections: () {
-        _addSectionsToSelectedList();
       },
       onIgnore: () {
         _clearSelectedList();
@@ -553,6 +660,9 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     );
   }
 
+  /// Handles select all action based on the current sidebar tab.
+  /// 
+  /// Selects all items in the active tab (books, authors, or sections).
   void _handleSelectAll() {
     switch (_selectedSidebarTab) {
       case 'الكتب':
@@ -577,76 +687,95 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> with WindowLi
     }
   }
 
+  /// Selects all authors and updates the filtered books list.
+  void _handleSelectAllAuthors() {
+    setState(() {
+      _selectedAuthorIds = _allAuthors.map((a) => a.id).toSet();
+    });
+    _updateFilteredBooks();
+  }
+
+  /// Selects all sections and updates the filtered books list.
+  void _handleSelectAllSections() {
+    setState(() {
+      _selectedSectionIds = _allSections.map((s) => s.id).toSet();
+    });
+    _updateFilteredBooks();
+  }
+
+  /// Fallback handler for selecting all books in author panel.
+  /// 
+  /// Note: This is typically handled by [AuthorsTablePanel] which knows
+  /// which books are visible. This is a fallback that selects all filtered books.
+  void _handleSelectAllBooksInAuthorPanel() {
+    setState(() {
+      for (var book in _getFilteredBooks()) {
+        _selectedBooks[book['book_path'] as String] = true;
+      }
+    });
+  }
+
+  /// Fallback handler for selecting all books in section panel.
+  /// 
+  /// Note: This is typically handled by [SectionsListPanel] which knows
+  /// which books are visible. This is a fallback that selects all filtered books.
+  void _handleSelectAllBooksInSectionPanel() {
+    setState(() {
+      for (var book in _getFilteredBooks()) {
+        _selectedBooks[book['book_path'] as String] = true;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Shortcuts(
-        shortcuts: {
-          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyA):
-              const SelectAllIntent(),
-        },
-        child: Actions(
-          actions: {
-            SelectAllIntent: CallbackAction<SelectAllIntent>(
-              onInvoke: (_) {
-                _handleSelectAll();
-                return null;
-              },
-            ),
-          },
-          child: Focus(
-            autofocus: true,
-            child: Scaffold(
-              backgroundColor: bgColor,
-              appBar: AppBar(
-                title: Text('البحث', style: bigStyle(color: secondaryColor, fontSize: 18)),
-                backgroundColor: primaryColor,
-                automaticallyImplyLeading: false,
-                actions: [
-                  IconButton(
-                    icon: Icon(Icons.close, color: secondaryColor, size: 20),
-                    onPressed: () async {
-                      await windowManager.close();
-                    },
-                  ),
-                ],
-              ),
-              body: Column(
-                children: [
-                  SearchDialogBuilder.buildContent( 
-                    selectedTab: _selectedSidebarTab,
-                    onTabSelected: (tab) => setState(() => _selectedSidebarTab = tab),
-                    searchOptionsPanel: _buildSearchOptionsPanel(),
-                    middlePanelContent: _buildMiddlePanelContent(),
-                  ),
-                  _buildBottomBar(),
-                  if (_results.isNotEmpty)
-                    SearchDialogBuilder.buildResultsPanel(
-                      results: _results,
-                      totalCount: _totalCount,
-                      onResultTapped: (path, page) {
-                        widget.onResultTapped(path, page);
-                        windowManager.close();
-                      },
-                      onClose: () => setState(() => _results = []),
-                      searchQueries: _groupControllers.values
-                          .expand((group) => group.map((c) => c.text.trim()))
-                          .where((q) => q.isNotEmpty)
-                          .toList(),
-                      morphologicalSearch: _morphologicalSearch,
-                    ) ?? SizedBox.shrink(),
-                ],
-              ),
-            ),
+      child: _buildScaffold(),
+    );
+  }
+
+  /// Builds the main scaffold widget with all UI components.
+  Widget _buildScaffold() {
+    return Scaffold(
+      backgroundColor: bgColor,
+      body: Column(
+        children: [
+          SearchDialogBuilder.buildContent( 
+            selectedTab: _selectedSidebarTab,
+            onTabSelected: (tab) => setState(() => _selectedSidebarTab = tab),
+            searchOptionsPanel: _buildSearchOptionsPanel(),
+            middlePanelContent: _buildMiddlePanelContent(),
           ),
-        ),
+          _buildBottomBar(),
+          if (_results.isNotEmpty)
+            SearchDialogBuilder.buildResultsPanel(
+              results: _results,
+              totalCount: _totalCount,
+              onResultTapped: widget.onResultTapped != null
+                  ? (path, page) => widget.onResultTapped!(path, page)
+                  : (path, page) {
+                      // If onResultTapped is null, do nothing
+                      // Results will be sent via onSearchPerformed
+                    },
+              onClose: () => setState(() {
+                _results = [];
+                _hasSearched = false;
+              }),
+              searchQueries: _groupControllers.values
+                  .expand((group) => group.map((c) => c.text.trim()))
+                  .where((q) => q.isNotEmpty)
+                  .toList(),
+              morphologicalSearch: _morphologicalSearch,
+            ) ?? SizedBox.shrink(),
+        ],
       ),
     );
   }
 }
 
+
+
 class SelectAllIntent extends Intent {
   const SelectAllIntent();
 }
-

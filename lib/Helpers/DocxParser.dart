@@ -3,8 +3,7 @@ import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Utils/FileToArchive.dart';
 import 'package:golden_shamela/wordToHTML/AddDocData.dart';
 import 'package:path/path.dart' as p;
-
-import '../main.dart';
+import 'package:golden_shamela/core/app_state.dart';
 
 /// A helper class to encapsulate the logic for parsing a .docx file.
 class DocxParser {
@@ -18,8 +17,9 @@ class DocxParser {
       tempDocument.title = p.basename(filePath);
 
       // Use the existing project functions to convert file to archive and parse data.
-      docArchive = await FileToArchive(filePath);
-      List<WordPage> parsedPages = await AddDocData(docArchive, tempDocument);
+      final appState = AppState();
+      appState.docArchive = await FileToArchive(filePath);
+      List<WordPage> parsedPages = await AddDocData(appState.docArchive, tempDocument);
 
       if (parsedPages.isEmpty) {
         print("DocxParser Warning: AddDocData returned 0 pages for file: $filePath. The file might be empty, corrupted, or in an unsupported format.");

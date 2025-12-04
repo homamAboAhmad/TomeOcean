@@ -95,10 +95,17 @@ class SearchResultsView extends StatelessWidget {
                     style: normalStyle(color: primaryColor),
                   ),
                   onTap: () {
+                    print("========================================");
+                    print("SearchResultsView: onTap called");
+                    print("Book path: ${result['book_path']}");
+                    print("Page number: ${result['page_number']}");
+                    print("Calling onResultTapped...");
+                    print("========================================");
                     onResultTapped(
                       result['book_path'] as String,
                       result['page_number'] as int,
                     );
+                    print("SearchResultsView: onResultTapped call completed");
                   },
                 ),
               );
