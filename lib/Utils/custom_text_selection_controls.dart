@@ -48,7 +48,6 @@ class _ContextMenuLayoutDelegate extends SingleChildLayoutDelegate {
   }
 }
 
-
 class CustomTextSelectionControls extends MaterialTextSelectionControls {
   CustomTextSelectionControls({
     required this.bookTitle,
@@ -61,10 +60,12 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
   final WordPage wordPage;
 
   void _handleCopyReference(TextSelectionDelegate delegate) {
-    final String selectedText =
-        delegate.textEditingValue.selection.textInside(delegate.textEditingValue.text);
+    final String selectedText = delegate.textEditingValue.selection.textInside(
+      delegate.textEditingValue.text,
+    );
     if (selectedText.isNotEmpty) {
-      final String textToCopy = '"$selectedText"\n(${bookTitle}, ${pageNumber})';
+      final String textToCopy =
+          '"$selectedText"\n(${bookTitle}, ${pageNumber})';
       Clipboard.setData(ClipboardData(text: textToCopy));
       delegate.hideToolbar();
     }
@@ -77,8 +78,9 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
   }
 
   void _handleGoogleSearch(TextSelectionDelegate delegate) async {
-    final String selectedText =
-        delegate.textEditingValue.selection.textInside(delegate.textEditingValue.text);
+    final String selectedText = delegate.textEditingValue.selection.textInside(
+      delegate.textEditingValue.text,
+    );
     if (selectedText.isNotEmpty) {
       final Uri googleUrl = Uri.parse(
         'https://www.google.com/search?q=${Uri.encodeComponent(selectedText)}',
@@ -92,8 +94,10 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
     }
   }
 
-  Widget _buildMenuItem(
-      {required String label, required VoidCallback? onPressed}) {
+  Widget _buildMenuItem({
+    required String label,
+    required VoidCallback? onPressed,
+  }) {
     return InkWell(
       onTap: onPressed,
       child: Padding(
@@ -101,7 +105,8 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
         child: Text(
           label,
           style: normalStyle(
-              color: onPressed != null ? Colors.white : Colors.grey),
+            color: onPressed != null ? Colors.white : Colors.grey,
+          ),
         ),
       ),
     );
@@ -137,7 +142,7 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
       _buildMenuItem(
         label: 'بحث',
         onPressed: () {
-          debugPrint("Search action triggered");
+          // debugPrint("Search action triggered");
           delegate.hideToolbar();
         },
       ),

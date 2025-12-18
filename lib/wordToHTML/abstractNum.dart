@@ -55,6 +55,7 @@ class Level {
   final String lvlJc; // المحاذاة الأفقية للنص في المستوى
   final int indentLeft; // المسافة البادئة اليسرى للمستوى
   final int indentHanging; // المسافة المعلقة للمستوى
+  final String? fontFamily; // خط الرمز المخصص للترقيم
 
   // مُنشئ الكلاس الذي يأخذ جميع الخصائص كمدخلات
   Level({
@@ -65,15 +66,48 @@ class Level {
     required this.lvlJc,
     required this.indentLeft,
     required this.indentHanging,
+    this.fontFamily,
   });
 
-  Level.empty() : ilvl = 0, startVal = 0, numFmt = '', lvlText = '', lvlJc = '', indentLeft = 0, indentHanging = 0;
+  Level.empty() : ilvl = 0, startVal = 0, numFmt = '', lvlText = '', lvlJc = '', indentLeft = 0, indentHanging = 0, fontFamily = null;
 
-  factory Level.fromJson(Map<String, dynamic> json) => _$LevelFromJson(json);
-  Map<String, dynamic> toJson() => _$LevelToJson(this);
+  // Override fromJson/toJson لمعالجة fontFamily يدوياً
+  factory Level.fromJson(Map<String, dynamic> json) {
+    final level = _$LevelFromJson(json);
+    // إضافة fontFamily يدوياً
+    return Level(
+      ilvl: level.ilvl,
+      startVal: level.startVal,
+      numFmt: level.numFmt,
+      lvlText: level.lvlText,
+      lvlJc: level.lvlJc,
+      indentLeft: level.indentLeft,
+      indentHanging: level.indentHanging,
+      fontFamily: json['fontFamily'] as String?,
+    );
+  }
+  
+  Map<String, dynamic> toJson() {
+    final json = _$LevelToJson(this);
+    if (fontFamily != null) {
+      json['fontFamily'] = fontFamily;
+    }
+    return json;
+  }
 
   static Level fromMap(Map<String, dynamic> json) {
-    return _$LevelFromJson(json);
+    final level = _$LevelFromJson(json);
+    // إضافة fontFamily يدوياً
+    return Level(
+      ilvl: level.ilvl,
+      startVal: level.startVal,
+      numFmt: level.numFmt,
+      lvlText: level.lvlText,
+      lvlJc: level.lvlJc,
+      indentLeft: level.indentLeft,
+      indentHanging: level.indentHanging,
+      fontFamily: json['fontFamily'] as String?,
+    );
   }
 
   // ميثود لتحويل عنصر XML إلى كائن Dart من نوع Level
@@ -106,6 +140,20 @@ class Level {
             ?.getElement('w:ind')
             ?.getAttribute('w:hanging') ??
         '0');
+    
+    // استخراج خط الرمز من w:rPr/w:rFonts
+    String? fontFamily;
+    final rPr = xml.getElement("w:rPr");
+    if (rPr != null) {
+      final rFonts = rPr.getElement("w:rFonts");
+      if (rFonts != null) {
+        // نفضل w:hAnsi أو w:ascii على w:cs
+        fontFamily = rFonts.getAttribute("w:hAnsi") ?? 
+                     rFonts.getAttribute("w:ascii") ?? 
+                     rFonts.getAttribute("w:cs");
+      }
+    }
+    
     // إنشاء كائن Level باستخدام القيم المستخرجة
     return Level(
       ilvl: ilvl,
@@ -115,6 +163,7 @@ class Level {
       lvlJc: lvlJc,
       indentLeft: indentLeft,
       indentHanging: indentHanging,
+      fontFamily: fontFamily,
     );
   }
 }

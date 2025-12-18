@@ -29,6 +29,7 @@ Level _$LevelFromJson(Map<String, dynamic> json) => Level(
   lvlJc: json['lvlJc'] as String,
   indentLeft: (json['indentLeft'] as num).toInt(),
   indentHanging: (json['indentHanging'] as num).toInt(),
+  fontFamily: json['fontFamily'] as String?,
 );
 
 Map<String, dynamic> _$LevelToJson(Level instance) => <String, dynamic>{
@@ -39,4 +40,5 @@ Map<String, dynamic> _$LevelToJson(Level instance) => <String, dynamic>{
   'lvlJc': instance.lvlJc,
   'indentLeft': instance.indentLeft,
   'indentHanging': instance.indentHanging,
+  'fontFamily': instance.fontFamily,
 };

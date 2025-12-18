@@ -32,7 +32,7 @@ class AppInitialization {
       await _initializeSearchEngine();
     } else {
       await windowManager.ensureInitialized();
-      await windowManager.setSize(Size(1000, 700));
+      await windowManager.setSize(Size(1100, 700));
       await windowManager.center();
 
       await _initializeSearchEngine();

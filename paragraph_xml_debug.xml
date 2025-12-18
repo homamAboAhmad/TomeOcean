@@ -1,0 +1,101 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                   PARAGRAPH XML                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+<w:p xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:pPr>
+    <w:bidi/>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+      <w:lang w:bidi="ar-AE"/>
+    </w:rPr>
+  </w:pPr>
+  <w:r w:rsidRPr="005C03E1">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:b/>
+      <w:bCs/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>أحدها:</w:t>
+  </w:r>
+  <w:r w:rsidRPr="005C03E1">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:color w:val="800000"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve"></w:t>
+  </w:r>
+  <w:r w:rsidRPr="005C03E1">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>أنَّ هذا مخالفٌ لأهمِّ مقتضيات الموالاةِ، وهي الن</w:t>
+  </w:r>
+  <w:r w:rsidR="005F0D80" w:rsidRPr="005C03E1">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic" w:hint="cs"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>ُّ</w:t>
+  </w:r>
+  <w:r w:rsidRPr="005C03E1">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>صر</w:t>
+  </w:r>
+  <w:r w:rsidR="005F0D80" w:rsidRPr="005C03E1">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic" w:hint="cs"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>َ</w:t>
+  </w:r>
+  <w:r w:rsidRPr="005C03E1">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>ة</w:t>
+  </w:r>
+  <w:r w:rsidR="005F0D80" w:rsidRPr="005C03E1">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic" w:hint="cs"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>ُ</w:t>
+  </w:r>
+  <w:r w:rsidRPr="005C03E1">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="40"/>
+      <w:szCs w:val="40"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">والمنعُ، فكلُّ آيةٍ في القرآنِ فيها أمرٌ بموالاة المؤمنين، أو نهي عن موالاة الكافرين، فإنَّها تحرِّمُ تسليمَ المسلمةِ إلى الكفار،</w:t>
+  </w:r>
+</w:p>
+╚══════════════════════════════════════════════════════════════════╝

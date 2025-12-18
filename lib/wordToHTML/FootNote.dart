@@ -1,6 +1,4 @@
 
-
-
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -31,22 +29,41 @@ class FootNote{
   updateDisplayNumber(String dn){
     displayNumber =dn;
     if (p.runs.isEmpty) {
-      print("Warning: Footnote with ID ${id} has no runs in its paragraph.");
+      // print("Warning: Footnote with ID ${id} has no runs in its paragraph.");
       return;
     }
-    runT r = p.runs[0];
-    if(r.rpr?.rPr?.getElement("w:rStyle")?.getAttribute("w:val")=="FootnoteReference") {
-      r.fnDisplayNum=dn;
-      if(r.xmlRun?.getAttribute("w:t")==null) {
-        r.footNoteId = id;
-        r.updateFnDisplayNumber();
+    
+    bool found = false;
+    // 1. Try to find explicit w:footnoteRef
+    for (runT r in p.runs) {
+      if (r.isFootnoteRef) {
+         r.fnDisplayNum = dn;
+         r.footNoteId = id;
+         r.updateFnDisplayNumber();
+         found = true;
+         break; 
       }
-   }
-    mergeFnrRuns();
+    }
 
+    // 2. Fallback: find run with FootnoteReference style AND no text
+    if (!found) {
+       for (runT r in p.runs) {
+          if (r.rpr?.rPr?.getElement("w:rStyle")?.getAttribute("w:val")=="FootnoteReference") {
+             // Check if it has no text (likely the placeholder)
+             if (r.xmlRun?.getAttribute("w:t") == null && (r.text == null || r.text!.isEmpty)) {
+                 r.fnDisplayNum = dn;
+                 r.footNoteId = id;
+                 r.updateFnDisplayNumber();
+                 found = true;
+                 break;
+             }
+          }
+       }
+    }
+
+    mergeFnrRuns();
   }
-  //fnr= foot note reference
-  // this fix seperating fnr content from each other
+
   void mergeFnrRuns() {
     List<runT> fnrRuns = [];
     for(runT r in p.runs){

@@ -46,6 +46,12 @@ class HomePageBookManagement {
           final jsonString = await metadataFile.readAsString();
           final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
           wordDocument = WordDocument.fromCacheJson(jsonMap);
+          
+          // تحميل الـ Archive لتمكين قراءة ملفات التذييل/الترويسة
+          // لأن هذه الملفات يتم تحميلها ديناميكياً من الأرشيف وليست مخزنة في الـ Cache
+          final appState = AppState();
+          appState.docArchive = await FileToArchive(filePath);
+          
           wordDocument.pagesDirectory = pagesDir.path;
 
           final pageFiles = await pagesDir.list().toList();
@@ -59,6 +65,8 @@ class HomePageBookManagement {
           wordDocument.initLoadedPages();
 
           ShowSnackBar(context, "Loaded from cache: ${wordDocument.title}");
+          print("DEBUG: Loaded from cache - bookMarksMap has ${wordDocument.bookMarksMap.length} entries");
+          print("DEBUG: hyperlinkAnchors should be in pages if saved correctly");
           loadedFromCache = true;
         }
       }
@@ -71,12 +79,36 @@ class HomePageBookManagement {
     }
 
     if (!loadedFromCache) {
+      String fileToRead = filePath;
+      File? tempFile;
+      
       try {
+        // إنشاء نسخة مؤقتة للعمل عليها
+        // لكي لا نعدل الملف الأصلي ونفسده بالنسبة للوورد
+        final tempDir = await getTemporaryDirectory();
+        final uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
+        String tempPath = '${tempDir.path}/temp_book_$uniqueId.docx';
+        
+        // نسخ الملف الأصلي
+        File(filePath).copySync(tempPath);
+        tempFile = File(tempPath);
+        fileToRead = tempPath;
+        
+        // محاولة إصلاح الصور (EMF) على النسخة المؤقتة
+        int sizeBefore = await tempFile.length();
+        await _runImageFixer(fileToRead);
+        int sizeAfter = await tempFile.length();
+        print("Temp file size change: $sizeBefore -> $sizeAfter");
+        
         final appState = AppState();
-        appState.docArchive = await FileToArchive(filePath);
+        // قراءة النسخة المؤقتة (التي تم إصلاح صورها)
+        appState.docArchive = await FileToArchive(fileToRead);
+        
         List<WordPage> parsedPages = await AddDocData(appState.docArchive, wordDocument);
         wordDocument.setLoadedPages(parsedPages);
-
+        
+        // ... (الحفظ في الكاش كما هو)
+        
         await bookCacheDir.create(recursive: true);
         await pagesDir.create(recursive: true);
 
@@ -94,11 +126,62 @@ class HomePageBookManagement {
       } catch (e) {
         ShowSnackBar(context, "Error parsing docx: $e");
         return;
+      } finally {
+        // حذف النسخة المؤقتة
+        if (tempFile != null && await tempFile.exists()) {
+          try {
+            await tempFile.delete();
+            print("Temporary file deleted: ${tempFile.path}");
+          } catch (e) {
+            print("Error deleting temp file: $e");
+          }
+        }
       }
     }
 
     onBookAdded(wordDocument);
     await Future.delayed(Duration(milliseconds: 1500), () {});
+  }
+
+  /// تشغيل أداة إصلاح الصور الخارجية (Python EXE)
+  Future<void> _runImageFixer(String filePath) async {
+    try {
+      // اسم ملف الـ EXE
+      String exeName = "fix_word_images.exe";
+      
+      // محاولة العثور على المسار الصحيح
+      // 1. بجانب ملف التطبيق (للنسخة النهائية)
+      String exePath = "${File(Platform.resolvedExecutable).parent.path}\\$exeName";
+      
+      if (!await File(exePath).exists()) {
+        // 2. في مجلد dist (أثناء التطوير - المسار الذي ذكرته)
+        exePath = "dist\\$exeName";
+        if (!await File(exePath).exists()) {
+          // 3. في مجلد scripts
+          exePath = "scripts\\$exeName"; 
+          if (!await File(exePath).exists()) {
+             // 4. في نفس المجلد الحالي
+             exePath = exeName;
+          }
+        }
+      }
+
+      print("Attempting to run Image Fixer: $exePath on $filePath");
+      
+      final result = await Process.run(exePath, [filePath]);
+      
+      if (result.exitCode == 0) {
+        print("Image Fixer Output: ${result.stdout}");
+        if (result.stdout.toString().contains("Done!")) {
+           ShowSnackBar(context, "تم إصلاح صور الكتاب (EMF -> PNG)");
+        }
+      } else {
+        print("Image Fixer Error (${result.exitCode}): ${result.stderr}");
+      }
+    } catch (e) {
+      print("Could not run Image Fixer: $e");
+      // لا نقوم بإيقاف العملية، فالـ exe اختياري
+    }
   }
 }
 

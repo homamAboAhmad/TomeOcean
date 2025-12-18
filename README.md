@@ -1,16 +1,52 @@
-# golden_shamela
+# الشاملة الذهبية (Golden Shamela)
 
-golden shamela
+## 📋 ملخص المشروع
 
-## Getting Started
+**نوع المشروع:** تطبيق Flutter Desktop (Windows) لقراءة وتصفح الكتب بصيغة `.docx` (تنسيق المكتبة الشاملة).
 
-This project is a starting point for a Flutter application.
+### 🏗️ البنية التقنية الأساسية (Core Architecture)
 
-A few resources to get you started if this is your first Flutter project:
+يعتمد التطبيق على محرك مخصص **لتحويل ملفات Word XML مباشرة إلى Flutter Widgets** (بدون استخدام WebView أو HTML).
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1.  **تحليل ملفات الوورد (`.docx` Parsing):**
+    -   يتم فك ضغط ملف `.docx` (لأنه أرشيف zip) باستخدام مكتبة `archive`.
+    -   يتم تحليل ملفات XML الداخلية (`document.xml`, `styles.xml`, `header/footer.xml`) باستخدام مكتبة `xml`.
+    -   **المسار:** `lib/wordToHTML/` (يحتوي على منطق التحليل والتحويل).
+    -   **مرجع التوثيق:** المجلد `WordXmlDoumentation` يحتوي على مراجع وتوثيق لمعايير Word XML (ECMA Office Open XML).
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+2.  **نماذج البيانات (Models):**
+    -   **`WordDocument`**: يمثل الكتاب بالكامل، ويدير التنقل بين الصفحات والملفات الداخلية.
+    -   **`WordPage`**: يمثل صفحة واحدة، تحتوي على قائمة فقرات (`ps`) وحواشي (`fns`). مسؤول عن تجميع الـ Widgets للصفحة (`toWidget`).
+    -   **`Paragraph`**: يمثل الفقرة (`<w:p>`)، ويعالج النصوص (`runT`) والصور المضمنة.
+    -   **`runT`**: يمثل جزءاً من النص (`<w:r>`) بخصائص تنسيق محددة.
+    -   **خصائص التنسيق**:
+        -   **`PPr`**: خصائص الفقرة (المحاذاة، المسافات البادئة `ind`، الاتجاه RTL).
+        -   **`RPr`**: خصائص النص (اللون، الخط، الحجم).
+        -   **`SectPr`**: خصائص القسم/الصفحة (الهوامش، حجم الصفحة، الهيدر والفوتر).
+
+3.  **عرض الصور والإطارات:**
+    -   يتم استخراج الصور من `media/` وعرضها باستخدام `Image.memory`.
+    -   يتم التعامل مع الصور كـ `Stack`:
+        -   صور خلفية (`behindDoc=1`) مثل الإطارات والزخارف.
+        -   صور داخل النص.
+        -   يتم حساب تموضع الصور (`Positioned`) بناءً على إحداثيات `wp:anchor` أو `wp:inline` من الـ XML.
+
+### 🖥️ واجهة المستخدم (UI)
+
+-   **`HomePage`**: الشاشة الرئيسية، تدير الكتب المفتوحة (`openedBooks`) والتبويبات.
+-   **`DocViewer`**: عارض الكتاب، يدير التنقل والبحث الجانبي.
+-   **`WordPageScreen`**: المسؤول عن رسم الصفحة الحالية. يقوم بحساب الهوامش (`getSectionMargins`) ودمج الهيدر/الفوتر مع المحتوى.
+
+### 🔧 المشاكل التقنية التي تمت معالجتها مؤخراً
+
+1.  **محاذاة النصوص (Indentation):**
+    -   تم إصلاح `PPr.dart` لضمان تطبيق المسافة البادئة للسطر الأول (`w:firstLine`) بشكل صحيح حتى في غياب هوامش جانبية (`w:left/w:right`)، مع مراعاة اتجاه النص (RTL).
+
+2.  **تداخل النص مع الإطارات (Frames/Borders):**
+    -   تم تحسين `SectPr.dart` لحساب ارتفاع الهيدر (`getHeaderHeight`) بناءً على الصور الموجودة فيه.
+    -   تم تعديل `WordPageScreen.dart` لزيادة الهامش العلوي (`topMargin`) تلقائياً إذا تم اكتشاف صور "إطارات" كبيرة في خلفية الصفحة (`behindDoc`)، لضمان عدم تغطية النص للزخارف العلوية.
+
+### 🚀 ميزات أخرى
+
+-   **تعدد النوافذ (Multi-Window):** يستخدم `desktop_multi_window` لفصل عمليات البحث عن النافذة الرئيسية.
+-   **قاعدة بيانات:** يستخدم SQLite لفهرسة الكتب والبحث السريع.

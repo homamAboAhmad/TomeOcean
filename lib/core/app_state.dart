@@ -16,6 +16,9 @@ class AppState {
   List<Map<String, dynamic>>? cachedIndexedBooks;
   bool isLoadingIndexedBooks = false;
   String? mainWindowId;
+  
+  /// Callback for TOC navigation - set by DocViewer
+  void Function(int pageIndex)? onTocNavigate;
 }
 
 

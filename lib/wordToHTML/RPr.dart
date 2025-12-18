@@ -132,14 +132,21 @@ class RPr {
     Paint? hlColor = highlightColor != null ? paint : null;
     String? finalColor = _normalizeColor(color);
 
+    // Reduce font size for superscript/subscript (Word uses ~58% of normal size)
+    double effectiveFontSize = fontSize ?? 14;
+    if (vertAlign == "superscript" || vertAlign == "subscript") {
+      effectiveFontSize = effectiveFontSize * 0.58;
+    }
+
     return TextStyle(
       fontWeight: b == true ? FontWeight.bold : null,
       fontStyle: i == true ? FontStyle.italic : FontStyle.normal,
       decoration: getTextDecoration(),
       color: finalColor != null ? Color(int.parse("0xFF$finalColor")) : Colors.black,
       background: hlColor, // لون خلفية النص
-      fontSize: fontSize ?? 14,
+      fontSize: effectiveFontSize,
       fontFamily: font,
+      // height is set by paragraph's w:spacing, not here
     );
   }
 
@@ -218,11 +225,23 @@ class RPr {
   }
 
   double? getFontSize() {
-    String? sz = rPr?.getElement("w:sz")?.getAttribute("w:val");
+    // try to get szCs first for Arabic/Complex script
+    String? sz = rPr?.getElement("w:szCs")?.getAttribute("w:val");
+    // fallback to sz if szCs is missing
+    sz ??= rPr?.getElement("w:sz")?.getAttribute("w:val");
+    
     late double fSz;
     if (sz == null) return null;
-    fSz = double.parse(sz) / 2;
-    // fSz = fSz * 1.1;
+    
+    // w:sz is in half-points
+    double points = double.parse(sz) / 2;
+    
+    // Convert points to logical pixels (approx 1.333 ratio at 96 DPI)
+    // 1 point = 1/72 inch, 1 inch = 96 pixels -> 1 point = 96/72 = 1.333 pixels
+    fSz = points * 1.333;
+    
+    // print("FONT DEBUG: sz/szCs=$sz, points=$points, pixelSize=$fSz");
+    
     return fSz;
   }
 
@@ -242,18 +261,30 @@ class RPr {
   String? getArFont() {
     XmlElement? rFonts = rPr?.getElement("w:rFonts");
     String? cs = rFonts?.getAttribute("w:cs");
-
-    // if(cs==null)print(rPr?.toXmlString());
-    if (cs != null) return cs;
+    
+    // إذا كان w:cs موجوداً، نستخدمه
+    if (cs != null && cs.isNotEmpty) return cs;
+    
+    // إذا لم يكن w:cs موجوداً، نبحث عن w:hAnsi أو w:ascii
+    String? hAnsi = rFonts?.getAttribute("w:hAnsi");
+    if (hAnsi != null && hAnsi.isNotEmpty) return hAnsi;
+    
+    String? ascii = rFonts?.getAttribute("w:ascii");
+    if (ascii != null && ascii.isNotEmpty) return ascii;
+    
+    // إذا كان هناك cstheme، نستخدم الخط المناسب من الـ theme
     String? cstheme = rFonts?.getAttribute("w:cstheme");
-    if (cstheme == null) cstheme = rFonts?.getAttribute("w:eastAsiaTheme");
-
-    if (cstheme != null && cstheme.contains("minor")) {
-      return wordDocument.defaultRPr?.font;
-    } else if (cstheme != null && cstheme.contains("major")) {
-      return wordDocument.defaultRPr?.font;
+    if (cstheme != null) {
+      // للنص العربي/Bidi، استخدم minorFont من الـ theme
+      if (cstheme.contains("minor")) {
+        return wordDocument.minorFont;
+      } else if (cstheme.contains("major")) {
+        return wordDocument.majorFont;
+      }
     }
-    return cstheme;
+    
+    // نرجع null ونترك الـ caller يقرر الـ fallback
+    return null;
   }
 
   String getFontH() {
@@ -278,10 +309,15 @@ class RPr {
   // }
 
   double getVertAlignNum() {
+    // Make offset proportional to font size (default 14pt)
+    // Superscript typically rises by about 40% of font height
+    double baseFontSize = fontSize ?? 14;
+    double offset = baseFontSize * 0.4;
+    
     if (vertAlign == "superscript")
-      return -8;
+      return -offset;
     else if (vertAlign == "subscript")
-      return 8;
+      return offset;
     else
       return 0;
   }
@@ -314,6 +350,8 @@ class RPr {
     font = getArFont();
     enFont =  rPr?.getElement("w:rFonts")?.getAttribute("w:ascii");
     uniqueFont = rPr?.getElement("w:rFonts")?.getAttribute("w:hAnsi");
+    
+
   }
 }
 

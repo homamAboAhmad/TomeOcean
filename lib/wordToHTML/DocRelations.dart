@@ -24,25 +24,39 @@ part 'DocRelations.g.dart';
 //     relIdList[relId.Id] = relId;
 //   });
 // }
-const WORD_RELS_FOLDER = "word/_rels/";
+const WORD_DOCUMENT_RELS = "word/_rels/document.xml.rels";
 Map<String,RelId> _relIdList={};
-Map<String,RelId> addDocRelations(Map<String, ArchiveFile> archiveMap,) {
+
+Map<String,RelId> addDocRelations(Map<String, ArchiveFile> archiveMap) {
    _relIdList = {};
 
-  archiveMap.forEach((path, file) {
-    if (path.startsWith(WORD_RELS_FOLDER) && path.endsWith(".rels")) {
-      XmlDocument document = ArchiveToXml(file);
-      document.getElement("Relationships")?.childElements.forEach((element) {
-        RelId relId = RelId(
-          element.getAttribute("Id")!,
-          element.getAttribute("Type")!,
-          element.getAttribute("Target")!,
-        );
-        _relIdList[relId.Id] = relId;
-      });
-    }
-  });
+  // We strictly look for document.xml.rels to avoid ID conflicts 
+  // (e.g. rId1 in document.xml vs rId1 in header1.xml)
+  if (archiveMap.containsKey(WORD_DOCUMENT_RELS)) {
+     _relIdList = parseRelationships(archiveMap[WORD_DOCUMENT_RELS]!);
+  }
+  
   return _relIdList;
+}
+
+Map<String, RelId> parseRelationships(ArchiveFile file) {
+  Map<String, RelId> relations = {};
+  try {
+    XmlDocument document = ArchiveToXml(file);
+    document.getElement("Relationships")?.childElements.forEach((element) {
+      String? id = element.getAttribute("Id");
+      String? type = element.getAttribute("Type");
+      String? target = element.getAttribute("Target");
+
+      if (id != null && type != null && target != null) {
+        RelId relId = RelId(id, type, target);
+        relations[relId.Id] = relId;
+      }
+    });
+  } catch (e) {
+    print("Error parsing relationships for ${file.name}: $e");
+  }
+  return relations;
 }
 
 String getImageFrmRel(String rId) {

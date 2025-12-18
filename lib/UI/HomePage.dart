@@ -201,6 +201,7 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.only(top: 48.0),
                 child: DocViewer(
                   openedBooks[selectedBookP],
+                  key: ObjectKey(openedBooks[selectedBookP]),
                   onBookSelected: _onBookSelected,
                 ),
               ),

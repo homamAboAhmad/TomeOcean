@@ -32,8 +32,10 @@ List<XmlElement> getAllXmlParagraphs(XmlElement? body) {
       List<XmlElement> indexPs = getIndexParagrphXmls(element);
       allPs.addAll(indexPs);
     } else if (element.name.local == "sectPr") {
-      // print("this is SectPr");
-      allPs.add(element);
+      // sectPr at body level is document's final section properties
+      // It's NOT a paragraph and should NOT be added to allPs
+      // (sectPr inside w:pPr is handled separately when processing paragraphs)
+      // Skip it entirely
     } else {
       // print("addParagraphToPage: new Type:" + element.name.local);
       // print("addParagraphToPage: new Type:" + element.toXmlString(pretty: true));
@@ -58,16 +60,20 @@ List<XmlElement> getIndexParagrphXmls(XmlElement element) {
 
   if (sdt != null) {
     sdt.lastElementChild?.setAttribute("isLastPageLine", "true");
-
+    
+    int tocItemIndex = 0;
     for (XmlElement element0 in sdt.childElements) {
-      // print(element0.name.local);
-      // print(element0.text);
-      // element0.innerText = extractTextFromXmlElement(element0);
-      // Paragraph paragraph = Paragraph().fromXml(element0);
-      // print("paragraph:"+paragraph.toHTML());
+      // Check if TOC item has page break
+      bool hasPageBreak = element0.findAllElements("w:lastRenderedPageBreak").isNotEmpty;
+      if (hasPageBreak) {
+        print("DEBUG TOC: Item $tocItemIndex has lastRenderedPageBreak!");
+      }
+      
       element0.setAttribute("isSdtRow", "True");
       ps.add(element0);
+      tocItemIndex++;
     }
+    print("DEBUG TOC: Total items extracted: $tocItemIndex");
   }
   return ps;
 }

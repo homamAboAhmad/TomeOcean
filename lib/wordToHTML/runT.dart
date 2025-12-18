@@ -7,8 +7,10 @@ import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/wordToHTML/PPr.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
+import 'package:golden_shamela/wordToHTML/TabStop.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
+import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 
 part 'runT.g.dart';
 
@@ -28,10 +30,18 @@ class runT {
   String? fnDisplayNum;
   ImageData? image;
   String? toc;
+  
+  /// Whether this run contains a w:tab element (for TOC entry/page number separation)
+  /// This is serialized to cache since xmlRun is ignored
+  bool hasTab = false;
+  
   @JsonKey(ignore: true)
   Paragraph parent;
+  
+  @JsonKey(ignore: true)
+  Map<String, RelId>? customRelIdList;
 
-  runT(this.parent, {required this.prPr, required this.pPr});
+  runT(this.parent, {required this.prPr, required this.pPr, this.customRelIdList});
 
   runT.empty() : parent = Paragraph.empty();
 
@@ -48,55 +58,110 @@ class runT {
     if (json['image'] != null) {
       runT.image = ImageData.fromMap(json['image'] as Map<String, dynamic>, runT);
     }
+    
+    // التحقق من الرموز عند التحميل من الكاش أيضاً
+    // (xmlRun سيكون null، لكن rpr?.font يجب أن يكون محفوظاً)
+    runT.checkSymbol();
+    
     return runT;
   }
 
+  bool isFootnoteRef = false;
+
   fromXml(XmlElement? xmlRun) {
     this.xmlRun = xmlRun;
+    // Check for tab element (used for TOC entry/page number separation)
+    hasTab = xmlRun?.getElement("w:tab") != null;
     getText();
+    
     checkBr();
     checkFnId();
     checkBookMark();
+    
+    // Check for footnoteRef
+    isFootnoteRef = xmlRun?.getElement("w:footnoteRef") != null;
+    
     XmlElement? xmlrPr = xmlRun?.getElement("w:rPr");
     if (xmlrPr != null) {
       rpr = RPr(this).fromXml(xmlrPr);
       rpr?.parent = this;
     }
+    // التحقق من الرموز (w:sym) بعد استخراج النص وتعيين rpr
+    checkSymbol();
     checkParaRpr();
     checkToc();
-    if (isImageRun(xmlRun)) {
-      image = parseImageData(this);
+    
+    bool isImg = isImageRun(xmlRun);
+    if (isImg) {
+      // print("DEBUG: Found image run in fromXml");
+      try {
+        image = parseImageData(this, customRelIdList: customRelIdList);
+        // if (image != null) {
+        //   print("DEBUG: Image parsed successfully. ID: ${image?.rId}, TextBox: ${image?.textBoxText}");
+        // } else {
+        //   print("DEBUG: Image parsing returned null");
+        // }
+      } catch (e) {
+        // Error parsing image data - silently ignore
+      }
     }
     return this;
   }
 
   isRelativeFromVParagraph() {
-    return image?.relativeFromV == "paragraph";
+    if (image == null) return false;
+    
+    // Reverted: Allow text boxes to be relative/positioned if the XML says so.
+    // This allows them to overlap images correctly.
+    // if (image!.textBoxText != null && image!.textBoxText!.isNotEmpty) return false;
+    
+    return image?.relativeFromV == "paragraph" || image?.relativeFromV == "line";
   }
 
   InlineSpan toWidgetWithImg() {
-    if (isImageRun(xmlRun) && isRelativeFromVParagraph())
+    // Fix: Check image property instead of xmlRun since xmlRun is not saved in cache
+    if (image != null) {
+      Widget w = getImageWidget(image!);
+      // Reverted the newline insertion. 
+      // We treat the text box as an inline widget. It should flow naturally after the preceding element.
       return WidgetSpan(
-          child: getImageWidget(image!)
+          child: w
       );
+    }
     else
       return toWidget();
   }
 
   InlineSpan toWidget() {
-    if (isImageRun(xmlRun)) {
+    // Fix: Check image property instead of xmlRun since xmlRun is not saved in cache
+    if (image != null) {
+      // Debugging: why is this treated as text run if it's an image?
+      // print("DEBUG: toWidget called for Image Run. This should not happen if it's in imageRunTs.");
       return TextSpan(text: "");
     }
 
     String bBr = hasBrBefore ? "\n" : "";
     String aBr = hasBrAfter ? "\n" : "";
     Widget? tab = getTabWidget();
+    // fixFnr() removed - parentheses are now fixed in addFnToPage
     checkSymbol();
 
     double vAlign = rpr?.getVertAlignNum() ?? 0;
     String fixedText = checkDiacritics();
+    
+
+    
+
+    
+    // Get effective text style (falls back to prPr if rpr is null)
+    TextStyle effectiveStyle = getEffectiveTextStyle();
+    
+
+    
     if (vAlign != 0) {
       return WidgetSpan(
+        alignment: PlaceholderAlignment.baseline,
+        baseline: TextBaseline.alphabetic,
         child: Transform.translate(
           offset: Offset(0.0, vAlign),
           child: Text(
@@ -114,8 +179,7 @@ class runT {
           children: [
             Text(
               "$bBr$fixedText$aBr",
-              style: rpr?.getTextStyle() ?? TextStyle(
-                  color: Colors.black, fontSize: 14, fontFamily: "jreg"),
+              style: effectiveStyle,
             ),
             tab
           ],
@@ -124,21 +188,39 @@ class runT {
     } else {
       return TextSpan(
         text: "$bBr$fixedText$aBr",
-        style: rpr?.getTextStyle() ??
-            TextStyle(color: Colors.black, fontSize: 14, fontFamily: "jreg"),
+        style: effectiveStyle,
       );
-
-      // return WidgetSpan(
-      //   child: Text(
-      //      "$bBr$text$aBr",
-      //     textDirection: TextDirection.rtl,
-      //     textAlign: TextAlign.right,
-      //     style:rpr?.getTextStyle()??TextStyle(color: Colors.black,fontSize: 14,fontFamily: "jreg"),
-      //   ),
-      // );
     }
-
-    // if (image != null) html = image!.toHtml() + html;
+  }
+  
+  /// Get effective TextStyle, falling back to paragraph properties when run properties are null
+  TextStyle getEffectiveTextStyle() {
+    TextStyle style;
+    // If rpr exists, use it
+    if (rpr != null) {
+      style = rpr!.getTextStyle();
+    }
+    // If rpr is null but prPr exists, use prPr
+    else if (prPr != null) {
+      style = prPr!.getTextStyle();
+    }
+    // Final fallback
+    else {
+      style = TextStyle(color: Colors.black, fontSize: 14, fontFamily: "jreg");
+    }
+    
+    // Apply paragraph properties (line height) from parent Paragraph's PPr
+    double? lineHeight = pPr?.lineHeight;
+    // Fallback to parent paragraph's PPr if run's pPr doesn't have it
+    if (lineHeight == null && parent.pPr != null) {
+      lineHeight = parent.pPr!.lineHeight;
+    }
+    // Final fallback: Word 2007+ default spacing (1.15, not 1.0!)
+    lineHeight ??= 1.15;
+    
+    style = style.copyWith(height: lineHeight);
+    
+    return style;
   }
 
 
@@ -180,40 +262,156 @@ class runT {
   }
 
   void getText() {
-    text = xmlRun
-        ?.getElement("w:t")
-        ?.text ?? "";
-    // if (text == "") text = " ";
+    // If this run contains instruction text (field code), ignore it
+    if (xmlRun?.getElement("w:instrText") != null) {
+      text = "";
+      return;
+    }
+    
+
+    // أولاً: محاولة استخراج النص من w:t
+    String? tText = xmlRun?.getElement("w:t")?.text;
+    
+    text = tText ?? "";
+    
+    // إذا لم يكن هناك نص في w:t، نبحث عن w:sym
+    if ((text?.isEmpty ?? true) && xmlRun != null) {
+      var symElement = xmlRun!.findElements("w:sym").firstOrNull;
+      if (symElement != null) {
+        String? charHex = symElement.getAttribute("w:char");
+        if (charHex != null && charHex.isNotEmpty) {
+          try {
+            int codePoint = int.parse(charHex, radix: 16);
+            text = String.fromCharCode(codePoint);
+          } catch (e) {
+            text = "?"; // رمز بديل
+          }
+        }
+      }
+    }
   }
 
   checkSymbol() {
-    if (hasSymbol()) {
-      rpr?.font = xmlRun?.getElement("w:sym")?.getAttribute("w:font");
-      // print("has symbol:" + xmlRun!.toXmlString(pretty: true));
-      String symbolToTxt =
-      (xmlRun?.getElement("w:sym")?.getAttribute("w:char") ?? "");
-      int codePoint = int.parse(symbolToTxt, radix: 16);
-      text = String.fromCharCode(codePoint);
-      // print("has symbol: ${xmlRun?.getElement("w:sym")?.toXmlString()}");
+    // إذا كان xmlRun موجوداً، نبحث عن w:sym مباشرة
+    if (xmlRun != null && hasSymbol()) {
+      if (rpr == null) {
+        rpr = RPr(this);
+      }
+      
+      var symElement = xmlRun!.findElements("w:sym").firstOrNull;
+      String? fontName = symElement?.getAttribute("w:font");
+      String? charHex = symElement?.getAttribute("w:char");
+      
+      if (fontName != null && fontName.isNotEmpty) {
+        rpr?.font = fontName;
+      }
+      
+      if (charHex != null && charHex.isNotEmpty) {
+        try {
+          int codePoint = int.parse(charHex, radix: 16);
+          if (text?.isEmpty ?? true) {
+            text = String.fromCharCode(codePoint);
+          }
+        } catch (e) {
+          if (text?.isEmpty ?? true) {
+            text = "?";
+          }
+        }
+      } else {
+        if (text?.isEmpty ?? true) {
+          text = "?";
+        }
+      }
     } else {
-      rpr?.font = changeFontByTxt(text);
-      // print("font: ${rpr?.font}");
+      // تحديد الخط المناسب حسب نوع النص
+      if (rpr != null) {
+        String? appropriateFont = changeFontByTxt(text);
+        if (appropriateFont != null && appropriateFont.isNotEmpty) {
+          rpr?.font = appropriateFont;
+        }
+      }
     }
   }
 
   bool hasSymbol() {
-    return xmlRun?.getElement("w:sym") != null;
+    return xmlRun?.findElements("w:sym").isNotEmpty ?? false;
   }
 
   Widget? getTabWidget() {
-    // fix this if you wany to convert to complete html
-    if (xmlRun?.getElement("w:tab") == null)
-      return null;
-    else
-      return Container(
-        width: 150,
-        child: Center(child: Text("................................")),
-      );
+    if (xmlRun?.getElement("w:tab") == null) return null;
+    
+    // Get tab stops from parent paragraph's pPr
+    PPr? paragraphPPr = parent.pPr;
+    
+    // Get the first defined tab stop (most common case: single tab)
+    // Word applies tabs in order, so we use the first one for now
+    TabStop? tabStop;
+    if (paragraphPPr != null && paragraphPPr.tabStops.isNotEmpty) {
+      tabStop = paragraphPPr.tabStops.first;
+    }
+    
+    // Calculate width from tab position (twips to pixels)
+    // If no tab defined, use default Word tab (720 twips = 0.5 inch)
+    double tabWidth = tabStop?.positionInPx ?? (720 * 0.0667);
+    
+    // Ensure minimum visible width
+    if (tabWidth < 20) tabWidth = 20;
+    
+    // Get leader type if any
+    String? leaderType = tabStop?.leader;
+    bool hasLeader = tabStop?.hasLeader ?? false;
+    
+    if (hasLeader) {
+      return _buildLeaderWidget(leaderType, tabWidth);
+    } else {
+      // No leader - just space
+      return SizedBox(width: tabWidth);
+    }
+  }
+  
+  Widget _buildLeaderWidget(String? leaderType, double width) {
+    String leaderChar;
+    switch (leaderType) {
+      case "dot":
+        leaderChar = ".";
+        break;
+      case "underscore":
+        leaderChar = "_";
+        break;
+      case "hyphen":
+        leaderChar = "-";
+        break;
+      case "middleDot":
+        leaderChar = "·";
+        break;
+      case "heavy":
+        leaderChar = "●";
+        break;
+      default:
+        leaderChar = ".";
+    }
+    
+    // Calculate how many characters needed to fill the width
+    // Approximate char width based on leader type
+    double charWidth = leaderChar == "." ? 4.0 : (leaderChar == "_" ? 8.0 : 6.0);
+    int charCount = (width / charWidth).floor();
+    if (charCount < 1) charCount = 1;
+    
+    return SizedBox(
+      width: width,
+      child: Text(
+        leaderChar * charCount,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        softWrap: false,
+        overflow: TextOverflow.clip,
+        style: TextStyle(
+          fontFamily: "jreg",
+          color: Colors.black,
+          letterSpacing: leaderChar == "_" ? 0 : 1.0, // Underscores need no spacing
+        ),
+      ),
+    );
   }
 
   void checkParaRpr() {

@@ -15,7 +15,14 @@ PPr _$PPrFromJson(Map<String, dynamic> json) => PPr.empty()
   ..numId = (json['numId'] as num?)?.toInt()
   ..paragraphNumber = (json['paragraphNumber'] as num?)?.toInt()
   ..ilvl = (json['ilvl'] as num?)?.toInt()
-  ..numberingH = json['numberingH'] as String?;
+  ..numberingH = json['numberingH'] as String?
+  ..tabStops = (json['tabStops'] as List<dynamic>)
+      .map((e) => TabStop.fromJson(e as Map<String, dynamic>))
+      .toList()
+  ..tocLevel = (json['tocLevel'] as num?)?.toInt()
+  ..spacingBefore = (json['spacingBefore'] as num?)?.toDouble()
+  ..spacingAfter = (json['spacingAfter'] as num?)?.toDouble()
+  ..lineHeight = (json['lineHeight'] as num?)?.toDouble();
 
 Map<String, dynamic> _$PPrToJson(PPr instance) => <String, dynamic>{
   'textAlign': instance.textAlign,
@@ -27,4 +34,9 @@ Map<String, dynamic> _$PPrToJson(PPr instance) => <String, dynamic>{
   'paragraphNumber': instance.paragraphNumber,
   'ilvl': instance.ilvl,
   'numberingH': instance.numberingH,
+  'tabStops': instance.tabStops.map((e) => e.toJson()).toList(),
+  'tocLevel': instance.tocLevel,
+  'spacingBefore': instance.spacingBefore,
+  'spacingAfter': instance.spacingAfter,
+  'lineHeight': instance.lineHeight,
 };

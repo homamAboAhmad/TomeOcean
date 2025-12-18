@@ -15,11 +15,16 @@ Future<Map<String,Uint8List>> extractImagesFromDocx(Map<String, ArchiveFile> arc
 
   // التنقل عبر جميع الملفات في الأرشيف
   for (final file in archiveMap.values) {
+    // توحيد الفواصل
+    String normalizedName = file.name.replaceAll("\\", "/");
+    
     // التحقق إذا كان الملف صورة داخل مجلد `word/media/`
-    if (file.isFile && file.name.startsWith('word/media/')) {
+    if (file.isFile && normalizedName.startsWith('word/media/')) {
       // قراءة بيانات الصورة كـ Uint8List
       Uint8List imageData = file.content as Uint8List;
-      String name = file.name.replaceAll("word/", "");
+      String name = normalizedName.replaceAll("word/", "");
+      
+      // print("Found image: $name (size: ${imageData.length})");
 
       // تحويل الصورة إلى Base64
       String base64Image = convertImageToBase64(imageData);

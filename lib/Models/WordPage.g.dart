@@ -13,10 +13,12 @@ WordPage _$WordPageFromJson(Map<String, dynamic> json) => WordPage.empty()
   ..fns = (json['fns'] as List<dynamic>)
       .map((e) => FootNote.fromJson(e as Map<String, dynamic>))
       .toList()
-  ..pageNum = json['pageNum'] as String;
+  ..pageNum = json['pageNum'] as String
+  ..pageIndex = (json['pageIndex'] as num).toInt();
 
 Map<String, dynamic> _$WordPageToJson(WordPage instance) => <String, dynamic>{
   'ps': instance.ps.map((e) => e.toJson()).toList(),
   'fns': instance.fns.map((e) => e.toJson()).toList(),
   'pageNum': instance.pageNum,
+  'pageIndex': instance.pageIndex,
 };

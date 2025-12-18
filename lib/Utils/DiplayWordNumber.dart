@@ -9,9 +9,24 @@ String getDisblayNumber(Level level,
 }
 
 String _getDisplayCharacter(Level level, int paragraphNumber) {
+  // إذا كان هناك خط مخصص للترقيم، نستخدم lvlText مباشرة
+  if (level.fontFamily != null && level.fontFamily!.isNotEmpty && level.numFmt == "bullet") {
+    return level.lvlText;
+  }
+  
   if (level.numFmt == "bullet") {
-    int codePoint = level.lvlText.codeUnitAt(0); // الحصول على قيمة الرمز
-    return bullets[codePoint.toString()] ?? bullets.values.first;
+    if (level.lvlText.isEmpty) {
+      return bullets.values.first;
+    }
+    
+    int codePoint = level.lvlText.codeUnitAt(0);
+    String? mappedSymbol = bullets[codePoint.toString()];
+    
+    if (mappedSymbol == null) {
+      return bullets.values.first;
+    }
+    
+    return mappedSymbol;
   } else if (level.numFmt == "decimal")
     return paragraphNumber.toString();
   else if (level.numFmt == "lowerLetter")

@@ -6,6 +6,8 @@ import 'package:golden_shamela/Styles/TextSyles.dart';
 class DocViewerTopToolbar extends StatelessWidget {
   final WordDocument wordDocument;
   final Widget sideBarIcons;
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
   final VoidCallback onDuplicateBook;
   final VoidCallback onGoStart;
   final VoidCallback onGoPrevious;
@@ -19,6 +21,8 @@ class DocViewerTopToolbar extends StatelessWidget {
     super.key,
     required this.wordDocument,
     required this.sideBarIcons,
+    required this.onZoomIn,
+    required this.onZoomOut,
     required this.onDuplicateBook,
     required this.onGoStart,
     required this.onGoPrevious,
@@ -46,6 +50,10 @@ class DocViewerTopToolbar extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildToolbarButton(onTap: onDuplicateBook, icon: Icons.new_label),
+                  const SizedBox(width: 8),
+                  _buildToolbarButton(onTap: onZoomIn, icon: Icons.zoom_in),
+                  const SizedBox(width: 8),
+                  _buildToolbarButton(onTap: onZoomOut, icon: Icons.zoom_out),
                   const SizedBox(width: 8),
                   _buildToolbarButton(onTap: onGoStart, icon: Icons.skip_next),
                   const SizedBox(width: 8),

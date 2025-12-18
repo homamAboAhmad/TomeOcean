@@ -25,7 +25,7 @@ part 'WordDocument.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class WordDocument {
-  String title="BOOK";
+  String title = "BOOK";
   @JsonKey(ignore: true)
   List<WordPage> _loadedPages = []; // Cache for loaded pages
   @JsonKey(ignore: true)
@@ -36,6 +36,7 @@ class WordDocument {
   RPr? defaultRPr;
   PPr? defaultPPr;
   String? majorFont, minorFont;
+  String? majorFontCS, minorFontCS;
   String autoDarkColor = "000000";
   String autoLightColor = "FFFFFF";
   Map<int, AbstractNum> abstractNumMap = {};
@@ -51,14 +52,15 @@ class WordDocument {
   @JsonKey(ignore: true)
   List<String> pageContents = [];
   Map<String, FootNote> docFootNotes = {};
-  Map<String,int> bookMarksMap = {};
+  Map<String, int> bookMarksMap = {};
   Map<String, RelId> relIdList = {};
   @JsonKey(fromJson: _docImagesFromJson, toJson: _docImagesToJson)
-  Map<String,Uint8List> docImages = {};
+  Map<String, Uint8List> docImages = {};
   @JsonKey(fromJson: _documentStylesFromJson, toJson: _documentStylesToJson)
   Map<String, XmlElement> documentStyles = {};
-  bool withDiacritics=true;
-  List<IndexItem> index =[];
+  bool? evenAndOddHeaders; // Different headers for even and odd pages
+  bool withDiacritics = true;
+  List<IndexItem> index = [];
   String? selectedIndexItem;
 
   WordDocument() : _loadedPages = [], pageFilePaths = [];
@@ -70,12 +72,20 @@ class WordDocument {
   }
 
   void initLoadedPages() {
-    _loadedPages = List.filled(pageFilePaths.length, WordPage.empty(), growable: true);
+    _loadedPages = List.filled(
+      pageFilePaths.length,
+      WordPage.empty(),
+      growable: true,
+    );
   }
 
-  WordDocument.empty() : _loadedPages = [], pageFilePaths = [], pagesDirectory = null;
+  WordDocument.empty()
+    : _loadedPages = [],
+      pageFilePaths = [],
+      pagesDirectory = null;
 
-  factory WordDocument.fromJson(Map<String, dynamic> json) => _$WordDocumentFromJson(json);
+  factory WordDocument.fromJson(Map<String, dynamic> json) =>
+      _$WordDocumentFromJson(json);
   Map<String, dynamic> toJson() => _$WordDocumentToJson(this);
 
   Map<String, dynamic> toMetadataJson() {
@@ -89,7 +99,10 @@ class WordDocument {
     final wordDocument = _$WordDocumentFromJson(json);
 
     if (json['sectpr'] != null) {
-      wordDocument.sectpr = SectPr.fromMap(json['sectpr'] as Map<String, dynamic>, wordDocument);
+      wordDocument.sectpr = SectPr.fromMap(
+        json['sectpr'] as Map<String, dynamic>,
+        wordDocument,
+      );
     }
     wordDocument.sectPrList = (json['sectPrList'] as List<dynamic>)
         .map((e) => SectPr.fromMap(e as Map<String, dynamic>, wordDocument))
@@ -103,45 +116,76 @@ class WordDocument {
         .toList();
 
     wordDocument.relIdList = (json['relIdList'] as Map<String, dynamic>).map(
-            (k, e) => MapEntry(k, RelId.fromMap(e as Map<String, dynamic>)));
+      (k, e) => MapEntry(k, RelId.fromMap(e as Map<String, dynamic>)),
+    );
 
-    wordDocument.abstractNumMap = (json['abstractNumMap'] as Map<String, dynamic>).map(
-            (k, e) => MapEntry(int.parse(k), AbstractNum.fromMap(e as Map<String, dynamic>)));
+    wordDocument.abstractNumMap =
+        (json['abstractNumMap'] as Map<String, dynamic>).map(
+          (k, e) => MapEntry(
+            int.parse(k),
+            AbstractNum.fromMap(e as Map<String, dynamic>),
+          ),
+        );
 
     wordDocument.numsMap = (json['numsMap'] as Map<String, dynamic>).map(
-            (k, e) => MapEntry(int.parse(k), Num.fromMap(e as Map<String, dynamic>)));
+      (k, e) => MapEntry(int.parse(k), Num.fromMap(e as Map<String, dynamic>)),
+    );
     return wordDocument;
   }
 
   static Map<String, Uint8List> _docImagesFromJson(Map<String, dynamic> json) {
     // print("_docImagesFromJson called with json keys: ${json.keys.toList()}");
-    return json.map((key, value) => MapEntry(key, uint8ListFromJson(value as String?) ?? Uint8List(0)));
+    return json.map(
+      (key, value) =>
+          MapEntry(key, uint8ListFromJson(value as String?) ?? Uint8List(0)),
+    );
   }
 
   static Map<String, String> _docImagesToJson(Map<String, Uint8List> object) {
     return object.map((key, value) => MapEntry(key, uint8ListToJson(value)!));
   }
 
-  static Map<String, XmlElement> _documentStylesFromJson(Map<String, dynamic> json) {
+  static Map<String, XmlElement> _documentStylesFromJson(
+    Map<String, dynamic> json,
+  ) {
     final converter = XmlElementConverter();
-    return json.map((key, value) => MapEntry(key, converter.fromJson(value as String?) ?? XmlElement(XmlName('empty'))));
+    return json.map(
+      (key, value) => MapEntry(
+        key,
+        converter.fromJson(value as String?) ?? XmlElement(XmlName('empty')),
+      ),
+    );
   }
 
-  static Map<String, String> _documentStylesToJson(Map<String, XmlElement> object) {
+  static Map<String, String> _documentStylesToJson(
+    Map<String, XmlElement> object,
+  ) {
     final converter = XmlElementConverter();
     return object.map((key, value) => MapEntry(key, converter.toJson(value)!));
   }
 
-  static Map<int, AbstractNum> _intKeyMapFromJsonAbstractNum(Map<String, dynamic> json) {
-    return json.map((key, value) => MapEntry(int.parse(key), AbstractNum.fromJson(value as Map<String, dynamic>)));
+  static Map<int, AbstractNum> _intKeyMapFromJsonAbstractNum(
+    Map<String, dynamic> json,
+  ) {
+    return json.map(
+      (key, value) => MapEntry(
+        int.parse(key),
+        AbstractNum.fromJson(value as Map<String, dynamic>),
+      ),
+    );
   }
 
-  static Map<String, dynamic> _intKeyMapToJsonAbstractNum(Map<int, AbstractNum> object) {
+  static Map<String, dynamic> _intKeyMapToJsonAbstractNum(
+    Map<int, AbstractNum> object,
+  ) {
     return object.map((key, value) => MapEntry(key.toString(), value.toJson()));
   }
 
   static Map<int, Num> _intKeyMapFromJsonNum(Map<String, dynamic> json) {
-    return json.map((key, value) => MapEntry(int.parse(key), Num.fromJson(value as Map<String, dynamic>)));
+    return json.map(
+      (key, value) =>
+          MapEntry(int.parse(key), Num.fromJson(value as Map<String, dynamic>)),
+    );
   }
 
   static Map<String, dynamic> _intKeyMapToJsonNum(Map<int, Num> object) {
@@ -173,7 +217,11 @@ class WordDocument {
 
     // Ensure _loadedPages has the correct length before assigning.
     if (_loadedPages.length != pageFilePaths.length) {
-      _loadedPages = List.filled(pageFilePaths.length, WordPage.empty(), growable: true);
+      _loadedPages = List.filled(
+        pageFilePaths.length,
+        WordPage.empty(),
+        growable: true,
+      );
     }
 
     _loadedPages[index] = loadedPage;
@@ -183,13 +231,17 @@ class WordDocument {
   // This method needs to be re-evaluated based on how UI consumes pages
   // For now, it will return a placeholder or throw an error.
   WordPage getCurrentPage() {
-    throw UnimplementedError("getCurrentPage is not implemented for lazy loading. Use getPage(currentPage) instead.");
+    throw UnimplementedError(
+      "getCurrentPage is not implemented for lazy loading. Use getPage(currentPage) instead.",
+    );
   }
 
   // This method needs to be re-evaluated based on how UI consumes pages
   // For now, it will return a placeholder or throw an error.
   WordPage getLastPage() {
-    throw UnimplementedError("getLastPage is not implemented for lazy loading. Use getPage(pageFilePaths.length - 1) instead.");
+    throw UnimplementedError(
+      "getLastPage is not implemented for lazy loading. Use getPage(pageFilePaths.length - 1) instead.",
+    );
   }
 
   // Map<String, Style> getFontsStyle() {
@@ -238,33 +290,58 @@ class WordDocument {
   }
 
   SectPr getPageSectPr() {
-    if (sectPrList.isEmpty)
+    return getSectPrForPage(currentPage);
+  }
+
+  SectPr getSectPrForPage(int pageIndex) {
+    if (sectPrList.isEmpty) {
       return SectPr.empty(this);
-    else {
+    } else {
       SectPr sectPr = sectPrList[0];
-      sectPrList.forEach((sect) {
-        if (currentPage >= sect.firstRange && currentPage <= sect.lastRange) {
+      // debugPrint("🔍 FINDING SECTION for page $pageIndex:");
+      for (int i = 0; i < sectPrList.length; i++) {
+        var sect = sectPrList[i];
+        bool matches =
+            pageIndex >= sect.firstRange && pageIndex <= sect.lastRange;
+        // debugPrint(
+        //   "   Section $i: range=[${sect.firstRange}-${sect.lastRange}], headerFirst=${sect.headerFirstPath}, ${matches ? '✓ MATCH' : ''}",
+        // );
+        if (matches) {
           sectPr = sect;
-          return;
         }
-      });
+      }
+      // debugPrint("   → Using Section ${sectPrList.indexOf(sectPr)}");
       return sectPr;
     }
   }
 
-  addSectPr(XmlElement element) {
-    // print("sectPr Found into p");
-    SectPr sectpr = getSectPrFrmXml(element,this);
-    SectPr? lastSectPr = sectPrList.lastOrNull;
-    sectpr.firstRange = lastSectPr != null ? lastSectPr.lastRange + 1 : 0;
-    sectpr.lastRange = pageFilePaths.length; // Use pageFilePaths.length
-    sectpr.parent=this;
+  addSectPr(XmlElement element, {int? currentPageNum}) {
+    SectPr sectpr = getSectPrFrmXml(element, this);
+
+    // استخدام رقم الصفحة الحالية (0-indexed) كـ firstRange
+    // الصفحة التي تحتوي على sectPr هي نهاية القسم، لذا firstRange = رقم الصفحة
+    if (currentPageNum != null) {
+      // currentPageNum هو 1-indexed، نحوله إلى 0-indexed
+      sectpr.firstRange = currentPageNum - 1;
+      sectpr.lastRange = currentPageNum - 1; // مؤقتاً، سيتم تحديثه لاحقاً
+    } else {
+      // Fallback للتوافق مع الكود القديم
+      SectPr? lastSectPr = sectPrList.lastOrNull;
+      sectpr.firstRange = lastSectPr != null ? lastSectPr.lastRange + 1 : 0;
+      sectpr.lastRange = pageFilePaths.length;
+    }
+
+    sectpr.parent = this;
     sectPrList.add(sectpr);
-    print(sectPrList.length);
+
+    // debugPrint("📋 SECTION ADDED: index=${sectPrList.length - 1}, firstRange=${sectpr.firstRange}, page=$currentPageNum");
   }
 
-  addBookMark(String bookMarkToc){
-    bookMarksMap[bookMarkToc]=pageFilePaths.length-1; // Use pageFilePaths.length
+  addBookMark(String bookMarkToc, {int? pageIndex}) {
+    // pageIndex is 1-based (from pageNum in parsing), but we need 0-based for navigation
+    int page = (pageIndex ?? pageFilePaths.length) - 1;
+    if (page < 0) page = 0;
+    bookMarksMap[bookMarkToc] = page;
   }
 }
 

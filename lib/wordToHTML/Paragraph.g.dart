@@ -17,6 +17,7 @@ Paragraph _$ParagraphFromJson(Map<String, dynamic> json) => Paragraph.empty()
       .map((e) => runT.fromJson(e as Map<String, dynamic>))
       .toList()
   ..text = json['text'] as String
+  ..xmlString = json['xmlString'] as String
   ..pageNum = json['pageNum'] as String
   ..imageRunTs = (json['imageRunTs'] as List<dynamic>)
       .map((e) => runT.fromJson(e as Map<String, dynamic>))
@@ -26,19 +27,22 @@ Paragraph _$ParagraphFromJson(Map<String, dynamic> json) => Paragraph.empty()
       .toList()
   ..textAlign = $enumDecode(_$TextAlignEnumMap, json['textAlign'])
   ..textDirection = $enumDecode(_$TextDirectionEnumMap, json['textDirection'])
-  ..sectionType = json['sectionType'] as String;
+  ..sectionType = json['sectionType'] as String
+  ..hyperlinkAnchor = json['hyperlinkAnchor'] as String?;
 
 Map<String, dynamic> _$ParagraphToJson(Paragraph instance) => <String, dynamic>{
   'pPr': instance.pPr?.toJson(),
   'prPr': instance.prPr?.toJson(),
   'runs': instance.runs.map((e) => e.toJson()).toList(),
   'text': instance.text,
+  'xmlString': instance.xmlString,
   'pageNum': instance.pageNum,
   'imageRunTs': instance.imageRunTs.map((e) => e.toJson()).toList(),
   'textRunTs': instance.textRunTs.map((e) => e.toJson()).toList(),
   'textAlign': _$TextAlignEnumMap[instance.textAlign]!,
   'textDirection': _$TextDirectionEnumMap[instance.textDirection]!,
   'sectionType': instance.sectionType,
+  'hyperlinkAnchor': instance.hyperlinkAnchor,
 };
 
 const _$TextAlignEnumMap = {

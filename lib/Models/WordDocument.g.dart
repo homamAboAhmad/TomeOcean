@@ -16,6 +16,8 @@ WordDocument _$WordDocumentFromJson(Map<String, dynamic> json) => WordDocument()
       : PPr.fromJson(json['defaultPPr'] as Map<String, dynamic>)
   ..majorFont = json['majorFont'] as String?
   ..minorFont = json['minorFont'] as String?
+  ..majorFontCS = json['majorFontCS'] as String?
+  ..minorFontCS = json['minorFontCS'] as String?
   ..autoDarkColor = json['autoDarkColor'] as String
   ..autoLightColor = json['autoLightColor'] as String
   ..abstractNumMap = (json['abstractNumMap'] as Map<String, dynamic>).map(
@@ -45,6 +47,7 @@ WordDocument _$WordDocumentFromJson(Map<String, dynamic> json) => WordDocument()
   ..documentStyles = WordDocument._documentStylesFromJson(
     json['documentStyles'] as Map<String, dynamic>,
   )
+  ..evenAndOddHeaders = json['evenAndOddHeaders'] as bool?
   ..withDiacritics = json['withDiacritics'] as bool
   ..index = (json['index'] as List<dynamic>)
       .map((e) => IndexItem.fromJson(e as Map<String, dynamic>))
@@ -59,6 +62,8 @@ Map<String, dynamic> _$WordDocumentToJson(
   'defaultPPr': instance.defaultPPr?.toJson(),
   'majorFont': instance.majorFont,
   'minorFont': instance.minorFont,
+  'majorFontCS': instance.majorFontCS,
+  'minorFontCS': instance.minorFontCS,
   'autoDarkColor': instance.autoDarkColor,
   'autoLightColor': instance.autoLightColor,
   'abstractNumMap': instance.abstractNumMap.map(
@@ -73,6 +78,7 @@ Map<String, dynamic> _$WordDocumentToJson(
   'relIdList': instance.relIdList.map((k, e) => MapEntry(k, e.toJson())),
   'docImages': WordDocument._docImagesToJson(instance.docImages),
   'documentStyles': WordDocument._documentStylesToJson(instance.documentStyles),
+  'evenAndOddHeaders': instance.evenAndOddHeaders,
   'withDiacritics': instance.withDiacritics,
   'index': instance.index.map((e) => e.toJson()).toList(),
   'selectedIndexItem': instance.selectedIndexItem,

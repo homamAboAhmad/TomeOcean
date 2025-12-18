@@ -11,142 +11,204 @@ import 'package:xml/xml.dart';
 class ParagraphTable extends Paragraph {
   ParagraphTable(super.parent);
 
-
   @override
   Widget toWidget() {
+    // Ensure pXml is available. If loaded from cache, it might need parsing from xmlString
+    if (pXml == null && xmlString.isNotEmpty) {
+      try {
+        pXml = XmlDocument.parse(xmlString).rootElement;
+      } catch (e) {
+        print("Error parsing table XML: $e");
+      }
+    }
+
     if (pXml != null)
-      return WordTableWidget(pXml!,super.parent);
+      return WordTableWidget(pXml!, super.parent);
     else {
-      print("no table Found!!!!");
-      return Container();
+      return SizedBox.shrink();
     }
   }
-
 }
 
 class WordTableWidget extends StatelessWidget {
   XmlElement tblXml;
   WordPage parent;
-  double tableWidthPx = 4000;
-  WordTableWidget(this.tblXml,this.parent);
+  
+  WordTableWidget(this.tblXml, this.parent);
 
   @override
   Widget build(BuildContext context) {
-    tableWidthPx = getTableWidthPx(context);
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [...getRowsWList()],
+    double screenWidth = MediaQuery.of(context).size.width;
+    
+    // 1. Calculate Total Table Width in Twips from Grid
+    double totalGridTwips = _getTotalGridTwips();
+    if (totalGridTwips == 0) totalGridTwips = 1;
+
+    // 2. Convert Twips to Pixels (Standard Word scaling)
+    // 1 Twip = 1/1440 inch. At 96 DPI, 1 pixel = 15 twips.
+    // But we use a custom factor often used in this project: 0.0667
+    double naturalWidthPx = totalGridTwips * 0.0667;
+
+    // 3. Determine Scale Factor and Final Width
+    double scaleFactor;
+    double finalTableWidth;
+
+    if (naturalWidthPx <= screenWidth) {
+      // If table fits, use its natural size
+      scaleFactor = 0.0667;
+      finalTableWidth = naturalWidthPx;
+    } else {
+      // If table is too big, scale it down to fit screen
+      finalTableWidth = screenWidth;
+      scaleFactor = screenWidth / totalGridTwips;
+    }
+
+    return Container(
+      width: screenWidth, // Container takes full width to allow centering
+      alignment: Alignment.center, // Center the table if it's smaller than screen
+      child: Container(
+        width: finalTableWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: getRowsWList(scaleFactor),
+        ),
       ),
     );
-
   }
 
-  List<XmlElement> getXmlRows() {
-    return tblXml.childElements.where((n) => n.name.local == 'tr').toList();
-  }
-
-  double getRowHeight(XmlElement row) {
-    String rowHeightS = row
-            .getElement("w:trPr")
-            ?.getElement("w:trHeight")
-            ?.getAttribute("w:val") ??
-        "350";
-    double rowHeight = double.tryParse(rowHeightS)?.twpsToPx() * 1.5 ?? 50;
-    return rowHeight;
-  }
-
-  List<XmlElement> getRowCells(XmlElement row) {
-    return row.childElements.where((n) => n.name.local == 'tc').toList();
-
-  }
-
-  double getCellWidth(XmlElement rowCell) {
-    final tcW = rowCell
-        .getElement("w:tcPr")
-        ?.getElement("w:tcW");
-    if (tcW == null) return 200;
-    final wS = tcW.getAttribute("w:w") ?? "0";
-    String type = tcW.getAttribute("type") ?? "dxa";
-    final wVal = double.tryParse(wS) ?? 0;
-
-    switch (type) {
-      case "dxa":
-        return wVal.twpsToPx(); // 1 dxa = 1/20 نقطة ≈ twipsToPx
-      case "pct":
-      // pct يُعطى بخمسين من المئة، ونطبق كنسبة من عرض الجدول
-        return tableWidthPx * (wVal / 5000);
-      case "auto":
-      // اختر عرض افتراضي أو قم بقياس المحتوى
-        return wVal > 0 ? wVal.twpsToPx() : 100;
-      default:
-      // fallback: اعتبرها dxa
-        return wVal.twpsToPx();
+  double _getTotalGridTwips() {
+    var gridCols = tblXml.findAllElements('w:tblGrid').firstOrNull?.findAllElements('w:gridCol');
+    if (gridCols != null && gridCols.isNotEmpty) {
+      double sum = 0;
+      for (var col in gridCols) {
+        sum += double.tryParse(col.getAttribute('w:w') ?? '0') ?? 0;
+      }
+      if (sum > 0) return sum;
     }
+
+    var firstRow = tblXml.findAllElements('w:tr').firstOrNull;
+    if (firstRow != null) {
+      double sum = 0;
+      for (var cell in firstRow.findAllElements('w:tc')) {
+        var w = cell.getElement('w:tcPr')?.getElement('w:tcW')?.getAttribute('w:w');
+        sum += double.tryParse(w ?? '0') ?? 0;
+      }
+      if (sum > 0) return sum;
+    }
+
+    return 0;
   }
 
+  Widget getCellWidget(XmlElement rowCell, double scaleFactor) {
+    double cellTwips = 0;
+    final tcW = rowCell.getElement("w:tcPr")?.getElement("w:tcW");
+    if (tcW != null) {
+       cellTwips = double.tryParse(tcW.getAttribute("w:w") ?? "0") ?? 0;
+    }
+    
+    double cellWidthPx = cellTwips * scaleFactor;
+    if (cellWidthPx <= 0) cellWidthPx = 10; // Minimal width fallback
 
-  Widget getCellWidget(XmlElement rowCell) {
-    double cellWidth = getCellWidth(rowCell);
-    XmlElement? xmlElement = rowCell.getElement("w:p");
-    if (xmlElement == null)
+    var paragraphsXml = rowCell.findAllElements("w:p");
+    
+    if (paragraphsXml.isEmpty)
       return Container(
-        width: cellWidth,
+        width: cellWidthPx,
+        constraints: BoxConstraints(minHeight: 20),
       );
-    Paragraph paragraph = Paragraph(parent).fromXml(xmlElement);
+
+    List<Widget> pWidgets = [];
+    for (var pXml in paragraphsXml) {
+        Paragraph paragraph = Paragraph(parent).fromXml(pXml);
+
+        // تخطي الفقرة فقط إذا كانت خالية تماماً ولا تحتوي حتى على فواصل أسطر
+        if ((paragraph.text.trim().isEmpty) &&
+            paragraph.runs.every((r) =>
+                (r.text ?? "").trim().isEmpty &&
+                r.hasBrBefore == false &&
+                r.hasBrAfter == false)) {
+          continue;
+        }
+        
+        // Fix Alignment for Table Cells:
+        // Center text if it's 'justify' (highKashida) to avoid ugly left/right gaps on short lines
+        if (paragraph.textAlign == TextAlign.justify) {
+           paragraph.textAlign = TextAlign.center;
+        }
+        
+        // Ensure RTL
+        if (paragraph.textDirection != TextDirection.rtl) {
+            paragraph.textDirection = TextDirection.rtl;
+        }
+
+        pWidgets.add(
+          DefaultTextStyle.merge(
+            style: const TextStyle(height: 0.9), // تقليل ارتفاع السطر داخل الجداول
+            child: paragraph.toWidget(),
+          ),
+        );
+    }
+
     return Container(
-      decoration:
-          BoxDecoration(border: Border.all(width: 1, color: Colors.black54)),
-      width: cellWidth - cellWidth / 5,
-      child: paragraph.toWidget(),
+      width: cellWidthPx,
+      padding: EdgeInsets.symmetric(horizontal: 1, vertical: 0), // تقليل padding الرأسي
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: pWidgets,
+      ),
     );
   }
 
-  List<Widget> getRowCellsWList(XmlElement row) {
-    List<XmlElement> rowCells = getRowCells(row);
-    List<Widget> rowCellsW = [];
-    rowCells.forEach((rowCell) {
-      rowCellsW.add(getCellWidget(rowCell));
-    });
-    return rowCellsW;
+  // استخراج ارتفاع الصف من XML (w:trHeight)
+  double? _getRowHeightTwips(XmlElement row) {
+    var trPr = row.getElement('w:trPr');
+    if (trPr == null) return null;
+    
+    var trHeight = trPr.getElement('w:trHeight');
+    if (trHeight == null) return null;
+    
+    String? heightVal = trHeight.getAttribute('w:val');
+    if (heightVal == null) return null;
+    
+    return double.tryParse(heightVal);
   }
 
- List<Widget> getRowsWList() {
-   List<XmlElement> rows = getXmlRows();
-   List<Widget> rowsW = [];
-   rows.forEach((row) {
-     rowsW.add(SizedBox(
-       height: getRowHeight(row),
-       child: Row(
+  List<Widget> getRowsWList(double scaleFactor) {
+    List<XmlElement> rows = tblXml.childElements.where((n) => n.name.local == 'tr').toList();
+    List<Widget> rowsW = [];
+    
+    for (var row in rows) {
+       List<XmlElement> rowCells = row.childElements.where((n) => n.name.local == 'tc').toList();
+       List<Widget> cellsW = [];
+       
+       for (var cell in rowCells) {
+         cellsW.add(getCellWidget(cell, scaleFactor));
+       }
+       
+       // استخدام ارتفاع الصف من XML كحد أدنى فقط (minHeight)
+       // لأن المحتوى قد يكون أكبر من الارتفاع المحدد
+       double? rowHeightTwips = _getRowHeightTwips(row);
+       double? rowHeightPx = rowHeightTwips != null ? rowHeightTwips * 0.0667 : null;
+       
+       Widget rowWidget = Row(
          mainAxisSize: MainAxisSize.min,
          textDirection: TextDirection.rtl,
-         children: [...getRowCellsWList(row)],
-       ),
-     ));
-   });
-   return rowsW;
- }
-
-  double getTableWidthPx(BuildContext context) {
-    final tblW = tblXml
-        .getElement('w:tblPr')
-        ?.getElement('w:tblW');
-    if (tblW == null) return MediaQuery.sizeOf(context).width;
-
-    final wS = tblW.getAttribute('w:w') ?? '0';
-    String type = tblW.getAttribute('type') ?? 'dxa';
-    final wVal = double.tryParse(wS) ?? 0;
-    switch (type) {
-      case 'pct':
-        return MediaQuery.sizeOf(context).width * (wVal / 5000);
-      case 'dxa':
-      case 'fixed':
-        return wVal.twpsToPx();
-      default:
-        return MediaQuery.sizeOf(context).width;
+         crossAxisAlignment: CrossAxisAlignment.start,
+         children: cellsW,
+       );
+       
+       // إذا كان هناك ارتفاع محدد، نستخدم ConstrainedBox مع minHeight
+       // هذا يضمن أن الصف لا يكون أصغر من الارتفاع المحدد، لكن يمكن أن يكون أكبر إذا كان المحتوى أكبر
+       if (rowHeightPx != null && rowHeightPx > 0) {
+         rowsW.add(ConstrainedBox(
+           constraints: BoxConstraints(minHeight: rowHeightPx),
+           child: rowWidget,
+         ));
+       } else {
+         rowsW.add(rowWidget);
+       }
     }
+    return rowsW;
   }
-
 }
