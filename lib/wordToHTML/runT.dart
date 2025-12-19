@@ -30,18 +30,23 @@ class runT {
   String? fnDisplayNum;
   ImageData? image;
   String? toc;
-  
+
   /// Whether this run contains a w:tab element (for TOC entry/page number separation)
   /// This is serialized to cache since xmlRun is ignored
   bool hasTab = false;
-  
+
   @JsonKey(ignore: true)
   Paragraph parent;
-  
+
   @JsonKey(ignore: true)
   Map<String, RelId>? customRelIdList;
 
-  runT(this.parent, {required this.prPr, required this.pPr, this.customRelIdList});
+  runT(
+    this.parent, {
+    required this.prPr,
+    required this.pPr,
+    this.customRelIdList,
+  });
 
   runT.empty() : parent = Paragraph.empty();
 
@@ -56,13 +61,16 @@ class runT {
       runT.rpr = RPr.fromMap(json['rpr'] as Map<String, dynamic>, runT);
     }
     if (json['image'] != null) {
-      runT.image = ImageData.fromMap(json['image'] as Map<String, dynamic>, runT);
+      runT.image = ImageData.fromMap(
+        json['image'] as Map<String, dynamic>,
+        runT,
+      );
     }
-    
+
     // التحقق من الرموز عند التحميل من الكاش أيضاً
     // (xmlRun سيكون null، لكن rpr?.font يجب أن يكون محفوظاً)
     runT.checkSymbol();
-    
+
     return runT;
   }
 
@@ -73,14 +81,14 @@ class runT {
     // Check for tab element (used for TOC entry/page number separation)
     hasTab = xmlRun?.getElement("w:tab") != null;
     getText();
-    
+
     checkBr();
     checkFnId();
     checkBookMark();
-    
+
     // Check for footnoteRef
     isFootnoteRef = xmlRun?.getElement("w:footnoteRef") != null;
-    
+
     XmlElement? xmlrPr = xmlRun?.getElement("w:rPr");
     if (xmlrPr != null) {
       rpr = RPr(this).fromXml(xmlrPr);
@@ -90,7 +98,7 @@ class runT {
     checkSymbol();
     checkParaRpr();
     checkToc();
-    
+
     bool isImg = isImageRun(xmlRun);
     if (isImg) {
       // print("DEBUG: Found image run in fromXml");
@@ -110,25 +118,23 @@ class runT {
 
   isRelativeFromVParagraph() {
     if (image == null) return false;
-    
+
     // Reverted: Allow text boxes to be relative/positioned if the XML says so.
     // This allows them to overlap images correctly.
     // if (image!.textBoxText != null && image!.textBoxText!.isNotEmpty) return false;
-    
-    return image?.relativeFromV == "paragraph" || image?.relativeFromV == "line";
+
+    return image?.relativeFromV == "paragraph" ||
+        image?.relativeFromV == "line";
   }
 
   InlineSpan toWidgetWithImg() {
     // Fix: Check image property instead of xmlRun since xmlRun is not saved in cache
     if (image != null) {
       Widget w = getImageWidget(image!);
-      // Reverted the newline insertion. 
+      // Reverted the newline insertion.
       // We treat the text box as an inline widget. It should flow naturally after the preceding element.
-      return WidgetSpan(
-          child: w
-      );
-    }
-    else
+      return WidgetSpan(child: w);
+    } else
       return toWidget();
   }
 
@@ -148,16 +154,10 @@ class runT {
 
     double vAlign = rpr?.getVertAlignNum() ?? 0;
     String fixedText = checkDiacritics();
-    
 
-    
-
-    
     // Get effective text style (falls back to prPr if rpr is null)
     TextStyle effectiveStyle = getEffectiveTextStyle();
-    
 
-    
     if (vAlign != 0) {
       return WidgetSpan(
         alignment: PlaceholderAlignment.baseline,
@@ -177,22 +177,16 @@ class runT {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              "$bBr$fixedText$aBr",
-              style: effectiveStyle,
-            ),
-            tab
+            Text("$bBr$fixedText$aBr", style: effectiveStyle),
+            tab,
           ],
         ),
       );
     } else {
-      return TextSpan(
-        text: "$bBr$fixedText$aBr",
-        style: effectiveStyle,
-      );
+      return TextSpan(text: "$bBr$fixedText$aBr", style: effectiveStyle);
     }
   }
-  
+
   /// Get effective TextStyle, falling back to paragraph properties when run properties are null
   TextStyle getEffectiveTextStyle() {
     TextStyle style;
@@ -208,7 +202,7 @@ class runT {
     else {
       style = TextStyle(color: Colors.black, fontSize: 14, fontFamily: "jreg");
     }
-    
+
     // Apply paragraph properties (line height) from parent Paragraph's PPr
     double? lineHeight = pPr?.lineHeight;
     // Fallback to parent paragraph's PPr if run's pPr doesn't have it
@@ -217,12 +211,11 @@ class runT {
     }
     // Final fallback: Word 2007+ default spacing (1.15, not 1.0!)
     lineHeight ??= 1.15;
-    
+
     style = style.copyWith(height: lineHeight);
-    
+
     return style;
   }
-
 
   void checkBr() {
     bool hasBr = xmlRun?.getElement("w:br") != null;
@@ -233,7 +226,8 @@ class runT {
       for (int i = 0; i < elements.length; i++) {
         if (elements[i].name.local == "t")
           tP = i;
-        else if (elements[i].name.local == "br") brP = i;
+        else if (elements[i].name.local == "br")
+          brP = i;
       }
       hasBrBefore = brP < tP;
       hasBrAfter = brP > tP;
@@ -241,8 +235,9 @@ class runT {
   }
 
   void checkFnId() {
-    footNoteId =
-        xmlRun?.getElement("w:footnoteReference")?.getAttribute("w:id");
+    footNoteId = xmlRun
+        ?.getElement("w:footnoteReference")
+        ?.getAttribute("w:id");
   }
 
   updateFnDisplayNumber() {
@@ -258,7 +253,8 @@ class runT {
       return;
     if (text!.contains("("))
       text = text!.replaceFirst("(", ")");
-    else if (text!.contains(")")) text = text!.replaceFirst(")", "(");
+    else if (text!.contains(")"))
+      text = text!.replaceFirst(")", "(");
   }
 
   void getText() {
@@ -267,13 +263,12 @@ class runT {
       text = "";
       return;
     }
-    
 
     // أولاً: محاولة استخراج النص من w:t
     String? tText = xmlRun?.getElement("w:t")?.text;
-    
+
     text = tText ?? "";
-    
+
     // إذا لم يكن هناك نص في w:t، نبحث عن w:sym
     if ((text?.isEmpty ?? true) && xmlRun != null) {
       var symElement = xmlRun!.findElements("w:sym").firstOrNull;
@@ -297,15 +292,15 @@ class runT {
       if (rpr == null) {
         rpr = RPr(this);
       }
-      
+
       var symElement = xmlRun!.findElements("w:sym").firstOrNull;
       String? fontName = symElement?.getAttribute("w:font");
       String? charHex = symElement?.getAttribute("w:char");
-      
+
       if (fontName != null && fontName.isNotEmpty) {
         rpr?.font = fontName;
       }
-      
+
       if (charHex != null && charHex.isNotEmpty) {
         try {
           int codePoint = int.parse(charHex, radix: 16);
@@ -339,28 +334,28 @@ class runT {
 
   Widget? getTabWidget() {
     if (xmlRun?.getElement("w:tab") == null) return null;
-    
+
     // Get tab stops from parent paragraph's pPr
     PPr? paragraphPPr = parent.pPr;
-    
+
     // Get the first defined tab stop (most common case: single tab)
     // Word applies tabs in order, so we use the first one for now
     TabStop? tabStop;
     if (paragraphPPr != null && paragraphPPr.tabStops.isNotEmpty) {
       tabStop = paragraphPPr.tabStops.first;
     }
-    
+
     // Calculate width from tab position (twips to pixels)
     // If no tab defined, use default Word tab (720 twips = 0.5 inch)
     double tabWidth = tabStop?.positionInPx ?? (720 * 0.0667);
-    
+
     // Ensure minimum visible width
     if (tabWidth < 20) tabWidth = 20;
-    
+
     // Get leader type if any
     String? leaderType = tabStop?.leader;
     bool hasLeader = tabStop?.hasLeader ?? false;
-    
+
     if (hasLeader) {
       return _buildLeaderWidget(leaderType, tabWidth);
     } else {
@@ -368,7 +363,7 @@ class runT {
       return SizedBox(width: tabWidth);
     }
   }
-  
+
   Widget _buildLeaderWidget(String? leaderType, double width) {
     String leaderChar;
     switch (leaderType) {
@@ -390,13 +385,15 @@ class runT {
       default:
         leaderChar = ".";
     }
-    
+
     // Calculate how many characters needed to fill the width
     // Approximate char width based on leader type
-    double charWidth = leaderChar == "." ? 4.0 : (leaderChar == "_" ? 8.0 : 6.0);
+    double charWidth = leaderChar == "."
+        ? 4.0
+        : (leaderChar == "_" ? 8.0 : 6.0);
     int charCount = (width / charWidth).floor();
     if (charCount < 1) charCount = 1;
-    
+
     return SizedBox(
       width: width,
       child: Text(
@@ -408,7 +405,9 @@ class runT {
         style: TextStyle(
           fontFamily: "jreg",
           color: Colors.black,
-          letterSpacing: leaderChar == "_" ? 0 : 1.0, // Underscores need no spacing
+          letterSpacing: leaderChar == "_"
+              ? 0
+              : 1.0, // Underscores need no spacing
         ),
       ),
     );
@@ -449,7 +448,6 @@ class runT {
     if (withDiacritics)
       return text ?? "";
     else
-    return removeDiacritics(text??"");
+      return removeDiacritics(text ?? "");
   }
-
 }

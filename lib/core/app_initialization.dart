@@ -6,6 +6,7 @@ import 'package:golden_shamela/core/database_initializer.dart';
 import 'package:golden_shamela/core/indexed_books_loader.dart';
 import 'package:golden_shamela/core/window_manager_helper.dart';
 import 'package:golden_shamela/core/preferences_helper.dart';
+import 'package:golden_shamela/core/startup_indexer.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -20,7 +21,7 @@ class AppInitialization {
   /// تهيئة التطبيق
   Future<InitializationResult> initialize() async {
     final windowInfo = await _windowManagerHelper.parseWindowInfo();
-    
+
     // تهيئة قاعدة البيانات و SharedPreferences لجميع النوافذ
     _databaseInitializer.initialize();
     await _initializePreferences();
@@ -29,6 +30,10 @@ class AppInitialization {
       await _windowManagerHelper.initializeMainWindow();
       _initializePaths();
       _indexedBooksLoader.loadInBackground();
+
+      // فهرسة الكتب الجديدة في الخلفية (لا تؤثر على بداية التطبيق)
+      Future.microtask(() => StartupIndexer.runBackgroundCheck());
+
       await _initializeSearchEngine();
     } else {
       await windowManager.ensureInitialized();
@@ -38,10 +43,7 @@ class AppInitialization {
       await _initializeSearchEngine();
     }
 
-    return InitializationResult(
-      route: windowInfo.route,
-      prefs: _prefs!,
-    );
+    return InitializationResult(route: windowInfo.route, prefs: _prefs!);
   }
 
   Future<void> _initializePreferences() async {
@@ -71,4 +73,3 @@ class InitializationResult {
 
   InitializationResult({required this.route, required this.prefs});
 }
-

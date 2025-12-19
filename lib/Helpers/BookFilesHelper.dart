@@ -1,15 +1,15 @@
 import 'dart:io';
 
 import '../Controllers/PathController.dart';
+import 'package:path/path.dart' as p;
 
 loadBooks() async {
   final dir = Directory(BOOKS_FOLDER_PATH);
   if (await dir.exists()) {
-    final files = dir
-        .listSync()
-        .whereType<File>()
-        // .where((f) => f.path.endsWith('.docx')) // لو حابب تحدد نوع الملفات
-        .toList();
+    final files = dir.listSync().whereType<File>().where((f) {
+      final name = p.basename(f.path);
+      return !name.startsWith('~\$') && name.toLowerCase().endsWith('.docx');
+    }).toList();
 
     return files;
   }
@@ -26,7 +26,8 @@ Future<File?> loadBookByName(String fileName) async {
   } else {
     // يمكنك طباعة رسالة للمساعدة في تتبع الأخطاء
     print(
-        'الملف "$fileName" لم يتم العثور عليه في المسار "$BOOKS_FOLDER_PATH".');
+      'الملف "$fileName" لم يتم العثور عليه في المسار "$BOOKS_FOLDER_PATH".',
+    );
     return null;
   }
 }

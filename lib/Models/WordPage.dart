@@ -1,5 +1,3 @@
-import 'dart:io';
-
 // import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
@@ -237,13 +235,13 @@ class WordPage {
       "╚══════════════════════════════════════════════════════════════════╝",
     );
 
-    try {
-      final file = File('page_xml_debug.xml');
-      file.writeAsStringSync(buffer.toString());
-      print("✅ XML saved to file: ${file.absolute.path}");
-    } catch (e) {
-      print("❌ Error saving XML to file: $e");
-    }
+    // try {
+    //   final file = File('page_xml_debug.xml');
+    //   file.writeAsStringSync(buffer.toString());
+    //   print("✅ XML saved to file: ${file.absolute.path}");
+    // } catch (e) {
+    //   print("❌ Error saving XML to file: $e");
+    // }
   }
 }
 

@@ -11,6 +11,7 @@ import 'package:golden_shamela/UI/AuthorsManagement/authors_management_screen.da
 import 'package:golden_shamela/UI/Search/search_results_tab_viewer.dart';
 import 'package:golden_shamela/UI/Search/models/search_results_tab.dart';
 import 'package:golden_shamela/Helpers/FileHelper.dart';
+import 'package:golden_shamela/UI/Widgets/BackgroundTasksBar.dart';
 import 'home_page/home_page_window_communication.dart';
 import 'home_page/home_page_search_handlers.dart';
 import 'home_page/home_page_book_management.dart';
@@ -42,7 +43,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   int? _pendingPageNumber;
-  
+
   void _initializeHelpers() {
     _bookManagement = HomePageBookManagement(
       context: context,
@@ -82,11 +83,9 @@ class _HomePageState extends State<HomePage> {
   Widget _buildSearchResultsTabViewer() {
     final tabIndex = selectedBookP - openedBooks.length;
     if (tabIndex < 0 || tabIndex >= _searchResultsTabs.length) {
-      return Center(
-        child: Text('خطأ في عرض النتائج', style: normalStyle()),
-      );
+      return Center(child: Text('خطأ في عرض النتائج', style: normalStyle()));
     }
-    
+
     final tab = _searchResultsTabs[tabIndex];
     return SearchResultsTabViewer(
       results: tab.results,
@@ -179,56 +178,72 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         drawer: BooksDrawer(onBookSelected: _onBookSelected),
-        body: Stack(
+        body: Column(
           children: [
-            if (openedBooks.isNotEmpty || _searchResultsTabs.isNotEmpty)
-              HomePageUIHelpers.openedBooksTitlesList(
-                openedBooks: openedBooks,
-                searchResultsTabs: _searchResultsTabs,
-                selectedBookP: selectedBookP,
-                onSwitchToBook: _switchToBook,
-                onCloseBook: _closeBook,
-                onCloseSearchResultsTab: _closeSearchResultsTab,
-                onReorderBooks: (oldIndex, newIndex) {
-                  setState(() {
-                    final draggedBook = openedBooks.removeAt(oldIndex);
-                    openedBooks.insert(newIndex, draggedBook);
-                  });
-                },
+            Expanded(
+              child: Stack(
+                children: [
+                  Container(color: Colors.white),
+                  if (openedBooks.isNotEmpty &&
+                      selectedBookP < openedBooks.length)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 48.0),
+                      child: DocViewer(
+                        openedBooks[selectedBookP],
+                        key: ObjectKey(openedBooks[selectedBookP]),
+                        onBookSelected: _onBookSelected,
+                      ),
+                    ),
+                  if (_searchResultsTabs.isNotEmpty &&
+                      selectedBookP >= openedBooks.length)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 48.0),
+                      child: _buildSearchResultsTabViewer(),
+                    ),
+                  if (openedBooks.isNotEmpty || _searchResultsTabs.isNotEmpty)
+                    HomePageUIHelpers.openedBooksTitlesList(
+                      openedBooks: openedBooks,
+                      searchResultsTabs: _searchResultsTabs,
+                      selectedBookP: selectedBookP,
+                      onSwitchToBook: _switchToBook,
+                      onCloseBook: _closeBook,
+                      onCloseSearchResultsTab: _closeSearchResultsTab,
+                      onReorderBooks: (oldIndex, newIndex) {
+                        setState(() {
+                          final draggedBook = openedBooks.removeAt(oldIndex);
+                          openedBooks.insert(newIndex, draggedBook);
+                        });
+                      },
+                    ),
+                ],
               ),
-            if (openedBooks.isNotEmpty && selectedBookP < openedBooks.length)
-              Padding(
-                padding: const EdgeInsets.only(top: 48.0),
-                child: DocViewer(
-                  openedBooks[selectedBookP],
-                  key: ObjectKey(openedBooks[selectedBookP]),
-                  onBookSelected: _onBookSelected,
-                ),
-              ),
-            if (_searchResultsTabs.isNotEmpty && selectedBookP >= openedBooks.length)
-              Padding(
-                padding: const EdgeInsets.only(top: 48.0),
-                child: _buildSearchResultsTabViewer(),
-              ),
+            ),
+            const BackgroundTasksBar(),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _onBookSelected(File book, {int? pageNumber, bool fromSearchResults = false}) async {
+  Future<void> _onBookSelected(
+    File book, {
+    int? pageNumber,
+    bool fromSearchResults = false,
+  }) async {
     filePath = book.path;
     final bookTitle = getFileName(filePath!);
-    
+
     // Always open a new instance of the book, even if it's already opened
     // This allows users to have multiple tabs of the same book
-    
+
     // Book is not opened (or opened from search results), read and add it
     _pendingPageNumber = pageNumber;
     await _bookManagement!.readDocxFile(filePath);
-    
+
     // Ensure page number is set (in case onBookAdded didn't set it)
-    if (pageNumber != null && openedBooks.isNotEmpty && selectedBookP < openedBooks.length) {
+    if (pageNumber != null &&
+        openedBooks.isNotEmpty &&
+        selectedBookP < openedBooks.length) {
       if (openedBooks[selectedBookP].currentPage != pageNumber) {
         openedBooks[selectedBookP].currentPage = pageNumber;
         if (mounted) {
@@ -236,7 +251,7 @@ class _HomePageState extends State<HomePage> {
         }
       }
     }
-    
+
     // Don't close search results tabs when opening a book
     if (mounted && pageNumber == null) {
       setState(() {});
@@ -244,7 +259,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _handleSearchResultNavigation(String bookPath, int pageNumber) async {
-    await _onBookSelected(File(bookPath), pageNumber: pageNumber, fromSearchResults: true);
+    await _onBookSelected(
+      File(bookPath),
+      pageNumber: pageNumber,
+      fromSearchResults: true,
+    );
   }
 
   void _closeBook(int i) {
@@ -386,7 +405,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       final tabIndex = _searchResultsTabs.indexWhere((tab) => tab.id == tabId);
       final searchQueries = queries.isNotEmpty ? queries : fallbackQueries;
-      
+
       if (tabIndex == -1) {
         final newTab = SearchResultsTab(
           id: tabId,
@@ -405,7 +424,7 @@ class _HomePageState extends State<HomePage> {
           morphologicalSearch: morphological,
         );
       }
-      
+
       selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
     });
   }

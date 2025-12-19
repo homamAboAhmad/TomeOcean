@@ -211,7 +211,18 @@ class WordDocument {
       throw StateError("pagesDirectory is not set for lazy loading.");
     }
     final pageFile = File('${pagesDirectory!}/${pageFilePaths[index]}');
-    final pageJsonString = await pageFile.readAsString();
+
+    String pageJsonString;
+    if (pageFile.path.endsWith('.gz')) {
+      // Read compressed file
+      final compressedBytes = await pageFile.readAsBytes();
+      final decodedBytes = GZipCodec().decode(compressedBytes);
+      pageJsonString = utf8.decode(decodedBytes);
+    } else {
+      // Read uncompressed file
+      pageJsonString = await pageFile.readAsString();
+    }
+
     final pageJsonMap = jsonDecode(pageJsonString) as Map<String, dynamic>;
     final loadedPage = WordPage.fromMap(pageJsonMap, this);
 
@@ -225,6 +236,7 @@ class WordDocument {
     }
 
     _loadedPages[index] = loadedPage;
+
     return loadedPage;
   }
 
@@ -310,7 +322,6 @@ class WordDocument {
           sectPr = sect;
         }
       }
-      // debugPrint("   → Using Section ${sectPrList.indexOf(sectPr)}");
       return sectPr;
     }
   }

@@ -37,7 +37,7 @@ void resolveSameRow(List<GlobalKey<_WidgetSpanWrapperState>> keys) {
   }
 }
 
-initFixWidgetSpan(){
+initFixWidgetSpan() {
   final keys = <GlobalKey<_WidgetSpanWrapperState>>[];
 
   SchedulerBinding.instance.addPostFrameCallback((timeStamp) {
@@ -62,6 +62,7 @@ initFixWidgetSpan(){
   });
   return keys;
 }
+
 nextKey() {
   var key = GlobalKey<_WidgetSpanWrapperState>();
   widgetSpanKeys.add(key);
@@ -157,7 +158,7 @@ nextKey() {
 // }
 
 class WidgetSpanWrapper extends StatefulWidget {
-   WidgetSpanWrapper({Key? key, required this.child}) : super(key: key);
+  WidgetSpanWrapper({Key? key, required this.child}) : super(key: key);
 
   final Widget child;
 
@@ -170,16 +171,13 @@ class _WidgetSpanWrapperState extends State<WidgetSpanWrapper> {
 
   void updateXOffset(double xOffset) {
     setState(() {
-      this.offset = Offset(xOffset, 0);
+      this.offset = Offset(xOffset.isFinite ? xOffset : 0, 0);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Transform.translate(
-      offset: offset,
-      child: widget.child,
-    );
+    return Transform.translate(offset: offset, child: widget.child);
   }
 }
 
@@ -187,12 +185,13 @@ class MyWidgetSpan extends StatelessWidget {
   final String text;
   TextStyle? style;
 
-   MyWidgetSpan({Key? key,required this.text,this.style}) : super(key: key);
+  MyWidgetSpan({Key? key, required this.text, this.style}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Text(text,
-    style: style,
+    return Text(
+      text,
+      style: style,
       textAlign: TextAlign.right,
       textDirection: TextDirection.rtl,
     );

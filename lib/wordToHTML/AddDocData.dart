@@ -15,8 +15,9 @@ import 'ExtractWordImages.dart';
 
 Future<List<WordPage>> AddDocData(
   Archive archive,
-  WordDocument wordDocument,
-) async {
+  WordDocument wordDocument, {
+  Function(int current, int total)? onProgress,
+}) async {
   // print("AddDocData: Starting...");
   Map<String, ArchiveFile> archiveMap = archive.toMap();
   // print("AddDocData: Extracted archive map.");
@@ -69,6 +70,7 @@ Future<List<WordPage>> AddDocData(
   List<WordPage> pages = await addWordPages(
     archiveMap[WORD_DOCUMENT]!,
     wordDocument,
+    onProgress: onProgress,
   );
   // print("AddDocData: Added word pages.");
 

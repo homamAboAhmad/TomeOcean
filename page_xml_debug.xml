@@ -3,6 +3,737 @@
 ╚══════════════════════════════════════════════════════════════════╝
 
 --- Paragraph 0 ---
+<w:p w14:paraId="078D0D99" w14:textId="77777777" w:rsidR="003A3788" w:rsidRPr="004B465D" w:rsidRDefault="004B465D" w:rsidP="00057857">
+  <w:pPr>
+    <w:pStyle w:val="Heading2"/>
+    <w:spacing w:line="18" w:lineRule="atLeast"/>
+    <w:ind w:left="-341" w:hanging="142"/>
+    <w:rPr>
+      <w:rtl/>
+    </w:rPr>
+  </w:pPr>
+  <w:bookmarkStart w:id="5" w:name="_Toc513468044"/>
+  <w:r w:rsidRPr="004B465D">
+    <w:rPr>
+      <w:rtl/>
+    </w:rPr>
+    <w:lastRenderedPageBreak/>
+    <w:drawing>
+      <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251421696" behindDoc="1" locked="0" layoutInCell="1" allowOverlap="1" wp14:anchorId="73BC50DB" wp14:editId="1A76D7F3">
+        <wp:simplePos x="0" y="0"/>
+        <wp:positionH relativeFrom="margin">
+          <wp:posOffset>274320</wp:posOffset>
+        </wp:positionH>
+        <wp:positionV relativeFrom="paragraph">
+          <wp:posOffset>-179705</wp:posOffset>
+        </wp:positionV>
+        <wp:extent cx="5295900" cy="704850"/>
+        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+        <wp:wrapNone/>
+        <wp:docPr id="582" name="صورة 582"/>
+        <wp:cNvGraphicFramePr>
+          <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+        </wp:cNvGraphicFramePr>
+        <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+          <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+            <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+              <pic:nvPicPr>
+                <pic:cNvPr id="582" name="طويل.jpg"/>
+                <pic:cNvPicPr/>
+              </pic:nvPicPr>
+              <pic:blipFill>
+                <a:blip r:embed="rId25">
+                  <a:extLst>
+                    <a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}">
+                      <a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:blip>
+                <a:stretch>
+                  <a:fillRect/>
+                </a:stretch>
+              </pic:blipFill>
+              <pic:spPr>
+                <a:xfrm>
+                  <a:off x="0" y="0"/>
+                  <a:ext cx="5295900" cy="704850"/>
+                </a:xfrm>
+                <a:prstGeom prst="rect">
+                  <a:avLst/>
+                </a:prstGeom>
+              </pic:spPr>
+            </pic:pic>
+          </a:graphicData>
+        </a:graphic>
+        <wp14:sizeRelH relativeFrom="page">
+          <wp14:pctWidth>0</wp14:pctWidth>
+        </wp14:sizeRelH>
+        <wp14:sizeRelV relativeFrom="page">
+          <wp14:pctHeight>0</wp14:pctHeight>
+        </wp14:sizeRelV>
+      </wp:anchor>
+    </w:drawing>
+  </w:r>
+  <w:r w:rsidRPr="004B465D">
+    <w:rPr>
+      <w:rFonts w:hint="cs"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:drawing>
+      <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251431936" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1" wp14:anchorId="5C473874" wp14:editId="334D964E">
+        <wp:simplePos x="0" y="0"/>
+        <wp:positionH relativeFrom="margin">
+          <wp:align>center</wp:align>
+        </wp:positionH>
+        <wp:positionV relativeFrom="page">
+          <wp:align>top</wp:align>
+        </wp:positionV>
+        <wp:extent cx="7164705" cy="736600"/>
+        <wp:effectExtent l="0" t="0" r="0" b="6350"/>
+        <wp:wrapNone/>
+        <wp:docPr id="562" name="صورة 228" descr="التقاط"/>
+        <wp:cNvGraphicFramePr>
+          <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+        </wp:cNvGraphicFramePr>
+        <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+          <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+            <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+              <pic:nvPicPr>
+                <pic:cNvPr id="0" name="Picture 228" descr="التقاط"/>
+                <pic:cNvPicPr>
+                  <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                </pic:cNvPicPr>
+              </pic:nvPicPr>
+              <pic:blipFill>
+                <a:blip r:embed="rId12">
+                  <a:extLst>
+                    <a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}">
+                      <a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:blip>
+                <a:srcRect/>
+                <a:stretch>
+                  <a:fillRect/>
+                </a:stretch>
+              </pic:blipFill>
+              <pic:spPr bwMode="auto">
+                <a:xfrm>
+                  <a:off x="0" y="0"/>
+                  <a:ext cx="7164705" cy="736600"/>
+                </a:xfrm>
+                <a:prstGeom prst="rect">
+                  <a:avLst/>
+                </a:prstGeom>
+                <a:noFill/>
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+              </pic:spPr>
+            </pic:pic>
+          </a:graphicData>
+        </a:graphic>
+        <wp14:sizeRelH relativeFrom="page">
+          <wp14:pctWidth>0</wp14:pctWidth>
+        </wp14:sizeRelH>
+        <wp14:sizeRelV relativeFrom="page">
+          <wp14:pctHeight>0</wp14:pctHeight>
+        </wp14:sizeRelV>
+      </wp:anchor>
+    </w:drawing>
+  </w:r>
+  <w:r w:rsidR="003A3788" w:rsidRPr="004B465D">
+    <w:rPr>
+      <w:rFonts w:hint="cs"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:drawing>
+      <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251426816" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1" wp14:anchorId="428BF1D9" wp14:editId="0DC9DE90">
+        <wp:simplePos x="0" y="0"/>
+        <wp:positionH relativeFrom="margin">
+          <wp:posOffset>-711200</wp:posOffset>
+        </wp:positionH>
+        <wp:positionV relativeFrom="margin">
+          <wp:posOffset>-864235</wp:posOffset>
+        </wp:positionV>
+        <wp:extent cx="7164705" cy="767080"/>
+        <wp:effectExtent l="0" t="0" r="0" b="0"/>
+        <wp:wrapNone/>
+        <wp:docPr id="135" name="صورة 228" descr="التقاط"/>
+        <wp:cNvGraphicFramePr>
+          <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+        </wp:cNvGraphicFramePr>
+        <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+          <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+            <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+              <pic:nvPicPr>
+                <pic:cNvPr id="0" name="Picture 228" descr="التقاط"/>
+                <pic:cNvPicPr>
+                  <a:picLocks noChangeAspect="1" noChangeArrowheads="1"/>
+                </pic:cNvPicPr>
+              </pic:nvPicPr>
+              <pic:blipFill>
+                <a:blip r:embed="rId12">
+                  <a:extLst>
+                    <a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}">
+                      <a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:blip>
+                <a:srcRect/>
+                <a:stretch>
+                  <a:fillRect/>
+                </a:stretch>
+              </pic:blipFill>
+              <pic:spPr bwMode="auto">
+                <a:xfrm>
+                  <a:off x="0" y="0"/>
+                  <a:ext cx="7164705" cy="767080"/>
+                </a:xfrm>
+                <a:prstGeom prst="rect">
+                  <a:avLst/>
+                </a:prstGeom>
+                <a:noFill/>
+                <a:ln>
+                  <a:noFill/>
+                </a:ln>
+              </pic:spPr>
+            </pic:pic>
+          </a:graphicData>
+        </a:graphic>
+        <wp14:sizeRelH relativeFrom="page">
+          <wp14:pctWidth>0</wp14:pctWidth>
+        </wp14:sizeRelH>
+        <wp14:sizeRelV relativeFrom="page">
+          <wp14:pctHeight>0</wp14:pctHeight>
+        </wp14:sizeRelV>
+      </wp:anchor>
+    </w:drawing>
+  </w:r>
+  <w:r w:rsidR="003A3788" w:rsidRPr="004B465D">
+    <w:rPr>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>فِي أَنَّ الفَتْوَى مِن غَيرِ الـمؤَهَّلِ مِن الكَبائر</w:t>
+  </w:r>
+  <w:bookmarkEnd w:id="5"/>
+</w:p>
+
+--- Paragraph 1 ---
+<w:p w14:paraId="494F6D77" w14:textId="77777777" w:rsidR="003A3788" w:rsidRPr="003469F7" w:rsidRDefault="003A3788" w:rsidP="00057857">
+  <w:pPr>
+    <w:widowControl w:val="0"/>
+    <w:tabs>
+      <w:tab w:val="left" w:pos="6741"/>
+    </w:tabs>
+    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
+    <w:ind w:firstLine="284"/>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="12"/>
+      <w:szCs w:val="12"/>
+      <w:rtl/>
+    </w:rPr>
+  </w:pPr>
+  <w:r w:rsidRPr="003469F7">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="12"/>
+      <w:szCs w:val="12"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:tab/>
+  </w:r>
+</w:p>
+
+--- Paragraph 2 ---
+<w:p w14:paraId="072741A1" w14:textId="326A43B7" w:rsidR="003A3788" w:rsidRPr="004213E8" w:rsidRDefault="003A3788" w:rsidP="00057857">
+  <w:pPr>
+    <w:widowControl w:val="0"/>
+    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
+    <w:ind w:firstLine="284"/>
+    <w:jc w:val="center"/>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="28"/>
+      <w:szCs w:val="26"/>
+      <w:rtl/>
+    </w:rPr>
+  </w:pPr>
+  <w:r w:rsidRPr="004213E8">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:b/>
+      <w:bCs/>
+      <w:sz w:val="28"/>
+      <w:szCs w:val="26"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>رَقَمُ الفَتْوى</w:t>
+  </w:r>
+  <w:r w:rsidRPr="004213E8">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="28"/>
+      <w:szCs w:val="26"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>: 3/9/</w:t>
+  </w:r>
+  <w:r w:rsidR="00F76FB9" w:rsidRPr="004213E8">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="28"/>
+      <w:szCs w:val="26"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>1631</w:t>
+  </w:r>
+  <w:r w:rsidR="00F76FB9" w:rsidRPr="00B60092">
+    <w:rPr>
+      <w:rStyle w:val="FootnoteReference"/>
+      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Traditional Arabic"/>
+      <w:color w:val="0000FF"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>(</w:t>
+  </w:r>
+  <w:r w:rsidR="00F76FB9" w:rsidRPr="00B60092">
+    <w:rPr>
+      <w:rStyle w:val="FootnoteReference"/>
+      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Traditional Arabic"/>
+      <w:color w:val="0000FF"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:footnoteReference w:id="4"/>
+  </w:r>
+  <w:r w:rsidR="00F76FB9" w:rsidRPr="00B60092">
+    <w:rPr>
+      <w:rStyle w:val="FootnoteReference"/>
+      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Traditional Arabic"/>
+      <w:color w:val="0000FF"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>)</w:t>
+  </w:r>
+</w:p>
+
+--- Paragraph 3 ---
+<w:p w14:paraId="080D7756" w14:textId="77777777" w:rsidR="003A3788" w:rsidRPr="003469F7" w:rsidRDefault="003A3788" w:rsidP="00057857">
+  <w:pPr>
+    <w:widowControl w:val="0"/>
+    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
+    <w:ind w:firstLine="284"/>
+    <w:jc w:val="center"/>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/>
+      <w:sz w:val="12"/>
+      <w:szCs w:val="12"/>
+      <w:rtl/>
+    </w:rPr>
+  </w:pPr>
+</w:p>
+
+--- Paragraph 4 ---
+<w:p w14:paraId="07A7DA6A" w14:textId="63D0BEB1" w:rsidR="003A3788" w:rsidRPr="00095B64" w:rsidRDefault="003A3788" w:rsidP="000E3A9A">
+  <w:pPr>
+    <w:widowControl w:val="0"/>
+    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
+    <w:ind w:firstLine="509"/>
+    <w:jc w:val="both"/>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:b/>
+      <w:bCs/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="34"/>
+      <w:rtl/>
+    </w:rPr>
+  </w:pPr>
+  <w:r>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Farsi Simple Bold" w:hint="cs"/>
+      <w:noProof/>
+      <w:sz w:val="38"/>
+      <w:szCs w:val="38"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:drawing>
+      <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251416576" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1" wp14:anchorId="146BEDCB" wp14:editId="0B8E300F">
+        <wp:simplePos x="0" y="0"/>
+        <wp:positionH relativeFrom="column">
+          <wp:posOffset>5299854</wp:posOffset>
+        </wp:positionH>
+        <wp:positionV relativeFrom="paragraph">
+          <wp:posOffset>53400</wp:posOffset>
+        </wp:positionV>
+        <wp:extent cx="396815" cy="409941"/>
+        <wp:effectExtent l="0" t="0" r="3810" b="0"/>
+        <wp:wrapNone/>
+        <wp:docPr id="235" name="صورة 235"/>
+        <wp:cNvGraphicFramePr>
+          <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+        </wp:cNvGraphicFramePr>
+        <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+          <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+            <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+              <pic:nvPicPr>
+                <pic:cNvPr id="0" name="3.jpg"/>
+                <pic:cNvPicPr/>
+              </pic:nvPicPr>
+              <pic:blipFill>
+                <a:blip r:embed="rId26" cstate="print">
+                  <a:extLst>
+                    <a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}">
+                      <a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/>
+                    </a:ext>
+                  </a:extLst>
+                </a:blip>
+                <a:stretch>
+                  <a:fillRect/>
+                </a:stretch>
+              </pic:blipFill>
+              <pic:spPr>
+                <a:xfrm>
+                  <a:off x="0" y="0"/>
+                  <a:ext cx="396815" cy="409941"/>
+                </a:xfrm>
+                <a:prstGeom prst="rect">
+                  <a:avLst/>
+                </a:prstGeom>
+              </pic:spPr>
+            </pic:pic>
+          </a:graphicData>
+        </a:graphic>
+        <wp14:sizeRelH relativeFrom="page">
+          <wp14:pctWidth>0</wp14:pctWidth>
+        </wp14:sizeRelH>
+        <wp14:sizeRelV relativeFrom="page">
+          <wp14:pctHeight>0</wp14:pctHeight>
+        </wp14:sizeRelV>
+      </wp:anchor>
+    </w:drawing>
+  </w:r>
+  <w:r w:rsidRPr="00BC2D33">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Farsi Simple Bold" w:hint="cs"/>
+      <w:sz w:val="38"/>
+      <w:szCs w:val="38"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>السؤال</w:t>
+  </w:r>
+  <w:r>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Farsi Simple Bold" w:hint="cs"/>
+      <w:sz w:val="38"/>
+      <w:szCs w:val="38"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">:</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>كَتَبَ إِلَيهِ سائلٌ يَقُولُ: السلامُ عَلَيكُمْ</w:t>
+  </w:r>
+  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>..</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">يَنْتَشِرُ فِي هَذِهِ الأَيامِ بَيْنَ الشبابِ الخَوْضُ فِي كَثِيرٍ مِن مسائلِ الشرْعِ وأحْكامِهِ؛ سواءٌ بالحَدِيثِ فِي الـمجالِسِ؛ أو الكِتابَةِ فِي</w:t>
+  </w:r>
+  <w:r w:rsidR="004B465D" w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>«</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>الإنْتَرْنِت</w:t>
+  </w:r>
+  <w:r w:rsidR="004B465D" w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>»</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>، والغالِبُ عَلَى مَن يَتَكَلَّمُ فِي ذلكَ أَنَّهُمْ مِن العامَّةِ أوْ مِن صِغارِ الطّلَبِةِ، وقَدْ سَمِعْتُ بَعْضَهُمْ يَتَكَلَّمُ فِي أَحَدِ الـمجالِسِ فِي التكْفِيرِ والعُذْرِ بالجَهْلِ؛ وقَدْ تَطاوَلَ عَلى بَعْضِ العُلماءِ بِكَلامٍ أنْكَرْتُهُ عَلَيهِ، وقُلْتُ لَهُ</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">:</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">مِثْلُ هَذِهِ الـمسائلِ يَنْبَغِي أنْ يُرْجَعَ فِيها إلَى العُلَماءِ، ولَمّا سَألْتُهُ عَمّا حَصَّلَهُ مِن العِلْمِ؛ قالَ لِي: حَضَرْتُ دُرُوسًا عَلَى أَحَدِ الـمشايِخِ سِتَّةَ أشْهُرٍ!، فَقُلْتُ لَهُ: هَذا لا يُصَيِّرُكَ طالِبًا فَضْلًا عَن تَأهُّلِكَ للإفْتاءِ، فَأجابِنَي: بِأنَّهُ لا يُقَلِّدُ أحَدًا؛ وإِنَّما يَأخُذُ بالكِتابِ والسنَّةِ!، والسؤالُ هُو:</w:t>
+  </w:r>
+  <w:r w:rsidRPr="00095B64">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:b/>
+      <w:bCs/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="34"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>هَلْ يَجُوزُ لِمِثْلِهِ الإفْتاءُ فِي مِثْلِ هَذهِ الـمسائلِ أمْ لا؟؛ وإنْ كانَ الجَوابُ بِالـمنْعِ فَهَلِ الفَتْوى بِغَيرِ عِلْمٍ مَعْدُودَةٌ مِن صَغائرِ الذنُوبِ أم مِن الكبائر؟؛ وهَلْ كُنْتُ مُحِقًّا فِي الإنْكارِ عَلَيهِ أم لا؟؛ وهَلْ هُو مُصِيبٌ فِي قَولِهِ إِنَّهُ يَأخُذُ بالكِتابِ والسنَّةِ؟، فَأرْجُو التعْجِيلَ بالجَوابِ تَفْصِيلًا؛ لأنَّ الأمْرَ قَدْ أشْكَلَ عَلَينا</w:t>
+  </w:r>
+  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="34"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>.</w:t>
+  </w:r>
+</w:p>
+
+--- Paragraph 5 ---
+<w:p w14:paraId="4D72C283" w14:textId="13266711" w:rsidR="003A3788" w:rsidRPr="0026525E" w:rsidRDefault="003A3788" w:rsidP="000E3A9A">
+  <w:pPr>
+    <w:widowControl w:val="0"/>
+    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
+    <w:ind w:firstLine="284"/>
+    <w:jc w:val="both"/>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+  </w:pPr>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>باركَ اللهُ فِي عِلْمِكُمْ ونَفَعَ بِكمُ الإسلامَ والـمسْلِمين</w:t>
+  </w:r>
+  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>.</w:t>
+  </w:r>
+</w:p>
+
+--- Paragraph 6 ---
+<w:p w14:paraId="469D09A9" w14:textId="77777777" w:rsidR="003A3788" w:rsidRPr="0026525E" w:rsidRDefault="003A3788" w:rsidP="000E3A9A">
+  <w:pPr>
+    <w:widowControl w:val="0"/>
+    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
+    <w:ind w:firstLine="284"/>
+    <w:jc w:val="both"/>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+  </w:pPr>
+  <w:r w:rsidRPr="00BC2D33">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Farsi Simple Bold" w:hint="cs"/>
+      <w:sz w:val="38"/>
+      <w:szCs w:val="38"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>الجواب</w:t>
+  </w:r>
+  <w:r>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Farsi Simple Bold" w:hint="cs"/>
+      <w:sz w:val="38"/>
+      <w:szCs w:val="38"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">:</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">أجابَ - مُبَسْمِلًا مُحْمِدْلًا مُصَلّيًا - بِما يَلِي:</w:t>
+  </w:r>
+</w:p>
+
+--- Paragraph 7 ---
+<w:p w14:paraId="11886BB8" w14:textId="1C0DB9FA" w:rsidR="003A3788" w:rsidRPr="0026525E" w:rsidRDefault="003A3788" w:rsidP="000E3A9A">
+  <w:pPr>
+    <w:widowControl w:val="0"/>
+    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
+    <w:ind w:firstLine="284"/>
+    <w:jc w:val="both"/>
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+  </w:pPr>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>مِن خادِمِ العِلْمِ وأهْلِهِ أبِي الوَلِيدِ الغَزِيِّ الأنْصارِيِّ إلَى حَضْرَةِ الأخِ الـمكَرَّمِ</w:t>
+  </w:r>
+  <w:r w:rsidR="00BD70A5" w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve"></w:t>
+  </w:r>
+  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>..</w:t>
+  </w:r>
+  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>....</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>؛ وفَ</w:t>
+  </w:r>
+  <w:r w:rsidR="00554F64">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>ّ</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>قَهُ اللهُ إلَى كُلِّ خَير</w:t>
+  </w:r>
+  <w:r w:rsidR="00BD70A5" w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>؛</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">السلامُ عَلَيكمْ ورَحْمَةُ اللهِ وبَركاتُهُ</w:t>
+  </w:r>
+  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>..</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">أما بعْد:</w:t>
+  </w:r>
+</w:p>
+
+--- Paragraph 8 ---
 <w:p xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:pPr>
     <w:widowControl w:val="0"/>
@@ -10,3930 +741,346 @@
     <w:ind w:firstLine="284"/>
     <w:jc w:val="both"/>
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:b/>
+      <w:bCs/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="34"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
   </w:pPr>
-  <w:r xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-    <w:t>فتحي الآغا</w:t>
+    <w:t xml:space="preserve">فَسُؤالُكَ</w:t>
   </w:r>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>»</w:t>
-  </w:r>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">سلمه الله</w:t>
-  </w:r>
-  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>.</w:t>
-  </w:r>
-</w:p>
-
---- Paragraph 1 ---
-<w:p w14:paraId="7542A3AE" w14:textId="14890BEF" w:rsidR="00522A6B" w:rsidRPr="00B60092" w:rsidRDefault="004F077C" w:rsidP="000E3A9A">
-  <w:pPr>
-    <w:widowControl w:val="0"/>
-    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
-    <w:ind w:firstLine="284"/>
-    <w:jc w:val="both"/>
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-  </w:pPr>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>ف</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">قد كنتُ اطلعتُ</w:t>
-  </w:r>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">قبل عدة أعوامٍ</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>على جملة من فتاو</w:t>
-  </w:r>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>ي</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">الشيخ</w:t>
-  </w:r>
-  <w:r w:rsidR="00334F7A" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">المجاهد</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">المحقق</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="AAA GoldenLotus" w:hAnsi="AAA GoldenLotus" w:cs="Lotus Linotype"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>«</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Alawi Shafa" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>أبي الوليد الغزي الأنصاري</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="AAA GoldenLotus" w:hAnsi="AAA GoldenLotus" w:cs="Lotus Linotype"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>»</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">نزيل أرض خراسان قرابة ثلاثين عامًا</w:t>
-  </w:r>
-  <w:r w:rsidR="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">شغلها بال</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>جهاد و</w:t>
-  </w:r>
-  <w:r w:rsidR="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>ال</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">هجرة</w:t>
-  </w:r>
-  <w:r w:rsidR="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>والتعليمِ والتأليف والفتيا؛</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">فكنت أجد فيها</w:t>
-  </w:r>
-  <w:r w:rsidR="00F76FB9" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">تحريرا وتنقيحا،</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">في</w:t>
-  </w:r>
-  <w:r w:rsidR="008A1B2A" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">شتى مسائل</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>العلم والجهاد؛ ف</w:t>
-  </w:r>
-  <w:r w:rsidR="00F76FB9" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">لما استقر بي المقام لفترةٍ من الراحة، وأيام من القراءة والدراسة،</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">عزمتُ</w:t>
-  </w:r>
-  <w:r w:rsidR="00F76FB9" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">على إخراج</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">هذه الأسئلة في كتابٍ واحد، لينتفع</w:t>
-  </w:r>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>بها</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">إخواني طلاب العلم والمجاهدين، كما انتفعتُ بها فيما مضى من أيام، سائلا الله التوفيق والسداد</w:t>
-  </w:r>
-  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>..</w:t>
-  </w:r>
-</w:p>
-
---- Paragraph 2 ---
-<w:p w14:paraId="308C60FB" w14:textId="18765479" w:rsidR="00AA73F8" w:rsidRPr="000E3A9A" w:rsidRDefault="004F077C" w:rsidP="000E3A9A">
-  <w:pPr>
-    <w:widowControl w:val="0"/>
-    <w:spacing w:after="80" w:line="276" w:lineRule="auto"/>
-    <w:ind w:firstLine="284"/>
-    <w:jc w:val="both"/>
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-  </w:pPr>
-  <w:r w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">فأزفُّ إليكَ</w:t>
-  </w:r>
-  <w:r w:rsidR="00F76FB9" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>- أخي طالب العلم</w:t>
-  </w:r>
-  <w:r w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">عامة، و</w:t>
-  </w:r>
-  <w:r w:rsidR="00F76FB9" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>المجاهد خاصةً</w:t>
-  </w:r>
-  <w:r w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve"></w:t>
-  </w:r>
-  <w:r w:rsidR="00F76FB9" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">-،</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>كتاب</w:t>
-  </w:r>
-  <w:r w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>َ</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="ae_AlMohanad" w:hAnsi="ae_AlMohanad" w:cs="ae_AlMohanad" w:hint="cs"/>
-      <w:b/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve"></w:t>
-  </w:r>
-  <w:r w:rsidR="00B60092" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="adwa-assalaf" w:hAnsi="adwa-assalaf" w:cs="adwa-assalaf"/>
-      <w:b/>
-      <w:caps/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:reflection w14:blurRad="12700" w14:stA="28000" w14:stPos="0" w14:endA="0" w14:endPos="45000" w14:dist="1003" w14:dir="5400000" w14:fadeDir="5400000" w14:sx="100000" w14:sy="-100000" w14:kx="0" w14:ky="0" w14:algn="bl"/>
-      <w14:textOutline w14:w="4495" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:solidFill>
-          <w14:schemeClr w14:val="accent4">
-            <w14:shade w14:val="50000"/>
-            <w14:satMod w14:val="120000"/>
-          </w14:schemeClr>
-        </w14:solidFill>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="43000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="48000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="85000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>«</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="ae_AlBattar" w:hAnsi="ae_AlBattar" w:cs="ae_AlBattar"/>
-      <w:b/>
-      <w:caps/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:reflection w14:blurRad="12700" w14:stA="28000" w14:stPos="0" w14:endA="0" w14:endPos="45000" w14:dist="1003" w14:dir="5400000" w14:fadeDir="5400000" w14:sx="100000" w14:sy="-100000" w14:kx="0" w14:ky="0" w14:algn="bl"/>
-      <w14:textOutline w14:w="4495" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:solidFill>
-          <w14:schemeClr w14:val="accent4">
-            <w14:shade w14:val="50000"/>
-            <w14:satMod w14:val="120000"/>
-          </w14:schemeClr>
-        </w14:solidFill>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="43000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="48000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="85000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>زه</w:t>
-  </w:r>
-  <w:r w:rsidR="00B60092" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="ae_AlBattar" w:hAnsi="ae_AlBattar" w:cs="ae_AlBattar" w:hint="cs"/>
-      <w:b/>
-      <w:caps/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:reflection w14:blurRad="12700" w14:stA="28000" w14:stPos="0" w14:endA="0" w14:endPos="45000" w14:dist="1003" w14:dir="5400000" w14:fadeDir="5400000" w14:sx="100000" w14:sy="-100000" w14:kx="0" w14:ky="0" w14:algn="bl"/>
-      <w14:textOutline w14:w="4495" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:solidFill>
-          <w14:schemeClr w14:val="accent4">
-            <w14:shade w14:val="50000"/>
-            <w14:satMod w14:val="120000"/>
-          </w14:schemeClr>
-        </w14:solidFill>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="43000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="48000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="85000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>ر</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="ae_AlBattar" w:hAnsi="ae_AlBattar" w:cs="ae_AlBattar"/>
-      <w:b/>
-      <w:caps/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:reflection w14:blurRad="12700" w14:stA="28000" w14:stPos="0" w14:endA="0" w14:endPos="45000" w14:dist="1003" w14:dir="5400000" w14:fadeDir="5400000" w14:sx="100000" w14:sy="-100000" w14:kx="0" w14:ky="0" w14:algn="bl"/>
-      <w14:textOutline w14:w="4495" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:solidFill>
-          <w14:schemeClr w14:val="accent4">
-            <w14:shade w14:val="50000"/>
-            <w14:satMod w14:val="120000"/>
-          </w14:schemeClr>
-        </w14:solidFill>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="43000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="48000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="85000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">الخمائل في مسائل النواز</w:t>
-  </w:r>
-  <w:r w:rsidR="00B60092" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="ae_AlBattar" w:hAnsi="ae_AlBattar" w:cs="ae_AlBattar" w:hint="cs"/>
-      <w:b/>
-      <w:caps/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:reflection w14:blurRad="12700" w14:stA="28000" w14:stPos="0" w14:endA="0" w14:endPos="45000" w14:dist="1003" w14:dir="5400000" w14:fadeDir="5400000" w14:sx="100000" w14:sy="-100000" w14:kx="0" w14:ky="0" w14:algn="bl"/>
-      <w14:textOutline w14:w="4495" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:solidFill>
-          <w14:schemeClr w14:val="accent4">
-            <w14:shade w14:val="50000"/>
-            <w14:satMod w14:val="120000"/>
-          </w14:schemeClr>
-        </w14:solidFill>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="43000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="48000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="85000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>ل</w:t>
-  </w:r>
-  <w:r w:rsidR="00B60092" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="adwa-assalaf" w:hAnsi="adwa-assalaf" w:cs="adwa-assalaf"/>
-      <w:b/>
-      <w:caps/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:reflection w14:blurRad="12700" w14:stA="28000" w14:stPos="0" w14:endA="0" w14:endPos="45000" w14:dist="1003" w14:dir="5400000" w14:fadeDir="5400000" w14:sx="100000" w14:sy="-100000" w14:kx="0" w14:ky="0" w14:algn="bl"/>
-      <w14:textOutline w14:w="4495" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:solidFill>
-          <w14:schemeClr w14:val="accent4">
-            <w14:shade w14:val="50000"/>
-            <w14:satMod w14:val="120000"/>
-          </w14:schemeClr>
-        </w14:solidFill>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="43000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="48000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="85000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>»</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
       <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
-      <w:b/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="28"/>
-      <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve"></w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-    <w:t>ل</w:t>
+    <w:t xml:space="preserve">-</w:t>
   </w:r>
-  <w:r w:rsidR="00B60092" w:rsidRPr="000E3A9A">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-    <w:t>فضيلة ا</w:t>
+    <w:t xml:space="preserve">أَوَّلًا</w:t>
   </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">لشيخ</w:t>
-  </w:r>
-  <w:r w:rsidR="00E50BFF" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>الـم</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>جاهد</w:t>
-  </w:r>
-  <w:r w:rsidR="00C15649" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">:</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="eastAsia"/>
-      <w:b/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="28"/>
-      <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>«</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="ae_AlBattar" w:hAnsi="ae_AlBattar" w:cs="ae_AlBattar"/>
-      <w:b/>
-      <w:caps/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:reflection w14:blurRad="12700" w14:stA="28000" w14:stPos="0" w14:endA="0" w14:endPos="45000" w14:dist="1003" w14:dir="5400000" w14:fadeDir="5400000" w14:sx="100000" w14:sy="-100000" w14:kx="0" w14:ky="0" w14:algn="bl"/>
-      <w14:textOutline w14:w="4495" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:solidFill>
-          <w14:schemeClr w14:val="accent4">
-            <w14:shade w14:val="50000"/>
-            <w14:satMod w14:val="120000"/>
-          </w14:schemeClr>
-        </w14:solidFill>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="43000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="48000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="85000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent4">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="245000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>أبي الوليد الغزي الأنصاري</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="000E3A9A">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
       <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
-      <w:b/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="28"/>
-      <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>»</w:t>
-  </w:r>
-  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-    <w:t xml:space="preserve"></w:t>
+    <w:t xml:space="preserve">-</w:t>
   </w:r>
-  <w:r w:rsidRPr="000E3A9A">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-    <w:t>سلمه الله</w:t>
+    <w:t xml:space="preserve">يَدُلُّ عَلَى تَعْظِيمِ قَدْرِ العِلْمِ وأهْلِهِ، وَهذا - بَعْدَ إِخْلاصِ الوَجْهِ للهِ تَعالَى</w:t>
   </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>، جمعتُ فيه</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>ِ</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">شتات الفتاوى التي نشرها في موقعه</w:t>
-  </w:r>
-  <w:r w:rsidR="00522A6B" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">الرسمي على الانترنت</w:t>
-  </w:r>
-  <w:r w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
     <w:t>-</w:t>
   </w:r>
-  <w:r w:rsidR="00F76FB9" w:rsidRPr="000E3A9A">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-    <w:t xml:space="preserve"></w:t>
+    <w:t xml:space="preserve">شَرْطُ التَوْفِيقِ فِي طَلَبِهِ، فَإنَّ الجُرْأَةَ عَلَى الفَتْوَى مِن أعْظَمِ عَوائِقِ الاسْتِزادَةِ مِن العِلْمِ، وحَقٌّ عَلَى العِلْمِ فِي شَرَفِهِ وعُلُّوِّ رُتْبَتِهِ أنْ يَمْتَنِعَ عَمَّنْ لا يُحْسِنُ أنْ يَأْتِيَهُ مِن أَبْوابِهِ!، ولِذا كانَ السلَفُ</w:t>
   </w:r>
-  <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>والمسمى بـ</w:t>
-  </w:r>
-  <w:r w:rsidR="00F76FB9" w:rsidRPr="000E3A9A">
+  <w:r w:rsidR="00FD2A67">
     <w:rPr>
       <w:rFonts w:ascii="AAA GoldenLotus" w:hAnsi="AAA GoldenLotus" w:cs="Lotus Linotype"/>
-      <w:b/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:va
-... [TRUNCATED] ...
-
---- Paragraph 3 ---
-<w:p w14:paraId="147147BD" w14:textId="1AE033A4" w:rsidR="004142B9" w:rsidRPr="00B60092" w:rsidRDefault="004142B9" w:rsidP="00057857">
-  <w:pPr>
-    <w:widowControl w:val="0"/>
-    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
-    <w:ind w:firstLine="284"/>
-    <w:jc w:val="both"/>
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="mohammad bold art 1"/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="34"/>
-      <w:szCs w:val="34"/>
-      <w:rtl/>
+      <w:color w:val="000000"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
     </w:rPr>
-  </w:pPr>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="mohammad bold art 1"/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="34"/>
-      <w:szCs w:val="34"/>
-      <w:rtl/>
-    </w:rPr>
-    <w:t>و</w:t>
+    <w:sym w:font="KFGQPC Arabic Symbols 01" w:char="F073"/>
   </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="mohammad bold art 1" w:hint="cs"/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="34"/>
-      <w:szCs w:val="34"/>
-      <w:rtl/>
-    </w:rPr>
-    <w:t xml:space="preserve">قد كان</w:t>
-  </w:r>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="mohammad bold art 1"/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="34"/>
-      <w:szCs w:val="34"/>
-      <w:rtl/>
-    </w:rPr>
-    <w:t>عملي في هذا الكتاب</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="mohammad bold art 1" w:hint="cs"/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="34"/>
-      <w:szCs w:val="34"/>
-      <w:rtl/>
-    </w:rPr>
-    <w:t xml:space="preserve"></w:t>
-  </w:r>
-  <w:r w:rsidR="004F077C" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="mohammad bold art 1" w:hint="cs"/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="34"/>
-      <w:szCs w:val="34"/>
-      <w:rtl/>
-    </w:rPr>
-    <w:t>ك</w:t>
-  </w:r>
-  <w:r w:rsidR="00F76FB9" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="mohammad bold art 1" w:hint="cs"/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="34"/>
-      <w:szCs w:val="34"/>
-      <w:rtl/>
-    </w:rPr>
-    <w:t xml:space="preserve">ما</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="mohammad bold art 1" w:hint="cs"/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="34"/>
-      <w:szCs w:val="34"/>
-      <w:rtl/>
-    </w:rPr>
-    <w:t>يلي</w:t>
-  </w:r>
-  <w:r w:rsidR="00C15649" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="mohammad bold art 1"/>
-      <w:color w:val="002060"/>
-      <w:sz w:val="34"/>
-      <w:szCs w:val="34"/>
-      <w:rtl/>
-    </w:rPr>
-    <w:t xml:space="preserve">:</w:t>
-  </w:r>
-</w:p>
-
---- Paragraph 4 ---
-<w:p w14:paraId="58D9ED3C" w14:textId="4EA475BA" w:rsidR="004142B9" w:rsidRPr="00B60092" w:rsidRDefault="00271F83" w:rsidP="00B60092">
-  <w:pPr>
-    <w:widowControl w:val="0"/>
-    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
-    <w:ind w:firstLine="284"/>
-    <w:jc w:val="both"/>
-    <w:rPr>
-      <w:rFonts w:ascii="ae_AlMohanad" w:hAnsi="ae_AlMohanad" w:cs="ae_AlMohanad"/>
-      <w:b/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-  </w:pPr>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>1</w:t>
-  </w:r>
-  <w:r w:rsidR="004142B9" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">- جمع الفتاوى</w:t>
-  </w:r>
-  <w:r w:rsidR="00E50BFF" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>الـم</w:t>
-  </w:r>
-  <w:r w:rsidR="004142B9" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>تناثرة في موقع الشيخ</w:t>
-  </w:r>
-  <w:r w:rsidR="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">المسمى بأكناف بيت المقدس</w:t>
-  </w:r>
-  <w:r w:rsidR="004142B9" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">، ضمن</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>كتاب جامع</w:t>
-  </w:r>
-  <w:r w:rsidR="00AA73F8" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">؛</w:t>
-  </w:r>
-  <w:r w:rsidR="00DF5A91" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>يحمل العنوان الذي اختاره الشيخ لها، وهو</w:t>
-  </w:r>
-  <w:r w:rsidR="00C15649" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">:</w:t>
-  </w:r>
-  <w:r w:rsidR="004B465D" w:rsidRPr="00B60092">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
       <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
-      <w:b/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="28"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
+    </w:rPr>
+    <w:t xml:space="preserve">تعالَى يَقُولُونَ:</w:t>
+  </w:r>
+  <w:r w:rsidR="00BD70A5" w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
     </w:rPr>
     <w:t>«</w:t>
   </w:r>
-  <w:r w:rsidR="00DF5A91" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>زَهْرُ الخَمائلِ فِي مَسائِلِ النَّوازِلِ</w:t>
-  </w:r>
-  <w:r w:rsidR="004B465D" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
-      <w:b/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="28"/>
-      <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>»</w:t>
-  </w:r>
-  <w:r w:rsidR="00DF5A91" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">، أو</w:t>
-  </w:r>
-  <w:r w:rsidR="004B465D" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
-      <w:b/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="28"/>
-      <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>«</w:t>
-  </w:r>
-  <w:r w:rsidR="00DF5A91" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>الاجْتِهاد في نَوازِلِ الجِهاد</w:t>
-  </w:r>
-  <w:r w:rsidR="004B465D" w:rsidRPr="00B60092">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
       <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
-      <w:b/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="28"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:shadow w14:blurRad="69850" w14:dist="43180" w14:dir="5400000" w14:sx="0" w14:sy="0" w14:kx="0" w14:ky="0" w14:algn="none">
-        <w14:srgbClr w14:val="000000">
-          <w14:alpha w14:val="35000"/>
-        </w14:srgbClr>
-      </w14:shadow>
-      <w14:textOutline w14:w="952" w14:cap="flat" w14:cmpd="sng" w14:algn="ctr">
-        <w14:noFill/>
-        <w14:prstDash w14:val="solid"/>
-        <w14:round/>
-      </w14:textOutline>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:schemeClr w14:val="accent6">
-                <w14:shade w14:val="20000"/>
-                <w14:satMod w14:val="200000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="78000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="90000"/>
-                <w14:shade w14:val="89000"/>
-                <w14:satMod w14:val="220000"/>
-              </w14:schemeClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:schemeClr w14:val="accent6">
-                <w14:tint w14:val="12000"/>
-                <w14:satMod w14:val="255000"/>
-              </w14:schemeClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="5400000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
+    </w:rPr>
+    <w:t>إِذا تَصَدَّرَ الحَدَثُ فاتَهُ خَيْرٌ كَثِيرٌ</w:t>
+  </w:r>
+  <w:r w:rsidR="00BD70A5" w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
     </w:rPr>
     <w:t>»</w:t>
+  </w:r>
+  <w:r w:rsidRPr="00B60092">
+    <w:rPr>
+      <w:rStyle w:val="FootnoteReference"/>
+      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Traditional Arabic"/>
+      <w:color w:val="0000FF"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>(</w:t>
+  </w:r>
+  <w:r w:rsidRPr="00B60092">
+    <w:rPr>
+      <w:rStyle w:val="FootnoteReference"/>
+      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Traditional Arabic"/>
+      <w:color w:val="0000FF"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:footnoteReference w:id="5"/>
+  </w:r>
+  <w:r w:rsidRPr="00B60092">
+    <w:rPr>
+      <w:rStyle w:val="FootnoteReference"/>
+      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Traditional Arabic"/>
+      <w:color w:val="0000FF"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>)</w:t>
   </w:r>
   <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
     <w:t>.</w:t>
   </w:r>
-</w:p>
-
---- Paragraph 5 ---
-<w:p w14:paraId="3B6EECE4" w14:textId="7849268A" w:rsidR="00DF5A91" w:rsidRPr="00B60092" w:rsidRDefault="00271F83" w:rsidP="00B60092">
-  <w:pPr>
-    <w:widowControl w:val="0"/>
-    <w:spacing w:after="80" w:line="18" w:lineRule="atLeast"/>
-    <w:ind w:firstLine="284"/>
-    <w:jc w:val="both"/>
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-  </w:pPr>
-  <w:r w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>2</w:t>
+    <w:t xml:space="preserve">وكانُوا يَقُولُونَ:</w:t>
   </w:r>
-  <w:r w:rsidR="00DF5A91" w:rsidRPr="00B60092">
+  <w:r w:rsidR="00BD70A5" w:rsidRPr="0026525E">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">- ترتيب</w:t>
-  </w:r>
-  <w:r w:rsidR="00E50BFF" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>الـم</w:t>
-  </w:r>
-  <w:r w:rsidR="00DF5A91" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t>سائل والأبواب موضوعيا، على طريقة كتب الفتاوى والنوازل، مع محاولة وضع كل مسألة بجوار شبيهتها لتكتمل الفائدة</w:t>
-  </w:r>
-  <w:r w:rsidR="007E4265" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
-    </w:rPr>
-    <w:t xml:space="preserve">، وقد كان الكتاب في أصله مقسمًا إلى أبواب بحسب نشر الشيخ لها في موقعه الالكتروني على الشبكة، وهي:</w:t>
-  </w:r>
-  <w:r w:rsidR="004B465D" w:rsidRPr="00B60092">
-    <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
-      <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
     <w:t>«</w:t>
   </w:r>
-  <w:r w:rsidR="007E4265" w:rsidRPr="00B60092">
+  <w:r w:rsidRPr="0026525E">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-    <w:t>كتاب العلم، مسائل الوضوء، مسائل التيمم، نوازل الصلاة، صلاة الخوف، الأقضية والأحكام، نوازل الجهاد، استتابة المرتدين، كتاب التوحيد، كتاب تعبير الرؤيا، كتاب الفتن والملاحم، وكتاب المسائل المتفرقة</w:t>
+    <w:t>م</w:t>
   </w:r>
-  <w:r w:rsidR="004B465D" w:rsidRPr="00B60092">
+  <w:r w:rsidR="00BD70A5" w:rsidRPr="0026525E">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
+    </w:rPr>
+    <w:t>َ</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>ن دَخَلَ فِي العِلْمِ وحْدَهُ خَرَجَ وَحْدَه!</w:t>
+  </w:r>
+  <w:r w:rsidR="00BD70A5" w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
     </w:rPr>
     <w:t>»</w:t>
   </w:r>
-  <w:r w:rsidR="007E4265" w:rsidRPr="00B60092">
+  <w:r w:rsidRPr="00B60092">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
+      <w:rStyle w:val="FootnoteReference"/>
+      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Traditional Arabic"/>
+      <w:color w:val="0000FF"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-    <w:t>، ولما كانت المسائل شبيهة ببعضها فإنَّنا في هذا الجمع الكريم قد آثرنا حذف الأبواب والاكتفاء بالمسائل مرتبة على أبواب العلم المعروفة في تقاسيم العلماء</w:t>
+    <w:t>(</w:t>
   </w:r>
-  <w:r w:rsidR="00B60092">
+  <w:r w:rsidRPr="00B60092">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera" w:hint="cs"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
-      <w:szCs w:val="32"/>
+      <w:rStyle w:val="FootnoteReference"/>
+      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Traditional Arabic"/>
+      <w:color w:val="0000FF"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
-    <w:t>، مع المحافظة على عناوين الشيخ للكتبِ</w:t>
+    <w:footnoteReference w:id="6"/>
+  </w:r>
+  <w:r w:rsidRPr="00B60092">
+    <w:rPr>
+      <w:rStyle w:val="FootnoteReference"/>
+      <w:rFonts w:ascii="Tahoma" w:hAnsi="Tahoma" w:cs="Traditional Arabic"/>
+      <w:color w:val="0000FF"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="36"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>)</w:t>
   </w:r>
   <w:r w:rsidR="000E3A9A" w:rsidRPr="000E3A9A">
     <w:rPr>
-      <w:rFonts w:ascii="Aljazeera" w:hAnsi="Aljazeera" w:cs="Aljazeera"/>
-      <w:color w:val="FF0000"/>
-      <w:sz w:val="32"/>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
       <w:szCs w:val="32"/>
       <w:rtl/>
-      <w14:textFill>
-        <w14:gradFill>
-          <w14:gsLst>
-            <w14:gs w14:pos="0">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="30000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="50000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="67500"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-            <w14:gs w14:pos="100000">
-              <w14:srgbClr w14:val="FF0000">
-                <w14:shade w14:val="100000"/>
-                <w14:satMod w14:val="115000"/>
-              </w14:srgbClr>
-            </w14:gs>
-          </w14:gsLst>
-          <w14:lin w14:ang="10800000" w14:scaled="0"/>
-        </w14:gradFill>
-      </w14:textFill>
     </w:rPr>
     <w:t>.</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">واعْتِرافُ الجاهِلِ بِجَهْلِهِ خَيْرٌ لهُ؛ لأَنَّ ذلكَ يَحْمِلُهُ عَلى الاسْتِزادَةِ مِن العِلْمِ ما أمْكَنُهُ،</w:t>
+  </w:r>
+  <w:r w:rsidRPr="00095B64">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:b/>
+      <w:bCs/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="34"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">لَكِنَّ البَلَيَّةَ كُلَّ البَلِيَّةِ فِي الجاهِلِ إِذا نَزَّلَ نَفْسَهُ مَنْزِلَةَ مَنْ يَعْلَمُ، وهذا هُوَ الذِي يُسَمِّيهِ العُلَماءُ</w:t>
+  </w:r>
+  <w:r w:rsidR="004B465D" w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="eastAsia"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>«</w:t>
+  </w:r>
+  <w:r w:rsidRPr="00095B64">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:b/>
+      <w:bCs/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="34"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>التَّعالـم</w:t>
+  </w:r>
+  <w:r w:rsidR="004B465D" w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>»</w:t>
+  </w:r>
+  <w:r w:rsidRPr="00095B64">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:b/>
+      <w:bCs/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="34"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>!،</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">وإِنّما مَثُلُهُ كَمَثَلِ مَن أَلِفَ الـمرَضَ الـمزْمِنَ واعْتادَهُ؛ فإنْ سَلَّمَ لِحُذَّاقِ الأطِبَّاءِ بِوُجُودِ الداءِ كانُوا علَى رَجاءٍ مِن شِفائِهِ، وإلاَّ أهْلَكَهُ، وَهَذا الفَرِيقُ مِن الناسِ خَطَرُهُ كَبِيرٌ عَلَى العِلْمِ خاصَّةً</w:t>
+  </w:r>
+  <w:r w:rsidR="00554F64">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype" w:hint="cs"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t>،</w:t>
+  </w:r>
+  <w:r w:rsidRPr="0026525E">
+    <w:rPr>
+      <w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Lotus Linotype"/>
+      <w:sz w:val="36"/>
+      <w:szCs w:val="32"/>
+      <w:rtl/>
+    </w:rPr>
+    <w:t xml:space="preserve">وَعَلَى أَهْلِ الإسلامِ عامَّةً،</w:t>
   </w:r>
 </w:p>
 

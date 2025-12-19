@@ -150,6 +150,10 @@ class _WordPageScreenState extends State<WordPageScreen> {
                                     (sectPr.width ?? 800) -
                                     margins.left -
                                     margins.right,
+                                height:
+                                    (sectPr.height ?? 1000) -
+                                    margins.top -
+                                    margins.bottom,
                                 child: Column(
                                   textDirection: TextDirection.rtl,
                                   mainAxisAlignment: MainAxisAlignment.start,

@@ -22,9 +22,13 @@ class WordUtils {
     return document.getElement("w:document")?.getElement("w:body");
   }
 
-  Future<List<WordPage>> addParagraphToDocument(XmlElement? body) async {
+  Future<List<WordPage>> addParagraphToDocument(
+    XmlElement? body, {
+    Function(int current, int total)? onProgress,
+  }) async {
     List<WordPage> pages = [];
     List<XmlElement> allPs = getAllXmlParagraphs(body);
+    final totalParagraphs = allPs.length;
     // print("📄 PAGINATION: Starting with ${allPs.length} paragraphs");
 
     if (allPs.isEmpty) {
@@ -39,6 +43,10 @@ class WordUtils {
       WordPage wordPage = await getPage(allPs, pageNum: j);
       pages.add(wordPage);
       // print("📄 PAGINATION: Page $j created with ${wordPage.ps.length} paragraphs");
+
+      // Report progress
+      int processed = totalParagraphs - allPs.length;
+      onProgress?.call(processed, totalParagraphs);
 
       j++;
     }

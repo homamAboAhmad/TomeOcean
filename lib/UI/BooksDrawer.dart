@@ -3,13 +3,12 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:golden_shamela/Constants.dart';
 import 'package:golden_shamela/Helpers/FileHelper.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 
 import '../Controllers/PathController.dart';
-import '../TestApp.dart';
+import 'dialogs/file_processing_dialog.dart';
 
 class BooksDrawer extends StatefulWidget {
   final void Function(File) onBookSelected;
@@ -35,25 +34,19 @@ class _BooksDrawerState extends State<BooksDrawer> {
     // loadBooks();
     return Drawer(
       backgroundColor: Colors.white,
-      child: Stack(
-        children: [
-          _headerW(),
-          _booksListW(),
-          _pickBtnW(),
-        ],
-      ),
+      child: Stack(children: [_headerW(), _booksListW(), _pickBtnW()]),
     );
   }
 
   void loadBooks() async {
     final dir = Directory(BOOKS_FOLDER_PATH);
-    print(BOOKS_FOLDER_PATH);
+    // print(BOOKS_FOLDER_PATH);
     if (await dir.exists()) {
-      final files = dir
-          .listSync()
-          .whereType<File>()
-          // .where((f) => f.path.endsWith('.docx')) // لو حابب تحدد نوع الملفات
-          .toList();
+      final files = dir.listSync().whereType<File>().where((f) {
+        // Get filename properly using path context separator agnostic approach
+        final name = f.path.split(Platform.pathSeparator).last;
+        return name.toLowerCase().endsWith('.docx') && !name.startsWith('~\$');
+      }).toList();
       setState(() => bookFiles = files);
     }
   }
@@ -76,10 +69,7 @@ class _BooksDrawerState extends State<BooksDrawer> {
             onPressed: _pickDocxFile,
             child: Text(
               'إضافة كتاب جديد',
-              style: normalStyle(
-                color: primaryColor,
-
-              ),
+              style: normalStyle(color: primaryColor),
             ),
           ),
         ),
@@ -94,10 +84,25 @@ class _BooksDrawerState extends State<BooksDrawer> {
         allowedExtensions: ['docx'],
       );
       if (result != null) {
-        await showFileProcessDailog(context, result!.files.single.path!,
-            update: true);
+        final filePath = result!.files.single.path!;
+        final processingResult = await showFileProcessDailog(
+          context,
+          filePath,
+          update: true,
+        );
         loadBooks();
         setState(() {});
+
+        // Auto-open the book if processing was successful
+        if (processingResult != null && processingResult.success) {
+          Navigator.pop(context); // Close drawer
+          // Get final book path (in BOOKS_FOLDER_PATH)
+          final fileName = filePath.split('\\').last.split('/').last;
+          final bookFile = File('$BOOKS_FOLDER_PATH\\$fileName');
+          if (await bookFile.exists()) {
+            widget.onBookSelected(bookFile);
+          }
+        }
       }
     } catch (e) {
       setState(() {});
@@ -117,8 +122,9 @@ class _BooksDrawerState extends State<BooksDrawer> {
   _booksListW() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 64.0, top: 212),
-      child:
-          ListView(children: bookFiles.map((file) => _bookRow(file)).toList()),
+      child: ListView(
+        children: bookFiles.map((file) => _bookRow(file)).toList(),
+      ),
     );
   }
 
@@ -137,12 +143,14 @@ class _BooksDrawerState extends State<BooksDrawer> {
           color: primaryColor.withOpacity(0.9),
           elevation: 2,
 
-          child: Center(child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(bookName,style: normalStyle(color: secondaryColor,),),
-          ))),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(bookName, style: normalStyle(color: secondaryColor)),
+            ),
+          ),
+        ),
       ),
     );
-
   }
 }

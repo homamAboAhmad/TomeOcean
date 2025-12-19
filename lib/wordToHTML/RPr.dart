@@ -40,7 +40,6 @@ String? _normalizeColor(String? color) {
   return color.replaceAll("#", "");
 }
 
-
 @JsonSerializable(explicitToJson: true, constructor: 'empty')
 class RPr {
   @JsonKey(ignore: true)
@@ -55,7 +54,7 @@ class RPr {
   bool? rtl;
   bool? strike;
   String? font;
-  String? enFont,uniqueFont;
+  String? enFont, uniqueFont;
   String? vertAlign;
   String? rStyle;
   @JsonKey(ignore: true)
@@ -93,7 +92,7 @@ class RPr {
     "strike",
     "vertAlign",
     "bCs",
-    "rStyle"
+    "rStyle",
   ];
 
   RPr fromXml(XmlElement? xmlrPr) {
@@ -127,7 +126,8 @@ class RPr {
 
   TextStyle getTextStyle() {
     String? finalHlColor = _normalizeColor(highlightColor);
-    Paint paint = Paint()..color = Color(int.parse("0xFF${finalHlColor ?? "000000"}"));
+    Paint paint = Paint()
+      ..color = Color(int.parse("0xFF${finalHlColor ?? "000000"}"));
 
     Paint? hlColor = highlightColor != null ? paint : null;
     String? finalColor = _normalizeColor(color);
@@ -142,7 +142,9 @@ class RPr {
       fontWeight: b == true ? FontWeight.bold : null,
       fontStyle: i == true ? FontStyle.italic : FontStyle.normal,
       decoration: getTextDecoration(),
-      color: finalColor != null ? Color(int.parse("0xFF$finalColor")) : Colors.black,
+      color: finalColor != null
+          ? Color(int.parse("0xFF$finalColor"))
+          : Colors.black,
       background: hlColor, // لون خلفية النص
       fontSize: effectiveFontSize,
       fontFamily: font,
@@ -153,11 +155,13 @@ class RPr {
   String toHTML() {
     String bold = b == true ? '''font-weight: bold;''' : "";
     String italic = i == true ? '''font-style: italic; ''' : "";
-    String underLine =
-        u == true ? '''text-decoration: underline single #$uColor; ''' : "";
+    String underLine = u == true
+        ? '''text-decoration: underline single #$uColor; '''
+        : "";
     String colorH = color != null ? '''color: #$color; ''' : "";
-    String hlColorH =
-        highlightColor != null ? "background-color:$highlightColor;" : "";
+    String hlColorH = highlightColor != null
+        ? "background-color:$highlightColor;"
+        : "";
     String isRtl = rtl == true ? "direction: rtl;" : "";
     String fontSizeH = getFontSizeH();
     String fontH = getFontH();
@@ -179,7 +183,7 @@ class RPr {
 
   String? getColor() {
     String? color = rPr?.getElement("w:color")?.getAttribute("w:val");
-    if (color == "auto") color = wordDocument?.autoDarkColor??"000000 ";
+    if (color == "auto") color = wordDocument?.autoDarkColor ?? "000000 ";
     return color;
   }
 
@@ -229,19 +233,19 @@ class RPr {
     String? sz = rPr?.getElement("w:szCs")?.getAttribute("w:val");
     // fallback to sz if szCs is missing
     sz ??= rPr?.getElement("w:sz")?.getAttribute("w:val");
-    
+
     late double fSz;
     if (sz == null) return null;
-    
+
     // w:sz is in half-points
     double points = double.parse(sz) / 2;
-    
+
     // Convert points to logical pixels (approx 1.333 ratio at 96 DPI)
     // 1 point = 1/72 inch, 1 inch = 96 pixels -> 1 point = 96/72 = 1.333 pixels
     fSz = points * 1.333;
-    
+
     // print("FONT DEBUG: sz/szCs=$sz, points=$points, pixelSize=$fSz");
-    
+
     return fSz;
   }
 
@@ -261,17 +265,17 @@ class RPr {
   String? getArFont() {
     XmlElement? rFonts = rPr?.getElement("w:rFonts");
     String? cs = rFonts?.getAttribute("w:cs");
-    
+
     // إذا كان w:cs موجوداً، نستخدمه
     if (cs != null && cs.isNotEmpty) return cs;
-    
+
     // إذا لم يكن w:cs موجوداً، نبحث عن w:hAnsi أو w:ascii
     String? hAnsi = rFonts?.getAttribute("w:hAnsi");
     if (hAnsi != null && hAnsi.isNotEmpty) return hAnsi;
-    
+
     String? ascii = rFonts?.getAttribute("w:ascii");
     if (ascii != null && ascii.isNotEmpty) return ascii;
-    
+
     // إذا كان هناك cstheme، نستخدم الخط المناسب من الـ theme
     String? cstheme = rFonts?.getAttribute("w:cstheme");
     if (cstheme != null) {
@@ -282,7 +286,7 @@ class RPr {
         return wordDocument.majorFont;
       }
     }
-    
+
     // نرجع null ونترك الـ caller يقرر الـ fallback
     return null;
   }
@@ -313,7 +317,7 @@ class RPr {
     // Superscript typically rises by about 40% of font height
     double baseFontSize = fontSize ?? 14;
     double offset = baseFontSize * 0.4;
-    
+
     if (vertAlign == "superscript")
       return -offset;
     else if (vertAlign == "subscript")
@@ -334,7 +338,7 @@ class RPr {
   getRStyle() {
     if (rStyle == null) return;
     WordDocument? wordDocument = parent?.parent?.parent?.parent;
-    XmlElement? rStyleXml = getRPrFRromStyle(rStyle!,wordDocument);
+    XmlElement? rStyleXml = getRPrFRromStyle(rStyle!, wordDocument);
     if (rStyleXml == null) return;
     rPr = mergeRPr(rPr!, rStyleXml);
   }
@@ -343,15 +347,14 @@ class RPr {
     return TextDecoration.combine([
       if (u == true) TextDecoration.underline, // إضافة إذا كانت u تساوي true
       if (strike == true) TextDecoration.lineThrough,
-      ]);
+    ]);
   }
+
   // <w:rFonts w:ascii="romoz II" w:hAnsi="romoz II" w:cs="Barada Reqa"/>
   void getFonts() {
     font = getArFont();
-    enFont =  rPr?.getElement("w:rFonts")?.getAttribute("w:ascii");
+    enFont = rPr?.getElement("w:rFonts")?.getAttribute("w:ascii");
     uniqueFont = rPr?.getElement("w:rFonts")?.getAttribute("w:hAnsi");
-    
-
   }
 }
 
@@ -360,7 +363,7 @@ XmlElement? mergeRPr(XmlElement? rPr, XmlElement? baseRPr) {
   if (rPr == null) return baseRPr;
 
   List<XmlElement> mergedElements = [
-    ...rPr.childElements.map(((e) => e.clone())) ?? []
+    ...rPr.childElements.map(((e) => e.clone())) ?? [],
   ];
   Map<String, XmlElement> currentElementsMap = {};
   rPr.childElements.forEach((e) {
@@ -370,8 +373,11 @@ XmlElement? mergeRPr(XmlElement? rPr, XmlElement? baseRPr) {
     if (currentElementsMap[e.name.local] == null) mergedElements.add(e.clone());
   });
 
-  XmlElement mergedRpr = XmlElement(XmlName.fromString(rPr.name.toXmlString()),
-      rPr.attributes.toList().clone(), mergedElements);
+  XmlElement mergedRpr = XmlElement(
+    XmlName.fromString(rPr.name.toXmlString()),
+    rPr.attributes.toList().clone(),
+    mergedElements,
+  );
 
   return mergedRpr;
 }

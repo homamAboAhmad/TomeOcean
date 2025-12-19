@@ -157,10 +157,26 @@ class ShamelaSearchEngine {
     final total = paragraphs.length;
     int processed = 0;
 
-    await _database!.delete('books_fts', where: 'book_path = ?', whereArgs: [bookPath]);
-    await _database!.delete('pages_fts', where: 'book_path = ?', whereArgs: [bookPath]);
-    await _database!.delete('morphological_index', where: 'book_path = ?', whereArgs: [bookPath]);
-    await _database!.delete('books_metadata', where: 'book_path = ?', whereArgs: [bookPath]);
+    await _database!.delete(
+      'books_fts',
+      where: 'book_path = ?',
+      whereArgs: [bookPath],
+    );
+    await _database!.delete(
+      'pages_fts',
+      where: 'book_path = ?',
+      whereArgs: [bookPath],
+    );
+    await _database!.delete(
+      'morphological_index',
+      where: 'book_path = ?',
+      whereArgs: [bookPath],
+    );
+    await _database!.delete(
+      'books_metadata',
+      where: 'book_path = ?',
+      whereArgs: [bookPath],
+    );
 
     for (var para in paragraphs) {
       final content = para['content'] as String;
@@ -190,7 +206,9 @@ class ShamelaSearchEngine {
         );
       }
 
-      final morphological = await _indexingOps!.createMorphologicalContent(content);
+      final morphological = await _indexingOps!.createMorphologicalContent(
+        content,
+      );
 
       batch.insert('books_fts', {
         'id': para['id'],
@@ -217,14 +235,16 @@ class ShamelaSearchEngine {
       );
 
       processed++;
-      if (onProgress != null && processed % 100 == 0) {
+      if (onProgress != null && processed % 10 == 0) {
         onProgress(processed, total);
       }
     }
 
     final currentDbVersion = 8;
     batch.insert('books_metadata', {
-      'id': base64Encode(utf8.encode(bookPath)).replaceAll(RegExp(r'[+/=]'), '_'),
+      'id': base64Encode(
+        utf8.encode(bookPath),
+      ).replaceAll(RegExp(r'[+/=]'), '_'),
       'book_path': bookPath,
       'book_name': bookName,
       'indexed_at': DateTime.now().millisecondsSinceEpoch,

@@ -661,7 +661,8 @@ class SectPr {
         return prevSect.headerOddPath;
       }
       // default يُعتبر fallback لـ odd
-      if (prevSect.headerDefaultPath != null) {        return prevSect.headerDefaultPath;
+      if (prevSect.headerDefaultPath != null) {
+        return prevSect.headerDefaultPath;
       }
     }
     return null;

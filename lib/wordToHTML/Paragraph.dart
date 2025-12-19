@@ -132,8 +132,13 @@ class Paragraph {
 
   Paragraph fromXml(XmlElement paragraphXml) {
     pXml = paragraphXml;
-    // حفظ XML كنص مع إخفاء بيانات الصور الطويلة
-    xmlString = _sanitizeXmlForStorage(paragraphXml.toXmlString(pretty: true));
+    // حفظ XML للجداول فقط (مطلوب لـ ParagraphTable عند التحميل من الكاش)
+    // الفقرات العادية لا تحتاج XML محفوظ - يتم بناؤها من runs
+    if (paragraphXml.name.local == 'tbl') {
+      xmlString = paragraphXml.toXmlString(pretty: false); // compact للتوفير
+    } else {
+      xmlString = ""; // لا نحفظ للفقرات العادية
+    }
     XmlElement? xmlpPr = paragraphXml.getElement("w:pPr");
     if (xmlpPr != null) pPr = PPr(this).fromXml(xmlpPr);
 
@@ -976,8 +981,8 @@ class Paragraph {
 
       widgets.add(
         Positioned(
-          left: left,
-          top: top,
+          left: left.isFinite ? left : 0,
+          top: top.isFinite ? top : 0,
           // إذا كانت هذه فقرة هيدر، نجعل الصورة تتجاهل الضغط
           // حتى يعمل الضغط المطول على الهيدر
           child: IgnorePointer(
@@ -1178,11 +1183,19 @@ class Paragraph {
 
   /// طباعة XML الفقرة في الـ console
   void _printParagraphXml() {
-    /* print(
+    print(
       "╔══════════════════════════════════════════════════════════════════╗",
     );
-    ...
-    */
+    print(
+      "║                  PARAGRAPH XML (Long Press)                      ║",
+    );
+    print(
+      "╚══════════════════════════════════════════════════════════════════╝",
+    );
+    print(xmlString);
+    print(
+      "═══════════════════════════════════════════════════════════════════",
+    );
   }
 
   void fixPDirection() {
@@ -1265,11 +1278,18 @@ class Paragraph {
   }
 
   EdgeInsets _getPPaddings() {
+    // Sanitize padding to prevent negative values which crash Flutter's Padding widget
+    // Word allows negative indentation (hanging), but Flutter Padding does not.
+    double left = pPr?.paddingLeft ?? 0;
+    double right = pPr?.paddingRight ?? 0;
+    double top = pPr?.spacingBefore ?? 0;
+    double bottom = pPr?.spacingAfter ?? 0;
+
     return EdgeInsets.only(
-      left: pPr?.paddingLeft ?? 0,
-      right: pPr?.paddingRight ?? 0,
-      top: pPr?.spacingBefore ?? 0,
-      bottom: pPr?.spacingAfter ?? 0,
+      left: left < 0 ? 0 : left,
+      right: right < 0 ? 0 : right,
+      top: top < 0 ? 0 : top,
+      bottom: bottom < 0 ? 0 : bottom,
     );
   }
 
@@ -1290,6 +1310,14 @@ class Paragraph {
         TextSpan(style: prPr?.getTextStyle(), children: spans),
         textAlign: textAlign,
         textDirection: textDirection,
+        strutStyle: StrutStyle(
+          forceStrutHeight: true,
+          height: pPr?.lineHeight,
+          fontFamily: prPr?.enFont, // ASCII font
+          fontFamilyFallback: prPr?.font != null
+              ? [prPr!.font!]
+              : null, // Arabic font
+        ),
         selectionControls: CustomTextSelectionControls(
           bookTitle: parent.parent.title,
           pageNumber: parent.parent.currentPage + 1,
@@ -1297,16 +1325,6 @@ class Paragraph {
         ),
       ),
     );
-  }
-
-  /// إخفاء بيانات الصور الطويلة (base64) من XML لتوفير المساحة
-  String _sanitizeXmlForStorage(String xml) {
-    // لا نحتاج لإخفاء شيء لأن بيانات الصور في ملفات منفصلة
-    // لكن نحد من طول XML إذا كان طويلاً جداً
-    if (xml.length > 50000) {
-      return xml.substring(0, 50000) + "\n... [TRUNCATED] ...";
-    }
-    return xml;
   }
 
   /// محاولة بسيطة لاستخراج صورة (PNG/JPG) مضمنة داخل ملف EMF
