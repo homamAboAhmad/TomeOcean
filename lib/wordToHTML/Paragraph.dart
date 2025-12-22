@@ -185,9 +185,9 @@ class Paragraph {
 
         // Check for PAGE instruction
         if (inFieldCode || hasBegin) {
-          if (element
-              .findAllElements("w:instrText")
-              .any((e) => e.text.contains("PAGE"))) {
+          if (element.findAllElements("w:instrText").any((e) {
+            return e.text.contains("PAGE");
+          })) {
             pendingPageNum = true;
             pageNumReplaced = false; // Reset when starting a new PAGE field
           }

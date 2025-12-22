@@ -130,6 +130,7 @@ class _DocViewerState extends State<DocViewer>
     widget.wordDocument.currentPage = pageIndex;
     _pageNumberController.text = (pageIndex + 1).toString();
     _visitedPagesSet.add(pageIndex);
+    _currentPageNotifier.value = pageIndex; // Ensure UI updates immediately
 
     // Update internal state if needed
     // if (mounted) setState(() {}); // interactuall scroll handles this properly via notification
@@ -444,8 +445,7 @@ class _DocViewerState extends State<DocViewer>
                   goToNextVisitedPage: _goToNextVisitedPage,
                   jumpToPage: _jumpToPage,
                   // Force UI update on slider change as we now rely on scroll offset
-                  onSliderChanged: () =>
-                      _jumpToPage(widget.wordDocument.currentPage),
+                  onSliderChanged: (value) => _jumpToPage(value.round() - 1),
                 );
               },
             ),

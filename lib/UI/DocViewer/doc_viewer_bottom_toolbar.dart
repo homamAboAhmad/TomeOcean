@@ -11,7 +11,7 @@ class DocViewerBottomToolbar extends StatelessWidget {
   final VoidCallback goToPreviousVisitedPage;
   final VoidCallback goToNextVisitedPage;
   final Function(int) jumpToPage;
-  final VoidCallback onSliderChanged;
+  final ValueChanged<double> onSliderChanged;
 
   const DocViewerBottomToolbar({
     super.key,
@@ -51,8 +51,9 @@ class DocViewerBottomToolbar extends StatelessWidget {
                     style: normalStyle(color: primaryColor, fontSize: 16),
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.only(bottom: 15)),
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.only(bottom: 15),
+                    ),
                     onSubmitted: (value) {
                       final page = int.tryParse(value);
                       if (page != null) {
@@ -78,8 +79,8 @@ class DocViewerBottomToolbar extends StatelessWidget {
                         ? wordDocument.pageFilePaths.length.toDouble()
                         : 1,
                     onChanged: (value) {
-                      pageNumberController.text = value.round().toString();
-                      onSliderChanged();
+                      // pageNumberController.text = value.round().toString(); // Parent handles this via jumpToPage
+                      onSliderChanged(value);
                     },
                     onChangeEnd: (value) {
                       jumpToPage(value.round() - 1);
@@ -89,8 +90,10 @@ class DocViewerBottomToolbar extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               IconButton(
-                icon: Icon(Icons.arrow_circle_right_outlined,
-                    size: iconSize + 4),
+                icon: Icon(
+                  Icons.arrow_circle_right_outlined,
+                  size: iconSize + 4,
+                ),
                 color: findPreviousVisited() != -1
                     ? primaryColor
                     : Theme.of(context).disabledColor,
@@ -99,13 +102,16 @@ class DocViewerBottomToolbar extends StatelessWidget {
                     : null,
               ),
               IconButton(
-                icon: Icon(Icons.arrow_circle_left_outlined,
-                    size: iconSize + 4),
+                icon: Icon(
+                  Icons.arrow_circle_left_outlined,
+                  size: iconSize + 4,
+                ),
                 color: findNextVisited() != null
                     ? primaryColor
                     : Theme.of(context).disabledColor,
-                onPressed:
-                    findNextVisited() != null ? goToNextVisitedPage : null,
+                onPressed: findNextVisited() != null
+                    ? goToNextVisitedPage
+                    : null,
               ),
             ],
           ),

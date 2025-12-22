@@ -53,6 +53,7 @@ class RPr {
   bool? u;
   bool? rtl;
   bool? strike;
+  bool? vanish;
   String? font;
   String? enFont, uniqueFont;
   String? vertAlign;
@@ -93,6 +94,7 @@ class RPr {
     "vertAlign",
     "bCs",
     "rStyle",
+    "vanish",
   ];
 
   RPr fromXml(XmlElement? xmlrPr) {
@@ -120,6 +122,7 @@ class RPr {
     getFonts();
     strike = hasStrike();
     vertAlign = getVerticalAlign();
+    vanish = isVanish();
 
     return this;
   }
@@ -256,6 +259,11 @@ class RPr {
 
   bool? hasStrike() {
     return rPr?.getElement("w:strike") != null;
+  }
+
+  /// Check if text is hidden (w:vanish element)
+  bool? isVanish() {
+    return rPr?.getElement("w:vanish") != null;
   }
 
   String getStrikeH() {

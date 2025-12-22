@@ -139,6 +139,11 @@ class runT {
   }
 
   InlineSpan toWidget() {
+    // Skip hidden/vanish text (like injected {{PG:X}} markers)
+    if (rpr?.vanish == true) {
+      return TextSpan(text: "");
+    }
+
     // Fix: Check image property instead of xmlRun since xmlRun is not saved in cache
     if (image != null) {
       // Debugging: why is this treated as text run if it's an image?

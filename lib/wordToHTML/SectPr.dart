@@ -262,15 +262,17 @@ class SectPr {
     String type,
   ) {
     Map<String, XmlElement> footersMap = {};
-    var footerRefs = sectPrElement.findAllElements("w:footerReference");
-
-    footerRefs.forEach((footerReference) {
-      var footerType = footerReference.getAttribute("w:type");
-
-      if (footerType != null) {
-        footersMap[footerType] = footerReference;
+    // Use childElements to avoid deep recursive search if not needed,
+    // but usually footerReference is a direct child of sectPr.
+    // Use local name to avoid namespace prefix issues.
+    for (var child in sectPrElement.childElements) {
+      if (child.name.local == "footerReference") {
+        var footerType = child.getAttribute("w:type");
+        if (footerType != null) {
+          footersMap[footerType] = child;
+        }
       }
-    });
+    }
 
     if (footersMap[type] == null) {
       return null;
@@ -668,9 +670,48 @@ class SectPr {
     return null;
   }
 
+  /// وراثة footerFirst من القسم السابق
+  String? _inheritFooterFirst(int currentSectionIndex) {
+    for (int i = currentSectionIndex - 1; i >= 0; i--) {
+      var prevSect = parent.sectPrList[i];
+      if (prevSect.footerFirstPath != null) {
+        return prevSect.footerFirstPath;
+      }
+    }
+    return null;
+  }
+
+  /// وراثة footerEven من القسم السابق
+  String? _inheritFooterEven(int currentSectionIndex) {
+    for (int i = currentSectionIndex - 1; i >= 0; i--) {
+      var prevSect = parent.sectPrList[i];
+      if (prevSect.footerEvenPath != null) {
+        return prevSect.footerEvenPath;
+      }
+    }
+    return null;
+  }
+
+  /// وراثة footerOdd/Default من القسم السابق
+  /// حسب ECMA-376: إذا لم يوجد odd footer، يُورث من القسم السابق
+  String? _inheritFooterOdd(int currentSectionIndex) {
+    for (int i = currentSectionIndex - 1; i >= 0; i--) {
+      var prevSect = parent.sectPrList[i];
+      if (prevSect.footerOddPath != null) {
+        return prevSect.footerOddPath;
+      }
+      // default يُعتبر fallback لـ odd
+      if (prevSect.footerDefaultPath != null) {
+        return prevSect.footerDefaultPath;
+      }
+    }
+    return null;
+  }
+
   XmlElement? getRequestedFooter(int docPageIndex) {
     bool titlePg = sectPrElement?.findElements("w:titlePg").isNotEmpty ?? false;
     bool evenAndOddHeaders = parent.evenAndOddHeaders ?? false;
+    int currentSectionIndex = parent.sectPrList.indexOf(this);
 
     String? path;
 
@@ -679,15 +720,28 @@ class SectPr {
 
     // Rule 1: First page of section with titlePg enabled
     if (pageInSection == 1 && titlePg) {
-      path = footerFirstPath ?? footerDefaultPath ?? footerOddPath;
+      path =
+          footerFirstPath ??
+          _inheritFooterFirst(currentSectionIndex) ??
+          footerDefaultPath ??
+          footerOddPath ??
+          _inheritFooterOdd(currentSectionIndex);
     }
     // Rule 2: Even/odd page footers (only if evenAndOddHeaders is enabled)
     else if (evenAndOddHeaders && pageInSection.isEven) {
-      path = footerEvenPath ?? footerOddPath ?? footerDefaultPath;
+      path =
+          footerEvenPath ??
+          _inheritFooterEven(currentSectionIndex) ??
+          footerOddPath ??
+          footerDefaultPath ??
+          _inheritFooterOdd(currentSectionIndex);
     }
-    // Rule 3: All other cases use odd/default footer
+    // Rule 3: All other cases use odd/default footer (with inheritance)
     else {
-      path = footerOddPath ?? footerDefaultPath;
+      path =
+          footerOddPath ??
+          footerDefaultPath ??
+          _inheritFooterOdd(currentSectionIndex);
     }
 
     if (path != null) {

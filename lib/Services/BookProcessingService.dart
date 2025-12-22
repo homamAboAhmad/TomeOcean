@@ -168,7 +168,8 @@ class BookProcessingService {
     finalBookPath = p.join(BOOKS_FOLDER_PATH, fileName);
 
     try {
-      await ExeRunner().runExe(BOOKS_FOLDER_PATH, fileName, (output) {
+      // Pass the FULL source path, not just filename
+      await ExeRunner().runExe(BOOKS_FOLDER_PATH, sourceFilePath, (output) {
         if (task.isCancelled) return;
         if (output.startsWith('PROGRESS:')) {
           final pct = int.tryParse(output.replaceFirst('PROGRESS:', '')) ?? 0;
@@ -181,6 +182,9 @@ class BookProcessingService {
           }
         } else if (output.startsWith('WARNING:FONT_RESTRICTED')) {
           emit(ProcessingState.rendering, 0.9, "تنبيه: خطوط محمية");
+        } else {
+          // ⚠️ Debugging Output from Python Script ⚠️
+          debugPrint("EXE OUTPUT: $output");
         }
       });
     } catch (e) {

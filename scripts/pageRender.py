@@ -69,31 +69,114 @@ def open_word_document(word_file_path):
     
     return word_app, doc
 
-def process_document(doc):
-    """تحديث تخطيط الصفحات"""
-    num_paragraphs = doc.Paragraphs.Count
-    
-    # تحديث الـ layout عبر الذهاب لآخر المستند
+def force_pagination(word_app, doc):
+    """إجبار Word على حساب التخطيط بشكل كامل"""
+    # 1. تعيين وضع العرض إلى Print Layout
     try:
-        last_para = doc.Paragraphs(doc.Paragraphs.Count)
-        _ = last_para.Range.Information(3)  # wdActiveEndPageNumber
-    except:
+        word_app.ActiveWindow.View.Type = 3  # wdPrintView
+    except Exception as e:
         pass
-
-    # إجبار Word على إعادة حساب الصفحات بالكامل
-    print("PROGRESS:20", flush=True)
+    
+    # 2. إعادة حساب الصفحات
     try:
         doc.Repaginate()
     except:
         pass
     
-    print("PROGRESS:50", flush=True)
-    
-    # استخدام ComputeStatistics يُجبر Word على حساب عدد الصفحات الفعلي
+    # 3. الذهاب لآخر المستند لإجبار Word على حساب كل شيء
     try:
-        _ = doc.ComputeStatistics(2) # wdStatisticPages
+        last_para = doc.Paragraphs(doc.Paragraphs.Count)
+        _ = last_para.Range.Information(3)  # wdActiveEndPageNumber
     except:
         pass
+    
+    # 4. استخدام ComputeStatistics يُجبر Word على حساب عدد الصفحات
+    try:
+        total_pages = doc.ComputeStatistics(2)  # wdStatisticPages
+    except Exception as e:
+        pass
+    
+    # 5. تحديث جميع الحقول (Fields) لضمان دقة أرقام الصفحات
+    try:
+        doc.Fields.Update()
+    except:
+        pass
+
+def inject_page_numbers(doc):
+    """إدراج أرقام الصفحات كنص مخفي داخل صفوف الجداول"""
+    print("STATUS:جاري إدراج أرقام الصفحات في الجداول...", flush=True)
+    
+    wdActiveEndPageNumber = 3
+    wdCollapseStart = 1
+    wdCollapseEnd = 0
+    wdCharacter = 1
+    
+    injected_count = 0
+    table_count = 0
+    
+    try:
+        for table in doc.Tables:
+            table_count += 1
+            
+            try:
+                # الحصول على رقم صفحة بداية ونهاية الجدول
+                rng_start = table.Range
+                rng_start.Collapse(wdCollapseStart)
+                start_page = rng_start.Information(wdActiveEndPageNumber)
+                
+                rng_end = table.Range
+                rng_end.Collapse(wdCollapseEnd)
+                end_page = rng_end.Information(wdActiveEndPageNumber)
+                
+                # إذا كان الجدول في صفحة واحدة، لا نحتاج للحقن
+                if start_page == end_page:
+                    continue
+                
+                # التكرار عبر الصفوف
+                for row in table.Rows:
+                    try:
+                        # الحصول على رقم الصفحة لبداية هذا الصف
+                        row_rng = row.Range
+                        row_rng.Collapse(wdCollapseStart)
+                        page_num = row_rng.Information(wdActiveEndPageNumber)
+                        
+                        # الوصول لأول خلية في الصف
+                        cell = row.Cells(1)
+                        cell_rng = cell.Range
+                        cell_rng.Collapse(wdCollapseStart)
+                        
+                        # إدراج النص المخفي باستخدام InsertBefore
+                        marker = f"{{{{PG:{page_num}}}}}"
+                        cell_rng.InsertBefore(marker)
+                        
+                        # تحديد نطاق النص المُدرج وإخفاؤه
+                        cell_rng2 = cell.Range
+                        cell_rng2.Collapse(wdCollapseStart)
+                        cell_rng2.MoveEnd(wdCharacter, len(marker))
+                        cell_rng2.Font.Hidden = True
+                        
+                        injected_count += 1
+                        
+                    except Exception as row_err:
+                        pass
+                        
+            except Exception as table_err:
+                pass
+                
+    except Exception as e:
+        print(f"WARNING: General injection error: {e}", flush=True)
+
+def process_document(word_app, doc):
+    """تحديث تخطيط الصفحات وحقن أرقام الصفحات"""
+    print("PROGRESS:20", flush=True)
+    
+    # إجبار Word على حساب التخطيط
+    force_pagination(word_app, doc)
+    
+    print("PROGRESS:50", flush=True)
+    
+    # حقن أرقام الصفحات
+    inject_page_numbers(doc)
         
     print("PROGRESS:100", flush=True)
 
@@ -149,7 +232,7 @@ def main():
     
     try:
         print("STATUS:جاري تحديث تخطيط الصفحات...", flush=True)
-        process_document(doc)
+        process_document(word_app, doc)
         
         print("STATUS:جاري حفظ الملف...", flush=True)
         save_and_close(doc, word_app, temp_file_path, output_file_path)
