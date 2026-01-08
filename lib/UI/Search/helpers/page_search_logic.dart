@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Helpers/ShamelaSearchEngine.dart';
+import 'package:golden_shamela/Helpers/search_engine/text_normalization.dart';
+import 'package:golden_shamela/Helpers/ArabicMorphologicalAnalyzer.dart';
 
 /// Handles page-level search logic with group conditions (AND, OR, NOT)
 class PageSearchLogic {
@@ -11,21 +13,17 @@ class PageSearchLogic {
   Map<String, List<String>> processSearchGroups(
     Map<String, List<TextEditingController>> groupControllers,
   ) {
-    final Map<String, List<String>> groups = {
-      'and': [],
-      'or': [],
-      'not': [],
-    };
+    final Map<String, List<String>> groups = {'and': [], 'or': [], 'not': []};
 
     for (var entry in groupControllers.entries) {
       final groupType = entry.key;
       final controllers = entry.value;
-      
+
       final queries = controllers
           .map((c) => c.text.trim())
           .where((q) => q.isNotEmpty)
           .toList();
-      
+
       if (queries.isNotEmpty) {
         groups[groupType] = queries;
       }
@@ -114,19 +112,21 @@ class PageSearchLogic {
   /// Check if all queries are in content
   bool _allQueriesInContent(List<String> queries, String content) {
     final normalizedContent = content.toLowerCase();
-    return queries.every((query) => 
-        normalizedContent.contains(query.toLowerCase()));
+    return queries.every(
+      (query) => normalizedContent.contains(query.toLowerCase()),
+    );
   }
 
   /// Check if any query is in content
   bool _anyQueryInContent(List<String> queries, String content) {
     final normalizedContent = content.toLowerCase();
-    return queries.any((query) => 
-        normalizedContent.contains(query.toLowerCase()));
+    return queries.any(
+      (query) => normalizedContent.contains(query.toLowerCase()),
+    );
   }
 
   /// Build FTS query for page search
-  String buildPageSearchQuery({
+  Future<String> buildPageSearchQuery({
     required Map<String, List<String>> groups,
     required String searchGrouping,
     required bool morphologicalSearch,
@@ -135,7 +135,9 @@ class PageSearchLogic {
     required bool ordered,
     required bool proximity,
     int proximityDistance = 5,
-  }) {
+    bool considerNumbers = true,
+    bool affixSearch = false,
+  }) async {
     final activeGroups = groups.entries
         .where((e) => e.value.isNotEmpty)
         .toList();
@@ -146,113 +148,135 @@ class PageSearchLogic {
     final List<String> positiveQueries = [];
     final List<String> notQueries = [];
 
+    // Helper to normalize or stem a single term
+    Future<String> processTerm(String term) async {
+      if (morphologicalSearch) {
+        // For morphological search, we stem the word
+        // TextNormalization is applied internally by the stemmer or before it
+        // Note: The database morphological_content contains space-separated roots/stems
+        // e.g. "ktb ktb" or "ktb"
+        final normalized = TextNormalization.normalizeText(
+          term,
+          removeDiacritics: true,
+          unifyHamzas: false, // Keep hamzas for accurate stemming if possible
+          removeNumbers: !considerNumbers,
+        ).trim();
+
+        final root = await ArabicMorphologicalAnalyzer.stem(normalized);
+        print(
+          '===== [PageSearchLogic] Morphological: "$term" -> normalized: "$normalized" -> root: "$root"',
+        );
+        return root;
+      } else {
+        // Standard normalization
+        return TextNormalization.normalizeText(
+          term,
+          removeDiacritics: !considerDiacritics,
+          unifyHamzas: !considerHamzas,
+          removeNumbers: !considerNumbers,
+        ).trim();
+      }
+    }
+
+    // Helper to format query (phrase vs word, affix vs exact)
+    String formatQuery(String q) {
+      if (q.contains(' ')) {
+        // It's a phrase - use quotes
+        return '"$q"';
+      } else {
+        // Single word
+        if (affixSearch) {
+          // Prefix search for affix (supports suffixes like "wal-")
+          // Standard FTS5 prefix search is term*
+          return '$q*';
+        } else {
+          // Exact match
+          return q;
+        }
+      }
+    }
+
     for (var group in activeGroups) {
       final groupType = group.key;
-      final queries = group.value;
+      final queryStrings = group.value;
 
       if (groupType == 'and') {
-        // All queries must match (AND within group)
-        String andQuery;
-        final terms = queries.map((q) => q.trim()).where((q) => q.isNotEmpty).toList();
-        
-        if (terms.isEmpty) continue;
-        
-        // Helper function to format query (phrase or word)
-        String formatQuery(String q) {
-          if (q.contains(' ')) {
-            // It's a phrase - use quotes
-            return '"$q"';
-          } else {
-            // Single word - use prefix search
-            return '$q*';
-          }
+        // Process all terms
+        List<String> terms = [];
+        for (var q in queryStrings) {
+          final processed = await processTerm(q);
+          if (processed.isNotEmpty) terms.add(processed);
         }
-        
+
+        if (terms.isEmpty) continue;
+
+        String andQuery;
+
         if (ordered && proximity) {
-          // Ordered and proximity: use NEAR with distance
-          // NEAR maintains order and enforces proximity
           if (terms.length >= 2) {
-            final normalizedTerms = terms.map(formatQuery).toList();
-            andQuery = 'NEAR(${normalizedTerms.join(', ')}, $proximityDistance)';
+            final formattedTerms = terms.map(formatQuery).toList();
+            andQuery = 'NEAR(${formattedTerms.join(', ')}, $proximityDistance)';
           } else {
             andQuery = formatQuery(terms.first);
           }
         } else if (ordered) {
-          // Ordered: phrases must appear in order (not necessarily adjacent)
-          // Use NEAR with large distance to ensure order while allowing separation
-          // Large distance (1000) allows phrases to be far apart but maintains order
           if (terms.length >= 2) {
-            final normalizedTerms = terms.map(formatQuery).toList();
-            // Use large distance to allow phrases to be separated but maintain order
-            andQuery = 'NEAR(${normalizedTerms.join(', ')}, 1000)';
+            final formattedTerms = terms.map(formatQuery).toList();
+            andQuery = 'NEAR(${formattedTerms.join(', ')}, 1000)';
           } else {
             andQuery = formatQuery(terms.first);
           }
         } else {
-          // Regular AND - all phrases/words must exist (order doesn't matter)
           final phraseQueries = terms.map(formatQuery).toList();
           andQuery = phraseQueries.join(' AND ');
         }
         positiveQueries.add('($andQuery)');
       } else if (groupType == 'or') {
-        // Any query can match (OR within group)
-        // Note: ordered/proximity don't make sense for OR groups
-        final terms = queries.map((q) => q.trim()).where((q) => q.isNotEmpty).toList();
+        List<String> terms = [];
+        for (var q in queryStrings) {
+          final processed = await processTerm(q);
+          if (processed.isNotEmpty) terms.add(processed);
+        }
+
         if (terms.isEmpty) continue;
-        
-        final orQuery = terms.map((q) {
-          if (q.contains(' ')) {
-            return '"$q"';
-          } else {
-            return '$q*';
-          }
-        }).join(' OR ');
+
+        final orQuery = terms.map(formatQuery).join(' OR ');
         positiveQueries.add('($orQuery)');
       } else if (groupType == 'not') {
-        // NOT queries - collect separately
-        final terms = queries.map((q) => q.trim()).where((q) => q.isNotEmpty).toList();
+        List<String> terms = [];
+        for (var q in queryStrings) {
+          final processed = await processTerm(q);
+          if (processed.isNotEmpty) terms.add(processed);
+        }
+
         if (terms.isEmpty) continue;
-        
-        final notQuery = terms.map((q) {
-          if (q.contains(' ')) {
-            return '"$q"';
-          } else {
-            return '$q*';
-          }
-        }).join(' OR ');
+
+        final notQuery = terms.map(formatQuery).join(' OR ');
         notQueries.add('($notQuery)');
       }
     }
 
     // Build final query
-    // FTS5 syntax: NOT must come before the term, not after AND
-    // Correct: "term NOT (term2 OR term3)" not "term AND NOT (term2 OR term3)"
     String finalQuery = '';
-    
+
     if (searchGrouping == 'all') {
-      // All positive groups must match
       if (positiveQueries.isNotEmpty) {
         finalQuery = positiveQueries.join(' AND ');
       }
-      // Add NOT conditions - FTS5: NOT without AND before it
       if (notQueries.isNotEmpty) {
         final notTerms = notQueries.join(' OR ');
         if (finalQuery.isNotEmpty) {
-          // FTS5 format: "term1 AND term2 NOT (term3 OR term4)"
           finalQuery = '$finalQuery NOT ($notTerms)';
         } else {
           finalQuery = 'NOT ($notTerms)';
         }
       }
     } else {
-      // One or more groups must match
       if (positiveQueries.isNotEmpty) {
         finalQuery = positiveQueries.join(' OR ');
       }
-      // For "one or more", NOT groups are handled separately
       if (notQueries.isNotEmpty && finalQuery.isNotEmpty) {
         final notTerms = notQueries.join(' OR ');
-        // Group positive queries, then add NOT
         finalQuery = '($finalQuery) NOT ($notTerms)';
       }
     }
@@ -260,4 +284,3 @@ class PageSearchLogic {
     return finalQuery;
   }
 }
-

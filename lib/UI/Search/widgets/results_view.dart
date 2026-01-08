@@ -40,10 +40,7 @@ class SearchResultsView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('النتائج: $totalCount', style: mediumStyle()),
-              IconButton(
-                icon: Icon(Icons.close),
-                onPressed: onClose,
-              ),
+              IconButton(icon: Icon(Icons.close), onPressed: onClose),
             ],
           ),
         ),
@@ -53,7 +50,26 @@ class SearchResultsView extends StatelessWidget {
             itemBuilder: (context, index) {
               final result = results[index];
               final content = result['content'] as String? ?? '';
-              
+              final morphContent =
+                  result['morphological_content'] as String? ?? '';
+
+              // Debug: Log result keys and morphological content for first 3 results
+              if (index < 3) {
+                print('===== [ResultsView] Result #$index =====');
+                print('  Keys: ${result.keys.toList()}');
+                print(
+                  '  morphological_content is null: ${result['morphological_content'] == null}',
+                );
+                if (morphContent.isNotEmpty) {
+                  final morphPreview = morphContent.length > 200
+                      ? morphContent.substring(0, 200)
+                      : morphContent;
+                  print('  morphological_content: "$morphPreview..."');
+                } else {
+                  print('  morphological_content is EMPTY');
+                }
+              }
+
               return Card(
                 elevation: 1,
                 margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -74,14 +90,18 @@ class SearchResultsView extends StatelessWidget {
                           return snapshot.data!;
                         } else if (snapshot.hasError) {
                           return Text(
-                            content.length > 100 ? '${content.substring(0, 100)}...' : content,
+                            content.length > 100
+                                ? '${content.substring(0, 100)}...'
+                                : content,
                             style: smallStyle(),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           );
                         } else {
                           return Text(
-                            content.length > 100 ? '${content.substring(0, 100)}...' : content,
+                            content.length > 100
+                                ? '${content.substring(0, 100)}...'
+                                : content,
                             style: smallStyle(),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -95,17 +115,10 @@ class SearchResultsView extends StatelessWidget {
                     style: normalStyle(color: primaryColor),
                   ),
                   onTap: () {
-                    print("========================================");
-                    print("SearchResultsView: onTap called");
-                    print("Book path: ${result['book_path']}");
-                    print("Page number: ${result['page_number']}");
-                    print("Calling onResultTapped...");
-                    print("========================================");
                     onResultTapped(
                       result['book_path'] as String,
                       result['page_number'] as int,
                     );
-                    print("SearchResultsView: onResultTapped call completed");
                   },
                 ),
               );
@@ -116,4 +129,3 @@ class SearchResultsView extends StatelessWidget {
     );
   }
 }
-

@@ -16,6 +16,7 @@ class SearchOperations {
     List<String>? sectionTypes,
     bool considerDiacritics,
     bool considerHamzas,
+    bool considerNumbers,
     bool allPhrasesRequired,
     bool ordered,
     bool proximity,
@@ -40,7 +41,15 @@ class SearchOperations {
     } else if (considerHamzas) {
       contentColumn = 'hamza_preserved_content';
     } else {
-      contentColumn = 'normalized_content';
+      // Default case: simple search
+      if (!considerNumbers) {
+        // Use no-numbers column ONLY if we are in this standard mode.
+        // For other modes (like Hamzas preserved), we fallback to standard handling
+        // (which includes numbers) because we don't have combinatorial columns.
+        contentColumn = 'normalized_no_numbers_content';
+      } else {
+        contentColumn = 'normalized_content';
+      }
     }
 
     final List<String> ftsQueries = [];
@@ -94,7 +103,8 @@ class SearchOperations {
         ? 'WHERE ${whereClauses.join(' AND ')}'
         : '';
 
-    final sql = '''
+    final sql =
+        '''
       SELECT 
         id,
         book_path,
@@ -111,28 +121,28 @@ class SearchOperations {
       LIMIT ? OFFSET ?
     ''';
 
-    final results = await database.rawQuery(
-      sql,
-      [...whereArgs, ftsQuery, limit, offset],
-    );
+    final results = await database.rawQuery(sql, [
+      ...whereArgs,
+      ftsQuery,
+      limit,
+      offset,
+    ]);
 
-    final countSql = '''
+    final countSql =
+        '''
       SELECT COUNT(*) as total
       FROM books_fts
       $whereClause
       AND books_fts MATCH ?
     ''';
-    final countResult = await database.rawQuery(
-      countSql,
-      [...whereArgs, ftsQuery],
-    );
+    final countResult = await database.rawQuery(countSql, [
+      ...whereArgs,
+      ftsQuery,
+    ]);
     final total = Sqflite.firstIntValue(countResult) ?? 0;
 
     return results.map((row) {
-      return {
-        ...row,
-        'estimatedTotalHits': total,
-      };
+      return {...row, 'estimatedTotalHits': total};
     }).toList();
   }
 
@@ -192,21 +202,28 @@ class SearchOperations {
       }
       whereClauses.add('(${groupConditions.join(' AND ')})');
     } else if (operator.toUpperCase() == 'NOT') {
-      final excludePlaceholders = List.filled(searchTerms.length, '?').join(',');
-      final excludeSql = '''
+      final excludePlaceholders = List.filled(
+        searchTerms.length,
+        '?',
+      ).join(',');
+      final excludeSql =
+          '''
         SELECT DISTINCT id FROM morphological_index
         WHERE (root IN ($excludePlaceholders) OR normalized_word IN ($excludePlaceholders))
       ''';
       final excludeArgs = [...searchTerms, ...searchTerms];
       final excludeResults = await database.rawQuery(excludeSql, excludeArgs);
-      final Set<String> excludeIds =
-          excludeResults.map((r) => r['id'] as String).toSet();
+      final Set<String> excludeIds = excludeResults
+          .map((r) => r['id'] as String)
+          .toSet();
 
       if (excludeIds.isEmpty) {
         whereClauses.add('1=1');
       } else {
-        final excludePlaceholders2 =
-            List.filled(excludeIds.length, '?').join(',');
+        final excludePlaceholders2 = List.filled(
+          excludeIds.length,
+          '?',
+        ).join(',');
         whereClauses.add('id NOT IN ($excludePlaceholders2)');
         whereArgs.addAll(excludeIds);
       }
@@ -231,10 +248,12 @@ class SearchOperations {
       whereArgs.addAll(sectionTypes);
     }
 
-    final whereClause =
-        whereClauses.isNotEmpty ? 'WHERE ${whereClauses.join(' AND ')}' : '';
+    final whereClause = whereClauses.isNotEmpty
+        ? 'WHERE ${whereClauses.join(' AND ')}'
+        : '';
 
-    final morphSql = '''
+    final morphSql =
+        '''
       SELECT DISTINCT id, book_path, page_number, section_type
       FROM morphological_index
       $whereClause
@@ -246,13 +265,15 @@ class SearchOperations {
       return [];
     }
 
-    final Set<String> matchingIds =
-        morphResults.map((r) => r['id'] as String).toSet();
+    final Set<String> matchingIds = morphResults
+        .map((r) => r['id'] as String)
+        .toSet();
 
     if (matchingIds.isEmpty) return [];
 
     final idsPlaceholders = List.filled(matchingIds.length, '?').join(',');
-    final sql = '''
+    final sql =
+        '''
       SELECT 
         id,
         book_path,
@@ -268,26 +289,23 @@ class SearchOperations {
       LIMIT ? OFFSET ?
     ''';
 
-    final results = await database.rawQuery(
-      sql,
-      [...matchingIds, limit, offset],
-    );
+    final results = await database.rawQuery(sql, [
+      ...matchingIds,
+      limit,
+      offset,
+    ]);
 
-    final countSql = '''
+    final countSql =
+        '''
       SELECT COUNT(DISTINCT id) as total
       FROM books_fts
       WHERE id IN ($idsPlaceholders)
     ''';
-    final countResult =
-        await database.rawQuery(countSql, matchingIds.toList());
+    final countResult = await database.rawQuery(countSql, matchingIds.toList());
     final total = Sqflite.firstIntValue(countResult) ?? matchingIds.length;
 
     return results.map((row) {
-      return {
-        ...row,
-        'estimatedTotalHits': total,
-      };
+      return {...row, 'estimatedTotalHits': total};
     }).toList();
   }
 }
-

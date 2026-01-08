@@ -22,7 +22,7 @@ class WindowManagerHelper {
     try {
       final windowController = await WindowController.fromCurrentEngine();
       final windowArgs = windowController.arguments;
-      
+
       if (windowArgs.isEmpty) {
         return WindowInfo(route: null, isSubWindow: false);
       }
@@ -40,7 +40,7 @@ class WindowManagerHelper {
     } catch (_) {
       // Main window - WindowController.fromCurrentEngine() throws if not a sub-window
     }
-    
+
     return WindowInfo(route: null, isSubWindow: false);
   }
 
@@ -50,27 +50,28 @@ class WindowManagerHelper {
 
     await windowManager.ensureInitialized();
     const windowOptions = WindowOptions(
-      size: Size(720, 720),
+      size: Size(1000, 720),
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.normal,
     );
-    
+
     await windowManager.waitUntilReadyToShow(windowOptions, () async {
       await windowManager.show();
       await windowManager.focus();
     });
-    
+
     _saveMainWindowId();
   }
 
   void _saveMainWindowId() {
-    WindowController.fromCurrentEngine().then((controller) {
-      _appState.mainWindowId = controller.windowId;
-    }).catchError((_) {
-      // Main window might not have WindowController, use window_manager instead
-    });
+    WindowController.fromCurrentEngine()
+        .then((controller) {
+          _appState.mainWindowId = controller.windowId;
+        })
+        .catchError((_) {
+          // Main window might not have WindowController, use window_manager instead
+        });
   }
 }
-

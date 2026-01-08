@@ -6,7 +6,7 @@ import 'package:golden_shamela/Models/Author.dart';
 import 'package:path/path.dart' as p;
 
 /// Widget that displays a list of books with search and selection capabilities.
-/// 
+///
 /// This panel allows users to:
 /// - Search books by title or author name
 /// - Select/deselect books individually or all at once (Ctrl+A)
@@ -60,22 +60,23 @@ class _BooksListPanelState extends State<BooksListPanel> {
   }
 
   /// Filters books based on the search query.
-  /// 
+  ///
   /// Searches in both book titles and author names.
   /// Returns a list of books matching the search criteria.
   List<Map<String, dynamic>> _filterBooks(String searchQuery) {
     if (searchQuery.isEmpty) {
       return widget.filteredIndexedBooks;
     }
-    
+
     return widget.filteredIndexedBooks.where((book) {
       final bookPath = book['book_path'] as String;
       final bookTitle = p.basenameWithoutExtension(bookPath).toLowerCase();
-      
+
       String authorName = '';
       if (widget.authors != null) {
-        final String? authorId = widget.bookAuthorMap[bookPath] ?? book['authorId'] as String?;
-        
+        final String? authorId =
+            widget.bookAuthorMap[bookPath] ?? book['authorId'] as String?;
+
         if (authorId != null) {
           final author = widget.authors!.firstWhere(
             (a) => a.id == authorId,
@@ -84,37 +85,43 @@ class _BooksListPanelState extends State<BooksListPanel> {
           authorName = author.name.toLowerCase();
         }
       }
-      
-      return bookTitle.contains(searchQuery) || authorName.contains(searchQuery);
+
+      return bookTitle.contains(searchQuery) ||
+          authorName.contains(searchQuery);
     }).toList();
   }
 
   /// Gets the author information for a book.
-  /// 
+  ///
   /// Returns a map with 'name' and 'deathYear' keys.
-  Map<String, String> _getAuthorInfo(String bookPath, Map<String, dynamic> book) {
+  Map<String, String> _getAuthorInfo(
+    String bookPath,
+    Map<String, dynamic> book,
+  ) {
     if (widget.authors == null) {
       return {'name': '', 'deathYear': ''};
     }
-    
-    final String? authorId = widget.bookAuthorMap[bookPath] ?? book['authorId'] as String?;
-    
+
+    final String? authorId =
+        widget.bookAuthorMap[bookPath] ?? book['authorId'] as String?;
+
     if (authorId == null) {
       return {'name': '', 'deathYear': ''};
     }
-    
+
     final author = widget.authors!.firstWhere(
       (a) => a.id == authorId,
       orElse: () => Author(id: '', name: '', description: ''),
     );
-    
+
     if (author.id.isEmpty) {
       return {'name': '', 'deathYear': ''};
     }
-    
+
     return {
       'name': author.name,
-      'deathYear': author.deathYear ?? widget.authorDeathYears?[author.id] ?? '',
+      'deathYear':
+          author.deathYear ?? widget.authorDeathYears?[author.id] ?? '',
     };
   }
 
@@ -122,7 +129,7 @@ class _BooksListPanelState extends State<BooksListPanel> {
   Widget build(BuildContext context) {
     final searchQuery = widget.searchController.text.toLowerCase();
     final filteredBooks = _filterBooks(searchQuery);
-    
+
     return GestureDetector(
       onTap: () => _booksFocusNode.requestFocus(),
       child: Focus(
@@ -143,8 +150,10 @@ class _BooksListPanelState extends State<BooksListPanel> {
                   SizedBox(
                     width: 40,
                     child: Checkbox(
-                      value: filteredBooks.isNotEmpty && 
-                             _temporarilySelectedBookPaths.length == filteredBooks.length,
+                      value:
+                          filteredBooks.isNotEmpty &&
+                          _temporarilySelectedBookPaths.length ==
+                              filteredBooks.length,
                       tristate: true,
                       onChanged: (val) => _toggleSelectAllBooks(filteredBooks),
                     ),
@@ -173,7 +182,10 @@ class _BooksListPanelState extends State<BooksListPanel> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                       ),
                       onChanged: (value) {
                         setState(() {}); // Rebuild to filter
@@ -188,78 +200,104 @@ class _BooksListPanelState extends State<BooksListPanel> {
                 ],
               ),
             ),
-            
+
             // Books List
             Expanded(
               child: filteredBooks.isEmpty
-                  ? Center(child: Text('لا توجد كتب مطابقة', style: normalStyle(color: Colors.grey)))
-                  : ListView.separated(
-                  itemCount: filteredBooks.length,
-                  separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.shade200),
-                  itemBuilder: (context, index) {
-                    final book = filteredBooks[index];
-                    final bookPath = book['book_path'] as String;
-                    final bookName = p.basenameWithoutExtension(bookPath);
-                    final isSelected = widget.selectedBooks[bookPath] ?? false;
-                    final isTemporarilySelected = _temporarilySelectedBookPaths.contains(bookPath);
-                    
-                    final authorInfo = _getAuthorInfo(bookPath, book);
-                    final authorName = authorInfo['name']!;
-                    final deathYear = authorInfo['deathYear']!;
-                    
-                    return Material(
-                      color: isSelected ? Colors.green.withOpacity(0.1) : Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            if (isTemporarilySelected) {
-                              _temporarilySelectedBookPaths.remove(bookPath);
-                            } else {
-                              _temporarilySelectedBookPaths.add(bookPath);
-                            }
-                          });
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                          child: Row(
-                            children: [
-                              Checkbox(
-                                value: isTemporarilySelected,
-                                onChanged: (val) {
-                                  setState(() {
-                                    if (val == true) {
-                                      _temporarilySelectedBookPaths.add(bookPath);
-                                    } else {
-                                      _temporarilySelectedBookPaths.remove(bookPath);
-                                    }
-                                  });
-                                },
-                              ),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      bookName,
-                                      style: normalStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                                    ),
-                                    if (authorName.isNotEmpty)
-                                      Text(
-                                        '$authorName ${deathYear.isNotEmpty ? "($deathYear)" : ""}',
-                                        style: normalStyle(fontSize: 12, color: Colors.grey.shade600),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                  ? Center(
+                      child: Text(
+                        'لا توجد كتب مطابقة',
+                        style: normalStyle(color: Colors.grey),
                       ),
-                    );
-                  },
-                ),
-        ),
-        
+                    )
+                  : ListView.separated(
+                      itemCount: filteredBooks.length,
+                      separatorBuilder: (context, index) =>
+                          Divider(height: 1, color: Colors.grey.shade200),
+                      itemBuilder: (context, index) {
+                        final book = filteredBooks[index];
+                        final bookPath = book['book_path'] as String;
+                        final bookName = p.basenameWithoutExtension(bookPath);
+                        final isSelected =
+                            widget.selectedBooks[bookPath] ?? false;
+                        final isTemporarilySelected =
+                            _temporarilySelectedBookPaths.contains(bookPath);
+
+                        final authorInfo = _getAuthorInfo(bookPath, book);
+                        final authorName = authorInfo['name']!;
+                        final deathYear = authorInfo['deathYear']!;
+
+                        return Material(
+                          color: isSelected
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.transparent,
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                if (isTemporarilySelected) {
+                                  _temporarilySelectedBookPaths.remove(
+                                    bookPath,
+                                  );
+                                } else {
+                                  _temporarilySelectedBookPaths.add(bookPath);
+                                }
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                                horizontal: 16.0,
+                              ),
+                              child: Row(
+                                children: [
+                                  Checkbox(
+                                    value: isTemporarilySelected,
+                                    onChanged: (val) {
+                                      setState(() {
+                                        if (val == true) {
+                                          _temporarilySelectedBookPaths.add(
+                                            bookPath,
+                                          );
+                                        } else {
+                                          _temporarilySelectedBookPaths.remove(
+                                            bookPath,
+                                          );
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          bookName,
+                                          style: normalStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        if (authorName.isNotEmpty)
+                                          Text(
+                                            '$authorName ${deathYear.isNotEmpty ? "($deathYear)" : ""}',
+                                            style: normalStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+
             // Bottom Selection Bar
             Container(
               padding: EdgeInsets.all(8),
@@ -273,7 +311,9 @@ class _BooksListPanelState extends State<BooksListPanel> {
                   ElevatedButton.icon(
                     onPressed: () {
                       if (_temporarilySelectedBookPaths.isNotEmpty) {
-                        widget.onBooksAdded(_temporarilySelectedBookPaths.toList());
+                        widget.onBooksAdded(
+                          _temporarilySelectedBookPaths.toList(),
+                        );
                         setState(() => _temporarilySelectedBookPaths.clear());
                       }
                     },
@@ -289,7 +329,9 @@ class _BooksListPanelState extends State<BooksListPanel> {
                   ElevatedButton.icon(
                     onPressed: () {
                       if (_temporarilySelectedBookPaths.isNotEmpty) {
-                        widget.onBooksRemoved(_temporarilySelectedBookPaths.toList());
+                        widget.onBooksRemoved(
+                          _temporarilySelectedBookPaths.toList(),
+                        );
                         setState(() => _temporarilySelectedBookPaths.clear());
                       }
                     },
@@ -312,16 +354,19 @@ class _BooksListPanelState extends State<BooksListPanel> {
   }
 
   /// Handles keyboard events for the books list.
-  /// 
+  ///
   /// Supports:
   /// - Ctrl+A: Toggle select all visible books
   /// - Escape: Clear all temporary selections
-  /// 
+  ///
   /// Returns [KeyEventResult.handled] if the event was processed,
   /// [KeyEventResult.ignored] otherwise.
-  KeyEventResult _handleKeyEvent(KeyEvent event, List<Map<String, dynamic>> filteredBooks) {
+  KeyEventResult _handleKeyEvent(
+    KeyEvent event,
+    List<Map<String, dynamic>> filteredBooks,
+  ) {
     if (event is KeyDownEvent) {
-      if (HardwareKeyboard.instance.isControlPressed && 
+      if (HardwareKeyboard.instance.isControlPressed &&
           event.logicalKey == LogicalKeyboardKey.keyA) {
         _toggleSelectAllBooks(filteredBooks);
         return KeyEventResult.handled;
@@ -335,7 +380,7 @@ class _BooksListPanelState extends State<BooksListPanel> {
   }
 
   /// Toggles selection of all filtered books.
-  /// 
+  ///
   /// If all books are selected, deselects them all.
   /// Otherwise, selects all filtered books.
   void _toggleSelectAllBooks(List<Map<String, dynamic>> filteredBooks) {

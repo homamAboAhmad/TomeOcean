@@ -23,8 +23,9 @@ class IndexingOperations {
       if (pageParagraphs.isEmpty) continue;
 
       final pageNumber = pageParagraphs.first['page_number'] as int? ?? 0;
-      final aggregatedContent =
-          PageContentAggregator.aggregatePageContent(pageParagraphs);
+      final aggregatedContent = PageContentAggregator.aggregatePageContent(
+        pageParagraphs,
+      );
       if (aggregatedContent.trim().isEmpty) continue;
 
       final normalized = TextNormalization.normalizeText(
@@ -41,6 +42,14 @@ class IndexingOperations {
         aggregatedContent,
         removeDiacritics: false,
         unifyHamzas: true,
+      );
+
+      // New: Normalized without numbers
+      final normalizedNoNumbers = TextNormalization.normalizeText(
+        aggregatedContent,
+        removeDiacritics: true,
+        unifyHamzas: true,
+        removeNumbers: true,
       );
 
       String? noDiacriticsContent;
@@ -64,6 +73,7 @@ class IndexingOperations {
         'diacritics_preserved_content': diacriticsPreserved,
         'no_diacritics_content': noDiacriticsContent ?? '',
         'morphological_content': morphological,
+        'normalized_no_numbers_content': normalizedNoNumbers,
       });
     }
 
@@ -118,7 +128,9 @@ class IndexingOperations {
     for (String word in words) {
       if (word.length < 2) continue;
 
-      final normalized = ArabicMorphologicalAnalyzer.normalizeForMorphology(word);
+      final normalized = ArabicMorphologicalAnalyzer.normalizeForMorphology(
+        word,
+      );
       morphological.add(normalized);
 
       final root = await ArabicMorphologicalAnalyzer.stem(normalized);
@@ -130,4 +142,3 @@ class IndexingOperations {
     return morphological.join(' ');
   }
 }
-

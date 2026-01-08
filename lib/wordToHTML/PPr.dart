@@ -37,6 +37,11 @@ class PPr {
   List<String> doneElements = ["numPr", "pStyle", "rPr", "ind", "jc", "tabs"];
   String? numberingH;
 
+  /// Flag to skip incrementing the numbering counter
+  /// Used when re-parsing paragraphs (e.g., in table cells during re-render)
+  @JsonKey(ignore: true)
+  bool skipNumberingCounter = false;
+
   /// Tab stops for this paragraph (used for TOC dot leaders)
   List<TabStop> tabStops = [];
 
@@ -68,7 +73,8 @@ class PPr {
   double? spacingAfter;
   double? lineHeight;
 
-  PPr fromXml(XmlElement? xmlpPr0) {
+  PPr fromXml(XmlElement? xmlpPr0, {bool skipNumberingCounter = false}) {
+    this.skipNumberingCounter = skipNumberingCounter;
     xmlpPr0?.childElements.forEach((xmlElement) {
       if (!doneElements.contains(xmlElement.name.local)) {
         // print("PPr:" + xmlElement.name.local);
@@ -345,9 +351,15 @@ class PPr {
     if (numId != null && ilvl != null) {
       Level? level = getNumberingLevel();
       if (level != null) {
-        int startLvl = level.startVal;
-        paragraphNumber =
-            startLvl - 1 + wordDocument.addParagraphNum(numId!, ilvl!);
+        if (!skipNumberingCounter) {
+          // Only increment counter during initial parsing, not during re-renders
+          int startLvl = level.startVal;
+          paragraphNumber =
+              startLvl - 1 + wordDocument.addParagraphNum(numId!, ilvl!);
+        }
+        // When skipNumberingCounter is true (e.g., table cells),
+        // paragraphNumber remains null and will be set by the caller (ParagraphTable)
+        // with the correct row index
       }
     }
   }

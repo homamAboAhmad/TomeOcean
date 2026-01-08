@@ -232,7 +232,7 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
             ),
             child: Text(
               'في الخلفية',
-              style: normalStyle(color: Colors.grey[600]),
+              style: normalStyle(color: Colors.grey[600]!),
             ),
           ),
           const SizedBox(width: 8),

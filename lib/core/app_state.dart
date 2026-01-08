@@ -9,16 +9,27 @@ class AppState {
   AppState._internal();
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-  
+
   List<WordDocument> openedBooks = [WordDocument()];
   Archive docArchive = Archive();
-  
+
   List<Map<String, dynamic>>? cachedIndexedBooks;
   bool isLoadingIndexedBooks = false;
   String? mainWindowId;
-  
+
   /// Callback for TOC navigation - set by DocViewer
   void Function(int pageIndex)? onTocNavigate;
+
+  /// Search highlighting state - words to highlight when navigating from search results
+  List<String> searchHighlightTerms = [];
+
+  /// Clear search highlighting
+  void clearSearchHighlight() {
+    searchHighlightTerms = [];
+  }
+
+  /// Set search highlighting terms
+  void setSearchHighlight(List<String> terms) {
+    searchHighlightTerms = terms;
+  }
 }
-
-

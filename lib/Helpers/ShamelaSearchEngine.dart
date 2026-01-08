@@ -51,14 +51,14 @@ class ShamelaSearchEngine {
 
       _database = await openDatabase(
         dbPath,
-        version: 8,
+        version: 9,
         singleInstance: false,
         onCreate: (db, version) async {
           await db.execute('''
             CREATE VIRTUAL TABLE books_fts USING fts5(
               id UNINDEXED, book_path UNINDEXED, book_name UNINDEXED, page_number UNINDEXED, section_type UNINDEXED,
               content, normalized_content, hamza_preserved_content, diacritics_preserved_content,
-              no_diacritics_content, morphological_content, raw_content UNINDEXED,
+              no_diacritics_content, morphological_content, normalized_no_numbers_content, raw_content UNINDEXED,
               tokenize = 'unicode61 remove_diacritics 0'
             );
           ''');
@@ -66,7 +66,7 @@ class ShamelaSearchEngine {
             CREATE VIRTUAL TABLE pages_fts USING fts5(
               book_path UNINDEXED, book_name UNINDEXED, page_number UNINDEXED,
               content, normalized_content, hamza_preserved_content, diacritics_preserved_content,
-              no_diacritics_content, morphological_content,
+              no_diacritics_content, morphological_content, normalized_no_numbers_content,
               tokenize = 'unicode61 remove_diacritics 0'
             );
           ''');
@@ -122,6 +122,18 @@ class ShamelaSearchEngine {
               );
             } catch (e) {
               // Column may already exist
+            }
+          }
+          if (oldVersion < 9) {
+            try {
+              await db.execute(
+                'ALTER TABLE books_fts ADD COLUMN normalized_no_numbers_content;',
+              );
+              await db.execute(
+                'ALTER TABLE pages_fts ADD COLUMN normalized_no_numbers_content;',
+              );
+            } catch (e) {
+              // Columns may already exist
             }
           }
         },
@@ -197,6 +209,14 @@ class ShamelaSearchEngine {
         unifyHamzas: true,
       );
 
+      // New: Normalized without numbers
+      final normalizedNoNumbers = TextNormalization.normalizeText(
+        content,
+        removeDiacritics: true,
+        unifyHamzas: true,
+        removeNumbers: true,
+      );
+
       String? noDiacriticsContent;
       if (!TextNormalization.hasDiacritics(content)) {
         noDiacriticsContent = TextNormalization.normalizeText(
@@ -222,6 +242,7 @@ class ShamelaSearchEngine {
         'diacritics_preserved_content': diacriticsPreserved,
         'no_diacritics_content': noDiacriticsContent ?? '',
         'morphological_content': morphological,
+        'normalized_no_numbers_content': normalizedNoNumbers,
         'raw_content': para['raw_content'] ?? content,
       });
 
@@ -240,7 +261,7 @@ class ShamelaSearchEngine {
       }
     }
 
-    final currentDbVersion = 8;
+    final currentDbVersion = 9;
     batch.insert('books_metadata', {
       'id': base64Encode(
         utf8.encode(bookPath),
@@ -310,6 +331,8 @@ class ShamelaSearchEngine {
             query,
             removeDiacritics: true,
             unifyHamzas: !considerHamzas,
+            removeNumbers:
+                !considerNumbers, // Remove numbers from query if not considered
           );
           terms = [normalized];
         }
@@ -341,6 +364,7 @@ class ShamelaSearchEngine {
         sectionTypes,
         considerDiacritics,
         considerHamzas,
+        considerNumbers,
         allPhrasesRequired,
         ordered,
         proximity,
@@ -367,8 +391,10 @@ class ShamelaSearchEngine {
   Future<List<Map<String, dynamic>>> searchPages({
     required String ftsQuery,
     List<String>? bookPaths,
+    List<String>? sectionTypes, // Added sectionTypes
     bool considerDiacritics = false,
     bool considerHamzas = false,
+    bool considerNumbers = true,
     bool morphologicalSearch = false,
     int limit = 100,
     int offset = 0,
@@ -377,8 +403,10 @@ class ShamelaSearchEngine {
     return await _dbQueries!.searchPages(
       ftsQuery: ftsQuery,
       bookPaths: bookPaths,
+      sectionTypes: sectionTypes,
       considerDiacritics: considerDiacritics,
       considerHamzas: considerHamzas,
+      considerNumbers: considerNumbers,
       morphologicalSearch: morphologicalSearch,
       limit: limit,
       offset: offset,
@@ -389,8 +417,10 @@ class ShamelaSearchEngine {
   Stream<List<Map<String, dynamic>>> searchPagesStream({
     required String ftsQuery,
     List<String>? bookPaths,
+    List<String>? sectionTypes, // Added sectionTypes
     bool considerDiacritics = false,
     bool considerHamzas = false,
+    bool considerNumbers = true,
     bool morphologicalSearch = false,
     int batchSize = 10,
     int? maxResults,
@@ -399,8 +429,10 @@ class ShamelaSearchEngine {
     yield* _dbQueries!.searchPagesStream(
       ftsQuery: ftsQuery,
       bookPaths: bookPaths,
+      sectionTypes: sectionTypes, // Pass sectionTypes
       considerDiacritics: considerDiacritics,
       considerHamzas: considerHamzas,
+      considerNumbers: considerNumbers,
       morphologicalSearch: morphologicalSearch,
       batchSize: batchSize,
       maxResults: maxResults,

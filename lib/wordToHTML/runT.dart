@@ -11,6 +11,7 @@ import 'package:golden_shamela/wordToHTML/TabStop.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 import 'package:golden_shamela/wordToHTML/DocRelations.dart';
+import 'package:golden_shamela/core/app_state.dart';
 
 part 'runT.g.dart';
 
@@ -151,8 +152,6 @@ class runT {
       return TextSpan(text: "");
     }
 
-    String bBr = hasBrBefore ? "\n" : "";
-    String aBr = hasBrAfter ? "\n" : "";
     Widget? tab = getTabWidget();
     // fixFnr() removed - parentheses are now fixed in addFnToPage
     checkSymbol();
@@ -163,17 +162,71 @@ class runT {
     // Get effective text style (falls back to prPr if rpr is null)
     TextStyle effectiveStyle = getEffectiveTextStyle();
 
+    List<InlineSpan> contentSpans = [];
+
+    List<String> highlightTerms = AppState().searchHighlightTerms;
+    if (highlightTerms.isNotEmpty && fixedText.isNotEmpty) {
+      // Build regex pattern from terms
+      // Use logical OR to match any term
+      String pattern = highlightTerms.map(RegExp.escape).join('|');
+      RegExp regex = RegExp(pattern); // Unicode safe by default in Dart?
+
+      int lastMatchEnd = 0;
+      bool hasMatch = false;
+
+      for (final match in regex.allMatches(fixedText)) {
+        hasMatch = true;
+        // Text before match
+        if (match.start > lastMatchEnd) {
+          contentSpans.add(
+            TextSpan(
+              text: fixedText.substring(lastMatchEnd, match.start),
+              style: effectiveStyle,
+            ),
+          );
+        }
+        // Matched text
+        contentSpans.add(
+          TextSpan(
+            text: fixedText.substring(match.start, match.end),
+            style: (rpr?.getTextStyle() ?? effectiveStyle).copyWith(
+              backgroundColor: const Color(0xFFFFE082),
+            ),
+          ),
+        );
+        lastMatchEnd = match.end;
+      }
+
+      // Remaining text
+      if (lastMatchEnd < fixedText.length) {
+        contentSpans.add(
+          TextSpan(
+            text: fixedText.substring(lastMatchEnd),
+            style: effectiveStyle,
+          ),
+        );
+      }
+
+      if (!hasMatch) {
+        // Clear previous spans if no match found but we entered the loop (just to be safe, though logic should prevent this)
+        contentSpans.clear();
+        contentSpans.add(TextSpan(text: fixedText, style: effectiveStyle));
+      }
+    } else {
+      contentSpans.add(TextSpan(text: fixedText, style: effectiveStyle));
+    }
+
     if (vAlign != 0) {
       return WidgetSpan(
         alignment: PlaceholderAlignment.baseline,
         baseline: TextBaseline.alphabetic,
         child: Transform.translate(
           offset: Offset(0.0, vAlign),
-          child: Text(
-            "$fixedText",
+          child: Text.rich(
+            TextSpan(children: contentSpans),
             textAlign: TextAlign.end,
             textDirection: TextDirection.ltr,
-            style: rpr?.getTextStyle(),
+            style: rpr?.getTextStyle(), // Base style for the paragraph/run
           ),
         ),
       );
@@ -182,13 +235,22 @@ class runT {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("$bBr$fixedText$aBr", style: effectiveStyle),
+            if (hasBrBefore) Text("\n", style: effectiveStyle),
+            Text.rich(TextSpan(children: contentSpans), style: effectiveStyle),
+            if (hasBrAfter) Text("\n", style: effectiveStyle),
             tab,
           ],
         ),
       );
     } else {
-      return TextSpan(text: "$bBr$fixedText$aBr", style: effectiveStyle);
+      // Reconstruct full span sequence with breaks
+      return TextSpan(
+        children: [
+          if (hasBrBefore) TextSpan(text: "\n", style: effectiveStyle),
+          ...contentSpans,
+          if (hasBrAfter) TextSpan(text: "\n", style: effectiveStyle),
+        ],
+      );
     }
   }
 

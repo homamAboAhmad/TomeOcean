@@ -7,10 +7,11 @@ class IndexedBooksLoader {
 
   /// تحميل الكتب المفهرسة في الخلفية
   void loadInBackground() {
-    if (_appState.isLoadingIndexedBooks || _appState.cachedIndexedBooks != null) {
+    if (_appState.isLoadingIndexedBooks ||
+        _appState.cachedIndexedBooks != null) {
       return;
     }
-    
+
     _appState.isLoadingIndexedBooks = true;
     Future.microtask(_loadBooks);
   }
@@ -20,7 +21,6 @@ class IndexedBooksLoader {
       final books = await ShamelaSearchIndexer().getIndexedBooks();
       _appState.cachedIndexedBooks = books;
     } catch (e) {
-      print("Error loading indexed books in background: $e");
       _appState.cachedIndexedBooks = [];
     } finally {
       _appState.isLoadingIndexedBooks = false;
@@ -32,16 +32,13 @@ class IndexedBooksLoader {
     if (_appState.cachedIndexedBooks != null) {
       return _appState.cachedIndexedBooks!;
     }
-    
+
     try {
       final books = await ShamelaSearchIndexer().getIndexedBooks();
       _appState.cachedIndexedBooks = books;
       return books;
     } catch (e) {
-      print("Error loading indexed books: $e");
       return [];
     }
   }
 }
-
-

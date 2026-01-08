@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Helpers/ArabicMorphologicalAnalyzer.dart';
+import 'package:golden_shamela/Helpers/search_engine/text_normalization.dart';
 
 /// Helper class for text highlighting in search results
+///
+/// Implements "Smart Context Cropping" and "Premium Highlighting"
 class SearchHighlightingHelper {
   final bool morphologicalSearch;
 
@@ -14,322 +17,405 @@ class SearchHighlightingHelper {
     List<String> searchQueries,
   ) async {
     if (text.isEmpty) return Text('', style: smallStyle());
-    
+    print('DEBUG: extractSnippetWithHighlight text length: ${text.length}');
+
     final wordsToHighlight = _collectWordsToHighlight(searchQueries);
-    final matches = await _findAllMatches(text, searchQueries, wordsToHighlight);
-    
+    final matches = await _findAllMatches(text, wordsToHighlight);
+
     if (matches.isEmpty) {
-      final snippet = text.length > 100 ? '${text.substring(0, 100)}...' : text;
-      return Text(snippet, style: smallStyle(), maxLines: 2, overflow: TextOverflow.ellipsis);
+      return _buildFallbackSnippet(text);
     }
-    
+
+    // Sort matches: Exact matches first, then by index
+    matches.sort((a, b) {
+      final aType = a['type'] as String? ?? 'root';
+      final bType = b['type'] as String? ?? 'root';
+
+      // Prioritize literal/exact matches over root matches for snippet selection
+      if (aType == 'exact' && bType != 'exact') return -1;
+      if (bType == 'exact' && aType != 'exact') return 1;
+
+      // Then sort by position
+      return (a['index'] as int).compareTo(b['index'] as int);
+    });
+
+    // Focus on the best match (first after sorting) for the snippet center
+    final snippetRange = _calculateSmartSnippetRange(text, matches.first);
+    final snippetText = text.substring(
+      snippetRange['start']!,
+      snippetRange['end']!,
+    );
+
+    // Re-sort matches purely by index for correct rendering order in RichText
+    // We need a copy or re-sort because RichText expects sequential spans
     matches.sort((a, b) => (a['index'] as int).compareTo(b['index'] as int));
-    
-    final snippetRange = _calculateSnippetRange(text, matches.first);
-    final snippet = _extractSnippet(text, snippetRange);
-    final adjustedMatches = _adjustMatchPositions(matches, snippetRange, snippet.length);
-    
-    return _buildHighlightedTextFromMatches(snippet, adjustedMatches, wordsToHighlight);
+
+    // Adjust matches to be relative to the snippet
+    final adjustedMatches = _adjustMatchPositions(
+      matches,
+      snippetRange,
+      snippetText.length,
+    );
+
+    return _buildHighlightedRichText(
+      snippetText,
+      adjustedMatches,
+      snippetRange,
+      text.length,
+    );
   }
 
-  /// Collect all words that should be highlighted
   Set<String> _collectWordsToHighlight(List<String> searchQueries) {
     final wordsToHighlight = <String>{};
     for (final query in searchQueries) {
-      wordsToHighlight.add(query);
-      if (!query.startsWith('ال')) {
-        wordsToHighlight.add('ال$query');
-      }
-      if (morphologicalSearch) {
-        wordsToHighlight.addAll(_getMorphologicalVariations(query));
-      }
+      if (query.trim().isEmpty) continue;
+      wordsToHighlight.add(query.trim());
     }
     return wordsToHighlight;
   }
 
-  /// Find all matches in the text
   Future<List<Map<String, dynamic>>> _findAllMatches(
     String text,
-    List<String> searchQueries,
-    Set<String> wordsToHighlight,
+    Set<String> words,
   ) async {
     final matches = <Map<String, dynamic>>[];
-    
-    for (final word in wordsToHighlight) {
-      int index = 0;
-      while (true) {
-        index = _findWordInTextFromPosition(text, word, index);
-        if (index == -1) break;
-        matches.add({
-          'word': word,
-          'index': index,
-          'length': word.length,
-        });
-        index += word.length;
-      }
-    }
-    
+
     if (morphologicalSearch) {
-      matches.addAll(await _findMorphologicalMatches(text, searchQueries));
-    }
-    
-    return matches;
-  }
+      // For morphological search, stem the search queries first
+      final searchRoots = <String, String>{}; // word -> root
+      for (final word in words) {
+        final root = await ArabicMorphologicalAnalyzer.stem(word);
+        searchRoots[word] = root;
+      }
 
-  /// Find morphological matches in the text
-  Future<List<Map<String, dynamic>>> _findMorphologicalMatches(
-    String text,
-    List<String> searchQueries,
-  ) async {
-    final matches = <Map<String, dynamic>>[];
-    
-    if (searchQueries.isEmpty) return matches;
-    
-    final queryRoot = await ArabicMorphologicalAnalyzer.stem(searchQueries.first);
-    if (queryRoot.isEmpty) return matches;
-    
-    final arabicWords = _extractArabicWordsWithPositions(text);
-    for (final wordInfo in arabicWords) {
-      final word = wordInfo['word'] as String;
-      final wordRoot = await ArabicMorphologicalAnalyzer.stem(word);
-      if (wordRoot == queryRoot) {
-        matches.add({
-          'word': word,
-          'index': wordInfo['start'] as int,
-          'length': word.length,
-        });
+      // Split text into words and find those with matching roots
+      final wordPattern = RegExp(r'[\u0600-\u06FF]+');
+      int matchCount = 0;
+
+      for (final match in wordPattern.allMatches(text)) {
+        final textWord = match.group(0)!;
+        final textWordRoot = await ArabicMorphologicalAnalyzer.stem(textWord);
+
+        // Debug: specific check for things looking like 'غير'
+        if (textWord.contains('غير')) {
+          final entryKey = searchRoots.keys.firstWhere(
+            (k) => k.contains('غير') || 'غير'.contains(k),
+            orElse: () => 'unknown',
+          );
+          if (entryKey != 'unknown') {
+            final normalizedWord = TextNormalization.normalizeText(textWord);
+            print('DEBUG MATCH CHECK:');
+            print('  Word: "$textWord"');
+            print('  Normalized: "$normalizedWord"');
+            print('  Root: "$textWordRoot"');
+            print('  Target Root: "${searchRoots[entryKey]}"');
+            print('  Contains "${entryKey}"? ${textWord.contains(entryKey)}');
+            print(
+              '  Normalized contains "${entryKey}"? ${normalizedWord.contains(entryKey)}',
+            );
+          }
+        }
+
+        // Check if any search query shares the same root
+        // Also check fallback: if word contains the search query literally (for stemmer edge cases like "وغيرهما")
+        for (final entry in searchRoots.entries) {
+          final rootMatches = textWordRoot == entry.value;
+
+          // Normalize textWord before contains check to handle diacritics
+          // We normalize BOTH just to be safe, though entry.key (query) is likely already normalized
+          final normalizedWord = TextNormalization.normalizeText(textWord);
+          final wordContainsQuery = normalizedWord.contains(entry.key);
+
+          if (rootMatches || wordContainsQuery) {
+            matchCount++;
+            matches.add({
+              'word': entry.key,
+              'index': match.start,
+              'length': match.end - match.start,
+              'type': 'root', // Morphological match
+            });
+            break; // Only add once per word
+          }
+        }
+      }
+    } else {
+      // Standard matching: use regex pattern matching
+      final sortedWords = words.toList()
+        ..sort((a, b) => b.length.compareTo(a.length));
+
+      for (final word in sortedWords) {
+        try {
+          final pattern = _buildSmartArabicPattern(word);
+          final regex = RegExp(pattern, caseSensitive: false);
+          final regexMatches = regex.allMatches(text).toList();
+
+          for (final match in regexMatches) {
+            // Expand highlighting to the full word for better UX
+            int start = match.start;
+            int end = match.end;
+
+            while (start > 0 && !_isWordBoundary(text, start - 1)) {
+              start--;
+            }
+            while (end < text.length && !_isWordBoundary(text, end)) {
+              end++;
+            }
+
+            matches.add({
+              'word': word,
+              'index': start,
+              'length': end - start,
+              'type': 'exact', // Standard/Exact match
+            });
+          }
+        } catch (e) {
+          // Silently handle regex errors
+        }
       }
     }
-    
+
+    // Safe Fallback: Perform a literal regex search for ALL words to catch any missed matches
+    // This addresses issues where the stemmer might miss a word, or normalization differences
+    final existingIndices = matches.map((m) => m['index'] as int).toSet();
+
+    for (final word in words) {
+      if (word.length < 2) continue; // Skip very short words to avoid noise
+
+      try {
+        // Build a pattern that allows for some Arabic flexibility (hamzas, etc) but is mostly literal
+        final pattern = _buildSmartArabicPattern(word);
+        final regex = RegExp(
+          pattern,
+          caseSensitive: false,
+        ); // 'u' flag not needed in Dart for Arabic usually
+
+        for (final match in regex.allMatches(text)) {
+          // If this range is not already covered by a morphological match
+          bool alreadyCovered = false;
+          for (int i = match.start; i < match.end; i++) {
+            if (existingIndices.contains(i)) {
+              alreadyCovered = true;
+              break;
+            }
+          }
+
+          if (!alreadyCovered) {
+            // Expand highligh word boundaries for better UX
+            int start = match.start;
+            int end = match.end;
+
+            while (start > 0 && !_isWordBoundary(text, start - 1)) {
+              start--;
+            }
+            while (end < text.length && !_isWordBoundary(text, end)) {
+              end++;
+            }
+
+            matches.add({
+              'word': word,
+              'index': start,
+              'length': end - start,
+              'type':
+                  'exact', // Literal/Fallback match (Higher priority for snippet)
+            });
+
+            // Mark these indices as covered to prevent overlap
+            for (int i = start; i < end; i++) existingIndices.add(i);
+          }
+        }
+      } catch (e) {
+        // Ignore regex errors
+      }
+    }
+
     return matches;
   }
 
-  /// Calculate the snippet range around the first match
-  Map<String, int> _calculateSnippetRange(
+  // Builds a regex that matches the word with optional diacritics/tatweel
+  String _buildSmartArabicPattern(String term) {
+    // Normalize to get base chars: Remove diacritics, Unify Hamzas
+    final normalized = TextNormalization.normalizeText(
+      term,
+      removeDiacritics: true,
+      unifyHamzas: true,
+      removeNumbers: false,
+    );
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < normalized.length; i++) {
+      final char = normalized[i];
+      // Handle permissive matching for unstable characters
+      if ('اأإآ'.contains(char)) {
+        buffer.write(r'[اأإآ]');
+      } else if ('هة'.contains(char)) {
+        buffer.write(r'[هة]');
+      } else if ('يى'.contains(char)) {
+        buffer.write(r'[يى]');
+      } else {
+        buffer.write(RegExp.escape(char));
+      }
+      // Allow optional diacritics/tatweel after each char
+      buffer.write(r'[\u064B-\u065F\u0640]*');
+    }
+    return buffer.toString();
+  }
+
+  Map<String, int> _calculateSmartSnippetRange(
     String text,
-    Map<String, dynamic> firstMatch,
+    Map<String, dynamic> mainMatch,
   ) {
-    const contextLength = 100;
-    const maxSnippetLength = 250;
-    
-    final firstMatchIndex = firstMatch['index'] as int;
-    final firstMatchLength = firstMatch['length'] as int;
-    
-    int start = (firstMatchIndex - contextLength).clamp(0, text.length);
-    if (firstMatchIndex < contextLength) {
-      start = 0;
+    const contextPadding = 70; // Characters before/after
+
+    final matchIndex = mainMatch['index'] as int;
+    final matchEnd = matchIndex + (mainMatch['length'] as int);
+
+    int start = (matchIndex - contextPadding).clamp(0, text.length);
+    int end = (matchEnd + contextPadding).clamp(0, text.length);
+
+    // Expand to word boundaries
+    while (start > 0 && !_isWordBoundary(text, start - 1)) {
+      start--;
     }
-    
-    int end = (firstMatchIndex + firstMatchLength + contextLength).clamp(0, text.length);
-    
-    if (firstMatchIndex + firstMatchLength + contextLength > text.length) {
-      final availableSpace = maxSnippetLength - (end - start);
-      if (availableSpace > 0) {
-        start = (start - availableSpace).clamp(0, text.length);
-      }
+    // Safety clamp (don't go back too far)
+    if (matchIndex - start > contextPadding + 20)
+      start = (matchIndex - contextPadding);
+
+    while (end < text.length && !_isWordBoundary(text, end)) {
+      end++;
     }
-    
-    if (end - start > maxSnippetLength) {
-      final matchCenter = firstMatchIndex + (firstMatchLength ~/ 2);
-      start = (matchCenter - maxSnippetLength ~/ 2).clamp(0, text.length);
-      end = (start + maxSnippetLength).clamp(0, text.length);
-    }
-    
-    if (firstMatchIndex < start) {
-      start = firstMatchIndex;
-    }
-    if (firstMatchIndex + firstMatchLength > end) {
-      end = firstMatchIndex + firstMatchLength;
-    }
-    
+    // Safety clamp
+    if (end - matchEnd > contextPadding + 20) end = (matchEnd + contextPadding);
+
     return {'start': start, 'end': end};
   }
 
-  /// Extract snippet text with ellipsis
-  String _extractSnippet(String text, Map<String, int> range) {
-    final start = range['start']!;
-    final end = range['end']!;
-    String snippet = text.substring(start, end);
-    if (start > 0) snippet = '...$snippet';
-    if (end < text.length) snippet = '$snippet...';
-    return snippet;
+  bool _isWordBoundary(String text, int index) {
+    final char = text[index];
+    return char == ' ' || char == '\n' || char == '\t' || _isPunctuation(char);
   }
 
-  /// Adjust match positions relative to snippet
+  bool _isPunctuation(String char) {
+    return RegExp(r'[.,;:"!?)(\[\]{}«»\-\—]').hasMatch(char);
+  }
+
   List<Map<String, dynamic>> _adjustMatchPositions(
     List<Map<String, dynamic>> matches,
     Map<String, int> snippetRange,
     int snippetLength,
   ) {
-    final adjustedMatches = <Map<String, dynamic>>[];
-    final start = snippetRange['start']!;
-    final end = snippetRange['end']!;
-    
+    final adjusted = <Map<String, dynamic>>[];
+    final startOffset = snippetRange['start']!;
+    final endOffset = snippetRange['end']!;
+
     for (final match in matches) {
-      final matchIndex = match['index'] as int;
-      final matchLength = match['length'] as int;
-      final matchEnd = matchIndex + matchLength;
-      
-      if (matchIndex < end && matchEnd > start) {
-        int adjustedIndex = matchIndex - start;
-        if (matchIndex < start) {
-          adjustedIndex = 0;
-        }
-        if (start > 0) adjustedIndex += 3;
-        
-        int adjustedEnd = (matchEnd - start).clamp(0, snippetLength);
-        if (matchIndex < start) {
-          adjustedEnd = (matchLength - (start - matchIndex)).clamp(0, snippetLength);
-        }
-        
-        adjustedMatches.add({
-          'word': match['word'],
-          'index': adjustedIndex.clamp(0, snippetLength),
-          'length': (adjustedEnd - adjustedIndex).clamp(0, snippetLength - adjustedIndex),
-        });
+      final mIndex = match['index'] as int;
+      final mLen = match['length'] as int;
+      final mEnd = mIndex + mLen;
+
+      // Check intersection
+      if (mEnd > startOffset && mIndex < endOffset) {
+        // Calculate relative positions
+        final relStart = (mIndex - startOffset).clamp(0, snippetLength);
+        final relEnd = (mEnd - startOffset).clamp(0, snippetLength);
+
+        adjusted.add({'index': relStart, 'length': relEnd - relStart});
       }
     }
-    
-    return adjustedMatches;
+    return adjusted;
   }
 
-  /// Build highlighted text widget from pre-calculated matches
-  Widget _buildHighlightedTextFromMatches(
-    String text,
+  Widget _buildHighlightedRichText(
+    String snippet,
     List<Map<String, dynamic>> matches,
-    Set<String> wordsToHighlight,
+    Map<String, int> range,
+    int totalLen,
   ) {
-    List<TextSpan> spans = [];
-    matches.sort((a, b) => (a['index'] as int).compareTo(b['index'] as int));
-    
-    int lastEnd = 0;
-    for (var match in matches) {
-      int matchIndex = match['index'] as int;
-      int matchLength = match['length'] as int;
-      
-      if (matchIndex < 0 || matchIndex >= text.length) continue;
-      int actualEnd = (matchIndex + matchLength).clamp(0, text.length);
-      matchIndex = matchIndex.clamp(0, text.length);
-      
-      if (matchIndex > lastEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastEnd, matchIndex),
-          style: smallStyle(),
-        ));
-      }
-      
-      spans.add(TextSpan(
-        text: text.substring(matchIndex, actualEnd),
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.bold,
-          color: Colors.red.shade700,
-          backgroundColor: Colors.yellow.withOpacity(0.4),
+    final spans = <InlineSpan>[];
+
+    // Add ellipsis if needed
+    if (range['start']! > 0) {
+      spans.add(
+        TextSpan(
+          text: '... ',
+          style: smallStyle(color: Colors.grey),
         ),
-      ));
-      
-      lastEnd = actualEnd;
+      );
     }
-    
-    if (lastEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastEnd),
-        style: smallStyle(),
-      ));
+
+    if (snippet.isEmpty) {
+      return RichText(text: TextSpan(children: spans));
     }
-    
-    if (spans.isEmpty) {
-      return Text(text, style: smallStyle(), maxLines: 3, overflow: TextOverflow.ellipsis);
+
+    // Sort matches
+    matches.sort((a, b) => (a['index'] as int).compareTo(b['index'] as int));
+
+    // Create highlight mask
+    final highlightMask = List<bool>.filled(snippet.length, false);
+    for (final m in matches) {
+      final s = m['index'] as int;
+      final len = m['length'] as int;
+      for (int i = s; i < s + len && i < snippet.length; i++) {
+        highlightMask[i] = true;
+      }
     }
-    
-    return Text.rich(
-      TextSpan(children: spans),
+
+    int currentStart = 0;
+    bool currentHighlight = highlightMask.isNotEmpty ? highlightMask[0] : false;
+
+    // Iterate through mask to build spans
+    for (int i = 1; i <= snippet.length; i++) {
+      final bool isHighlight = (i < snippet.length)
+          ? highlightMask[i]
+          : !currentHighlight;
+
+      if (i == snippet.length || isHighlight != currentHighlight) {
+        // Segment ended
+        final textPart = snippet.substring(currentStart, i);
+        if (currentHighlight) {
+          spans.add(
+            TextSpan(
+              text: textPart,
+              style: TextStyle(
+                backgroundColor: const Color(0xFFFFF9C4), // Soft Gold/Cream
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                fontFamily: 'jreg',
+              ),
+            ),
+          );
+        } else {
+          spans.add(
+            TextSpan(
+              text: textPart,
+              style: smallStyle(fontSize: 14, color: Colors.grey.shade800),
+            ),
+          );
+        }
+        currentStart = i;
+        if (i < snippet.length) currentHighlight = highlightMask[i];
+      }
+    }
+
+    if (range['end']! < totalLen) {
+      spans.add(
+        TextSpan(
+          text: ' ...',
+          style: smallStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    return RichText(
+      text: TextSpan(children: spans),
+      textDirection: TextDirection.rtl,
       maxLines: 3,
       overflow: TextOverflow.ellipsis,
-      textDirection: TextDirection.rtl,
     );
   }
 
-  int _findWordInTextFromPosition(String text, String word, int fromIndex) {
-    if (fromIndex >= text.length) return -1;
-    
-    int index = text.indexOf(word, fromIndex);
-    if (index != -1) {
-      if (_isWordBoundary(text, index, word.length)) {
-        return index;
-      }
-      return _findWordInTextFromPosition(text, word, index + 1);
-    }
-    
-    if (!word.startsWith('ال')) {
-      String alWord = 'ال$word';
-      int alIndex = text.indexOf(alWord, fromIndex);
-      if (alIndex != -1) {
-        if (_isWordBoundary(text, alIndex, alWord.length)) {
-          return alIndex;
-        }
-        return _findWordInTextFromPosition(text, word, alIndex + 1);
-      }
-    }
-    
-    return -1;
-  }
-
-  bool _isWordBoundary(String text, int index, int length) {
-    if (index > 0) {
-      String before = text[index - 1];
-      if (RegExp(r'[\u0600-\u06FF]').hasMatch(before)) {
-        return false;
-      }
-    }
-    
-    if (index + length < text.length) {
-      String after = text[index + length];
-      if (RegExp(r'[\u0600-\u06FF]').hasMatch(after)) {
-        return false;
-      }
-    }
-    
-    return true;
-  }
-
-  Set<String> _getMorphologicalVariations(String word) {
-    Set<String> variations = {};
-    variations.add(word);
-    
-    if (!word.startsWith('ال')) {
-      variations.add('ال$word');
-    }
-    
-    try {
-      List<String> morphVariations = ArabicMorphologicalAnalyzer.generateMorphologicalVariations(word);
-      variations.addAll(morphVariations);
-      
-      for (String variation in morphVariations) {
-        if (!variation.startsWith('ال')) {
-          variations.add('ال$variation');
-        }
-      }
-    } catch (e) {
-      // Fallback: just use the word itself
-    }
-    
-    return variations;
-  }
-
-  List<Map<String, dynamic>> _extractArabicWordsWithPositions(String text) {
-    List<Map<String, dynamic>> words = [];
-    RegExp arabicWordRegex = RegExp(r'[\u0600-\u06FF]+');
-    
-    for (Match match in arabicWordRegex.allMatches(text)) {
-      words.add({
-        'word': match.group(0)!,
-        'start': match.start,
-        'end': match.end,
-      });
-    }
-    
-    return words;
+  Widget _buildFallbackSnippet(String text) {
+    final snippet = text.length > 150 ? '${text.substring(0, 150)}...' : text;
+    return Text(snippet, style: smallStyle(color: Colors.grey.shade700));
   }
 }
-

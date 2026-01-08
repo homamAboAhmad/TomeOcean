@@ -5,7 +5,9 @@ import 'package:golden_shamela/UI/Search/helpers/page_search_logic.dart';
 /// Handles search execution logic
 class SearchExecutor {
   final ShamelaSearchEngine _engine = ShamelaSearchEngine();
-  final PageSearchLogic _pageSearchLogic = PageSearchLogic(ShamelaSearchEngine());
+  final PageSearchLogic _pageSearchLogic = PageSearchLogic(
+    ShamelaSearchEngine(),
+  );
 
   /// Perform search with given parameters
   Future<SearchResult> performSearch({
@@ -35,7 +37,7 @@ class SearchExecutor {
       affixSearch: affixSearch,
       considerHamzas: considerHamzas,
       considerDiacritics: considerDiacritics,
-      considerNumbers: considerNumbers,
+      considerNumbers: considerNumbers, // Now this will be used
       allPhrasesRequired: allPhrasesRequired,
       ordered: ordered,
       proximity: proximity,
@@ -47,10 +49,7 @@ class SearchExecutor {
         ? (results.first['estimatedTotalHits'] as int? ?? 0)
         : 0;
 
-    return SearchResult(
-      results: results,
-      totalCount: totalCount,
-    );
+    return SearchResult(results: results, totalCount: totalCount);
   }
 
   /// Determine which books to search in based on filters and selections
@@ -64,31 +63,41 @@ class SearchExecutor {
         .where((entry) => entry.value)
         .map((entry) => entry.key)
         .toList();
-    
+
     // If filters are applied (filtered books < all indexed books), search only in filtered books
     if (filteredIndexedBooks.length < allIndexedBooks.length) {
       // Search only in filtered books
       // If user has selected specific books from filtered list, use those
       // Otherwise, use all filtered books
-      if (selectedBookPaths.isNotEmpty && selectedBookPaths.length < filteredIndexedBooks.length) {
-        print("SearchExecutor: Searching in ${selectedBookPaths.length} selected books from ${filteredIndexedBooks.length} filtered books");
+      if (selectedBookPaths.isNotEmpty &&
+          selectedBookPaths.length < filteredIndexedBooks.length) {
+        print(
+          "SearchExecutor: Searching in ${selectedBookPaths.length} selected books from ${filteredIndexedBooks.length} filtered books",
+        );
         return selectedBookPaths;
       } else {
         // User selected all filtered books (or didn't deselect any), search in all filtered books
         final booksToSearch = filteredIndexedBooks
             .map((book) => book['book_path'] as String)
             .toList();
-        print("SearchExecutor: Searching in all ${booksToSearch.length} filtered books (from ${allIndexedBooks.length} total indexed books)");
+        print(
+          "SearchExecutor: Searching in all ${booksToSearch.length} filtered books (from ${allIndexedBooks.length} total indexed books)",
+        );
         return booksToSearch;
       }
     } else {
       // No filters applied - search in all indexed books or selected books
-      if (selectedBookPaths.isNotEmpty && selectedBookPaths.length < allIndexedBooks.length) {
-        print("SearchExecutor: Searching in ${selectedBookPaths.length} selected books from ${allIndexedBooks.length} total indexed books");
+      if (selectedBookPaths.isNotEmpty &&
+          selectedBookPaths.length < allIndexedBooks.length) {
+        print(
+          "SearchExecutor: Searching in ${selectedBookPaths.length} selected books from ${allIndexedBooks.length} total indexed books",
+        );
         return selectedBookPaths;
       } else {
         // Search in all indexed books
-        print("SearchExecutor: Searching in all ${allIndexedBooks.length} indexed books (no filters)");
+        print(
+          "SearchExecutor: Searching in all ${allIndexedBooks.length} indexed books (no filters)",
+        );
         return null;
       }
     }
@@ -115,7 +124,7 @@ class SearchExecutor {
 
     // Process groups
     final groups = _pageSearchLogic.processSearchGroups(groupControllers);
-    
+
     // Check if any group has queries
     final hasQueries = groups.values.any((queries) => queries.isNotEmpty);
     if (!hasQueries) {
@@ -123,7 +132,7 @@ class SearchExecutor {
     }
 
     // Build FTS query
-    final ftsQuery = _pageSearchLogic.buildPageSearchQuery(
+    final ftsQuery = await _pageSearchLogic.buildPageSearchQuery(
       groups: groups,
       searchGrouping: searchGrouping,
       morphologicalSearch: morphologicalSearch,
@@ -132,6 +141,8 @@ class SearchExecutor {
       ordered: ordered,
       proximity: proximity,
       proximityDistance: proximityDistance,
+      considerNumbers: considerNumbers,
+      affixSearch: affixSearch,
     );
 
     if (ftsQuery.isEmpty) {
@@ -142,8 +153,10 @@ class SearchExecutor {
     final pageResults = await _engine.searchPages(
       ftsQuery: ftsQuery,
       bookPaths: bookPaths,
+      sectionTypes: sectionTypes,
       considerDiacritics: considerDiacritics,
       considerHamzas: considerHamzas,
+      considerNumbers: considerNumbers,
       morphologicalSearch: morphologicalSearch,
       limit: limit,
     );
@@ -157,29 +170,34 @@ class SearchExecutor {
       final bookPath = pageResult['book_path'] as String;
       final pageNumber = pageResult['page_number'] as int;
       final pageKey = '$bookPath|$pageNumber';
-      
+
       if (processedPages.contains(pageKey)) continue;
       processedPages.add(pageKey);
 
       // Get all paragraphs from this page
-      final paragraphs = await _engine.getParagraphsByPage(bookPath, pageNumber);
-      
+      final paragraphs = await _engine.getParagraphsByPage(
+        bookPath,
+        pageNumber,
+      );
+
       // Filter by section types if specified
       final filteredParagraphs = sectionTypes != null && sectionTypes.isNotEmpty
-          ? paragraphs.where((p) => sectionTypes.contains(p['section_type'])).toList()
+          ? paragraphs
+                .where((p) => sectionTypes.contains(p['section_type']))
+                .toList()
           : paragraphs;
 
       if (filteredParagraphs.isNotEmpty) {
         // Use first paragraph as representative of the page
         // Or aggregate all paragraphs content for better display
         final firstPara = filteredParagraphs.first;
-        
+
         // Aggregate content from all paragraphs for better snippet
         final aggregatedContent = filteredParagraphs
             .map((p) => p['content'] as String? ?? '')
             .where((c) => c.trim().isNotEmpty)
             .join(' ');
-        
+
         // Add one result per page with aggregated content
         results.add({
           'id': firstPara['id'],
@@ -187,8 +205,8 @@ class SearchExecutor {
           'book_name': pageResult['book_name'] ?? firstPara['book_name'],
           'page_number': pageNumber,
           'section_type': firstPara['section_type'],
-          'content': aggregatedContent.length > 500 
-              ? '${aggregatedContent.substring(0, 500)}...' 
+          'content': aggregatedContent.length > 500
+              ? '${aggregatedContent.substring(0, 500)}...'
               : aggregatedContent,
           'raw_content': aggregatedContent,
           'estimatedTotalHits': pageResult['estimatedTotalHits'],
@@ -199,13 +217,11 @@ class SearchExecutor {
     // totalCount should be the number of matching pages (from searchPages result)
     // This gives the total count of matching pages, not just the ones in current batch
     final totalCount = pageResults.isNotEmpty
-        ? (pageResults.first['estimatedTotalHits'] as int? ?? processedPages.length)
+        ? (pageResults.first['estimatedTotalHits'] as int? ??
+              processedPages.length)
         : processedPages.length;
 
-    return SearchResult(
-      results: results,
-      totalCount: totalCount,
-    );
+    return SearchResult(results: results, totalCount: totalCount);
   }
 
   /// Perform page-level search with streaming support
@@ -227,32 +243,39 @@ class SearchExecutor {
     int batchSize = 10,
     int? maxResults,
   }) async* {
-    print("===== [SearchExecutor.performPageSearchStream] ===== Starting stream search");
+    print(
+      "===== [SearchExecutor.performPageSearchStream] ===== Starting stream search",
+    );
     print("  searchGrouping: $searchGrouping");
     print("  bookPaths count: ${bookPaths?.length ?? 0}");
     print("  sectionTypes: $sectionTypes");
     print("  batchSize: $batchSize");
-    
+
     await _engine.initialize();
 
     // Process groups
     final groups = _pageSearchLogic.processSearchGroups(groupControllers);
-    
-    print("===== [SearchExecutor.performPageSearchStream] ===== Processed groups:");
+
+    print(
+      "===== [SearchExecutor.performPageSearchStream] ===== Processed groups:",
+    );
     groups.forEach((key, value) {
       print("  $key: ${value.length} queries");
     });
-    
+
     // Check if any group has queries
     final hasQueries = groups.values.any((queries) => queries.isNotEmpty);
     if (!hasQueries) {
-      print("===== [SearchExecutor.performPageSearchStream] ===== No queries found, returning empty result");
+      print(
+        "===== [SearchExecutor.performPageSearchStream] ===== No queries found, returning empty result",
+      );
       yield SearchResult(results: [], totalCount: 0);
       return;
     }
 
     // Build FTS query
-    final ftsQuery = _pageSearchLogic.buildPageSearchQuery(
+    // Build FTS query
+    final ftsQuery = await _pageSearchLogic.buildPageSearchQuery(
       groups: groups,
       searchGrouping: searchGrouping,
       morphologicalSearch: morphologicalSearch,
@@ -261,12 +284,18 @@ class SearchExecutor {
       ordered: ordered,
       proximity: proximity,
       proximityDistance: proximityDistance,
+      considerNumbers: considerNumbers,
+      affixSearch: affixSearch,
     );
 
-    print("===== [SearchExecutor.performPageSearchStream] ===== Built FTS query: $ftsQuery");
+    print(
+      "===== [SearchExecutor.performPageSearchStream] ===== Built FTS query: $ftsQuery",
+    );
 
     if (ftsQuery.isEmpty) {
-      print("===== [SearchExecutor.performPageSearchStream] ===== Empty FTS query, returning empty result");
+      print(
+        "===== [SearchExecutor.performPageSearchStream] ===== Empty FTS query, returning empty result",
+      );
       yield SearchResult(results: [], totalCount: 0);
       return;
     }
@@ -279,18 +308,24 @@ class SearchExecutor {
     await for (final pageBatch in _engine.searchPagesStream(
       ftsQuery: ftsQuery,
       bookPaths: bookPaths,
+      sectionTypes: sectionTypes,
       considerDiacritics: considerDiacritics,
       considerHamzas: considerHamzas,
+      considerNumbers: considerNumbers,
       morphologicalSearch: morphologicalSearch,
       batchSize: batchSize,
       maxResults: maxResults,
     )) {
-      print("===== [SearchExecutor.performPageSearchStream] ===== Received page batch: ${pageBatch.length} pages");
-      
+      print(
+        "===== [SearchExecutor.performPageSearchStream] ===== Received page batch: ${pageBatch.length} pages",
+      );
+
       // Get total count from first batch
       if (totalCount == null && pageBatch.isNotEmpty) {
         totalCount = pageBatch.first['estimatedTotalHits'] as int? ?? 0;
-        print("===== [SearchExecutor.performPageSearchStream] ===== Total count: $totalCount");
+        print(
+          "===== [SearchExecutor.performPageSearchStream] ===== Total count: $totalCount",
+        );
       }
 
       // Process batch and convert to paragraph-like format
@@ -300,34 +335,44 @@ class SearchExecutor {
         final bookPath = pageResult['book_path'] as String;
         final pageNumber = pageResult['page_number'] as int;
         final pageKey = '$bookPath|$pageNumber';
-        
+
         if (processedPages.contains(pageKey)) {
-          print("===== [SearchExecutor.performPageSearchStream] ===== Skipping duplicate page: $pageKey");
+          print(
+            "===== [SearchExecutor.performPageSearchStream] ===== Skipping duplicate page: $pageKey",
+          );
           continue;
         }
         processedPages.add(pageKey);
 
         try {
           // Get all paragraphs from this page
-          final paragraphs = await _engine.getParagraphsByPage(bookPath, pageNumber);
-          
-          print("===== [SearchExecutor.performPageSearchStream] ===== Page $pageNumber in ${pageResult['book_name']}: ${paragraphs.length} paragraphs");
-          
+          final paragraphs = await _engine.getParagraphsByPage(
+            bookPath,
+            pageNumber,
+          );
+
+          print(
+            "===== [SearchExecutor.performPageSearchStream] ===== Page $pageNumber in ${pageResult['book_name']}: ${paragraphs.length} paragraphs",
+          );
+
           // Filter by section types if specified
-          final filteredParagraphs = sectionTypes != null && sectionTypes.isNotEmpty
-              ? paragraphs.where((p) => sectionTypes.contains(p['section_type'])).toList()
+          final filteredParagraphs =
+              sectionTypes != null && sectionTypes.isNotEmpty
+              ? paragraphs
+                    .where((p) => sectionTypes.contains(p['section_type']))
+                    .toList()
               : paragraphs;
 
           if (filteredParagraphs.isNotEmpty) {
             // Use first paragraph as representative of the page
             final firstPara = filteredParagraphs.first;
-            
+
             // Aggregate content from all paragraphs for better snippet
             final aggregatedContent = filteredParagraphs
                 .map((p) => p['content'] as String? ?? '')
                 .where((c) => c.trim().isNotEmpty)
                 .join(' ');
-            
+
             // Add one result per page with aggregated content
             batchResults.add({
               'id': firstPara['id'],
@@ -335,21 +380,25 @@ class SearchExecutor {
               'book_name': pageResult['book_name'] ?? firstPara['book_name'],
               'page_number': pageNumber,
               'section_type': firstPara['section_type'],
-              'content': aggregatedContent.length > 500 
-                  ? '${aggregatedContent.substring(0, 500)}...' 
+              'content': aggregatedContent.length > 500
+                  ? '${aggregatedContent.substring(0, 500)}...'
                   : aggregatedContent,
               'raw_content': aggregatedContent,
               'estimatedTotalHits': totalCount ?? 0,
             });
           }
         } catch (e) {
-          print("===== [SearchExecutor.performPageSearchStream] ===== ERROR processing page $pageKey: $e");
+          print(
+            "===== [SearchExecutor.performPageSearchStream] ===== ERROR processing page $pageKey: $e",
+          );
           // Continue with next page
         }
       }
 
       totalProcessed += batchResults.length;
-      print("===== [SearchExecutor.performPageSearchStream] ===== Yielding batch: ${batchResults.length} results (total processed: $totalProcessed)");
+      print(
+        "===== [SearchExecutor.performPageSearchStream] ===== Yielding batch: ${batchResults.length} results (total processed: $totalProcessed)",
+      );
 
       if (batchResults.isNotEmpty) {
         yield SearchResult(
@@ -359,7 +408,9 @@ class SearchExecutor {
       }
     }
 
-    print("===== [SearchExecutor.performPageSearchStream] ===== Stream completed. Total processed: $totalProcessed");
+    print(
+      "===== [SearchExecutor.performPageSearchStream] ===== Stream completed. Total processed: $totalProcessed",
+    );
   }
 }
 
@@ -368,9 +419,5 @@ class SearchResult {
   final List<Map<String, dynamic>> results;
   final int totalCount;
 
-  SearchResult({
-    required this.results,
-    required this.totalCount,
-  });
+  SearchResult({required this.results, required this.totalCount});
 }
-

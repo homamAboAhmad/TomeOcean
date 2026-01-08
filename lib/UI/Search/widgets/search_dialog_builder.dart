@@ -23,10 +23,7 @@ class SearchDialogBuilder {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'البحث',
-            style: bigStyle(color: secondaryColor, fontSize: 18),
-          ),
+          Text('البحث', style: bigStyle(color: secondaryColor, fontSize: 18)),
           IconButton(
             icon: Icon(Icons.close, color: secondaryColor, size: 20),
             padding: EdgeInsets.all(4),
@@ -52,35 +49,29 @@ class SearchDialogBuilder {
           Container(
             width: 200,
             decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(color: Colors.grey.shade300),
-              ),
+              border: Border(right: BorderSide(color: Colors.grey.shade300)),
             ),
             child: SidebarNavigation(
               selectedTab: selectedTab,
               onTabSelected: onTabSelected,
             ),
           ),
-          
+
           // Middle panel - Content
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(color: Colors.grey.shade300),
-                ),
+                border: Border(right: BorderSide(color: Colors.grey.shade300)),
               ),
               child: middlePanelContent,
             ),
           ),
-          
+
           // Search options panel (right side)
           Container(
             width: 350,
             decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(color: Colors.grey.shade300),
-              ),
+              border: Border(right: BorderSide(color: Colors.grey.shade300)),
             ),
             child: searchOptionsPanel,
           ),
@@ -99,7 +90,7 @@ class SearchDialogBuilder {
     required bool morphologicalSearch,
   }) {
     if (results.isEmpty) return null;
-    
+
     return Container(
       height: 300,
       decoration: BoxDecoration(
@@ -115,7 +106,83 @@ class SearchDialogBuilder {
       ),
     );
   }
+
+  /// Build no results panel for when search completes with zero results
+  static Widget buildNoResultsPanel({
+    required List<String> searchQueries,
+    required VoidCallback onClose,
+  }) {
+    return Container(
+      height: 300,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: Column(
+        children: [
+          // Header with close button
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'النتائج: 0',
+                  style: mediumStyle(color: Colors.grey.shade700),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(),
+                  onPressed: onClose,
+                ),
+              ],
+            ),
+          ),
+          // No results message
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.08),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.search_off_rounded,
+                      size: 40,
+                      color: primaryColor.withOpacity(0.6),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'عذراً، لم نجد نتائج',
+                    style: mediumStyle(fontSize: 16, color: primaryColor),
+                  ),
+                  SizedBox(height: 8),
+                  if (searchQueries.isNotEmpty)
+                    Text(
+                      '« ${searchQueries.join(' | ')} »',
+                      style: smallStyle(color: Colors.grey.shade600),
+                    ),
+                  SizedBox(height: 12),
+                  Text(
+                    'جرّب كلمات بحث مختلفة أو تحقق من الإملاء',
+                    style: smallStyle(color: Colors.grey.shade500),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
-
-
-

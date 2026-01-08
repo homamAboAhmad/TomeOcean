@@ -32,10 +32,12 @@ class ExeRunner {
     void Function(String) onOutput,
   ) async {
     late Process process;
+    print('USE_PYTHON: $USE_PYTHON');
 
     if (USE_PYTHON) {
       // وضع التطوير: تشغيل Python مباشرة
-      process = await Process.start('python', [
+      // استخدام المسار الكامل لتجنب مشاكل PATH
+      process = await Process.start(r'C:\Python310\python.exe', [
         PYTHON_SCRIPT,
         outputFolder,
         inputFile,

@@ -1,19 +1,16 @@
 import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Helpers/FileHelper.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
-
 import '../Controllers/PathController.dart';
 import 'dialogs/file_processing_dialog.dart';
 
 class BooksDrawer extends StatefulWidget {
   final void Function(File) onBookSelected;
 
-  BooksDrawer({required this.onBookSelected, super.key});
+  const BooksDrawer({required this.onBookSelected, super.key});
 
   @override
   State<BooksDrawer> createState() => _BooksDrawerState();
@@ -29,21 +26,10 @@ class _BooksDrawerState extends State<BooksDrawer> {
     loadBooks();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // loadBooks();
-    return Drawer(
-      backgroundColor: Colors.white,
-      child: Stack(children: [_headerW(), _booksListW(), _pickBtnW()]),
-    );
-  }
-
   void loadBooks() async {
     final dir = Directory(BOOKS_FOLDER_PATH);
-    // print(BOOKS_FOLDER_PATH);
     if (await dir.exists()) {
       final files = dir.listSync().whereType<File>().where((f) {
-        // Get filename properly using path context separator agnostic approach
         final name = f.path.split(Platform.pathSeparator).last;
         return name.toLowerCase().endsWith('.docx') && !name.startsWith('~\$');
       }).toList();
@@ -51,33 +37,186 @@ class _BooksDrawerState extends State<BooksDrawer> {
     }
   }
 
-  _pickBtnW() {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: secondaryColor.withOpacity(0.8),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12), // القيمة التي تريدها
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      elevation: 0,
+      backgroundColor: const Color(0xFFF9FAFB),
+      child: Column(
+        children: [
+          _buildHeader(),
+          Expanded(child: _buildBooksList()),
+          _buildAddBookButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+      decoration: const BoxDecoration(
+        color: primaryColor,
+        borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: secondaryColor, width: 2),
+            ),
+            child: const CircleAvatar(
+              radius: 30,
+              backgroundColor: Colors.white,
+              child: Icon(
+                Icons.menu_book_rounded,
+                color: primaryColor,
+                size: 32,
               ),
             ),
-            onPressed: _pickDocxFile,
-            child: Text(
-              'إضافة كتاب جديد',
-              style: normalStyle(color: primaryColor),
-            ),
           ),
+          const SizedBox(height: 16),
+          Text(
+            'البحر المحيط',
+            style: bigStyle(color: Colors.white, fontSize: 22),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'مكتبتك الرقمية المتكاملة',
+            style: normalStyle(color: Colors.white70, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBooksList() {
+    if (bookFiles.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.library_books_outlined,
+              size: 48,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'لا توجد كتب حالياً',
+              style: normalStyle(color: Colors.grey[500]!),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      itemCount: bookFiles.length,
+      itemBuilder: (context, index) {
+        final file = bookFiles[index];
+        final bookName = getFileName(file.path);
+        return _buildBookTile(file, bookName);
+      },
+    );
+  }
+
+  Widget _buildBookTile(File file, String bookName) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        onTap: () {
+          Navigator.pop(context);
+          widget.onBookSelected(file);
+        },
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(Icons.book_outlined, color: primaryColor, size: 20),
+        ),
+        title: Text(
+          bookName,
+          style: normalStyle(color: Colors.black87, fontSize: 15),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 14,
+          color: Colors.grey,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Widget _buildAddBookButton() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 2,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onPressed: _pickDocxFile,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add_circle_outline_rounded, color: secondaryColor),
+            const SizedBox(width: 8),
+            Text(
+              'إضافة كتاب جديد',
+              style: normalStyle(color: secondaryColor, fontSize: 16),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  _pickDocxFile() async {
+  Future<void> _pickDocxFile() async {
     try {
       result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -85,72 +224,28 @@ class _BooksDrawerState extends State<BooksDrawer> {
       );
       if (result != null) {
         final filePath = result!.files.single.path!;
-        final processingResult = await showFileProcessDailog(
-          context,
-          filePath,
-          update: true,
-        );
-        loadBooks();
-        setState(() {});
+        if (mounted) {
+          final processingResult = await showFileProcessDailog(
+            context,
+            filePath,
+            update: true,
+          );
 
-        // Auto-open the book if processing was successful
-        if (processingResult != null && processingResult.success) {
-          Navigator.pop(context); // Close drawer
-          // Get final book path (in BOOKS_FOLDER_PATH)
-          final fileName = filePath.split('\\').last.split('/').last;
-          final bookFile = File('$BOOKS_FOLDER_PATH\\$fileName');
-          if (await bookFile.exists()) {
-            widget.onBookSelected(bookFile);
+          loadBooks();
+
+          if (processingResult != null && processingResult.success) {
+            if (mounted) Navigator.pop(context);
+
+            final fileName = filePath.split('\\').last.split('/').last;
+            final bookFile = File('$BOOKS_FOLDER_PATH\\$fileName');
+            if (await bookFile.exists()) {
+              widget.onBookSelected(bookFile);
+            }
           }
         }
       }
     } catch (e) {
-      setState(() {});
+      debugPrint('Error picking file: $e');
     }
-  }
-
-  _headerW() {
-    String logo_path = "assets/icons/logo.png";
-    return Image.asset(
-      logo_path,
-      fit: BoxFit.fitWidth,
-      width: double.infinity,
-      height: 196,
-    );
-  }
-
-  _booksListW() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 64.0, top: 212),
-      child: ListView(
-        children: bookFiles.map((file) => _bookRow(file)).toList(),
-      ),
-    );
-  }
-
-  Widget _bookRow(File file) {
-    String bookName = getFileName(file.path);
-    print(file.path);
-    return InkWell(
-      onTap: () {
-        Navigator.pop(context);
-        widget.onBookSelected(file);
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Material(
-          borderRadius: BorderRadius.circular(8),
-          color: primaryColor.withOpacity(0.9),
-          elevation: 2,
-
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(bookName, style: normalStyle(color: secondaryColor)),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

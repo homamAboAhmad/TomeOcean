@@ -18,6 +18,7 @@ class TextNormalization {
     String text, {
     bool removeDiacritics = true,
     bool unifyHamzas = true,
+    bool removeNumbers = false,
   }) {
     String normalized = text;
 
@@ -31,7 +32,13 @@ class TextNormalization {
       normalized = normalized.replaceAll('ئ', 'ي');
     }
 
+    if (removeNumbers) {
+      // Remove Arabic and Western digits
+      normalized = normalized.replaceAll(RegExp(r'[0-9\u0660-\u0669]'), ' ');
+      // Clean up extra spaces resulting from removal
+      normalized = normalized.replaceAll(RegExp(r'\s+'), ' ');
+    }
+
     return normalized;
   }
 }
-

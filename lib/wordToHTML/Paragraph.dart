@@ -130,7 +130,10 @@ class Paragraph {
     return paragraph;
   }
 
-  Paragraph fromXml(XmlElement paragraphXml) {
+  Paragraph fromXml(
+    XmlElement paragraphXml, {
+    bool skipNumberingCounter = false,
+  }) {
     pXml = paragraphXml;
     // حفظ XML للجداول فقط (مطلوب لـ ParagraphTable عند التحميل من الكاش)
     // الفقرات العادية لا تحتاج XML محفوظ - يتم بناؤها من runs
@@ -140,7 +143,10 @@ class Paragraph {
       xmlString = ""; // لا نحفظ للفقرات العادية
     }
     XmlElement? xmlpPr = paragraphXml.getElement("w:pPr");
-    if (xmlpPr != null) pPr = PPr(this).fromXml(xmlpPr);
+    if (xmlpPr != null)
+      pPr = PPr(
+        this,
+      ).fromXml(xmlpPr, skipNumberingCounter: skipNumberingCounter);
 
     _setSectionType();
 
@@ -186,7 +192,7 @@ class Paragraph {
         // Check for PAGE instruction
         if (inFieldCode || hasBegin) {
           if (element.findAllElements("w:instrText").any((e) {
-            return e.text.contains("PAGE");
+            return e.text.toUpperCase().contains("PAGE");
           })) {
             pendingPageNum = true;
             pageNumReplaced = false; // Reset when starting a new PAGE field
@@ -203,6 +209,22 @@ class Paragraph {
         if (inFieldCode && !hasSeparate && !hasEnd && !hasBegin) {
           runt0.text = "";
         }
+
+        // --- NEW: Parse {{PG:X}} Page Number Marker ---
+        // This marker is injected by the Python script (hidden text with double braces)
+        if (runt0.text != null && runt0.text!.contains("{{PG:")) {
+          final RegExp pgRegex = RegExp(r"\{\{PG:(\d+)\}\}");
+          final match = pgRegex.firstMatch(runt0.text!);
+          if (match != null) {
+            String? pageStr = match.group(1);
+            if (pageStr != null) {
+              pageNum = pageStr; // Set the paragraph's page number
+              // Remove the marker from the text so it doesn't show up
+              runt0.text = runt0.text!.replaceAll(match.group(0)!, "");
+            }
+          }
+        }
+        // ---------------------------------------------
 
         if (element.findAllElements("w:instrText").isNotEmpty) {
           runt0.text = "";
@@ -440,6 +462,14 @@ class Paragraph {
     }
   }
 
+  /// Determines the section type for search indexing purposes.
+  ///
+  /// **Database Architect Note**: This method accurately classifies paragraphs into:
+  /// - `title`: Main headings, sub-headings (Heading1-9, Title, TOC, etc.)
+  /// - `main`: Regular body text (default)
+  /// - `footnote`: Set separately in DocFootNotes.dart
+  ///
+  /// Note: 'comment' type is NOT used as it's under development.
   void _setSectionType() {
     String? style = pPr?.pStyle?.toLowerCase();
     if (style == null) {
@@ -447,7 +477,22 @@ class Paragraph {
       return;
     }
 
-    if (style.startsWith('heading') || style == 'title') {
+    // Check for common heading/title style patterns in Word documents
+    // This covers English and Arabic document styles
+    if (style.startsWith('heading') || // Heading1, Heading2, etc.
+        style.startsWith('toc') || // Table of Contents entries
+        style == 'title' || // Title style
+        style == 'subtitle' || // Subtitle style
+        style.contains('heading') || // Custom heading styles
+        style.contains('عنوان') || // Arabic: "عنوان" = Title
+        style.contains('رأس') || // Arabic: "رأس" = Head
+        style.contains('فصل') || // Arabic: "فصل" = Chapter
+        style.contains('باب') || // Arabic: "باب" = Section/Gate
+        style.contains('مطلب') || // Arabic: "مطلب" = Requirement/Section
+        style.contains('مبحث') || // Arabic: "مبحث" = Topic
+        style.contains('فرع') || // Arabic: "فرع" = Branch/Sub-section
+        style.contains('مسألة')) {
+      // Arabic: "مسألة" = Issue/Question
       sectionType = 'title';
     } else {
       sectionType = 'main';
@@ -1231,6 +1276,10 @@ class Paragraph {
   }
 
   getPageNum() {
+    // Only try to get from instrText if pageNum wasn't already set
+    // (e.g., from {{PG:X}} marker injected by pageRender.py)
+    if (pageNum.isNotEmpty) return;
+
     pageNum =
         pXml
             ?.findAllElements("w:instrText")

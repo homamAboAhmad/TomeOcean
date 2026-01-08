@@ -12,6 +12,7 @@ import 'package:golden_shamela/UI/Search/search_results_tab_viewer.dart';
 import 'package:golden_shamela/UI/Search/models/search_results_tab.dart';
 import 'package:golden_shamela/Helpers/FileHelper.dart';
 import 'package:golden_shamela/UI/Widgets/BackgroundTasksBar.dart';
+import 'package:golden_shamela/core/app_state.dart';
 import 'home_page/home_page_window_communication.dart';
 import 'home_page/home_page_search_handlers.dart';
 import 'home_page/home_page_book_management.dart';
@@ -51,7 +52,6 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           openedBooks.add(book);
           selectedBookP = openedBooks.length - 1;
-          // Set page number if pending
           if (_pendingPageNumber != null) {
             openedBooks[selectedBookP].currentPage = _pendingPageNumber!;
             _pendingPageNumber = null;
@@ -66,6 +66,7 @@ class _HomePageState extends State<HomePage> {
       onPerformSearch: _performSearchInMainWindow,
       isMounted: () => mounted,
       setState: () => setState(() {}),
+      onSearchCompleted: _addSearchResultsTab,
     );
 
     _windowCommunication = HomePageWindowCommunication(
@@ -91,6 +92,9 @@ class _HomePageState extends State<HomePage> {
       results: tab.results,
       totalCount: tab.totalCount,
       onResultTapped: (bookPath, pageNumber) async {
+        // Set search terms to highlight in the opened page
+        AppState().setSearchHighlight(tab.searchQueries);
+
         await _onBookSelected(
           File(bookPath),
           pageNumber: pageNumber,
@@ -107,74 +111,85 @@ class _HomePageState extends State<HomePage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
+        backgroundColor: const Color(0xFFF3F3F3), // Neutral premium background
         appBar: AppBar(
           backgroundColor: primaryColor,
-          title: Container(
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Text(
-                "البحر المحيط",
-                style: normalStyle(fontSize: 24, color: secondaryColor),
-              ),
-            ),
-          ),
+          elevation: 2,
+          toolbarHeight: 70,
           leading: Builder(
             builder: (context) => IconButton(
-              icon: Icon(Icons.menu, color: secondaryColor),
+              icon: const Icon(
+                Icons.menu_rounded,
+                color: secondaryColor,
+                size: 28,
+              ),
               onPressed: () => Scaffold.of(context).openDrawer(),
+              tooltip: 'القائمة الرئيسية',
             ),
           ),
+          title: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.menu_book_rounded,
+                  color: secondaryColor,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  "البحر المحيط",
+                  style: bigStyle(fontSize: 22, color: secondaryColor),
+                ),
+              ],
+            ),
+          ),
+          centerTitle: true,
           actions: [
-            IconButton(
-              icon: Icon(Icons.search, color: secondaryColor),
+            _buildAppBarAction(
+              icon: Icons.search_rounded,
               tooltip: 'بحث',
               onPressed: () => _searchHandlers!.openSearchWindow(),
             ),
-            IconButton(
-              icon: Icon(Icons.storage, color: secondaryColor),
+            _buildAppBarAction(
+              icon: Icons.storage_rounded,
               tooltip: 'فهرسة الكتب',
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (context) => const IndexingDialog(),
-                );
-              },
+              onPressed: () => _showIndexingDialog(context),
             ),
-            IconButton(
-              icon: Icon(Icons.people, color: secondaryColor),
+            _buildAppBarAction(
+              icon: Icons.people_outline_rounded,
               tooltip: 'إدارة المؤلفين',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AuthorsManagementScreen(),
-                  ),
-                );
-              },
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AuthorsManagementScreen(),
+                ),
+              ),
             ),
-            IconButton(
-              icon: Icon(Icons.settings, color: secondaryColor),
+            _buildAppBarAction(
+              icon: Icons.settings_rounded,
               tooltip: 'الإعدادات',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SettingsScreen(),
-                  ),
-                );
-              },
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              ),
             ),
-            IconButton(
-              icon: Icon(Icons.bug_report, color: secondaryColor),
-              tooltip: 'اختبار',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => TestScreen()),
-                );
-              },
-            ),
+            // Hidden/Secondary actions could go into a popup menu if needed
+            // Keeping bug report for now as requested by user previously
+            // _buildAppBarAction(
+            //   icon: Icons.bug_report_rounded,
+            //   tooltip: 'اختبار',
+            //   onPressed: () => Navigator.push(
+            //     context,
+            //     MaterialPageRoute(builder: (context) => TestScreen()),
+            //   ),
+            // ),
+            const SizedBox(width: 8),
           ],
         ),
         drawer: BooksDrawer(onBookSelected: _onBookSelected),
@@ -183,37 +198,91 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: Stack(
                 children: [
-                  Container(color: Colors.white),
+                  // Base Empty State
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.auto_stories_rounded,
+                          size: 80,
+                          color: Colors.blueGrey.withOpacity(0.1),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'اختر كتاباً من القائمة الجانبية للبدء',
+                          style: bigStyle(
+                            color: Colors.blueGrey.withOpacity(0.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Content Layer
                   if (openedBooks.isNotEmpty &&
                       selectedBookP < openedBooks.length)
                     Padding(
-                      padding: const EdgeInsets.only(top: 48.0),
-                      child: DocViewer(
-                        openedBooks[selectedBookP],
-                        key: ObjectKey(openedBooks[selectedBookP]),
-                        onBookSelected: _onBookSelected,
+                      padding: const EdgeInsets.only(
+                        top: 48.0,
+                      ), // Space for tabs bar
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: DocViewer(
+                          openedBooks[selectedBookP],
+                          key: ObjectKey(openedBooks[selectedBookP]),
+                          onBookSelected: _onBookSelected,
+                        ),
                       ),
                     ),
+
                   if (_searchResultsTabs.isNotEmpty &&
                       selectedBookP >= openedBooks.length)
                     Padding(
                       padding: const EdgeInsets.only(top: 48.0),
-                      child: _buildSearchResultsTabViewer(),
+                      child: Container(
+                        decoration: const BoxDecoration(color: Colors.white),
+                        child: _buildSearchResultsTabViewer(),
+                      ),
                     ),
+
+                  // Tabs Layer (Top)
                   if (openedBooks.isNotEmpty || _searchResultsTabs.isNotEmpty)
-                    HomePageUIHelpers.openedBooksTitlesList(
-                      openedBooks: openedBooks,
-                      searchResultsTabs: _searchResultsTabs,
-                      selectedBookP: selectedBookP,
-                      onSwitchToBook: _switchToBook,
-                      onCloseBook: _closeBook,
-                      onCloseSearchResultsTab: _closeSearchResultsTab,
-                      onReorderBooks: (oldIndex, newIndex) {
-                        setState(() {
-                          final draggedBook = openedBooks.removeAt(oldIndex);
-                          openedBooks.insert(newIndex, draggedBook);
-                        });
-                      },
+                    Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            offset: const Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                      child: HomePageUIHelpers.openedBooksTitlesList(
+                        openedBooks: openedBooks,
+                        searchResultsTabs: _searchResultsTabs,
+                        selectedBookP: selectedBookP,
+                        onSwitchToBook: _switchToBook,
+                        onCloseBook: _closeBook,
+                        onCloseSearchResultsTab: _closeSearchResultsTab,
+                        onReorderBooks: (oldIndex, newIndex) {
+                          setState(() {
+                            final draggedBook = openedBooks.removeAt(oldIndex);
+                            openedBooks.insert(newIndex, draggedBook);
+                          });
+                        },
+                      ),
                     ),
                 ],
               ),
@@ -225,22 +294,54 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildAppBarAction({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onPressed,
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: secondaryColor, size: 22),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showIndexingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const IndexingDialog(),
+    );
+  }
+
   Future<void> _onBookSelected(
     File book, {
     int? pageNumber,
     bool fromSearchResults = false,
   }) async {
     filePath = book.path;
-    final bookTitle = getFileName(filePath!);
 
-    // Always open a new instance of the book, even if it's already opened
-    // This allows users to have multiple tabs of the same book
+    // Clear search highlighting if not coming from search results
+    if (!fromSearchResults) {
+      AppState().clearSearchHighlight();
+    }
 
-    // Book is not opened (or opened from search results), read and add it
     _pendingPageNumber = pageNumber;
     await _bookManagement!.readDocxFile(filePath);
 
-    // Ensure page number is set (in case onBookAdded didn't set it)
     if (pageNumber != null &&
         openedBooks.isNotEmpty &&
         selectedBookP < openedBooks.length) {
@@ -252,7 +353,6 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    // Don't close search results tabs when opening a book
     if (mounted && pageNumber == null) {
       setState(() {});
     }
@@ -377,7 +477,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  /// Extract search queries from group controllers map
   List<String> _extractSearchQueries(Map<String, dynamic> groupControllersMap) {
     final searchQueries = <String>[];
     groupControllersMap.forEach((key, value) {
@@ -393,7 +492,6 @@ class _HomePageState extends State<HomePage> {
     return searchQueries;
   }
 
-  /// Update or create search results tab
   void _updateSearchResultsTab(
     String tabId,
     List<Map<String, dynamic>> results,

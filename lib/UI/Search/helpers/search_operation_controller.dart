@@ -3,7 +3,7 @@ import 'package:golden_shamela/UI/Search/helpers/search_executor.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 
 /// Controller responsible for managing search operations.
-/// 
+///
 /// Handles search execution, state management, and result processing.
 class SearchOperationController {
   final SearchExecutor _searchExecutor;
@@ -12,11 +12,13 @@ class SearchOperationController {
   SearchOperationController({
     required SearchExecutor searchExecutor,
     required BooksMetadataDatabase metadataDb,
-  })  : _searchExecutor = searchExecutor,
-        _metadataDb = metadataDb;
+  }) : _searchExecutor = searchExecutor,
+       _metadataDb = metadataDb;
 
   /// Checks if there are any search queries in the controllers.
-  bool hasSearchQueries(Map<String, List<TextEditingController>> groupControllers) {
+  bool hasSearchQueries(
+    Map<String, List<TextEditingController>> groupControllers,
+  ) {
     for (var group in groupControllers.values) {
       if (group.any((c) => c.text.trim().isNotEmpty)) {
         return true;
@@ -45,8 +47,8 @@ class SearchOperationController {
       groupControllers: groupControllers,
       searchGrouping: searchGrouping,
       bookPaths: booksToSearch,
-      sectionTypes: selectedSections.length < searchSections.length 
-          ? selectedSections 
+      sectionTypes: selectedSections.length < searchSections.length
+          ? selectedSections
           : null,
       morphologicalSearch: morphologicalSearch,
       affixSearch: affixSearch,
@@ -60,9 +62,15 @@ class SearchOperationController {
   }
 
   /// Gets the list of selected section types.
+  ///
+  /// **QA Note**: Explicitly excludes 'comment' section type as it's under development.
+  /// This is a safety measure to prevent accidental queries to the comments field.
   List<String> getSelectedSections(Map<String, bool> searchSections) {
+    // Define valid section types (excludes 'comment' which is under development)
+    const validSectionTypes = {'main', 'footnote', 'title'};
+
     return searchSections.entries
-        .where((e) => e.value)
+        .where((e) => e.value && validSectionTypes.contains(e.key))
         .map((e) => e.key)
         .toList();
   }
@@ -118,5 +126,3 @@ class SearchOperationController {
     };
   }
 }
-
-

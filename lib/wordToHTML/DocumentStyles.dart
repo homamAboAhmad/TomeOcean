@@ -10,7 +10,7 @@ const WORD_STYLES = "word/styles.xml";
 Map<String, XmlElement> addStyles(ArchiveFile? archiveFile) {
   Map<String, XmlElement> documentStyles = {};
 
-  if(archiveFile==null) return {};
+  if (archiveFile == null) return {};
   // تحويل ArchiveFile إلى XmlDocument
   XmlDocument document = ArchiveToXml(archiveFile);
 
@@ -20,7 +20,6 @@ Map<String, XmlElement> addStyles(ArchiveFile? archiveFile) {
     if (element.name.local == 'styles') {
       // استعراض الأنماط داخل عنصر 'styles'
       element.findAllElements('w:style').forEach((style) {
-
         final styleId = style.getAttribute('w:styleId');
 
         if (styleId != null) documentStyles[styleId] = style;
@@ -31,20 +30,40 @@ Map<String, XmlElement> addStyles(ArchiveFile? archiveFile) {
   return documentStyles;
 }
 
-XmlElement? getRPrFRromStyle(String styleId,WordDocument? wordDocument) {
-  return getDocumentStyle(styleId,wordDocument)?.getElement("w:rPr");
-}
-XmlElement? getPPrFRromStyle(String styleId,WordDocument? wordDocument) {
-  return getDocumentStyle(styleId,wordDocument)?.getElement("w:pPr");
+XmlElement? getRPrFRromStyle(String styleId, WordDocument? wordDocument) {
+  return getDocumentStyle(styleId, wordDocument)?.getElement("w:rPr");
 }
 
-XmlElement? getDocumentStyle(String styleId,WordDocument? wordDocument) {
+XmlElement? getPPrFRromStyle(String styleId, WordDocument? wordDocument) {
+  return getDocumentStyle(styleId, wordDocument)?.getElement("w:pPr");
+}
+
+/// Get table borders from a table style definition
+/// Returns the tblBorders element from tblPr in the style
+XmlElement? getTableStyleBorders(String? styleId, WordDocument? wordDocument) {
+  if (styleId == null || wordDocument == null) return null;
+
+  XmlElement? style = getDocumentStyle(styleId, wordDocument);
+  if (style == null) return null;
+
+  // Table styles have tblPr which contains tblBorders
+  var tblPr = style.getElement("w:tblPr");
+  if (tblPr != null) {
+    return tblPr.getElement("w:tblBorders");
+  }
+
+  return null;
+}
+
+XmlElement? getDocumentStyle(String styleId, WordDocument? wordDocument) {
   XmlElement? xmlElement = wordDocument?.documentStyles[styleId];
-  String? basedOnStyle = xmlElement?.getElement("w:basedOn")?.getAttribute("w:val");
+  String? basedOnStyle = xmlElement
+      ?.getElement("w:basedOn")
+      ?.getAttribute("w:val");
 
   if (basedOnStyle != null) {
     // Recursively get the basedOn style
-    XmlElement? basedOn = getDocumentStyle(basedOnStyle,wordDocument);
+    XmlElement? basedOn = getDocumentStyle(basedOnStyle, wordDocument);
 
     // Merge the basedOn style with the current style
     xmlElement = mergeStyles(basedOn, xmlElement);
@@ -56,6 +75,7 @@ XmlElement? getDocumentStyle(String styleId,WordDocument? wordDocument) {
 
   return xmlElement;
 }
+
 XmlElement? mergeStyles(XmlElement? baseStyle, XmlElement? currentStyle) {
   if (baseStyle == null) return currentStyle?.clone();
   if (currentStyle == null) return baseStyle.clone();
@@ -65,13 +85,12 @@ XmlElement? mergeStyles(XmlElement? baseStyle, XmlElement? currentStyle) {
 
   List<XmlAttribute> mergedAttributes = [...currentStyle.attributes];
 
-  Map<String,XmlAttribute> currentAttrMap = {};
-  mergedAttributes.forEach((attr){
-    currentAttrMap[attr.name.local]= attr;
+  Map<String, XmlAttribute> currentAttrMap = {};
+  mergedAttributes.forEach((attr) {
+    currentAttrMap[attr.name.local] = attr;
   });
-  baseStyle.attributes.forEach((attr){
-    if(currentAttrMap[attr.name.local]==null)
-      mergedAttributes.add(attr);
+  baseStyle.attributes.forEach((attr) {
+    if (currentAttrMap[attr.name.local] == null) mergedAttributes.add(attr);
   });
   // Merge pPr and rPr separately
   final basePPr = baseStyle.getElement('w:pPr');
@@ -84,12 +103,16 @@ XmlElement? mergeStyles(XmlElement? baseStyle, XmlElement? currentStyle) {
 
   // Combine other children (non-pPr and non-rPr)
   final mergedChildren = <XmlElement>[];
-  Map<String,XmlElement> baseChildren = Map.fromIterable(
-    baseStyle.children.whereType<XmlElement>().where((e) => e.name.local != 'pPr' && e.name.local != 'rPr'),
+  Map<String, XmlElement> baseChildren = Map.fromIterable(
+    baseStyle.children.whereType<XmlElement>().where(
+      (e) => e.name.local != 'pPr' && e.name.local != 'rPr',
+    ),
     key: (e) => (e as XmlElement).name.local,
   );
-  Map<String,XmlElement> currentChildren = Map.fromIterable(
-    currentStyle.children.whereType<XmlElement>().where((e) => e.name.local != 'pPr' && e.name.local != 'rPr'),
+  Map<String, XmlElement> currentChildren = Map.fromIterable(
+    currentStyle.children.whereType<XmlElement>().where(
+      (e) => e.name.local != 'pPr' && e.name.local != 'rPr',
+    ),
     key: (e) => (e as XmlElement).name.local,
   );
 
@@ -103,8 +126,11 @@ XmlElement? mergeStyles(XmlElement? baseStyle, XmlElement? currentStyle) {
   if (mergedPPr != null) mergedChildren.add(mergedPPr);
   if (mergedRPr != null) mergedChildren.add(mergedRPr);
 
-
-  return XmlElement(XmlName('style'), mergedAttributes.toList().clone(), mergedChildren);
+  return XmlElement(
+    XmlName('style'),
+    mergedAttributes.toList().clone(),
+    mergedChildren,
+  );
 }
 
 XmlElement? mergeProperties(XmlElement? baseProps, XmlElement? currentProps) {
@@ -114,21 +140,20 @@ XmlElement? mergeProperties(XmlElement? baseProps, XmlElement? currentProps) {
   // Merge attributes
   List<XmlAttribute> mergedAttributes = [...currentProps.attributes];
 
-  Map<String,XmlAttribute> currentAttrMap = {};
-  mergedAttributes.forEach((attr){
-    currentAttrMap[attr.name.local]= attr;
+  Map<String, XmlAttribute> currentAttrMap = {};
+  mergedAttributes.forEach((attr) {
+    currentAttrMap[attr.name.local] = attr;
   });
-  baseProps.attributes.forEach((attr){
-    if(currentAttrMap[attr.name.local]==null)
-      mergedAttributes.add(attr);
+  baseProps.attributes.forEach((attr) {
+    if (currentAttrMap[attr.name.local] == null) mergedAttributes.add(attr);
   });
   // Merge child elements (giving priority to currentProps)
   final mergedChildren = <XmlElement>[];
-  Map<String,XmlElement> baseChildren = Map.fromIterable(
+  Map<String, XmlElement> baseChildren = Map.fromIterable(
     baseProps.children.whereType<XmlElement>(),
     key: (e) => (e as XmlElement).name.local,
   );
-  Map<String,XmlElement> currentChildren = Map.fromIterable(
+  Map<String, XmlElement> currentChildren = Map.fromIterable(
     currentProps.children.whereType<XmlElement>(),
     key: (e) => (e as XmlElement).name.local,
   );
@@ -146,4 +171,3 @@ XmlElement? mergeProperties(XmlElement? baseProps, XmlElement? currentProps) {
     mergedChildren,
   );
 }
-

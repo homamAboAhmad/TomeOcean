@@ -11,16 +11,32 @@ import 'package:golden_shamela/Utils/SnackBar.dart';
 import 'package:golden_shamela/core/app_state.dart';
 import 'package:golden_shamela/core/indexed_books_loader.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:golden_shamela/core/preferences_helper.dart';
 
 /// Search handlers for HomePage
 class HomePageSearchHandlers {
   final BuildContext context;
   final Function(String, int) onResultTapped;
-  final Function(Map<String, dynamic>, String, List<Map<String, dynamic>>,
-      Map<String, bool>, bool, bool, bool, bool, bool, bool, bool, bool,
-      List<Map<String, dynamic>>) onPerformSearch;
+  final Function(
+    Map<String, dynamic>,
+    String,
+    List<Map<String, dynamic>>,
+    Map<String, bool>,
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    bool,
+    List<Map<String, dynamic>>,
+  )
+  onPerformSearch;
   final bool Function() isMounted;
   final Function() setState;
+  final Function(List<Map<String, dynamic>>, int, List<String>, bool)?
+  onSearchCompleted;
 
   HomePageSearchHandlers({
     required this.context,
@@ -28,6 +44,7 @@ class HomePageSearchHandlers {
     required this.onPerformSearch,
     required this.isMounted,
     required this.setState,
+    this.onSearchCompleted,
   });
 
   /// Open search window
@@ -35,8 +52,8 @@ class HomePageSearchHandlers {
     try {
       final appState = AppState();
       final booksLoader = IndexedBooksLoader();
-      
-      List<Map<String, dynamic>> indexedBooks = 
+
+      List<Map<String, dynamic>> indexedBooks =
           appState.cachedIndexedBooks ?? await booksLoader.getIndexedBooks();
 
       if (indexedBooks.isEmpty) {
@@ -51,7 +68,13 @@ class HomePageSearchHandlers {
         appState.cachedIndexedBooks = indexedBooks;
       }
 
-      if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      final searchMode =
+          PreferencesHelper.prefs.getString('search_window_mode') ?? 'separate';
+      final useMultiWindow =
+          searchMode == 'separate' &&
+          (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+      if (useMultiWindow) {
         try {
           final windowConfig = WindowConfiguration(
             arguments: jsonEncode({
@@ -63,7 +86,6 @@ class HomePageSearchHandlers {
 
           final window = await WindowController.create(windowConfig);
           await window.show();
-
         } catch (e, stackTrace) {
           ShowSnackBar(context, "خطأ في فتح نافذة البحث: $e");
           showSearchDialog(indexedBooks);
@@ -83,6 +105,7 @@ class HomePageSearchHandlers {
       builder: (context) => ShamelaSearchDialog(
         onResultTapped: onResultTapped,
         indexedBooks: indexedBooks,
+        onSearchCompleted: onSearchCompleted,
       ),
     );
   }
@@ -103,7 +126,7 @@ class HomePageSearchHandlers {
     required bool proximity,
     required List<Map<String, dynamic>> indexedBooks,
     required Function(List<Map<String, dynamic>>, int?, List<String>, bool)
-        onSearchResultsUpdate,
+    onSearchResultsUpdate,
   }) async {
     try {
       final searchExecutor = SearchExecutor();
@@ -124,7 +147,9 @@ class HomePageSearchHandlers {
       List<String>? booksToSearch;
 
       final sectionIdsFromSearch = selectedBooksForSearch
-          .where((item) => item['type'] == 'section' && item['sectionId'] != null)
+          .where(
+            (item) => item['type'] == 'section' && item['sectionId'] != null,
+          )
           .map((item) {
             final sectionId = item['sectionId'];
             return sectionId is String ? sectionId : sectionId.toString();
@@ -137,16 +162,19 @@ class HomePageSearchHandlers {
         final allBookPaths = <String>[];
         for (var sectionId in sectionIdsFromSearch) {
           try {
-            final bookPaths =
-                await metadataDb.getBookPaths(sectionId: sectionId.toString());
+            final bookPaths = await metadataDb.getBookPaths(
+              sectionId: sectionId.toString(),
+            );
             allBookPaths.addAll(bookPaths);
           } catch (e, stackTrace) {
             // Continue with next section
           }
         }
         booksFromSections = allBookPaths
-            .where((bookPath) =>
-                indexedBooks.any((book) => book['book_path'] == bookPath))
+            .where(
+              (bookPath) =>
+                  indexedBooks.any((book) => book['book_path'] == bookPath),
+            )
             .toList();
       }
 
@@ -169,16 +197,19 @@ class HomePageSearchHandlers {
         final allBookPaths = <String>[];
         for (var authorId in authorIdsFromSearch) {
           try {
-            final bookPaths =
-                await metadataDb.getBookPaths(authorId: authorId.toString());
+            final bookPaths = await metadataDb.getBookPaths(
+              authorId: authorId.toString(),
+            );
             allBookPaths.addAll(bookPaths);
           } catch (e, stackTrace) {
             // Continue with next author
           }
         }
         booksFromAuthors = allBookPaths
-            .where((bookPath) =>
-                indexedBooks.any((book) => book['book_path'] == bookPath))
+            .where(
+              (bookPath) =>
+                  indexedBooks.any((book) => book['book_path'] == bookPath),
+            )
             .toList();
       }
 
@@ -235,8 +266,12 @@ class HomePageSearchHandlers {
         }
 
         allResults.addAll(searchResult.results);
-        onSearchResultsUpdate(allResults, totalCount, searchQueries,
-            morphologicalSearch);
+        onSearchResultsUpdate(
+          allResults,
+          totalCount,
+          searchQueries,
+          morphologicalSearch,
+        );
       }
     } catch (e, stackTrace) {
       if (isMounted()) {
@@ -245,4 +280,3 @@ class HomePageSearchHandlers {
     }
   }
 }
-

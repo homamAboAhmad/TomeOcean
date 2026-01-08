@@ -307,7 +307,7 @@ class _DocViewerState extends State<DocViewer>
               onShowBookCard: _onShowBookCard,
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 30.0, bottom: 40.0),
+              padding: const EdgeInsets.only(top: 48.0, bottom: 52.0),
               child: Row(
                 textDirection: TextDirection.rtl,
                 children: [

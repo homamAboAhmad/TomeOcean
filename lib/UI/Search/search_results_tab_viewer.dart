@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_highlighting_helper.dart';
+import 'package:golden_shamela/UI/Search/widgets/no_results_widget.dart';
 
 /// Widget to display search results in a tab
 class SearchResultsTabViewer extends StatelessWidget {
@@ -10,6 +11,7 @@ class SearchResultsTabViewer extends StatelessWidget {
   final Function(String, int) onResultTapped;
   final List<String> searchQueries;
   final bool morphologicalSearch;
+  final VoidCallback? onNewSearch;
 
   const SearchResultsTabViewer({
     Key? key,
@@ -18,6 +20,7 @@ class SearchResultsTabViewer extends StatelessWidget {
     required this.onResultTapped,
     required this.searchQueries,
     required this.morphologicalSearch,
+    this.onNewSearch,
   }) : super(key: key);
 
   @override
@@ -54,29 +57,35 @@ class SearchResultsTabViewer extends StatelessWidget {
                 ],
               ),
             ),
-            // Results list
+            // Results list or No Results widget
             Expanded(
               child: results.isEmpty
-                  ? Center(
-                      child: Text(
-                        'لا توجد نتائج',
-                        style: normalStyle(color: Colors.grey),
-                      ),
+                  ? NoResultsWidget(
+                      searchQueries: searchQueries,
+                      onNewSearch: onNewSearch,
                     )
                   : ListView.builder(
                       padding: EdgeInsets.all(8),
                       itemCount: results.length,
                       itemBuilder: (context, index) {
                         // Safely convert result to Map<String, dynamic>
-                        final resultMap = Map<String, dynamic>.from(results[index]);
+                        final resultMap = Map<String, dynamic>.from(
+                          results[index],
+                        );
                         final content = resultMap['content'] as String? ?? '';
-                        final bookName = resultMap['book_name'] as String? ?? '';
-                        final bookPath = resultMap['book_path'] as String? ?? '';
-                        final pageNumber = (resultMap['page_number'] as num?)?.toInt() ?? 0;
+                        final bookName =
+                            resultMap['book_name'] as String? ?? '';
+                        final bookPath =
+                            resultMap['book_path'] as String? ?? '';
+                        final pageNumber =
+                            (resultMap['page_number'] as num?)?.toInt() ?? 0;
 
                         return Card(
                           elevation: 1,
-                          margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          margin: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           child: ListTile(
                             title: Text(
                               bookName,
@@ -85,10 +94,11 @@ class SearchResultsTabViewer extends StatelessWidget {
                             subtitle: Padding(
                               padding: EdgeInsets.only(top: 4),
                               child: FutureBuilder<Widget>(
-                                future: highlightingHelper.extractSnippetWithHighlight(
-                                  content,
-                                  searchQueries,
-                                ),
+                                future: highlightingHelper
+                                    .extractSnippetWithHighlight(
+                                      content,
+                                      searchQueries,
+                                    ),
                                 builder: (context, snapshot) {
                                   if (snapshot.hasData) {
                                     return snapshot.data!;
@@ -132,4 +142,3 @@ class SearchResultsTabViewer extends StatelessWidget {
     );
   }
 }
-

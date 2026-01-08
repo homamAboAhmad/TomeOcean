@@ -40,7 +40,9 @@ class StartupIndexer {
         return;
       }
 
-      debugPrint("[Startup Indexer] Found ${files.length} books - Checking...");
+      debugPrint(
+        "[Startup Indexer] Found ${files.length} books total - Checking which need indexing...",
+      );
 
       final indexer = ShamelaSearchIndexer();
       int indexed = 0;

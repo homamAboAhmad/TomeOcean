@@ -18,9 +18,9 @@ class HomePageUIHelpers {
     final totalTabs = openedBooks.length + searchResultsTabs.length;
 
     return Padding(
-      padding: const EdgeInsets.only(left: 8.0, right: 8, top: 24),
+      padding: const EdgeInsets.only(left: 8.0, right: 8, top: 12),
       child: SizedBox(
-        height: 24,
+        height: 36,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: totalTabs,
@@ -78,4 +78,3 @@ class HomePageUIHelpers {
     );
   }
 }
-

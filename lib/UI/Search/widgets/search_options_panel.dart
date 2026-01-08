@@ -45,9 +45,9 @@ class SearchOptionsPanel extends StatelessWidget {
     required this.ordered,
     required this.proximity,
     required this.onPhraseOptionChanged,
-      required this.groupControllers,
-      required this.onAddQueryField,
-      required this.onRemoveQueryField,
+    required this.groupControllers,
+    required this.onAddQueryField,
+    required this.onRemoveQueryField,
     required this.onSearch,
     required this.onClear,
     required this.isLoading,
@@ -88,10 +88,7 @@ class SearchOptionsPanel extends StatelessWidget {
                   SizedBox(height: 4),
                   _buildSelectedBooksSearchField(),
                   SizedBox(height: 4),
-                  SizedBox(
-                    height: 120,
-                    child: _buildSelectedBooksList(),
-                  ),
+                  SizedBox(height: 120, child: _buildSelectedBooksList()),
                   SizedBox(height: 6),
                   _buildResultsSummary(),
                 ],
@@ -104,29 +101,112 @@ class SearchOptionsPanel extends StatelessWidget {
   }
 
   Widget _buildSearchScope() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('البحث في:', style: normalStyle(fontSize: 13)),
-        SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: primaryColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: primaryColor.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.search, size: 16, color: primaryColor),
+              SizedBox(width: 4),
+              Text(
+                'نطاق البحث:',
+                style: normalStyle(fontSize: 13, color: primaryColor),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // المتن (Body Text) - Main content
+              Tooltip(
+                message: 'البحث في المتن الرئيسي للكتاب',
+                child: _buildScopeCheckbox(
+                  'المتن',
+                  Icons.article_outlined,
+                  searchSections['main'] ?? true,
+                  (v) => onSearchSectionChanged('main', v),
+                ),
+              ),
+              // العناوين (Headings) - Titles and sub-headings
+              Tooltip(
+                message: 'البحث في العناوين الرئيسية والفرعية',
+                child: _buildScopeCheckbox(
+                  'العناوين',
+                  Icons.title,
+                  searchSections['title'] ?? false,
+                  (v) => onSearchSectionChanged('title', v),
+                ),
+              ),
+              // الحواشي (Footnotes) - References and marginal notes
+              Tooltip(
+                message: 'البحث في الحواشي والمراجع الهامشية',
+                child: _buildScopeCheckbox(
+                  'الحواشي',
+                  Icons.format_quote,
+                  searchSections['footnote'] ?? true,
+                  (v) => onSearchSectionChanged('footnote', v),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Build a styled checkbox for search scope with icon
+  Widget _buildScopeCheckbox(
+    String label,
+    IconData icon,
+    bool value,
+    Function(bool) onChanged,
+  ) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      borderRadius: BorderRadius.circular(4),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: value ? primaryColor.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: value ? primaryColor : Colors.grey.shade400,
+            width: value ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(child: _buildCheckbox('المتن', searchSections['main']!, (v) {
-              onSearchSectionChanged('main', v);
-            })),
-            Flexible(child: _buildCheckbox('الحواشي', searchSections['footnote']!, (v) {
-              onSearchSectionChanged('footnote', v);
-            })),
-            Flexible(child: _buildCheckbox('التعليقات', searchSections['comment']!, (v) {
-              onSearchSectionChanged('comment', v);
-            })),
-            Flexible(child: _buildCheckbox('العناوين', searchSections['title']!, (v) {
-              onSearchSectionChanged('title', v);
-            })),
+            Icon(
+              icon,
+              size: 14,
+              color: value ? primaryColor : Colors.grey.shade600,
+            ),
+            SizedBox(width: 4),
+            Text(
+              label,
+              style: normalStyle(
+                fontSize: 11,
+                color: value ? primaryColor : Colors.grey.shade700,
+              ),
+            ),
+            SizedBox(width: 4),
+            Icon(
+              value ? Icons.check_circle : Icons.circle_outlined,
+              size: 14,
+              color: value ? primaryColor : Colors.grey.shade400,
+            ),
           ],
         ),
-      ],
+      ),
     );
   }
 
@@ -155,13 +235,17 @@ class SearchOptionsPanel extends StatelessWidget {
   Widget _buildSearchTypeOptions() {
     return Row(
       children: [
-        Flexible(child: _buildCheckbox('بحث صرفي', morphologicalSearch, (v) {
-          onAdvancedOptionChanged('morphological', v);
-        })),
-        SizedBox(width: 24,),
-        Flexible(child: _buildCheckbox('بحث باللواصق', affixSearch, (v) {
-          onAdvancedOptionChanged('affix', v);
-        })),
+        Flexible(
+          child: _buildCheckbox('بحث صرفي', morphologicalSearch, (v) {
+            onAdvancedOptionChanged('morphological', v);
+          }),
+        ),
+        SizedBox(width: 24),
+        Flexible(
+          child: _buildCheckbox('بحث باللواصق', affixSearch, (v) {
+            onAdvancedOptionChanged('affix', v);
+          }),
+        ),
       ],
     );
   }
@@ -192,7 +276,10 @@ class SearchOptionsPanel extends StatelessWidget {
           child: RadioListTile<String>(
             dense: true,
             contentPadding: EdgeInsets.zero,
-            title: Text('البحث بكل المجموعات', style: normalStyle(fontSize: 12)),
+            title: Text(
+              'البحث بكل المجموعات',
+              style: normalStyle(fontSize: 12),
+            ),
             value: 'all',
             groupValue: searchGrouping ?? 'all',
             onChanged: (value) => onSearchGroupingChanged!(value!),
@@ -202,7 +289,10 @@ class SearchOptionsPanel extends StatelessWidget {
           child: RadioListTile<String>(
             dense: true,
             contentPadding: EdgeInsets.zero,
-            title: Text('البحث بواحدة أو أكثر', style: normalStyle(fontSize: 12)),
+            title: Text(
+              'البحث بواحدة أو أكثر',
+              style: normalStyle(fontSize: 12),
+            ),
             value: 'one_or_more',
             groupValue: searchGrouping ?? 'all',
             onChanged: (value) => onSearchGroupingChanged!(value!),
@@ -215,7 +305,10 @@ class SearchOptionsPanel extends StatelessWidget {
   Widget _buildAndGroupOptions() {
     return Row(
       children: [
-        Text('يلزم وجود العبارات', style: normalStyle(fontSize: 12, color: Colors.grey.shade700)),
+        Text(
+          'يلزم وجود العبارات',
+          style: normalStyle(fontSize: 12, color: Colors.grey.shade700),
+        ),
         SizedBox(width: 12),
         _buildCheckbox('مرتبة', ordered, (v) {
           onPhraseOptionChanged('ordered', v);
@@ -266,7 +359,11 @@ class SearchOptionsPanel extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.clear_all, size: 18, color: Colors.grey.shade600),
+                  icon: Icon(
+                    Icons.clear_all,
+                    size: 18,
+                    color: Colors.grey.shade600,
+                  ),
                   padding: EdgeInsets.all(4),
                   constraints: BoxConstraints(),
                   onPressed: onClear,
@@ -289,9 +386,7 @@ class SearchOptionsPanel extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.grey.shade100,
-              border: Border(
-                top: BorderSide(color: Colors.grey.shade300),
-              ),
+              border: Border(top: BorderSide(color: Colors.grey.shade300)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -299,7 +394,10 @@ class SearchOptionsPanel extends StatelessWidget {
                 ElevatedButton.icon(
                   onPressed: onSearch,
                   icon: Icon(Icons.search, size: 16, color: Colors.white),
-                  label: Text('بحث', style: normalStyle(color: Colors.white, fontSize: 12)),
+                  label: Text(
+                    'بحث',
+                    style: normalStyle(color: Colors.white, fontSize: 12),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -324,7 +422,8 @@ class SearchOptionsPanel extends StatelessWidget {
       groupKeyForAnd: groupKey == 'and',
       buildAndGroupOptions: () => _buildAndGroupOptions(),
       buildGroupDescription: (key) => _buildGroupDescription(key),
-      buildQueryField: (key, index, controller) => _buildQueryField(key, index, controller),
+      buildQueryField: (key, index, controller) =>
+          _buildQueryField(key, index, controller),
     );
   }
 
@@ -339,15 +438,18 @@ class SearchOptionsPanel extends StatelessWidget {
     } else {
       description = '';
     }
-    
+
     return Text(
       description,
       style: normalStyle(fontSize: 12, color: Colors.grey.shade700),
     );
   }
 
-
-  Widget _buildQueryField(String groupKey, int index, TextEditingController controller) {
+  Widget _buildQueryField(
+    String groupKey,
+    int index,
+    TextEditingController controller,
+  ) {
     final controllers = groupControllers[groupKey] ?? [];
     return Padding(
       padding: EdgeInsets.only(bottom: 4),
@@ -364,7 +466,10 @@ class SearchOptionsPanel extends StatelessWidget {
               controller: controller,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 6,
+                ),
                 isDense: true,
               ),
               style: normalStyle(fontSize: 12),
@@ -390,7 +495,7 @@ class SearchOptionsPanel extends StatelessWidget {
     if (selectedBooksForSearch == null || selectedBooksForSearch!.isEmpty) {
       return SizedBox.shrink();
     }
-    
+
     return Container(
       height: 24,
       decoration: BoxDecoration(
@@ -417,13 +522,13 @@ class SearchOptionsPanel extends StatelessWidget {
     if (selectedBooksForSearch == null || selectedBooksForSearch!.isEmpty) {
       return SizedBox.shrink();
     }
-    
+
     // Use ValueListenableBuilder to rebuild when search text changes
     final controller = selectedBooksSearchController;
     if (controller == null) {
       return _buildFilteredList(selectedBooksForSearch!, '');
     }
-    
+
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, child) {
@@ -431,8 +536,11 @@ class SearchOptionsPanel extends StatelessWidget {
       },
     );
   }
-  
-  Widget _buildFilteredList(List<Map<String, dynamic>> allItems, String searchText) {
+
+  Widget _buildFilteredList(
+    List<Map<String, dynamic>> allItems,
+    String searchText,
+  ) {
     // Filter the list based on search text
     final searchLower = searchText.toLowerCase().trim();
     final filteredList = searchLower.isEmpty
@@ -440,12 +548,13 @@ class SearchOptionsPanel extends StatelessWidget {
         : allItems.where((item) {
             final name = (item['name'] as String).toLowerCase();
             final bookPath = (item['bookPath'] as String? ?? '').toLowerCase();
-            final deathYear = (item['deathYear'] as String? ?? '').toLowerCase();
-            return name.contains(searchLower) || 
-                   bookPath.contains(searchLower) || 
-                   deathYear.contains(searchLower);
+            final deathYear = (item['deathYear'] as String? ?? '')
+                .toLowerCase();
+            return name.contains(searchLower) ||
+                bookPath.contains(searchLower) ||
+                deathYear.contains(searchLower);
           }).toList();
-    
+
     if (filteredList.isEmpty && searchLower.isNotEmpty) {
       return Container(
         decoration: BoxDecoration(
@@ -463,24 +572,28 @@ class SearchOptionsPanel extends StatelessWidget {
         ),
       );
     }
-    
+
     return _SelectedBooksScrollableList(
       filteredList: filteredList,
       onClearSelectedList: onClearSelectedList,
     );
   }
 
-
-
   Widget _buildResultsSummary() {
     if (isLoading) {
       return Center(child: CircularProgressIndicator(strokeWidth: 2));
     }
     if (errorMessage != null) {
-      return Text('خطأ: $errorMessage', style: normalStyle(color: Colors.red, fontSize: 11));
+      return Text(
+        'خطأ: $errorMessage',
+        style: normalStyle(color: Colors.red, fontSize: 11),
+      );
     }
     if (totalCount > 0) {
-      return Text('عدد النتائج: $totalCount', style: normalStyle(color: primaryColor, fontSize: 12));
+      return Text(
+        'عدد النتائج: $totalCount',
+        style: normalStyle(color: primaryColor, fontSize: 12),
+      );
     }
     return SizedBox.shrink();
   }
@@ -556,7 +669,10 @@ class _GroupTabContentState extends State<_GroupTabContent> {
                   icon: Icon(Icons.add_circle, size: 20, color: primaryColor),
                   padding: EdgeInsets.all(4),
                   constraints: BoxConstraints(),
-                  onPressed: () => widget.onAddQueryField(widget.groupKey, widget.controllers.length),
+                  onPressed: () => widget.onAddQueryField(
+                    widget.groupKey,
+                    widget.controllers.length,
+                  ),
                   tooltip: 'إضافة مربع بحث',
                 ),
               ],
@@ -576,7 +692,11 @@ class _GroupTabContentState extends State<_GroupTabContent> {
               )
             else
               ...List.generate(widget.controllers.length, (index) {
-                return widget.buildQueryField(widget.groupKey, index, widget.controllers[index]);
+                return widget.buildQueryField(
+                  widget.groupKey,
+                  index,
+                  widget.controllers[index],
+                );
               }),
           ],
         ),
@@ -597,10 +717,12 @@ class _SelectedBooksScrollableList extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<_SelectedBooksScrollableList> createState() => _SelectedBooksScrollableListState();
+  State<_SelectedBooksScrollableList> createState() =>
+      _SelectedBooksScrollableListState();
 }
 
-class _SelectedBooksScrollableListState extends State<_SelectedBooksScrollableList> {
+class _SelectedBooksScrollableListState
+    extends State<_SelectedBooksScrollableList> {
   late ScrollController _scrollController;
 
   @override
@@ -639,31 +761,31 @@ class _SelectedBooksScrollableListState extends State<_SelectedBooksScrollableLi
                   final type = item['type'] as String;
                   final name = item['name'] as String;
                   final deathYear = item['deathYear'] as String?;
-                  
+
                   return Container(
                     height: 28,
                     padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     child: Row(
                       children: [
                         Icon(
-                          type == 'author' 
-                              ? Icons.edit 
+                          type == 'author'
+                              ? Icons.edit
                               : type == 'section'
-                                  ? Icons.category
-                                  : Icons.book,
+                              ? Icons.category
+                              : Icons.book,
                           size: 12,
                           color: Colors.grey.shade700,
                         ),
                         SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            type == 'author' 
+                            type == 'author'
                                 ? 'مؤلف: $name'
                                 : type == 'section'
-                                    ? 'تصنيف: $name'
-                                    : deathYear != null 
-                                        ? '$name (ت $deathYear)'
-                                        : name,
+                                ? 'تصنيف: $name'
+                                : deathYear != null
+                                ? '$name (ت $deathYear)'
+                                : name,
                             style: smallStyle(fontSize: 10),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -681,4 +803,3 @@ class _SelectedBooksScrollableListState extends State<_SelectedBooksScrollableLi
     );
   }
 }
-
