@@ -14,7 +14,6 @@ import 'package:archive/archive.dart';
 import 'package:golden_shamela/wordToHTML/AddDocData.dart';
 import 'package:flutter/foundation.dart';
 
-
 class TestScreen extends StatefulWidget {
   const TestScreen({super.key});
 
@@ -59,7 +58,9 @@ class _TestScreenState extends State<TestScreen> {
 
       _wordDocument = WordDocument();
       _wordDocument!.title = "Test Document";
-      final WordPage testPage = WordPage(_wordDocument!); // Create a single page for testing
+      final WordPage testPage = WordPage(
+        _wordDocument!,
+      ); // Create a single page for testing
 
       // Attempt to render based on the root element type
       if (rootElement.name.local == "p") {
@@ -68,13 +69,20 @@ class _TestScreenState extends State<TestScreen> {
       } else if (rootElement.name.local == "r") {
         // For a run, we need a dummy paragraph to create it
         final Paragraph dummyParagraph = Paragraph(testPage);
-        final runT run = runT(dummyParagraph, prPr: null, pPr: null).fromXml(rootElement);
+        final runT run = runT(
+          dummyParagraph,
+          prPr: null,
+          pPr: null,
+        ).fromXml(rootElement);
         _renderedContent = Text.rich(run.toWidget()); // Render run as rich text
-      } else if (rootElement.name.local == "drawing") { // Assuming w:drawing is the root
+      } else if (rootElement.name.local == "drawing") {
+        // Assuming w:drawing is the root
         // For a drawing, we need a dummy run to parse it
         final Paragraph dummyParagraph = Paragraph(testPage);
         final runT dummyRun = runT(dummyParagraph, prPr: null, pPr: null);
-        dummyRun.xmlRun = xml.XmlElement(xml.XmlName('w:r'), [], [rootElement]); // Wrap drawing in a dummy run
+        dummyRun.xmlRun = xml.XmlElement(xml.XmlName('w:r'), [], [
+          rootElement,
+        ]); // Wrap drawing in a dummy run
         final ImageData? imageData = parseImageData(dummyRun);
         if (imageData != null) {
           _renderedContent = getImageWidget(imageData);
@@ -82,16 +90,24 @@ class _TestScreenState extends State<TestScreen> {
           _error = "Failed to parse image data from w:drawing element.";
         }
       } else if (rootElement.name.local == "sdt") {
-        final xml.XmlElement? sdtContent = rootElement.findAllElements('w:sdtContent').firstOrNull;
+        final xml.XmlElement? sdtContent = rootElement
+            .findAllElements('w:sdtContent')
+            .firstOrNull;
         if (sdtContent != null) {
           final List<Widget> childrenWidgets = [];
-          for (final xml.XmlElement childElement in sdtContent.children.whereType<xml.XmlElement>()) {
+          for (final xml.XmlElement childElement
+              in sdtContent.children.whereType<xml.XmlElement>()) {
             if (childElement.name.local == "p") {
-              final Paragraph paragraph = Paragraph(testPage).fromXml(childElement);
+              final Paragraph paragraph = Paragraph(
+                testPage,
+              ).fromXml(childElement);
               childrenWidgets.add(paragraph.toWidget());
-            }
-            else {
-              childrenWidgets.add(Text('Unsupported element in sdtContent: ${childElement.name.local}'));
+            } else {
+              childrenWidgets.add(
+                Text(
+                  'Unsupported element in sdtContent: ${childElement.name.local}',
+                ),
+              );
             }
           }
           _renderedContent = Column(children: childrenWidgets);
@@ -99,9 +115,9 @@ class _TestScreenState extends State<TestScreen> {
           _error = "w:sdt element does not contain w:sdtContent.";
         }
       } else {
-        _error = "Unsupported root element for direct rendering: ${rootElement.name.local}";
+        _error =
+            "Unsupported root element for direct rendering: ${rootElement.name.local}";
       }
-
     } catch (e) {
       _error = 'Failed to load or parse test.xml: ${e.toString()}';
       debugPrint(_error);
@@ -121,14 +137,13 @@ class _TestScreenState extends State<TestScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.code),
+            tooltip: 'عرض XML',
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Raw XML Content'),
-                  content: SingleChildScrollView(
-                    child: Text(_rawXmlContent),
-                  ),
+                  content: SingleChildScrollView(child: Text(_rawXmlContent)),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
@@ -144,11 +159,14 @@ class _TestScreenState extends State<TestScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error.isNotEmpty
-              ? Center(child: Text(
-                  'Error: $_error',
-                  style: const TextStyle(color: Colors.red, fontSize: 16),
-                ))
-              : _renderedContent ?? const Center(child: Text('No content to display.')),
+          ? Center(
+              child: Text(
+                'Error: $_error',
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+              ),
+            )
+          : _renderedContent ??
+                const Center(child: Text('No content to display.')),
     );
   }
 }

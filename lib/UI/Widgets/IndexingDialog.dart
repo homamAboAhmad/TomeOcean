@@ -21,7 +21,7 @@ class _IndexingDialogState extends State<IndexingDialog> {
   bool _isIndexing = false;
   final ShamelaSearchIndexer _indexer = ShamelaSearchIndexer();
   final ValueNotifier<bool> _cancellationNotifier = ValueNotifier(false);
-  
+
   // New state variables for the enhanced UI
   final List<String> _logs = [];
   final ScrollController _logScrollController = ScrollController();
@@ -59,7 +59,7 @@ class _IndexingDialogState extends State<IndexingDialog> {
     if (message.isEmpty) return;
     // Avoid duplicate consecutive logs
     if (_logs.isNotEmpty && _logs.first == message) return;
-    
+
     setState(() {
       _logs.insert(0, message); // Add to top
       if (_logs.length > 100) _logs.removeLast(); // Keep last 100 logs
@@ -77,8 +77,10 @@ class _IndexingDialogState extends State<IndexingDialog> {
     _cancellationNotifier.value = false;
 
     try {
-      String? selectedDirectory = PreferencesHelper.prefs.getString('books_directory_path');
-      
+      String? selectedDirectory = PreferencesHelper.prefs.getString(
+        'books_directory_path',
+      );
+
       if (selectedDirectory == null || selectedDirectory.isEmpty) {
         _handleError('يرجى اختيار مجلد الكتب من الإعدادات أولاً');
         return;
@@ -119,23 +121,27 @@ class _IndexingDialogState extends State<IndexingDialog> {
         if (mounted) {
           setState(() {
             _progress = progressUpdate;
-            
+
             // Extract book name from message if it contains "Indexing" or similar
             // This depends on how the indexer sends messages, but we can try to parse or just use the message
             if (progressUpdate.message.isNotEmpty) {
-               // Update current book name if it looks like a path or name
-               if (progressUpdate.message.contains('.docx')) {
-                 _currentBookName = progressUpdate.message.split(Platform.pathSeparator).last;
-               } else {
-                 // Try to infer from context or just show the message
-               }
+              // Update current book name if it looks like a path or name
+              if (progressUpdate.message.contains('.docx')) {
+                _currentBookName = progressUpdate.message
+                    .split(Platform.pathSeparator)
+                    .last;
+              } else {
+                // Try to infer from context or just show the message
+              }
             }
-            
+
             // Add significant updates to log
-            if (progressUpdate.currentBookNum > 0 && 
+            if (progressUpdate.currentBookNum > 0 &&
                 progressUpdate.currentBookProgress == 0.0) {
-               // Likely started a new book
-               _addLog('جاري فهرسة الكتاب ${progressUpdate.currentBookNum}: $_currentBookName');
+              // Likely started a new book
+              _addLog(
+                'جاري فهرسة الكتاب ${progressUpdate.currentBookNum}: $_currentBookName',
+              );
             }
           });
         }
@@ -214,16 +220,15 @@ class _IndexingDialogState extends State<IndexingDialog> {
                     child: Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        border: Border(left: BorderSide(color: Colors.grey.shade200)),
+                        border: Border(
+                          left: BorderSide(color: Colors.grey.shade200),
+                        ),
                       ),
                       child: _buildProgressSection(),
                     ),
                   ),
                   // Right Side: Logs (RTL: actually appears on left)
-                  Expanded(
-                    flex: 4,
-                    child: _buildLogsSection(),
-                  ),
+                  Expanded(flex: 4, child: _buildLogsSection()),
                 ],
               ),
             ),
@@ -257,6 +262,7 @@ class _IndexingDialogState extends State<IndexingDialog> {
             IconButton(
               icon: const Icon(Icons.close, color: Colors.white70),
               onPressed: () => Navigator.of(context).pop(),
+              tooltip: 'إغلاق',
             ),
         ],
       ),
@@ -268,7 +274,9 @@ class _IndexingDialogState extends State<IndexingDialog> {
       return _buildWelcomeState();
     }
 
-    if (!_isIndexing && (_progress.message.contains('يرجى') || _progress.message.contains('غير موجود'))) {
+    if (!_isIndexing &&
+        (_progress.message.contains('يرجى') ||
+            _progress.message.contains('غير موجود'))) {
       return _buildErrorState();
     }
 
@@ -296,10 +304,7 @@ class _IndexingDialogState extends State<IndexingDialog> {
                       '${(_progress.overallProgress * 100).toInt()}%',
                       style: bigStyle(color: primaryColor, fontSize: 36),
                     ),
-                    Text(
-                      'مكتمل',
-                      style: normalStyle(color: Colors.grey),
-                    ),
+                    Text('مكتمل', style: normalStyle(color: Colors.grey)),
                   ],
                 ),
               ),
@@ -307,7 +312,7 @@ class _IndexingDialogState extends State<IndexingDialog> {
           ),
         ),
         const SizedBox(height: 32),
-        
+
         // Current Book Info
         Container(
           padding: const EdgeInsets.all(12),
@@ -321,8 +326,14 @@ class _IndexingDialogState extends State<IndexingDialog> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('الكتاب الحالي:', style: normalStyle(color: primaryColor, fontSize: 14)),
-                  Text('${_progress.currentBookNum} / ${_progress.totalBooks}', style: normalStyle(color: primaryColor, fontSize: 14)),
+                  Text(
+                    'الكتاب الحالي:',
+                    style: normalStyle(color: primaryColor, fontSize: 14),
+                  ),
+                  Text(
+                    '${_progress.currentBookNum} / ${_progress.totalBooks}',
+                    style: normalStyle(color: primaryColor, fontSize: 14),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -343,15 +354,23 @@ class _IndexingDialogState extends State<IndexingDialog> {
             ],
           ),
         ),
-        
+
         const Spacer(),
-        
+
         // Stats Row
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildStatItem(Icons.timer, 'الوقت المنقضي', _formatDuration(_elapsedSeconds)),
-            _buildStatItem(Icons.book, 'الكتب المتبقية', '${_progress.totalBooks - _progress.currentBookNum}'),
+            _buildStatItem(
+              Icons.timer,
+              'الوقت المنقضي',
+              _formatDuration(_elapsedSeconds),
+            ),
+            _buildStatItem(
+              Icons.book,
+              'الكتب المتبقية',
+              '${_progress.totalBooks - _progress.currentBookNum}',
+            ),
           ],
         ),
       ],
@@ -377,12 +396,20 @@ class _IndexingDialogState extends State<IndexingDialog> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text('سجل العمليات', style: normalStyle(color: Colors.grey.shade700)),
+            child: Text(
+              'سجل العمليات',
+              style: normalStyle(color: Colors.grey.shade700),
+            ),
           ),
           const Divider(height: 1),
           Expanded(
             child: _logs.isEmpty
-                ? Center(child: Text('لا توجد سجلات بعد', style: smallStyle(color: Colors.grey)))
+                ? Center(
+                    child: Text(
+                      'لا توجد سجلات بعد',
+                      style: smallStyle(color: Colors.grey),
+                    ),
+                  )
                 : ListView.builder(
                     controller: _logScrollController,
                     padding: const EdgeInsets.all(16),
@@ -393,7 +420,11 @@ class _IndexingDialogState extends State<IndexingDialog> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.arrow_left, size: 16, color: secondaryColor),
+                            Icon(
+                              Icons.arrow_left,
+                              size: 16,
+                              color: secondaryColor,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -416,7 +447,11 @@ class _IndexingDialogState extends State<IndexingDialog> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.library_books_rounded, size: 64, color: primaryColor.withOpacity(0.5)),
+        Icon(
+          Icons.library_books_rounded,
+          size: 64,
+          color: primaryColor.withOpacity(0.5),
+        ),
         const SizedBox(height: 16),
         Text(
           'مرحباً بك في مفهرس الشاملة',
@@ -451,10 +486,7 @@ class _IndexingDialogState extends State<IndexingDialog> {
       children: [
         Icon(Icons.error_outline_rounded, size: 64, color: Colors.red.shade300),
         const SizedBox(height: 16),
-        Text(
-          'تنبيه',
-          style: bigStyle(color: Colors.red.shade700),
-        ),
+        Text('تنبيه', style: bigStyle(color: Colors.red.shade700)),
         const SizedBox(height: 8),
         Text(
           _progress.message,
@@ -466,9 +498,7 @@ class _IndexingDialogState extends State<IndexingDialog> {
           onPressed: () {
             Navigator.of(context).pop();
             Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const SettingsScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const SettingsScreen()),
             );
           },
           icon: const Icon(Icons.settings),
@@ -502,7 +532,10 @@ class _IndexingDialogState extends State<IndexingDialog> {
           TextButton.icon(
             onPressed: _cancelIndexing,
             icon: const Icon(Icons.stop_circle_outlined, color: Colors.red),
-            label: const Text('إلغاء العملية', style: TextStyle(color: Colors.red)),
+            label: const Text(
+              'إلغاء العملية',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),

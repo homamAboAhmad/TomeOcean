@@ -1,7 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:golden_shamela/Utils/RomanConverter.dart';
 import 'package:golden_shamela/Utils/XmlElementClone.dart';
-import 'package:golden_shamela/main.dart';
 import 'package:golden_shamela/wordToHTML/DocumentStyles.dart';
 import 'package:golden_shamela/wordToHTML/MyInt.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
@@ -27,7 +25,10 @@ class PPr {
   XmlElement? xmlprPr;
   String? textAlign;
   bool? rtl;
+  bool? bidi; // Paragraph direction (BiDi)
   double? paddingLeft;
+  // Controls whether to force the strut height (ignoring font metrics) or respect natural metrics
+  bool forceStrutHeight = true;
   double? paddingRight;
   String? pStyle;
   int? numId;
@@ -83,6 +84,10 @@ class PPr {
     });
     this.xmlpPr = xmlpPr0;
 
+    // Initialize styleRunProperties with default document properties
+    // This ensures that if there is no pStyle, we still have the defaults
+    this.styleRunProperties = wordDocument.defaultRPr?.rPr;
+
     getPStyle();
     if (wordDocument.defaultPPr != null) {
       this.xmlpPr = mergePPr(
@@ -94,6 +99,19 @@ class PPr {
 
     this.xmlprPr = xmlpPr?.getElement("w:rPr");
     this.rtl = RPr(getEmptyRun()).fromXml(xmlprPr).rtl;
+
+    // Parse paragraph bidi property
+    String? bidiVal = xmlpPr?.getElement("w:bidi")?.getAttribute("w:val");
+    // <w:bidi/> or <w:bidi w:val="1"/> means RTL. <w:bidi w:val="0"/> means LTR.
+    // If element exists with no val, it defaults to true (1).
+    if (xmlpPr?.getElement("w:bidi") != null) {
+      if (bidiVal == "0" || bidiVal == "false") {
+        this.bidi = false;
+      } else {
+        this.bidi = true;
+      }
+    }
+
     if (textAlign == null) textAlign = getTextAlign();
 
     checkNumbering();
@@ -105,13 +123,23 @@ class PPr {
     return this;
   }
 
+  // Factor 1.40 is empirically chosen for Traditional Arabic to match Word's "Single" spacing.
+  static const double kArabicLineSpacingFactor = 1.40;
+
   void getSpacing() {
     XmlElement? spacing = xmlpPr?.getElement("w:spacing");
 
     // Word 2007+ default line spacing is 1.15 (not 1.0!)
     // When no spacing element exists, Word uses this default
     if (spacing == null) {
-      lineHeight = 1.15; // Word 2007+ default
+      lineHeight =
+          kArabicLineSpacingFactor; // Word 2007+ default for Arabic text (includes safety margin)
+
+      // Default "Normal" style in Word 2007+ usually has 10pt spacing after.
+      // We apply the same correction factor to this default.
+      // 10pt * 20 twips/pt * twipsToPx * kArabicLineSpacingFactor
+      spacingAfter = 10.0 * 20.0 * twipsToPx * kArabicLineSpacingFactor;
+
       return;
     }
 
@@ -120,17 +148,31 @@ class PPr {
     String? before = spacing.getAttribute("w:before");
     String? after = spacing.getAttribute("w:after");
 
-    if (before != null) {
+    // Check for auto-spacing overrides
+    bool beforeAuto = spacing.getAttribute("w:beforeAutospacing") == "1";
+    bool afterAuto = spacing.getAttribute("w:afterAutospacing") == "1";
+
+    // Spacing correction for Arabic layout consistency
+    const double verticalScaleCorrection = kArabicLineSpacingFactor;
+
+    if (beforeAuto) {
+      // Word uses approximately 10pt (7.5px) for auto-spacing
+      spacingBefore =
+          10.0 * twipsToPx * 20 * verticalScaleCorrection; // ~17.3px
+    } else if (before != null) {
       spacingBefore = double.tryParse(before);
       if (spacingBefore != null) {
-        spacingBefore = spacingBefore! * twipsToPx;
+        spacingBefore = spacingBefore! * twipsToPx * verticalScaleCorrection;
       }
     }
 
-    if (after != null) {
+    if (afterAuto) {
+      // Word uses approximately 10pt (7.5px) for auto-spacing
+      spacingAfter = 10.0 * twipsToPx * 20 * verticalScaleCorrection; // ~17.3px
+    } else if (after != null) {
       spacingAfter = double.tryParse(after);
       if (spacingAfter != null) {
-        spacingAfter = spacingAfter! * twipsToPx;
+        spacingAfter = spacingAfter! * twipsToPx * verticalScaleCorrection;
       }
     }
 
@@ -143,27 +185,58 @@ class PPr {
 
       if (lineRule == "auto" || lineRule == null) {
         // "auto": w:line is in 240ths of a line
-        // 240 = Single (1.0), 276 = 1.15, 360 = 1.5, 480 = Double (2.0)
-        lineHeight = lineVal / 240.0;
+        // 240 = Single (1.0), 360 = 1.5, 480 = Double (2.0)
+
+        // RESEARCH IMPLEMENTATION:
+        // Recent investigation confirms Word applies proprietary "Safety Margins" (extra leading)
+        // for Arabic scripts (like Traditional Arabic) to prevent clipping of deep diacritics.
+        // Flutter's Skia engine uses raw font metrics, resulting in simpler/tighter rendering.
+        // We MUST apply a correction factor to match Word's "Safety Margin".
+        const double arabicSafetyMargin = kArabicLineSpacingFactor;
+
+        lineHeight = (lineVal / 240.0) * arabicSafetyMargin;
+        forceStrutHeight = true;
       } else if (lineRule == "exact" || lineRule == "atLeast") {
         // "exact"/"atLeast": w:line is in twips (twentieths of a point)
         double points = lineVal / 20.0; // twips to points
 
-        if (lineRule == "atLeast" && points < 10) {
-          // For "atLeast" with very small values (like 0.9pt),
-          // Word uses the natural line height of the font.
-          // We tune this slightly below 1.15 to fit content on page without overflow.
-          lineHeight =
-              1.08; // تعديل دقيق لتقليل الـ Overflow (توفير حوالي 5-7%)
+        // Get actual font size from paragraph run properties (prPr)
+        // Default to 12pt if not specified (Word's default body font size)
+        double fontSize = 12.0;
+        String? fontSizeStr = xmlprPr
+            ?.getElement("w:sz")
+            ?.getAttribute("w:val");
+        if (fontSizeStr != null) {
+          // w:sz is in half-points
+          fontSize = (double.tryParse(fontSizeStr) ?? 24.0) / 2.0;
+        }
+
+        // Ensure minimum font size for calculation
+        if (fontSize < 8) fontSize = 12.0;
+
+        if (lineRule == "atLeast" && points < fontSize) {
+          // Fallback for atLeast small values - use Safety Margin
+          lineHeight = kArabicLineSpacingFactor;
+          forceStrutHeight = true;
         } else {
-          // Calculate the multiplier
-          double calculatedHeight = points / 14.0;
-          lineHeight = calculatedHeight < 0.8 ? 0.8 : calculatedHeight;
+          // Calculate the multiplier based on actual font size
+          double calculatedHeight = points / fontSize;
+
+          // Ensure reasonable bounds
+          if (calculatedHeight < 1.0) {
+            lineHeight = 1.0;
+          } else if (calculatedHeight > 3.0) {
+            lineHeight = 3.0;
+          } else {
+            lineHeight = calculatedHeight;
+          }
+          forceStrutHeight = true;
         }
       }
     } else {
-      // No w:line specified - default to Word 2007+ default
-      lineHeight = 1.15;
+      // Default fallback - use Safety Margin
+      lineHeight = kArabicLineSpacingFactor;
+      forceStrutHeight = true;
     }
   }
 
@@ -287,6 +360,9 @@ class PPr {
     return paddingH;
   }
 
+  @JsonKey(ignore: true)
+  XmlElement? styleRunProperties; // Defines text style excluding paragraph mark specific formatting
+
   getPStyle() {
     pStyle = xmlpPr?.getElement("w:pStyle")?.getAttribute("w:val");
     if (pStyle == null) return;
@@ -301,6 +377,13 @@ class PPr {
     if (style == null) return;
     XmlElement? pStyleXml = style.getElement("w:pPr");
     XmlElement? rStyleXml = style.getElement("w:rPr");
+
+    // Calculate effective text style (Style + Default) separate from Direct Formatting
+    // This ensures text runs inherit from the Style chain, not the Pilcrow formatting (e.g. Green paragraph mark)
+    styleRunProperties = mergeRPr(rStyleXml, wordDocument.defaultRPr?.rPr);
+
+    // Legacy merge for xmlpPr (Paragraph Props + Pilcrow Props)
+    // We still merge rStyleXml here so pPr knows about style defaults for the pilcrow too
     rStyleXml = mergeRPr(rStyleXml, wordDocument.defaultRPr?.rPr);
 
     xmlpPr = mergePPr(xmlpPr, pStyleXml, rStyleXml);

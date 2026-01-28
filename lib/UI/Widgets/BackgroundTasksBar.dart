@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Services/BookProcessingService.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/dialogs/batch_file_processing_dialog.dart';
 
 class BackgroundTasksBar extends StatelessWidget {
   const BackgroundTasksBar({super.key});
@@ -11,92 +12,96 @@ class BackgroundTasksBar extends StatelessWidget {
     return ValueListenableBuilder<List<ActiveTask>>(
       valueListenable: BookProcessingService().activeTasksNotifier,
       builder: (context, tasks, child) {
-        // If no tasks, verify if bar should slide down or disappear
-        // For simple MVP: Empty container
         if (tasks.isEmpty) {
           return const SizedBox.shrink();
         }
 
-        // We only show the latest task for now or a summary
-        final task = tasks.last;
+        // إيجاد أول كتاب نشط (ليس في الانتظار)
+        final activeTask = tasks.firstWhere(
+          (t) => t.state != ProcessingState.waitingForWord && t.state != ProcessingState.preparing,
+          orElse: () => tasks.first,
+        );
+        
+        final service = BookProcessingService();
+        final totalTasks = service.currentBatchFiles.length;
+        // حساب المكتملين نجاحاً من السجل المPersistent
+        final completedTasks = service.batchResults.values.where((v) => v == ProcessingState.completed).length;
 
-        return Container(
-          width: double.infinity,
-          height: 36, // Slim bar
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border(
-              top: BorderSide(color: Colors.grey.withOpacity(0.2)),
+        return InkWell(
+          onTap: () {
+            // إعادة فتح نافذة التفاصيل مع جميع ملفات الدفعة
+            final filePaths = service.currentBatchFiles;
+            if (filePaths.isEmpty) return;
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (ctx) => BatchFileProcessingDialog(
+                filePaths: filePaths,
+                isResuming: true, // لا نبدأ معالجة جديدة
+              ),
+            );
+          },
+          child: Container(
+            width: double.infinity,
+            height: 42,
+            decoration: BoxDecoration(
+              color: primaryColor.withOpacity(0.95),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  offset: const Offset(0, -2),
+                  blurRadius: 6,
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                offset: const Offset(0, -2),
-                blurRadius: 4,
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              // Icon
-              SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  value:
-                      task.state == ProcessingState.preparing ||
-                          task.state == ProcessingState.rendering
-                      ? null // indetermined for preparing
-                      : null, // spinning
-                  valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                // Icon
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
+                const SizedBox(width: 12),
 
-              // Text
-              Expanded(
-                child: Text(
-                  "${task.title}: ${task.message}",
-                  style: normalStyle().copyWith(fontSize: 12),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-
-              // Percentage
-              if (task.progress > 0)
-                Text(
-                  "${(task.progress * 100).toInt()}%",
-                  style: normalStyle().copyWith(
-                    fontSize: 12,
-                    color: primaryColor,
+                // Text
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "جاري إضافة الكتب ($completedTasks/$totalTasks)",
+                        style: normalStyle().copyWith(fontSize: 12, color: Colors.white),
+                      ),
+                      Text(
+                        activeTask.message,
+                        style: normalStyle().copyWith(fontSize: 10, color: Colors.white70),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 ),
 
-              const SizedBox(width: 12),
-
-              // Count if multiple
-              if (tasks.length > 1)
+                // اضغط للتفاصيل
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    "+${tasks.length - 1}",
-                    style: normalStyle().copyWith(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    "تفاصيل",
+                    style: normalStyle().copyWith(fontSize: 10, color: Colors.white),
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
         );
       },

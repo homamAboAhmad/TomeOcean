@@ -2,7 +2,7 @@
 # Execution Plan Update
 
 The test on `testDoc.docx` failed with a "File Corrupted" error from Word.
-I am now attempting to locate the user's requested book "البحر المحيط" in `C:\Users\nkxa2\Documents\البحر المحيط`.
+I am now attempting to locate the user's requested book "المكتبة" in `C:\Users\nkxa2\Documents\المكتبة`.
 
 ## Next Steps
 1.  **Locate File:** Find valid `.docx` files in the target directory.

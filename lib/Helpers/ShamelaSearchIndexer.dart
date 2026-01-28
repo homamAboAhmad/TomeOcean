@@ -203,6 +203,9 @@ class ShamelaSearchIndexer {
     String bookPath,
     List<WordPage> pages, {
     Function(double progress, String message)? onProgress,
+    bool Function()? shouldStop,
+    Future<void> Function()? acquireLock,
+    void Function()? releaseLock,
   }) async {
     await _engine.initialize();
 
@@ -218,6 +221,8 @@ class ShamelaSearchIndexer {
 
       List<Map<String, dynamic>> documents = [];
       for (int i = 0; i < pages.length; i++) {
+        if (shouldStop?.call() ?? false) return false; // Basic check
+
         WordPage page = pages[i];
         for (int j = 0; j < page.ps.length; j++) {
           var paragraph = page.ps[j];
@@ -261,6 +266,9 @@ class ShamelaSearchIndexer {
             onProgress?.call(progress, "Indexing: $current/$total paragraphs");
           }
         },
+        shouldStop: shouldStop,
+        acquireLock: acquireLock,
+        releaseLock: releaseLock,
       );
 
       onProgress?.call(1.0, "Done!");

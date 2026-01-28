@@ -19,9 +19,9 @@ class AppRoutes {
 /// تطبيق Flutter الرئيسي
 class MyApp extends StatefulWidget {
   final String? initialRoute;
-  
+
   const MyApp({Key? key, this.initialRoute}) : super(key: key);
-  
+
   @override
   State<MyApp> createState() => _MyAppState();
 }
@@ -30,14 +30,13 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final appState = AppState();
-    
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      title: 'المكتبة',
       navigatorKey: appState.navigatorKey,
       initialRoute: widget.initialRoute ?? AppRoutes.home,
       routes: AppRoutes.getRoutes(),
     );
   }
 }
-
-

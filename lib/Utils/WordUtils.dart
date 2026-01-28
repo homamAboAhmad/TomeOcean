@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 
 import 'package:golden_shamela/Controllers/IndexController.dart';
 import 'package:golden_shamela/main.dart';
@@ -13,6 +14,8 @@ import '../wordToHTML/ParagraphTable.dart';
 import '../wordToHTML/SectPr.dart';
 import 'TxtUtils.dart';
 import 'XmlParagraphExtractor.dart';
+import 'package:golden_shamela/Utils/XmlElementClone.dart';
+import 'package:golden_shamela/Utils/TocPageInjector.dart';
 
 class WordUtils {
   WordDocument wordDocument;
@@ -28,28 +31,46 @@ class WordUtils {
   }) async {
     List<WordPage> pages = [];
     List<XmlElement> allPs = getAllXmlParagraphs(body);
-    final totalParagraphs = allPs.length;
 
-    if (allPs.isEmpty) {
-      throw Exception("No paragraphs found in document body.");
+    // === Fix: Inject Page Markers for TOC using lastRenderedPageBreak ===
+    // This allows TOC to split across pages even if the Python script missed it.
+    // We assume TOC starts at the current max page (or 1 if new).
+    // Determining the start page is tricky. If TOC is at the beginning, it's 1.
+    // If it's in the middle, we need the last page seen.
+    // For now, we pass 1 as a baseline, but ideally we should track it.
+    // Since this runs on `allPs` before any processing, we can rely on `TocPageInjector`
+    // to find explicit pages if present in previous paragraphs.
+    // However, `allPs` contains EVERYTHING.
+    // Let's refine: We iterate and track page numbers.
+    // Actually, `TocPageInjector` logic handles the stream. We just need to call it.
+    // We start at page 1. The injector will increment as it finds breaks.
+    // Optimization: If `allPs` has explicit markers in non-TOC paragraphs,
+    // we should respect them. But `TocPageInjector` is designed for TOC only.
+    // Let's just call it.
+    TocPageInjector.injectPageMarkers(allPs, 1);
+    // ====================================================================
+
+    // === Refactoring Phase 5: Map-Based Pagination ===
+    Map<int, List<XmlElement>> pagesMap = _groupParagraphsByPage(allPs);
+
+    int maxPage = 1;
+    if (pagesMap.isNotEmpty) {
+      maxPage = pagesMap.keys.reduce(max);
     }
 
-    int j = 1;
-    while (allPs.isNotEmpty) {
-      WordPage wordPage = await getPage(allPs, pageNum: j);
+    for (int j = 1; j <= maxPage; j++) {
+      List<XmlElement> pagePs = pagesMap[j] ?? [];
+
+      WordPage wordPage = await getPage(pagePs, pageNum: j);
       pages.add(wordPage);
 
-      int processed = totalParagraphs - allPs.length;
-      onProgress?.call(processed, totalParagraphs);
-
-      j++;
+      onProgress?.call(j, maxPage);
     }
     return pages;
   }
 
-  getPage(List<XmlElement> allPs, {required int pageNum}) async {
+  getPage(List<XmlElement> pagePs, {required int pageNum}) async {
     try {
-      List<XmlElement> pagePs = getPageXmlPs(allPs);
       WordPage wordPage = WordPage(wordDocument);
       wordPage.parent = wordDocument;
       addPsToPage(wordPage, pagePs, pageNum: pageNum);
@@ -68,8 +89,36 @@ class WordUtils {
         runT run = p.runs[runIndex];
         if (run.footNoteId != null) {
           FootNote? footNote = wordDocument.docFootNotes[run.footNoteId];
-          footNote?.updateDisplayNumber(i.toString());
-          run.fnDisplayNum = i.toString();
+
+          // Determine context for formatting
+          // 1. Surrounding text in the main body (Paragraph p)
+          bool isBodyArabic = isArabicText(p.text);
+
+          // 2. Footnote text itself
+          bool isFootnoteArabic = false;
+          if (footNote != null && footNote.p.text.isNotEmpty) {
+            isFootnoteArabic = isArabicText(footNote.p.text);
+          }
+
+          // Format the number for the BODY (Inline reference)
+          String bodyNum = i.toString();
+          if (isBodyArabic) {
+            bodyNum = toArabicNumbers(bodyNum);
+          }
+
+          // Format the number for the FOOTNOTE (Bottom reference)
+          String footerNum = i.toString();
+          // Note: typically footnotes match the document language.
+          // If the footnote text is Arabic, OR if the reference is from Arabic text (and footnote is ambiguous/short), use Arabic.
+          if (isFootnoteArabic || isBodyArabic) {
+            footerNum = toArabicNumbers(footerNum);
+          }
+
+          // Update Footnote at the bottom
+          footNote?.updateDisplayNumber(footerNum);
+
+          // Update Inline Reference
+          run.fnDisplayNum = bodyNum;
           run.updateFnDisplayNumber();
           if (footNote != null) wordPage.fns.add(footNote);
 
@@ -121,140 +170,441 @@ class WordUtils {
     }
   }
 
-  List<XmlElement> getPageXmlPs(List<XmlElement> allPs) {
-    XmlElement? remainingParagraph;
-    int k = 0;
-    List<XmlElement> pagePs = [];
+  /// استخراج رقم الصفحة من {{PG:X}} marker داخل فقرة
+  int? _extractPgMarkerFromParagraph(XmlElement element) {
+    // تجميع النص الكامل للفقرة للتعامل مع الماركرات المقسمة على عدة runs
+    // Word قد يقسم النص: run1="{{", run2="PG:25", run3="}}"
+    String fullText = element
+        .findAllElements("w:t")
+        .map((e) => e.text)
+        .join("");
 
-    // Working in logical pixels (dp) is easier since Flutter uses dp
-    double pageHeightDp = wordDocument.sectpr?.height ?? 842;
-    double pageMarginDp =
-        (wordDocument.sectpr?.topMargin ?? 56) +
-        (wordDocument.sectpr?.bottomMargin ?? 56);
-    double availableHeightDp = pageHeightDp - pageMarginDp;
+    var match = RegExp(r"\{\{PG:(\d+)\}\}").firstMatch(fullText);
+    if (match != null) {
+      return int.parse(match.group(1)!);
+    }
+    return null;
+  }
 
-    double currentContentHeight = 0;
+  /// استخراج كل أرقام الصفحات من فقرة (للفقرات التي تحتوي على أكثر من marker)
+  /// تُرجع قائمة من أرقام الصفحات بترتيب ظهورها
+  List<int> _extractAllPgMarkersFromParagraph(XmlElement element) {
+    List<int> pageNumbers = [];
 
-    for (int i = 0; i < allPs.length; i++) {
-      XmlElement element = allPs[i];
-      XmlElement? nextElement = i + 1 < allPs.length ? allPs[i + 1] : null;
+    // نمر على كل الـ runs بالترتيب
+    var runs = element.findAllElements("w:r").toList();
+    for (var run in runs) {
+      var texts = run.findAllElements("w:t");
+      for (var t in texts) {
+        var text = t.text ?? "";
+        var matches = RegExp(r"\{\{PG:(\d+)\}\}").allMatches(text);
+        for (var match in matches) {
+          pageNumbers.add(int.parse(match.group(1)!));
+        }
+      }
+    }
 
-      bool isTocItem = element.getAttribute("isSdtRow") == "True";
+    return pageNumbers;
+  }
 
-      if (element.name.local == "tbl") {
-        var tableBreakInfo = getTableBreakPosition(element);
+  /// تقسيم فقرة تحتوي على markers متعددة إلى فقرات منفصلة
+  /// تُرجع قائمة من (pageNum, XmlElement) لكل جزء
+  List<MapEntry<int, XmlElement>> _splitParagraphByMarkers(XmlElement para) {
+    List<MapEntry<int, XmlElement>> result = [];
+    List<int> markers = _extractAllPgMarkersFromParagraph(para);
 
-        if (tableBreakInfo != null) {
-          String? position = tableBreakInfo["position"] as String;
+    // If no markers, treat as normal paragraph (page 1 or inherited depending on caller context, but here defaults to 1 if empty)
+    if (markers.isEmpty) {
+      result.add(MapEntry(1, para));
+      return result;
+    }
 
-          if (position == "start" && i > 0) {
-            break;
-          } else if (position == "middle") {
-            var splitResult = splitTableAtPageBreak(element);
-            if (splitResult != null) {
-              pagePs.add(splitResult['before']!);
-              k++;
-              remainingParagraph = splitResult['after'];
-              break;
-            }
-          } else if (position == "first_row") {
-            if (i > 0) {
-              break;
-            }
-          }
+    // Get all children of the original paragraph
+    var allChildren = para.children.whereType<XmlElement>().toList();
+
+    // Find indices of markers
+    List<int> markerChildIndices = [];
+    for (int i = 0; i < allChildren.length; i++) {
+      var child = allChildren[i];
+      if (child.name.local == "r") {
+        var textsJoined = child
+            .findAllElements("w:t")
+            .map((t) => t.text)
+            .join("");
+        if (textsJoined.contains(RegExp(r"\{\{PG:\d+\}\}"))) {
+          markerChildIndices.add(i);
+        }
+      }
+    }
+
+    if (markerChildIndices.length != markers.length) {
+      result.add(MapEntry(markers.first, para));
+      return result;
+    }
+
+    // 1. Check for Pre-Marker Content (Inherited from Previous Page)
+    int firstMarkerIdx = markerChildIndices[0];
+    bool hasPreContent = false;
+    for (int i = 0; i < firstMarkerIdx; i++) {
+      if (allChildren[i].name.local != "pPr") {
+        hasPreContent = true;
+        break;
+      }
+    }
+
+    if (hasPreContent) {
+      // Create Inherited Part: From Start (0) to First Marker (exclusive)
+      // The user wants to inject the "Previous Page" marker at the start of this part.
+      // We assume the previous page is (markers[0] - 1).
+      int prevPage = markers[0] > 1 ? markers[0] - 1 : 1;
+
+      var inheritedPara = _createPartialPara(
+        para,
+        0,
+        firstMarkerIdx,
+        allChildren,
+      );
+
+      // Inject {{PG:Prev}} at the beginning of the inherited part
+      _injectPageMarkerToPara(inheritedPara, prevPage);
+
+      result.add(MapEntry(-1, inheritedPara));
+    }
+
+    // 2. Create Marker Parts (Content associated with each marker)
+    // The user explicitly stated: "Keep the marker in the second copy".
+    // So the range MUST START AT 'markerChildIndices[m]' (Inclusive).
+    for (int m = 0; m < markers.length; m++) {
+      int start = markerChildIndices[m]; // Start AT the marker
+      int end = (m == markers.length - 1)
+          ? allChildren.length
+          : markerChildIndices[m + 1]; // End BEFORE next marker
+
+      var partPara = _createPartialPara(para, start, end, allChildren);
+      result.add(MapEntry(markers[m], partPara));
+    }
+
+    return result;
+  }
+
+  /// Helper to create a partial paragraph containing children from start to end index
+  XmlElement _createPartialPara(
+    XmlElement originalPara,
+    int startIdx,
+    int endIdx,
+    List<XmlElement> allChildren,
+  ) {
+    var paraCopy = XmlElement(
+      XmlName.fromString(originalPara.name.qualified),
+      originalPara.attributes
+          .map(
+            (a) => XmlAttribute(XmlName.fromString(a.name.qualified), a.value),
+          )
+          .toList(),
+      [],
+    );
+
+    // Always copy pPr if it exists (it defines style/alignment)
+    var pPr = originalPara.getElement("w:pPr");
+    if (pPr != null) {
+      paraCopy.children.add(pPr.copy());
+    }
+
+    // Copy children in range
+    for (int i = startIdx; i < endIdx; i++) {
+      // Skip pPr as we already added it (if it was in the range)
+      if (allChildren[i].name.local == "pPr") continue;
+      paraCopy.children.add(allChildren[i].copy());
+    }
+
+    return paraCopy;
+  }
+
+  /// استخراج رقم الصفحة من جدول (أول خلية في أول صف غير header)
+  int? _extractPgMarkerFromTable(XmlElement table) {
+    var allRows = table.findElements("w:tr").toList();
+    for (var row in allRows) {
+      // تخطي صفوف الـ header
+      var trPr = row.getElement("w:trPr");
+      if (trPr != null && trPr.getElement("w:tblHeader") != null) {
+        continue;
+      }
+      // البحث في أول خلية
+      var firstCell = row.findElements("w:tc").firstOrNull;
+      if (firstCell != null) {
+        // تجميع النص الكامل للخلية
+        String cellText = firstCell
+            .findAllElements("w:t")
+            .map((e) => e.text)
+            .join("");
+        var match = RegExp(r"\{\{PG:(\d+)\}\}").firstMatch(cellText);
+        if (match != null) {
+          return int.parse(match.group(1)!);
+        }
+      }
+    }
+    return null;
+  }
+
+  /// استخراج رقم الصفحة من أي عنصر (فقرة أو جدول)
+  int? _extractPgMarker(XmlElement element) {
+    if (element.name.local == "tbl") {
+      return _extractPgMarkerFromTable(element);
+    } else {
+      return _extractPgMarkerFromParagraph(element);
+    }
+  }
+
+  // === Refactoring: Pagination Phase 1 (Pre-Processing) ===
+  // تقوم هذه الدالة بتجهيز الفقرات:
+  // 1. كشف الكسور (Splits) ومعالجتها.
+  // 2. التحقق من الكسور الوهمية (Ghost Breaks).
+  // 3. حقن ماركر الصفحة للجزء الثاني من الانقسام لضمان التجميع السلس.
+  // === Refactoring: Pagination Phase 5 (Map-Based Approach) ===
+  // === تحديث: الآن نعتمد على Python للتعامل مع فواصل الصفحات ===
+  // === تحديث 2: Dart يقسم الفقرات التي تحتوي على markers متعددة ===
+  Map<int, List<XmlElement>> _groupParagraphsByPage(List<XmlElement> rawPs) {
+    Map<int, List<XmlElement>> pages = {};
+    int currentPage = 1;
+
+    void addToPage(int page, XmlElement element) {
+      if (!pages.containsKey(page)) {
+        pages[page] = [];
+      }
+      pages[page]!.add(element);
+    }
+
+    debugPrint("--- Start Grouping Paragraphs (Map Phase) ---");
+
+    for (var element in rawPs) {
+      // التحقق من نوع العنصر
+      if (element.name.local == "p") {
+        // فقرة: التحقق من وجود markers
+        List<int> markers = _extractAllPgMarkersFromParagraph(element);
+
+        if (element.getAttribute("isSdtRow") == "True") {
+          debugPrint(
+            "DEBUG SDT ROW: Markers: $markers. CurrentPage: $currentPage. Text: ${element.text.substring(0, element.text.length > 30 ? 30 : element.text.length)}",
+          );
         }
 
-        // If no split determined by Word, add full table
-        pagePs.add(element);
-        k++;
+        if (markers.isNotEmpty) {
+          // الفقرة تحتوي على markers (واحد أو أكثر) - نقسمها لضمان فصل المحتوى السابق
+          var splitParts = _splitParagraphByMarkers(element);
+          debugPrint(
+            "DEBUG: Split Paragraph into ${splitParts.length} parts. Markers: $markers",
+          );
+
+          for (var part in splitParts) {
+            int targetPage = part.key;
+            int finalTargetPage = targetPage;
+
+            // -1 Indicates "Inherited" content (belongs to previous page)
+            if (targetPage == -1) {
+              finalTargetPage = currentPage;
+              debugPrint(
+                "  Part INHERITED -> assigned to Page $finalTargetPage",
+              );
+            } else {
+              // Explicit page marker, switch current page
+              currentPage = targetPage;
+              finalTargetPage = targetPage;
+              debugPrint(
+                "  Part MARKER ($targetPage) -> assigned to Page $finalTargetPage",
+              );
+            }
+            addToPage(finalTargetPage, part.value);
+          }
+        } else {
+          // فقرة عادية بدون markers
+          addToPage(currentPage, element);
+        }
+      } else {
+        // جدول أو عنصر آخر
+        int? markerPage = _extractPgMarker(element);
+        if (markerPage != null) {
+          currentPage = markerPage;
+        }
+        addToPage(currentPage, element);
+      }
+
+      // Legacy manual increment removed. We now trust {{PG:X}} markers exclusively.
+      // if (isSectPr(element) || hasFullPageImage(element, wordDocument)) {
+      //   currentPage++;
+      // }
+    }
+
+    debugPrint("--- End Grouping: Mapped ${pages.keys.length} pages ---");
+    return pages;
+  }
+
+  // دالة مساعدة لحقن الماركر في الفقرة
+  void _injectPageMarkerToPara(XmlElement para, int pageNum) {
+    // Check existing
+    if (_extractPgMarker(para) != null) {
+      debugPrint("Marker {{PG:$pageNum}} already exists, skipping injection.");
+      return;
+    }
+
+    var runs = para.findAllElements('w:r');
+    if (runs.isNotEmpty) {
+      var firstRun = runs.first;
+      var t = firstRun.findAllElements('w:t').firstOrNull;
+      if (t != null) {
+        String newText = "{{PG:$pageNum}}${t.text}";
+        t.children.clear();
+        t.children.add(XmlText(newText));
+        debugPrint("Injected {{PG:$pageNum}} into existing run.");
+      } else {
+        firstRun.children.insert(
+          0,
+          XmlElement(XmlName('w:t'), [], [XmlText("{{PG:$pageNum}}")]),
+        );
+        debugPrint("Injected {{PG:$pageNum}} into new w:t in existing run.");
+      }
+    } else {
+      // Create Run if missing
+      para.children.add(
+        XmlElement(XmlName('w:r'), [], [
+          XmlElement(XmlName('w:t'), [], [XmlText("{{PG:$pageNum}}")]),
+        ]),
+      );
+      debugPrint("Injected {{PG:$pageNum}} into new run.");
+    }
+  }
+
+  /// تقسيم الفقرة إلى جزئين عند lastRenderedPageBreak
+  Map<String, XmlElement>? splitParagraphAtRenderedBreak(XmlElement para) {
+    if (para.findAllElements("w:lastRenderedPageBreak").isEmpty) return null;
+
+    XmlElement para1 = XmlElement(
+      XmlName.fromString(para.name.toXmlString()),
+      para.attributes
+          .map(
+            (attr) => XmlAttribute(
+              XmlName.fromString(attr.name.toXmlString()),
+              attr.value,
+            ),
+          )
+          .toList(),
+      [],
+      para.isSelfClosing,
+    );
+
+    XmlElement para2 = XmlElement(
+      XmlName.fromString(para.name.toXmlString()),
+      para.attributes
+          .map(
+            (attr) => XmlAttribute(
+              XmlName.fromString(attr.name.toXmlString()),
+              attr.value,
+            ),
+          )
+          .toList(),
+      [],
+      para.isSelfClosing,
+    );
+
+    // نسخ الخصائص
+    var pPr = para.getElement("w:pPr");
+    if (pPr != null) {
+      para1.children.add(pPr.clone());
+      para2.children.add(pPr.clone());
+    }
+
+    bool breakFound = false;
+
+    for (var child in para.children) {
+      if (child is! XmlElement) {
         continue;
       }
 
-      String breakPosition = getLastRenderBreakPosition(element);
+      // تخطي pPr لأننا نسخناه بالفعل
+      if (child.name.local == "pPr") continue;
 
-      if (breakPosition == "start" && i > 0) {
-        break;
-      } else if (breakPosition == "middle") {
-        var splitResult = splitParagraphAtBreak(element);
-        if (splitResult != null) {
-          pagePs.add(splitResult['before']!);
-          k++;
-          remainingParagraph = splitResult['after'];
-          break;
-        }
+      if (breakFound) {
+        para2.children.add(child.clone());
+        continue;
       }
 
-      if (isTocItem) {
-        double itemHeight = 30.0;
-        var rPr = element.findAllElements("w:rPr").firstOrNull;
-        if (rPr != null) {
-          var sz = rPr.findAllElements("w:sz").firstOrNull;
-          if (sz != null) {
-            var val = double.tryParse(sz.getAttribute("w:val") ?? "28");
-            if (val != null) {
-              double fontSizePt = val / 2;
-              itemHeight = fontSizePt * 2.1;
-              if (fontSizePt > 24) {
-                itemHeight += 40;
-              }
+      if (child.name.local == "r") {
+        var breakElement = child.getElement("w:lastRenderedPageBreak");
+        if (breakElement != null) {
+          breakFound = true;
+
+          // === تقسيم الـ Run داخلياً ===
+          XmlElement run1 = XmlElement(
+            XmlName.fromString(child.name.toXmlString()),
+            child.attributes
+                .map(
+                  (a) => XmlAttribute(
+                    XmlName.fromString(a.name.toXmlString()),
+                    a.value,
+                  ),
+                )
+                .toList(),
+            [],
+            child.isSelfClosing,
+          );
+
+          XmlElement run2 = XmlElement(
+            XmlName.fromString(child.name.toXmlString()),
+            child.attributes
+                .map(
+                  (a) => XmlAttribute(
+                    XmlName.fromString(a.name.toXmlString()),
+                    a.value,
+                  ),
+                )
+                .toList(),
+            [],
+            child.isSelfClosing,
+          );
+
+          // نسخ rPr
+          var rPr = child.getElement("w:rPr");
+          if (rPr != null) {
+            run1.children.add(rPr.clone());
+            run2.children.add(rPr.clone());
+          }
+
+          bool splitInRun = false;
+          // التكرار على العقد داخل الـ run (نصوص، صور، إلخ)
+          for (var runChild in child.children) {
+            if (runChild is XmlElement && runChild.name.local == "rPr")
+              continue;
+
+            if (runChild is XmlElement &&
+                runChild.name.local == "lastRenderedPageBreak") {
+              splitInRun = true;
+              continue;
+            }
+
+            if (splitInRun) {
+              run2.children.add(_cloneNodeManual(runChild));
+            } else {
+              run1.children.add(_cloneNodeManual(runChild));
             }
           }
-        }
 
-        currentContentHeight += itemHeight;
-        double safetyMargin = 50.0;
+          if (run1.children.isNotEmpty) para1.children.add(run1);
+          if (run2.children.isNotEmpty) para2.children.add(run2);
 
-        if (currentContentHeight > (availableHeightDp - safetyMargin) &&
-            k > 0) {
-          if (nextElement != null &&
-              nextElement.getAttribute("isSdtRow") == "True") {
-            break;
-          }
+          continue;
         }
       }
 
-      pagePs.add(element);
-      k++;
-
-      var brPageResult = splitParagraphAtBrPage(element);
-      if (brPageResult != null) {
-        pagePs.removeLast();
-        pagePs.add(brPageResult['before']!);
-
-        var afterParagraph = brPageResult['after'];
-        if (afterParagraph != null) {
-          bool hasContent = afterParagraph.findElements("w:r").isNotEmpty;
-          if (hasContent) {
-            remainingParagraph = afterParagraph;
-          }
-        }
-
-        if (nextElement != null && isEmptySectPrParagraph(nextElement)) {
-          pagePs.add(nextElement);
-          k++;
-        }
-
-        break;
-      }
-
-      if (hasBrPage(element, nextElement: nextElement)) {
-        if (nextElement != null && isEmptySectPrParagraph(nextElement)) {
-          pagePs.add(nextElement);
-          k++;
-        }
-        break;
-      }
-
-      if (isSectPr(element)) {
-        break;
-      }
-
-      if (hasFullPageImage(element, wordDocument)) break;
+      para1.children.add(child.clone());
     }
 
-    updateAllPs(allPs, k, remainingParagraph);
+    return {'before': para1, 'after': para2};
+  }
 
-    return pagePs;
+  // دالة مساعدة لنسخ العقد غير Elements (مثل النصوص)
+  XmlNode _cloneNodeManual(XmlNode node) {
+    if (node is XmlElement) return node.clone();
+    if (node is XmlText) return XmlText(node.text);
+    return node; // fallback (reference copy for comments etc which is irrelevant mostly)
   }
 
   void updateAllPs(
@@ -357,17 +707,6 @@ class WordUtils {
 
     return !hasContent;
   }
-}
-
-String _toArabicNumerals(String input) {
-  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  const arabicIndic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-
-  String result = input;
-  for (int i = 0; i < western.length; i++) {
-    result = result.replaceAll(western[i], arabicIndic[i]);
-  }
-  return result;
 }
 
 int? _getRowPageNum(XmlElement row) {

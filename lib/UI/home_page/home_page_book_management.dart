@@ -48,6 +48,7 @@ class HomePageBookManagement {
           // تحميل الـ Archive لتمكين قراءة ملفات التذييل/الترويسة
           final appState = AppState();
           appState.docArchive = await FileToArchive(filePath);
+          wordDocument.archive = appState.docArchive;
 
           wordDocument.pagesDirectory = pagesDir.path;
 

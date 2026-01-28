@@ -55,6 +55,30 @@ XmlElement? getTableStyleBorders(String? styleId, WordDocument? wordDocument) {
   return null;
 }
 
+/// Get hyperlink style (rPr) from styles.xml
+/// Word typically defines a "Hyperlink" style with color and underline
+/// Returns the rPr element from the Hyperlink style, or null if not found
+XmlElement? getHyperlinkStyleRPr(WordDocument? wordDocument) {
+  if (wordDocument == null) return null;
+
+  // Try common hyperlink style names
+  const hyperlinkStyleNames = [
+    'Hyperlink',
+    'hyperlink',
+    'Internet Link',
+    'FollowedHyperlink',
+  ];
+
+  for (String styleName in hyperlinkStyleNames) {
+    XmlElement? style = getDocumentStyle(styleName, wordDocument);
+    if (style != null) {
+      return style.getElement("w:rPr");
+    }
+  }
+
+  return null;
+}
+
 XmlElement? getDocumentStyle(String styleId, WordDocument? wordDocument) {
   XmlElement? xmlElement = wordDocument?.documentStyles[styleId];
   String? basedOnStyle = xmlElement

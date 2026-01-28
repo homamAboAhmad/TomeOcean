@@ -1,0 +1,621 @@
+
+
+--- Session Start: 2026-01-26 22:04:54.378169 ---
+Raw Args: ['scripts\\fix_word_images.py', 'C:\\Users\\HP\\Documents\\المكتبة\\ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:19:02.444853 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:19:12.318606 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:20:32.041358 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:20:40.973921 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:27:44.256704 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:27:56.363798 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:30:22.584557 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:30:36.116615 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:34:44.392458 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 22:36:09.281183 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 23:04:36.118814 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 23:08:51.608814 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 23:13:38.114940 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 23:21:25.336692 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-26 23:25:34.540287 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-27 00:20:57.272505 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-27 00:35:56.984674 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-01-27 00:43:00.814153 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 14:46:45.268066 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 16:15:54.307056 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 16:29:26.908823 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 16:54:04.217580 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 17:09:45.660016 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 17:45:00.794690 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-01-28 17:47:01.806265 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-01-28 17:52:49.801355 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 17:55:35.294133 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 17:57:51.593530 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 19:25:35.085902 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 19:31:36.441437 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 19:33:29.124281 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 20:15:07.759107 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 20:17:40.060610 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 20:27:32.332198 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 20:28:50.034829 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-01-28 21:11:10.572178 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 21:16:15.122141 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 21:52:03.674643 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-01-28 22:26:56.111131 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-01-28 22:27:07.485981 ---
+Raw Args: ['dist\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!

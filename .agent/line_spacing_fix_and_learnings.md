@@ -20,7 +20,7 @@ We modified the logic for handling `w:lineRule="atLeast"` when the specified val
     *   **Why 1.08?** Word defaults to "Natural Line Height" when the specified "atLeast" value is smaller than the font size. For Arabic text, the standard natural height is around **1.15**. However, to perfectly fit the content without overflow in our Flutter implementation, **1.08** proved to be the "sweet spot"—providing comfortable legibility without wasting vertical space.
 
 ```dart
-// d:\ImportantProjects\golden_shamela\lib\wordToHTML\PPr.dart
+// d:\ImportantProjects\المكتبة\lib\wordToHTML\PPr.dart
 
 if (lineRule == "atLeast" && points < 10) {
   // For "atLeast" with very small values (like 0.9pt),

@@ -104,6 +104,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios, color: secondaryColor),
             onPressed: () => Navigator.of(context).pop(),
+            tooltip: 'رجوع',
           ),
           title: Text('الإعدادات', style: bigStyle(color: secondaryColor)),
           centerTitle: true,

@@ -346,7 +346,7 @@ class SectPr {
       return null;
     }
 
-    var archiveMap = AppState().docArchive.toMap();
+    var archiveMap = parent.archive?.toMap() ?? AppState().docArchive.toMap();
 
     ArchiveFile? archiveFile = archiveMap[path];
     if (archiveFile == null) {
@@ -381,7 +381,7 @@ class SectPr {
       relsPath = "_rels/$filename.rels";
     }
 
-    var archiveMap = AppState().docArchive.toMap();
+    var archiveMap = parent.archive?.toMap() ?? AppState().docArchive.toMap();
     ArchiveFile? relsFile = archiveMap[relsPath];
 
     if (relsFile != null) {
@@ -395,7 +395,7 @@ class SectPr {
       return null;
     }
 
-    var archiveMap = AppState().docArchive.toMap();
+    var archiveMap = parent.archive?.toMap() ?? AppState().docArchive.toMap();
 
     ArchiveFile? archiveFile = archiveMap[path];
     if (archiveFile == null) {
@@ -426,19 +426,64 @@ class SectPr {
     bool titlePg = sectPrElement?.findElements("w:titlePg").isNotEmpty ?? false;
     bool evenAndOddHeaders = parent.evenAndOddHeaders ?? false;
 
+    int sectionIndex = parent.sectPrList.indexOf(this);
+
     if (pageInSection == 1 && titlePg) {
-      path = headerFirstPath ?? headerDefaultPath ?? headerOddPath;
+      if (headerFirstPath != null) {
+        path = headerFirstPath;
+      } else {
+        path = _inheritHeaderFirst(sectionIndex);
+      }
     } else if (evenAndOddHeaders && pageInSection.isEven) {
-      path = headerEvenPath ?? headerOddPath ?? headerDefaultPath;
+      if (headerEvenPath != null) {
+        path = headerEvenPath;
+      } else {
+        path = _inheritHeaderEven(sectionIndex);
+      }
     } else {
-      path = headerOddPath ?? headerDefaultPath;
+      if (headerOddPath != null) {
+        path = headerOddPath;
+      } else if (headerDefaultPath != null) {
+        path = headerDefaultPath;
+      } else {
+        path = _inheritHeaderOdd(sectionIndex);
+      }
     }
 
     if (path != null) {
       headerRelations = _loadRelationshipsForPart(path);
+    } else {
+      // Fallback: This usually happens if inheritance found nothing or logic gap.
+      // But getRequestedHeader logic usually resolves to something if header exists.
     }
 
     if (currentHeader == null) return Container();
+
+    // DEBUG: Save full header XML and relations to file
+    try {
+      StringBuffer debugBuffer = StringBuffer();
+      debugBuffer.writeln("=== HEADER DEBUG ===");
+      debugBuffer.writeln("Path: $path");
+      debugBuffer.writeln(
+        "HeaderRelations count: ${headerRelations?.length ?? 0}",
+      );
+      debugBuffer.writeln("");
+      debugBuffer.writeln("--- headerRelations keys ---");
+      headerRelations?.forEach((key, value) {
+        debugBuffer.writeln("$key -> ${value.Target}");
+      });
+      debugBuffer.writeln("");
+      debugBuffer.writeln("--- FULL HEADER XML ---");
+      debugBuffer.writeln(currentHeader.toXmlString(pretty: true));
+
+      final file = File(
+        'd:/ImportantProjects/golden_shamela/header_full_debug.xml',
+      );
+      file.writeAsStringSync(debugBuffer.toString());
+      // print("DEBUG: Full header saved to ${file.path}");
+    } catch (e) {
+      print("DEBUG: Error saving header: $e");
+    }
 
     List<Widget> psWidgets = [];
 
@@ -484,10 +529,7 @@ class SectPr {
       // Skip other elements like bookmarkStart, bookmarkEnd
     }
 
-    return GestureDetector(
-      onLongPress: () {},
-      child: Column(mainAxisSize: MainAxisSize.min, children: psWidgets),
-    );
+    return Column(mainAxisSize: MainAxisSize.min, children: psWidgets);
   }
 
   Widget getSectFooterWidget(WordPage wordPage, String pageNumStr) {

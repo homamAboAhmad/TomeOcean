@@ -64,7 +64,7 @@ When page numbers are skipping, resetting unexpectedly, or showing wrong values.
 
 1. **Consult Word XML documentation**:
    ```
-   d:\ImportantProjects\golden_shamela\WordXmlDoumentation\
+   d:\ImportantProjects\المكتبة\WordXmlDoumentation\
    ```
 
 2. **Search for relevant elements**:
@@ -102,7 +102,7 @@ When page numbers are skipping, resetting unexpectedly, or showing wrong values.
 ## Project Structure Reference | مرجع هيكل المشروع
 
 ```
-golden_shamela/
+المكتبة/
 ├── lib/
 │   ├── Models/
 │   │   ├── WordDocument.dart   # Main document model

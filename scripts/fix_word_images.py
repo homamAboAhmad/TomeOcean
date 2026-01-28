@@ -4,6 +4,35 @@ import io
 import sys
 from PIL import Image
 import shutil
+import datetime
+
+# GLOBAL LOG FILE PATH
+LOG_FILE = None
+
+def setup_logging(docx_path):
+    global LOG_FILE
+    try:
+        # Fallback to local log first to ensure we catch argv issues
+        LOG_FILE = "debug_fixer.txt"
+        
+        # Initialize/Clear log
+        with open(LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"\n\n--- Session Start: {datetime.datetime.now()} ---\n")
+            f.write(f"Raw Args: {sys.argv}\n")
+            f.write(f"Target (passed): {docx_path}\n")
+            f.write(f"CWD: {os.getcwd()}\n")
+    except:
+        pass
+
+def safe_print(msg):
+    """Log to file ONLY. No console output to avoid encoding crashes."""
+    global LOG_FILE
+    if LOG_FILE:
+        try:
+            with open(LOG_FILE, "a", encoding="utf-8") as f:
+                f.write(str(msg) + "\n")
+        except:
+            pass
 
 def convert_emf_to_png(emf_bytes):
     """
@@ -12,8 +41,8 @@ def convert_emf_to_png(emf_bytes):
     try:
         # Create a temporary file for the EMF data
         # Pillow on Windows handles EMF better from file path
-        temp_emf = "temp_image.emf"
-        temp_png = "temp_image.png"
+        temp_emf = f"temp_image_{os.getpid()}.emf"
+        temp_png = f"temp_image_{os.getpid()}.png"
         
         # Write bytes to temp file
         with open(temp_emf, "wb") as f:
@@ -22,7 +51,6 @@ def convert_emf_to_png(emf_bytes):
         try:
             # Try opening and saving
             with Image.open(temp_emf) as img:
-                # print(f"    Image info: {img.format} {img.size} {img.mode}")
                 img.save(temp_png, "PNG")
             
             # Read back the PNG
@@ -37,28 +65,26 @@ def convert_emf_to_png(emf_bytes):
                 return png_bytes
             
         except Exception as e:
-            print(f"    Pillow conversion failed: {e}")
+            safe_print(f"    Pillow conversion failed: {e}")
             if os.path.exists(temp_emf): os.remove(temp_emf)
             if os.path.exists(temp_png): os.remove(temp_png)
             return None
 
     except Exception as e:
-        print(f"Error converting EMF to PNG: {e}")
+        safe_print(f"Error converting EMF to PNG: {e}")
         return None
 
 def process_docx(docx_path):
-    print(f"Processing: {docx_path}")
-    print("Version: 2.0 (Pillow Only)") # للتأكد من النسخة
+    setup_logging(docx_path)
+    safe_print(f"Processing: {docx_path}")
+    safe_print("Version: 3.0 (File Log Mode)") 
     
     temp_dir = "temp_docx_extract" + str(os.getpid()) # Unique temp dir
     if os.path.exists(temp_dir):
-        shutil.rmtree(temp_dir)
-    
-    # Debug folder for images
-    debug_dir = os.path.join(os.path.dirname(docx_path), "debug_images")
-    if not os.path.exists(debug_dir):
-        os.makedirs(debug_dir)
-        print(f"Debug images will be saved to: {debug_dir}")
+        try:
+            shutil.rmtree(temp_dir)
+        except:
+            pass
     
     try:
         # 1. Extract Docx
@@ -67,7 +93,7 @@ def process_docx(docx_path):
             
         media_path = os.path.join(temp_dir, "word", "media")
         if not os.path.exists(media_path):
-            print("No media folder found.")
+            safe_print("No media folder found.")
             return
 
         changes_made = False
@@ -91,47 +117,45 @@ def process_docx(docx_path):
                     pass
             
             if is_emf:
-                print(f"Found EMF image: {filename}")
+                safe_print(f"Found EMF image: {filename}")
                 
                 with open(file_path, "rb") as f:
                     emf_bytes = f.read()
                 
                 # Always use Pillow for conversion (Reliable)
-                print(f"  -> Converting {filename} to PNG...")
+                safe_print(f"  -> Converting {filename} to PNG...")
                 png_bytes = convert_emf_to_png(emf_bytes)
                 
                 if png_bytes:
                     # Overwrite the file with PNG data
                     with open(file_path, "wb") as f:
                         f.write(png_bytes)
-                    print(f"  -> Replaced {filename} with PNG data.")
+                    safe_print(f"  -> Replaced {filename} with PNG data.")
                     changes_made = True
-                    
-                    # Save debug image
-                    debug_path = os.path.join(debug_dir, f"{filename}_converted.png")
-                    with open(debug_path, "wb") as f:
-                        f.write(png_bytes)
-                    print(f"  -> Debug image saved to {debug_path}")
-                    
                 else:
-                    print(f"  -> Failed to convert {filename}")
+                    safe_print(f"  -> Failed to convert {filename}")
 
         # 3. Re-zip if changes made
         if changes_made:
-            print("Saving changes...")
+            safe_print("Saving changes...")
             
             with zipfile.ZipFile(docx_path, 'w', zipfile.ZIP_DEFLATED) as zip_out:
                 for root, dirs, files in os.walk(temp_dir):
                     for file in files:
                         full_path = os.path.join(root, file)
                         rel_path = os.path.relpath(full_path, temp_dir)
-                        zip_out.write(full_path, rel_path)
-            print("Done!")
+                        # Ensure we write valid paths inside zip
+                        # Use forward slashes for zip internal paths
+                        arcname = os.path.relpath(full_path, temp_dir).replace("\\", "/")
+                        zip_out.write(full_path, arcname)
+            safe_print("Done!")
         else:
-            print("No EMF images converted.")
+            safe_print("No EMF images converted.")
 
     except Exception as e:
-        print(f"Error processing docx: {e}")
+        safe_print(f"Error processing docx: {e}")
+        import traceback
+        safe_print(traceback.format_exc())
     finally:
         if os.path.exists(temp_dir):
             try:
@@ -141,6 +165,7 @@ def process_docx(docx_path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python fix_word_images.py <docx_path>")
+        # No args, nothing to do
+        pass
     else:
         process_docx(sys.argv[1])

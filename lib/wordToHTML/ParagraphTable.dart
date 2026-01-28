@@ -7,6 +7,7 @@ import 'package:golden_shamela/wordToHTML/DocumentStyles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
+import 'package:golden_shamela/wordToHTML/SectPr.dart';
 import 'package:xml/xml.dart';
 
 class ParagraphTable extends Paragraph {
@@ -71,15 +72,61 @@ class WordTableWidget extends StatelessWidget {
     // 4. Determine Scale Factor and Final Width
     double scaleFactor;
     double finalTableWidth;
+    double? targetWidthPx;
 
-    if (naturalWidthPx <= screenWidth) {
-      // If table fits, use its natural size
-      scaleFactor = 0.0667;
-      finalTableWidth = naturalWidthPx;
+    // --- NEW: Respect w:tblW (Total Table Width) ---
+    var tblPr = tblXml.getElement('w:tblPr');
+    var tblW = tblPr?.getElement('w:tblW');
+    if (tblW != null) {
+      String type = tblW.getAttribute('w:type') ?? 'auto';
+      double val = double.tryParse(tblW.getAttribute('w:w') ?? '0') ?? 0;
+
+      if (val > 0) {
+        if (type == 'pct') {
+          // Percentage: val is in 1/50th of a percent (5000 = 100%)
+          // Relies on Page Width from SectPr
+          SectPr sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
+          // SectPr properties are already in Display Pixels (dp) ~ 0.0667 scale
+          double pageBodyWidth =
+              (sectPr.width ?? screenWidth) -
+              (sectPr.leftMargin) -
+              (sectPr.rightMargin);
+          if (pageBodyWidth <= 0) pageBodyWidth = screenWidth;
+
+          targetWidthPx = pageBodyWidth * (val / 5000.0);
+        } else if (type == 'dxa') {
+          // Twips
+          targetWidthPx = val * 0.0667;
+        }
+      }
+    }
+
+    if (targetWidthPx != null && targetWidthPx > 0) {
+      // If we have an explicit target width (e.g. 92% of page), use it.
+      // But limit to screen width to prevent overflow
+      if (targetWidthPx > screenWidth) {
+        finalTableWidth = screenWidth;
+      } else {
+        finalTableWidth = targetWidthPx;
+      }
+      // Re-calculate scale factor: distribute the target width across the grid twips
+      // if totalGridTwips is 0 or 1, avoid div/0
+      if (totalGridTwips > 1) {
+        scaleFactor = finalTableWidth / totalGridTwips;
+      } else {
+        scaleFactor = 0.0667;
+      }
     } else {
-      // If table is too big, scale it down to fit screen
-      finalTableWidth = screenWidth;
-      scaleFactor = screenWidth / totalGridTwips;
+      // Fallback to old Grid Logic
+      if (naturalWidthPx <= screenWidth) {
+        // If table fits, use its natural size
+        scaleFactor = 0.0667;
+        finalTableWidth = naturalWidthPx;
+      } else {
+        // If table is too big, scale it down to fit screen
+        finalTableWidth = screenWidth;
+        scaleFactor = screenWidth / totalGridTwips;
+      }
     }
 
     // Generate Rows
@@ -308,12 +355,45 @@ class WordTableWidget extends StatelessWidget {
       // IMPORTANT: Reset numbering indentation for table cells
       // Word behavior: When a ListParagraph is inside a table cell,
       // indentation is applied RELATIVE to the cell boundaries, not the page.
-      // The paragraph indentation values (from numbering levels) are designed
-      // for full-page paragraphs. Inside narrow table cells, this causes
-      // text wrapping. The cell itself provides the container boundaries.
       if (paragraph.pPr != null) {
         paragraph.pPr!.paddingLeft = 0;
         paragraph.pPr!.paddingRight = 0;
+
+        // --- HEIGHT FIX: Remove default spacing in table cells ---
+        // PPr.dart defaults to "Normal" style spacing (10pt after) if not present.
+        // In tables, this causes excessive height. We force 0 here ONLY if not explicitly set.
+        bool hasExplicitSpacing =
+            pXml.getElement('w:pPr')?.getElement('w:spacing') != null;
+        if (!hasExplicitSpacing) {
+          paragraph.pPr!.spacingBefore = 0;
+          paragraph.pPr!.spacingAfter = 0;
+        }
+      }
+
+      // --- HEIGHT FIX: Remove trailing breaks (w:br) in table cells ---
+      // These are often used in Word tables (e.g. <w:br/><w:t> </w:t>) but cause double height in Flutter.
+      if (paragraph.runs.isNotEmpty) {
+        for (int i = paragraph.runs.length - 1; i >= 0; i--) {
+          var run = paragraph.runs[i];
+          String txt = run.text ?? "";
+
+          // Check for "tiny" or "hidden" text often used as anchors/markers (e.g. 1pt)
+          // w:sz in XML is half-points. 4 = 2pt. We treat anything <= 4 as hidden.
+          // Default to 20 (10pt) if null so we don't accidentally hide normal text.
+          double size = run.rpr?.fontSize ?? 20.0;
+          bool isTiny = size <= 4.0;
+
+          if (txt.trim().isEmpty || isTiny) {
+            // Empty, whitespace, or tiny run: remove all breaks and continue backwards
+            // We want to clear the break even if this specific run is where it lives
+            run.hasBrAfter = false;
+            run.hasBrBefore = false;
+          } else {
+            // Content run: remove trailing break only, then stop
+            run.hasBrAfter = false;
+            break;
+          }
+        }
       }
 
       pWidgets.add(

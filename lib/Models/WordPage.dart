@@ -1,4 +1,5 @@
 // import 'package:flutter_html/flutter_html.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/wordToHTML/FootNote.dart';
@@ -126,13 +127,21 @@ class WordPage {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ...fns.map(
-          (fn) => SelectionArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 2.0,
+          (fn) => GestureDetector(
+            onLongPress: () {
+              print(
+                "🔍 FOOTNOTE DEBUG: Long Press Detected on Footnote ID: ${fn.id}",
+              );
+              fn.p.printParagraphXml();
+            },
+            child: SelectionArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 2.0,
+                ),
+                child: fn.p.toWidget(),
               ),
-              child: fn.p.toWidget(),
             ),
           ),
         ),
@@ -235,13 +244,13 @@ class WordPage {
       "╚══════════════════════════════════════════════════════════════════╝",
     );
 
-    // try {
-    //   final file = File('page_xml_debug.xml');
-    //   file.writeAsStringSync(buffer.toString());
-    //   print("✅ XML saved to file: ${file.absolute.path}");
-    // } catch (e) {
-    //   print("❌ Error saving XML to file: $e");
-    // }
+    try {
+      final file = File('test_page_xml.xml');
+      file.writeAsStringSync(buffer.toString());
+      print("✅ XML saved to file: ${file.absolute.path}");
+    } catch (e) {
+      print("❌ Error saving XML to file: $e");
+    }
   }
 }
 
@@ -249,15 +258,18 @@ List<ImageData> getParagraphImages(List<Paragraph> paragraphs) {
   List<ImageData> list = [];
   paragraphs.forEach((p) {
     p.runs.forEach((r) {
-      if (r.image != null && !r.isRelativeFromVParagraph()) {
+      // FIX: Exclude inline images (wrapMode == null) from the page-level image stack.
+      // Inline images are already rendered within the text flow (Paragraph.toWidget).
+      // Including them here causes duplication (appearing at 0,0 or top-left).
+      if (r.image != null &&
+          r.image!.wrapMode != null &&
+          !r.isRelativeFromVParagraph()) {
         // تخطي مربعات النص هنا لأننا نعرضها داخل الفقرة نفسها
         if (r.image!.textBoxText != null && r.image!.textBoxText!.isNotEmpty) {
           return;
         }
         list.add(r.image!);
-      } /*else if (r.image != null && r.isRelativeFromVParagraph()) {
-        print("there is image but is relative");
-      }*/
+      }
     });
   });
   // ترتيب الصور: في Stack العناصر الأخيرة تظهر فوق العناصر السابقة

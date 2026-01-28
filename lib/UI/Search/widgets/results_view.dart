@@ -40,7 +40,11 @@ class SearchResultsView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('النتائج: $totalCount', style: mediumStyle()),
-              IconButton(icon: Icon(Icons.close), onPressed: onClose),
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: onClose,
+                tooltip: 'إغلاق',
+              ),
             ],
           ),
         ),

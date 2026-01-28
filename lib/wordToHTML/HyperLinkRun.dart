@@ -1,10 +1,17 @@
+import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../main.dart';
 
 class HyperLinkRun extends runT {
+  String? url;
+  String? tooltip; // w:tooltip attribute from hyperlink
+
   HyperLinkRun(super.parent, {required super.prPr, required super.pPr});
+
   @override
   void checkParaRpr() {
     rpr?.b = prPr?.b;
@@ -17,6 +24,41 @@ class HyperLinkRun extends runT {
     rpr?.font ??= prPr?.font;
     rpr?.fontSize = prPr?.fontSize;
     rpr?.vertAlign = prPr?.vertAlign;
+  }
+
+  @override
+  InlineSpan toWidget() {
+    if (url != null) {
+      // Force blue color and underline for hyperlinks
+      TextStyle style = getEffectiveTextStyle().copyWith(
+        color: Colors.blue,
+        decoration: TextDecoration.underline,
+        decorationColor: Colors.blue,
+      );
+
+      // Note: Tooltip cannot be used with TextSpan directly as it requires a Widget.
+      // Using WidgetSpan breaks TOC layout, so we use TextSpan without tooltip.
+      // The tooltip property is still available for future use if needed.
+      return TextSpan(
+        text: checkDiacritics(),
+        style: style,
+        recognizer: TapGestureRecognizer()
+          ..onTap = () async {
+            try {
+              final uri = Uri.parse(url!);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri);
+              } else {
+                print("Could not launch URL: $url");
+              }
+            } catch (e) {
+              print("Error launching URL: $e");
+            }
+          },
+      );
+    }
+
+    return super.toWidget();
   }
 }
 

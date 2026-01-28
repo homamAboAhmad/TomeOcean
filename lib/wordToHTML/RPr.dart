@@ -137,12 +137,33 @@ class RPr {
 
     // Reduce font size for superscript/subscript (Word uses ~58% of normal size)
     double effectiveFontSize = fontSize ?? 14;
+
     if (vertAlign == "superscript" || vertAlign == "subscript") {
       effectiveFontSize = effectiveFontSize * 0.58;
     }
 
+    // Check for bold in font name if not explicitly set by XML
+    // Fix: Use the cleaner helper method from WordDocument instead of ad-hoc logic
+    FontWeight? implicitWeight = font != null
+        ? getImplicitFontWeight(font!)
+        : null;
+
+    // Priority:
+    // 1. XML property (b=true/false)
+    // 2. Implicit weight from name (if XML is not explicit)
+    FontWeight? finalFontWeight;
+
+    if (b == true) {
+      finalFontWeight = FontWeight.bold;
+    } else if (b == false) {
+      finalFontWeight = FontWeight.normal;
+    } else {
+      // b is null (not set), fallback to implicit weight
+      finalFontWeight = implicitWeight;
+    }
+
     return TextStyle(
-      fontWeight: b == true ? FontWeight.bold : null,
+      fontWeight: finalFontWeight,
       fontStyle: i == true ? FontStyle.italic : FontStyle.normal,
       decoration: getTextDecoration(),
       color: finalColor != null
@@ -150,7 +171,9 @@ class RPr {
           : Colors.black,
       background: hlColor, // لون خلفية النص
       fontSize: effectiveFontSize,
-      fontFamily: font,
+      fontFamily: font != null ? normalizeFontFamily(font!) : null,
+      letterSpacing:
+          0, // مهم جداً: منع Material 3 من إضافة تباعد يؤثر على عرض السطر
       // height is set by paragraph's w:spacing, not here
     );
   }
@@ -191,14 +214,19 @@ class RPr {
   }
 
   bool? isBold() {
-    bool isBold =
-        rPr?.getElement("w:b") != null || rPr?.getElement("w:bCs") != null;
-    if (isBold) return true;
+    var element = rPr?.getElement("w:b") ?? rPr?.getElement("w:bCs");
+    if (element == null) return null;
+    String? val = element.getAttribute("w:val");
+    if (val == "0" || val == "false" || val == "off") return false;
+    return true;
   }
 
   bool? isItalic() {
-    bool isItalic = rPr?.getElement("w:i") != null;
-    if (isItalic) return true;
+    var element = rPr?.getElement("w:i") ?? rPr?.getElement("w:iCs");
+    if (element == null) return null;
+    String? val = element.getAttribute("w:val");
+    if (val == "0" || val == "false" || val == "off") return false;
+    return true;
   }
 
   bool? isUnderLine() {
@@ -258,12 +286,20 @@ class RPr {
   }
 
   bool? hasStrike() {
-    return rPr?.getElement("w:strike") != null;
+    var element = rPr?.getElement("w:strike");
+    if (element == null) return null;
+    String? val = element.getAttribute("w:val");
+    if (val == "0" || val == "false" || val == "off") return false;
+    return true;
   }
 
   /// Check if text is hidden (w:vanish element)
   bool? isVanish() {
-    return rPr?.getElement("w:vanish") != null;
+    var element = rPr?.getElement("w:vanish");
+    if (element == null) return null;
+    String? val = element.getAttribute("w:val");
+    if (val == "0" || val == "false" || val == "off") return false;
+    return true;
   }
 
   String getStrikeH() {
@@ -275,7 +311,10 @@ class RPr {
     String? cs = rFonts?.getAttribute("w:cs");
 
     // إذا كان w:cs موجوداً، نستخدمه
-    if (cs != null && cs.isNotEmpty) return cs;
+    if (cs != null && cs.isNotEmpty) {
+      // debugPrint("DEBUG_FONT: getArFont found w:cs='$cs'");
+      return cs;
+    }
 
     // إذا لم يكن w:cs موجوداً، نبحث عن w:hAnsi أو w:ascii
     String? hAnsi = rFonts?.getAttribute("w:hAnsi");

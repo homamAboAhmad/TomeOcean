@@ -33,7 +33,8 @@ class AuthorBooksManagerDialog extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<AuthorBooksManagerDialog> createState() => _AuthorBooksManagerDialogState();
+  State<AuthorBooksManagerDialog> createState() =>
+      _AuthorBooksManagerDialogState();
 }
 
 class _AuthorBooksManagerDialogState extends State<AuthorBooksManagerDialog> {
@@ -122,10 +123,7 @@ class _AuthorBooksManagerDialogState extends State<AuthorBooksManagerDialog> {
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          textDirection: TextDirection.rtl,
-        ),
+        content: Text(message, textDirection: TextDirection.rtl),
         backgroundColor: Colors.black87,
         behavior: SnackBarBehavior.floating,
       ),
@@ -135,10 +133,7 @@ class _AuthorBooksManagerDialogState extends State<AuthorBooksManagerDialog> {
   void _showSuccessSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          message,
-          textDirection: TextDirection.rtl,
-        ),
+        content: Text(message, textDirection: TextDirection.rtl),
         backgroundColor: Colors.black87,
         behavior: SnackBarBehavior.floating,
       ),
@@ -178,8 +173,13 @@ class _AuthorBooksManagerDialogState extends State<AuthorBooksManagerDialog> {
                       textDirection: TextDirection.rtl,
                     ),
                     IconButton(
-                      icon: Icon(Icons.close, color: Colors.grey.shade400, size: 20),
+                      icon: Icon(
+                        Icons.close,
+                        color: Colors.grey.shade400,
+                        size: 20,
+                      ),
                       onPressed: () => Navigator.of(context).pop(),
+                      tooltip: 'إغلاق',
                     ),
                   ],
                 ),
@@ -208,30 +208,31 @@ class _AuthorBooksManagerDialogState extends State<AuthorBooksManagerDialog> {
                           color: Colors.grey.shade600,
                           fontWeight: FontWeight.w400,
                         ),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Colors.grey.shade400,
-                        size: 20,
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.grey.shade400,
+                          size: 20,
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: Colors.grey.shade400,
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _onSearchChanged();
+                                },
+                                tooltip: 'مسح البحث',
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                       ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: Colors.grey.shade400,
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                _onSearchChanged();
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
                     ),
                   ),
                 ),
@@ -251,7 +252,9 @@ class _AuthorBooksManagerDialogState extends State<AuthorBooksManagerDialog> {
                   textDirection: TextDirection.rtl,
                   children: [
                     TextButton(
-                      onPressed: _viewModel.isSaving || _viewModel.selectedBookIds.isEmpty
+                      onPressed:
+                          _viewModel.isSaving ||
+                              _viewModel.selectedBookIds.isEmpty
                           ? null
                           : _handleUnlink,
                       child: Text(
@@ -266,7 +269,9 @@ class _AuthorBooksManagerDialogState extends State<AuthorBooksManagerDialog> {
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
-                      onPressed: _viewModel.isSaving || _viewModel.selectedBookIds.isEmpty
+                      onPressed:
+                          _viewModel.isSaving ||
+                              _viewModel.selectedBookIds.isEmpty
                           ? null
                           : _handleLink,
                       style: ElevatedButton.styleFrom(
@@ -287,7 +292,9 @@ class _AuthorBooksManagerDialogState extends State<AuthorBooksManagerDialog> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(
@@ -310,4 +317,3 @@ class _AuthorBooksManagerDialogState extends State<AuthorBooksManagerDialog> {
     );
   }
 }
-

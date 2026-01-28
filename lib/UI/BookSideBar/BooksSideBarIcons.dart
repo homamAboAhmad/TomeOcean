@@ -33,14 +33,19 @@ class BookSideBarController {
   showBookSideBarW() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: InkWell(
-        onTap: () => setState(() => showBookSideBar = !showBookSideBar),
-        child: Container(
-          color: showBookSideBar ? Colors.grey : Colors.transparent,
-          width: 24,
-          height: 24,
-          child: Center(
-            child: Icon(Icons.view_sidebar, size: showBookSideBar ? 20 : 24),
+      child: Tooltip(
+        message: showBookSideBar
+            ? 'إخفاء الشريط الجانبي'
+            : 'إظهار الشريط الجانبي',
+        child: InkWell(
+          onTap: () => setState(() => showBookSideBar = !showBookSideBar),
+          child: Container(
+            color: showBookSideBar ? Colors.grey : Colors.transparent,
+            width: 24,
+            height: 24,
+            child: Center(
+              child: Icon(Icons.view_sidebar, size: showBookSideBar ? 20 : 24),
+            ),
           ),
         ),
       ),
@@ -51,14 +56,20 @@ class BookSideBarController {
     bool isSelected = selecteSideBarP == 0;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: InkWell(
-        onTap: () => setState(() => selecteSideBarP = 0),
-        child: Container(
-          color: isSelected ? Colors.grey : Colors.transparent,
-          width: 24,
-          height: 24,
-          child: Center(
-            child: Icon(Icons.collections_bookmark, size: isSelected ? 20 : 24),
+      child: Tooltip(
+        message: 'فهرس الكتاب',
+        child: InkWell(
+          onTap: () => setState(() => selecteSideBarP = 0),
+          child: Container(
+            color: isSelected ? Colors.grey : Colors.transparent,
+            width: 24,
+            height: 24,
+            child: Center(
+              child: Icon(
+                Icons.collections_bookmark,
+                size: isSelected ? 20 : 24,
+              ),
+            ),
           ),
         ),
       ),
@@ -69,13 +80,18 @@ class BookSideBarController {
     bool isSelected = selecteSideBarP == 1;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: InkWell(
-        onTap: () => setState(() => selecteSideBarP = 1),
-        child: Container(
-          color: isSelected ? Colors.grey : Colors.transparent,
-          width: 24,
-          height: 24,
-          child: Center(child: Icon(Icons.search, size: isSelected ? 20 : 24)),
+      child: Tooltip(
+        message: 'البحث في الكتاب',
+        child: InkWell(
+          onTap: () => setState(() => selecteSideBarP = 1),
+          child: Container(
+            color: isSelected ? Colors.grey : Colors.transparent,
+            width: 24,
+            height: 24,
+            child: Center(
+              child: Icon(Icons.search, size: isSelected ? 20 : 24),
+            ),
+          ),
         ),
       ),
     );
@@ -85,14 +101,17 @@ class BookSideBarController {
     bool isSelected = selecteSideBarP == 2;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: InkWell(
-        onTap: () => setState(() => selecteSideBarP = 2),
-        child: Container(
-          color: isSelected ? Colors.grey : Colors.transparent,
-          width: 24,
-          height: 24,
-          child: Center(
-            child: Icon(Icons.category, size: isSelected ? 20 : 24),
+      child: Tooltip(
+        message: 'كتب القسم',
+        child: InkWell(
+          onTap: () => setState(() => selecteSideBarP = 2),
+          child: Container(
+            color: isSelected ? Colors.grey : Colors.transparent,
+            width: 24,
+            height: 24,
+            child: Center(
+              child: Icon(Icons.category, size: isSelected ? 20 : 24),
+            ),
           ),
         ),
       ),
@@ -103,14 +122,17 @@ class BookSideBarController {
     bool isSelected = selecteSideBarP == 3;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: InkWell(
-        onTap: () => setState(() => selecteSideBarP = 3),
-        child: Container(
-          color: isSelected ? Colors.grey : Colors.transparent,
-          width: 24,
-          height: 24,
-          child: Center(
-            child: Icon(Icons.edit_note_rounded, size: isSelected ? 20 : 24),
+      child: Tooltip(
+        message: 'كتب المؤلف',
+        child: InkWell(
+          onTap: () => setState(() => selecteSideBarP = 3),
+          child: Container(
+            color: isSelected ? Colors.grey : Colors.transparent,
+            width: 24,
+            height: 24,
+            child: Center(
+              child: Icon(Icons.edit_note_rounded, size: isSelected ? 20 : 24),
+            ),
           ),
         ),
       ),

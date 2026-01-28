@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.shamela.golden" "\0"
-            VALUE "FileDescription", "golden_shamela" "\0"
+            VALUE "FileDescription", "المكتبة" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "golden_shamela" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2024 com.shamela.golden. All rights reserved." "\0"
             VALUE "OriginalFilename", "golden_shamela.exe" "\0"
-            VALUE "ProductName", "golden_shamela" "\0"
+            VALUE "ProductName", "المكتبة" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

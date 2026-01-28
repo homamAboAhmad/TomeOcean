@@ -77,6 +77,8 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
     delegate.hideToolbar();
   }
 
+  // _handlePrintXml removed per user request
+
   void _handleGoogleSearch(TextSelectionDelegate delegate) async {
     final String selectedText = delegate.textEditingValue.selection.textInside(
       delegate.textEditingValue.text,
@@ -139,6 +141,7 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
         label: 'نسخ الصفحة',
         onPressed: () => _handleCopyPage(delegate),
       ),
+
       _buildMenuItem(
         label: 'بحث',
         onPressed: () {

@@ -16,7 +16,8 @@ class AuthorsManagementScreen extends StatefulWidget {
   const AuthorsManagementScreen({Key? key}) : super(key: key);
 
   @override
-  State<AuthorsManagementScreen> createState() => _AuthorsManagementScreenState();
+  State<AuthorsManagementScreen> createState() =>
+      _AuthorsManagementScreenState();
 }
 
 class _AuthorsManagementScreenState extends State<AuthorsManagementScreen> {
@@ -74,7 +75,10 @@ class _AuthorsManagementScreenState extends State<AuthorsManagementScreen> {
   }
 
   Future<void> _handleDeleteAuthor(Author author) async {
-    final confirmed = await DialogHelper.showDeleteConfirmation(context, author);
+    final confirmed = await DialogHelper.showDeleteConfirmation(
+      context,
+      author,
+    );
     if (confirmed != true || !mounted) return;
 
     setState(() {});
@@ -186,30 +190,31 @@ class _AuthorsManagementScreenState extends State<AuthorsManagementScreen> {
                           color: Colors.grey.shade600,
                           fontWeight: FontWeight.w400,
                         ),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Colors.grey.shade400,
-                        size: 20,
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: Colors.grey.shade400,
+                          size: 20,
+                        ),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: Colors.grey.shade400,
+                                  size: 20,
+                                ),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  _onSearchChanged();
+                                },
+                                tooltip: 'مسح البحث',
+                              )
+                            : null,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                       ),
-                      suffixIcon: _searchController.text.isNotEmpty
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: Colors.grey.shade400,
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                _searchController.clear();
-                                _onSearchChanged();
-                              },
-                            )
-                          : null,
-                      border: InputBorder.none,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                    ),
                     ),
                   ),
                 ),
@@ -225,7 +230,9 @@ class _AuthorsManagementScreenState extends State<AuthorsManagementScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            primaryColor,
+                          ),
                           strokeWidth: 2,
                         ),
                         const SizedBox(height: 24),
@@ -246,68 +253,69 @@ class _AuthorsManagementScreenState extends State<AuthorsManagementScreen> {
                     ),
                   )
                 : _viewModel.filteredAuthors.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.people_outline,
-                              size: 64,
-                              color: Colors.grey.shade300,
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 64,
+                          color: Colors.grey.shade300,
+                        ),
+                        const SizedBox(height: 24),
+                        Directionality(
+                          textDirection: TextDirection.rtl,
+                          child: Text(
+                            _searchController.text.isEmpty
+                                ? 'لا توجد مؤلفين'
+                                : 'لا توجد نتائج للبحث',
+                            style: normalStyle(
+                              fontSize: 16,
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
                             ),
-                            const SizedBox(height: 24),
-                          Directionality(
+                            textAlign: TextAlign.center,
                             textDirection: TextDirection.rtl,
+                          ),
+                        ),
+                        if (_searchController.text.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          TextButton(
+                            onPressed: () {
+                              _searchController.clear();
+                              _onSearchChanged();
+                            },
                             child: Text(
-                              _searchController.text.isEmpty
-                                  ? 'لا توجد مؤلفين'
-                                  : 'لا توجد نتائج للبحث',
+                              'مسح البحث',
                               style: normalStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                                color: primaryColor,
                                 fontWeight: FontWeight.w500,
                               ),
-                              textAlign: TextAlign.center,
                               textDirection: TextDirection.rtl,
                             ),
                           ),
-                            if (_searchController.text.isNotEmpty) ...[
-                              const SizedBox(height: 16),
-                              TextButton(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _onSearchChanged();
-                                },
-                                child: Text(
-                                  'مسح البحث',
-                                  style: normalStyle(
-                                    fontSize: 14,
-                                    color: primaryColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  textDirection: TextDirection.rtl,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: _viewModel.filteredAuthors.length,
-                        itemBuilder: (context, index) {
-                          final author = _viewModel.filteredAuthors[index];
-                          final bookCount = _viewModel.authorBookCounts[author.id] ?? 0;
-                          return AuthorCard(
-                            author: author,
-                            bookCount: bookCount,
-                            onTap: () => _handleViewDetails(author.id),
-                            onViewDetails: () => _handleViewDetails(author.id),
-                            onEdit: () => _handleEditAuthor(author),
-                            onDelete: () => _handleDeleteAuthor(author),
-                          );
-                        },
-                      ),
+                        ],
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: _viewModel.filteredAuthors.length,
+                    itemBuilder: (context, index) {
+                      final author = _viewModel.filteredAuthors[index];
+                      final bookCount =
+                          _viewModel.authorBookCounts[author.id] ?? 0;
+                      return AuthorCard(
+                        author: author,
+                        bookCount: bookCount,
+                        onTap: () => _handleViewDetails(author.id),
+                        onViewDetails: () => _handleViewDetails(author.id),
+                        onEdit: () => _handleEditAuthor(author),
+                        onDelete: () => _handleDeleteAuthor(author),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

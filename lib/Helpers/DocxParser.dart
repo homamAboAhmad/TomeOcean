@@ -19,10 +19,17 @@ class DocxParser {
       // Use the existing project functions to convert file to archive and parse data.
       final appState = AppState();
       appState.docArchive = await FileToArchive(filePath);
-      List<WordPage> parsedPages = await AddDocData(appState.docArchive, tempDocument);
+      tempDocument.archive =
+          appState.docArchive; // Store archive in document instance
+      List<WordPage> parsedPages = await AddDocData(
+        appState.docArchive,
+        tempDocument,
+      );
 
       if (parsedPages.isEmpty) {
-        print("DocxParser Warning: AddDocData returned 0 pages for file: $filePath. The file might be empty, corrupted, or in an unsupported format.");
+        print(
+          "DocxParser Warning: AddDocData returned 0 pages for file: $filePath. The file might be empty, corrupted, or in an unsupported format.",
+        );
       }
 
       return parsedPages;

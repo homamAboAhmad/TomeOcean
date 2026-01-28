@@ -1,7 +1,7 @@
 
 # Batch Testing Script
 
-The user wants to test `pageRender.py` on all `.docx` files in `C:\Users\nkxa2\Documents\البحر المحيط` (and potentially other folders) and report the results.
+The user wants to test `pageRender.py` on all `.docx` files in `C:\Users\nkxa2\Documents\المكتبة` (and potentially other folders) and report the results.
 Result should compare "Original Word Count" vs "Processed Count".
 
 I will create a python script `batch_test_pagination.py` to:

@@ -14,7 +14,10 @@ ImageData _$ImageDataFromJson(Map<String, dynamic> json) => ImageData()
   ..alignH = json['alignH'] as String
   ..alingV = json['alingV'] as String
   ..relativeHeight = (json['relativeHeight'] as num).toDouble()
+  ..rotation = (json['rotation'] as num?)?.toDouble() ?? 0
   ..behindDoc = json['behindDoc'] as bool? ?? false
+  ..flipH = json['flipH'] as bool? ?? false
+  ..flipV = json['flipV'] as bool? ?? false
   ..posY = (json['posY'] as num).toDouble()
   ..relativeFromH = json['relativeFromH'] as String
   ..relativeFromV = json['relativeFromV'] as String
@@ -24,7 +27,11 @@ ImageData _$ImageDataFromJson(Map<String, dynamic> json) => ImageData()
   ..textColor = json['textColor'] as String?
   ..textSize = (json['textSize'] as num?)?.toDouble()
   ..fontFamily = json['fontFamily'] as String?
-  ..containsPageField = json['containsPageField'] as bool? ?? false;
+  ..containsPageField = json['containsPageField'] as bool? ?? false
+  ..hyperlinkUrl = json['hyperlinkUrl'] as String?
+  ..isStretched = json['isStretched'] as bool? ?? false
+  ..isGroup = json['isGroup'] as bool? ?? false
+  ..isVectorShape = json['isVectorShape'] as bool? ?? false;
 
 Map<String, dynamic> _$ImageDataToJson(ImageData instance) => <String, dynamic>{
   'rId': instance.rId,
@@ -34,7 +41,10 @@ Map<String, dynamic> _$ImageDataToJson(ImageData instance) => <String, dynamic>{
   'alignH': instance.alignH,
   'alingV': instance.alingV,
   'relativeHeight': instance.relativeHeight,
+  'rotation': instance.rotation,
   'behindDoc': instance.behindDoc,
+  'flipH': instance.flipH,
+  'flipV': instance.flipV,
   'posY': instance.posY,
   'relativeFromH': instance.relativeFromH,
   'relativeFromV': instance.relativeFromV,
@@ -45,4 +55,8 @@ Map<String, dynamic> _$ImageDataToJson(ImageData instance) => <String, dynamic>{
   'textSize': instance.textSize,
   'fontFamily': instance.fontFamily,
   'containsPageField': instance.containsPageField,
+  'hyperlinkUrl': instance.hyperlinkUrl,
+  'isStretched': instance.isStretched,
+  'isGroup': instance.isGroup,
+  'isVectorShape': instance.isVectorShape,
 };

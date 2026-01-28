@@ -35,9 +35,9 @@ class AuthorDialogHeader extends StatelessWidget {
         IconButton(
           icon: Icon(Icons.close, color: Colors.grey.shade400, size: 20),
           onPressed: onClose,
+          tooltip: 'إغلاق',
         ),
       ],
     );
   }
 }
-

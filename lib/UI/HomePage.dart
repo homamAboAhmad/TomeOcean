@@ -143,7 +143,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  "البحر المحيط",
+                  "المكتبة",
                   style: bigStyle(fontSize: 22, color: secondaryColor),
                 ),
               ],

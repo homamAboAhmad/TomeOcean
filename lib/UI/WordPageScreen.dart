@@ -97,11 +97,15 @@ class _WordPageScreenState extends State<WordPageScreen> {
                     widget.wordPage.pageIndex - 1,
                   );
                   var margins = getSectionMargins();
+                  double pageHeight = sectPr.height ?? 1000;
+                  double pageWidth = sectPr.width ?? 800;
 
                   return Center(
                     child: Container(
-                      width: sectPr.width ?? 800,
-                      height: sectPr.height ?? 1000, // حجم الصفحة من Word
+                      width: pageWidth,
+                      constraints: BoxConstraints(
+                        minHeight: pageHeight, // الحد الأدنى هو حجم الصفحة
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         boxShadow: [
@@ -113,83 +117,123 @@ class _WordPageScreenState extends State<WordPageScreen> {
                           ),
                         ],
                       ),
-                      child: Stack(
-                        children: [
-                          // 1. الصور الخلفية (behindDoc=true) - خلف كل شيء
-                          widget.wordPage.getBackgroundImages(),
-
-                          // 2. الهيدر
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              height: margins.top,
-                              // color: Colors.transparent,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: margins.left,
-                              ),
-                              alignment: Alignment
-                                  .bottomCenter, // محتوى الهيدر في أسفل الهامش العلوي
-                              child: pageHeaderW(),
-                            ),
-                          ),
-
-                          // 3. المحتوى + الحواشي
-                          Positioned(
-                            top: margins.top,
-                            left: margins.left,
-                            right: margins.right,
-                            bottom: margins.bottom,
-                            child: FittedBox(
-                              fit: BoxFit
-                                  .scaleDown, // يقلص المحتوى تلقائياً إذا كان أكبر من المساحة
-                              alignment: Alignment.topRight, // RTL alignment
-                              child: SizedBox(
-                                width:
-                                    (sectPr.width ?? 800) -
-                                    margins.left -
-                                    margins.right,
-                                height:
-                                    (sectPr.height ?? 1000) -
-                                    margins.top -
-                                    margins.bottom,
-                                child: Column(
-                                  textDirection: TextDirection.rtl,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    pageContentW(),
-                                    getSeperator(
-                                      widget.wordPage.fns.isNotEmpty,
-                                    ),
-                                    const SizedBox(height: 5),
-                                    widget.wordPage.footnotesW(),
-                                  ],
+                      child: ClipRect(
+                        child: Stack(
+                          children: [
+                            // 1. الهيدر (ثابت في الأعلى)
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                height: margins.top,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: margins.left,
                                 ),
+                                alignment: Alignment.bottomCenter,
+                                child: pageHeaderW(),
                               ),
                             ),
-                          ),
 
-                          // 4. رقم الصفحة (الفوتر)
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              height: margins.bottom,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: margins.left,
-                              ),
-                              alignment: Alignment.topCenter,
-                              child: footerW(),
+                            // 2. الصور الخلفية (behindDoc=true) - يجب أن تلتزم بحجم الصفحة الأصلي ولا تتأثر بالتمطيط
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              width: pageWidth,
+                              height: pageHeight,
+                              child: widget.wordPage.getBackgroundImages(),
                             ),
-                          ),
 
-                          // 5. الصور الأمامية (behindDoc=false) - فوق كل شيء (تغطي الهيدر والمحتوى)
-                          widget.wordPage.getForegroundImages(),
-                        ],
+                            // 3. المحتوى + الحواشي (يتحكم في ارتفاع الصفحة)
+                            Padding(
+                              padding: margins,
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  // Calculate minimum content height (Page Height - Margins)
+                                  double minContentHeight =
+                                      pageHeight - margins.top - margins.bottom;
+                                  // Handle potential negative values
+                                  if (minContentHeight < 0)
+                                    minContentHeight = 0;
+
+                                  // CASE 1: No footnotes - Return simple layout to avoid IntrinsicHeight overhead/errors
+                                  if (widget.wordPage.fns.isEmpty) {
+                                    return ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        minHeight: minContentHeight,
+                                      ),
+                                      child: Column(
+                                        textDirection: TextDirection.rtl,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [pageContentW()],
+                                      ),
+                                    );
+                                  }
+
+                                  // CASE 2: Has footnotes - Use IntrinsicHeight + Expanded for sticky footer
+                                  return ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      minHeight: minContentHeight,
+                                    ),
+                                    child: IntrinsicHeight(
+                                      child: Column(
+                                        textDirection: TextDirection.rtl,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                pageContentW(),
+                                                getSeperator(true),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          ConstrainedBox(
+                                            constraints: const BoxConstraints(
+                                              minHeight:
+                                                  100, // الحد الأدنى المعتدل للحفاظ على التناسق
+                                            ),
+                                            child: widget.wordPage.footnotesW(),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+
+                            // 4. رقم الصفحة (الفوتر) (ثابت في الأسفل)
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                height: margins.bottom,
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: margins.left,
+                                ),
+                                alignment: Alignment.topCenter,
+                                child: footerW(),
+                              ),
+                            ),
+
+                            // 5. الصور الأمامية (behindDoc=false) - يجب أن تلتزم بحجم الصفحة الأصلي
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              width: pageWidth,
+                              height: pageHeight,
+                              child: widget.wordPage.getForegroundImages(),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -205,7 +249,7 @@ class _WordPageScreenState extends State<WordPageScreen> {
                   },
                   backgroundColor: Colors.blue.shade700,
                   child: Icon(Icons.code, color: Colors.white, size: 20),
-                  tooltip: 'طباعة XML الصفحة',
+                  tooltip: 'طباعة فقرات الصفحة',
                 ),
               ),
             ],

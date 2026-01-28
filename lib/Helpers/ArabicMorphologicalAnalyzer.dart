@@ -11,10 +11,24 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class ArabicMorphologicalAnalyzer {
-  // قاعدة بيانات الجذور SQLite
+  // ... existing fields ...
+
+  /// Helper to get the canonical path (for main thread use)
+  static Future<String> getDatabasePath() async {
+      final appDocDir = await getApplicationDocumentsDirectory();
+      final dbDir = Directory(p.join(appDocDir.path, 'tome_ocean', 'roots_db'));
+      return p.join(dbDir.path, 'arabic_roots_database.db');
+  }
   static Database? _rootsDatabase;
   static bool _databaseLoaded = false;
   static bool _loadingInProgress = false;
+  static String? _manualDbPath; // Path provided manually (e.g. from Isolate)
+
+  /// Manual setter for ISOLATES which cannot use getApplicationDocumentsDirectory
+  static void setDatabasePath(String path) {
+    _manualDbPath = path;
+  }
+  
   // ISRI stemmer prefixes (ordered by length, longest first)
   static const List<String> prefixes = [
     'وال', 'بال', 'كال', 'فال', 'ولل', 'لل',
@@ -74,7 +88,6 @@ class ArabicMorphologicalAnalyzer {
     
     // Prevent multiple simultaneous loads
     if (_loadingInProgress) {
-      // Wait for the ongoing load to complete
       while (_loadingInProgress) {
         await Future.delayed(const Duration(milliseconds: 10));
       }
@@ -85,32 +98,44 @@ class ArabicMorphologicalAnalyzer {
     
     try {
       // Initialize database factory for Windows if needed
-      if (Platform.isWindows && databaseFactory == null) {
+      if (Platform.isWindows) {
         sqfliteFfiInit();
         databaseFactory = databaseFactoryFfi;
       }
       
-      // Get app documents directory
-      final appDocDir = await getApplicationDocumentsDirectory();
-      final dbDir = Directory(p.join(appDocDir.path, 'tome_ocean', 'roots_db'));
-      await dbDir.create(recursive: true);
+      String dbPath;
       
-      final dbPath = p.join(dbDir.path, 'arabic_roots_database.db');
-      final dbFile = File(dbPath);
-      
-      // Copy database from assets if it doesn't exist
-      if (!await dbFile.exists()) {
-        print('Copying Arabic roots database from assets...');
-        final ByteData data = await rootBundle.load('assets/arabic_roots_database.db');
-        final List<int> bytes = data.buffer.asUint8List();
-        await dbFile.writeAsBytes(bytes);
-        print('Arabic roots database copied to: $dbPath');
+      if (_manualDbPath != null) {
+        // Optimized path for Isolates: Use provided path directly
+        dbPath = _manualDbPath!;
+      } else {
+         // Main thread path: Use path_provider and verify asset
+        final appDocDir = await getApplicationDocumentsDirectory();
+        final dbDir = Directory(p.join(appDocDir.path, 'tome_ocean', 'roots_db'));
+        await dbDir.create(recursive: true);
+        
+        dbPath = p.join(dbDir.path, 'arabic_roots_database.db');
+        final dbFile = File(dbPath);
+        
+        // Copy database from assets if it doesn't exist
+        if (!await dbFile.exists()) {
+          try {
+            print('Copying Arabic roots database from assets...');
+            final ByteData data = await rootBundle.load('assets/arabic_roots_database.db');
+            final List<int> bytes = data.buffer.asUint8List();
+            await dbFile.writeAsBytes(bytes);
+            print('Arabic roots database copied to: $dbPath');
+          } catch (e) {
+            print('Error copying DB from assets: $e');
+          }
+        }
       }
-      
+
       // Open database
       _rootsDatabase = await openDatabase(
         dbPath,
         readOnly: true,
+        singleInstance: false, // Force new instance for Isolate
       );
       
       // Test query to verify database is working
@@ -128,6 +153,9 @@ class ArabicMorphologicalAnalyzer {
       _loadingInProgress = false;
     }
   }
+
+  /// Public wrapper to ensure database is ready (useful before Isolate usage)
+  static Future<void> prepareRootsDatabase() => _loadRootsDatabase();
 
   /// ISRI Arabic Stemmer - Main stemming function
   /// This implements the ISRI stemming algorithm for Arabic

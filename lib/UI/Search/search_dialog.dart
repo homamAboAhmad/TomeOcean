@@ -22,7 +22,7 @@ class _SearchDialogState extends State<SearchDialog> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final dbHelper = SearchDatabaseHelper.instance;
-  
+
   SearchType _searchType = SearchType.normalized;
   List<SearchResult> _searchResults = [];
   int _totalResults = 0;
@@ -82,7 +82,8 @@ class _SearchDialogState extends State<SearchDialog> {
   }
 
   void _scrollListener() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+    if (_scrollController.position.pixels ==
+        _scrollController.position.maxScrollExtent) {
       _loadMoreResults();
     }
   }
@@ -176,7 +177,10 @@ class _SearchDialogState extends State<SearchDialog> {
           child: Column(
             children: [
               AppBar(
-                title: Text('بحث في الكتب', style: normalStyle(color: Colors.black)),
+                title: Text(
+                  'بحث في الكتب',
+                  style: normalStyle(color: Colors.black),
+                ),
                 backgroundColor: primaryColor,
                 automaticallyImplyLeading: false, // No back button
                 actions: [
@@ -185,6 +189,7 @@ class _SearchDialogState extends State<SearchDialog> {
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
+                    tooltip: 'إغلاق',
                   ),
                 ],
               ),
@@ -202,7 +207,8 @@ class _SearchDialogState extends State<SearchDialog> {
   }
 
   Widget _buildFilteredBooksList() {
-    if (_filteredBookTitles.isEmpty && (_selectedAuthorId != null || _selectedSectionId != null)) {
+    if (_filteredBookTitles.isEmpty &&
+        (_selectedAuthorId != null || _selectedSectionId != null)) {
       return Padding(
         padding: const EdgeInsets.all(8.0),
         child: Text(
@@ -219,7 +225,10 @@ class _SearchDialogState extends State<SearchDialog> {
           spacing: 8.0,
           runSpacing: 4.0,
           children: _filteredBookTitles
-              .map((title) => Chip(label: Text(title, style: normalStyle(fontSize: 10))))
+              .map(
+                (title) =>
+                    Chip(label: Text(title, style: normalStyle(fontSize: 10))),
+              )
               .toList(),
         ),
       ),
@@ -311,6 +320,7 @@ class _SearchDialogState extends State<SearchDialog> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: _performSearch,
+            tooltip: 'بحث',
           ),
         ],
       ),
@@ -332,7 +342,10 @@ class _SearchDialogState extends State<SearchDialog> {
           },
         ),
         RadioListTile<SearchType>(
-          title: Text('مطابقة تامة (مع التشكيل)', style: normalStyle(color: Colors.black)),
+          title: Text(
+            'مطابقة تامة (مع التشكيل)',
+            style: normalStyle(color: Colors.black),
+          ),
           value: SearchType.exact,
           groupValue: _searchType,
           onChanged: (SearchType? value) {
@@ -361,7 +374,7 @@ class _SearchDialogState extends State<SearchDialog> {
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: SelectableText( 
+            child: SelectableText(
               _error!,
               style: normalStyle(color: Colors.red),
               textAlign: TextAlign.center,
@@ -376,7 +389,11 @@ class _SearchDialogState extends State<SearchDialog> {
     }
 
     if (_searchResults.isEmpty) {
-      return Expanded(child: Center(child: Text('لا توجد نتائج', style: normalStyle(color: Colors.black))));
+      return Expanded(
+        child: Center(
+          child: Text('لا توجد نتائج', style: normalStyle(color: Colors.black)),
+        ),
+      );
     }
 
     return Expanded(
@@ -384,7 +401,10 @@ class _SearchDialogState extends State<SearchDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
             child: Text(
               '$_totalResults نتيجة',
               style: normalStyle(color: Colors.black54, fontSize: 14),
@@ -401,7 +421,10 @@ class _SearchDialogState extends State<SearchDialog> {
                 }
                 final result = _searchResults[index];
                 return ListTile(
-                  title: Text(result.bookName, style: normalStyle(color: Colors.black, fontSize: 14)),
+                  title: Text(
+                    result.bookName,
+                    style: normalStyle(color: Colors.black, fontSize: 14),
+                  ),
                   subtitle: Text.rich(
                     _highlightSnippet(result.snippet),
                     style: normalStyle(color: Colors.black, fontSize: 12),
@@ -427,13 +450,15 @@ class _SearchDialogState extends State<SearchDialog> {
 
     for (final part in parts) {
       if (part.isEmpty) continue;
-      spans.add(TextSpan(
-        text: part,
-        style: TextStyle(
-          fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-          color: isBold ? Colors.red : Colors.black54,
+      spans.add(
+        TextSpan(
+          text: part,
+          style: TextStyle(
+            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            color: isBold ? Colors.red : Colors.black54,
+          ),
         ),
-      ));
+      );
       isBold = !isBold;
     }
     return TextSpan(children: spans);

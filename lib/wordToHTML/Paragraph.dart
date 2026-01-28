@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import 'package:golden_shamela/TestApp2.dart';
-import 'package:golden_shamela/wordToHTML/ParagraphHyperLink.dart';
+import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
@@ -137,11 +137,21 @@ class Paragraph {
     pXml = paragraphXml;
     // حفظ XML للجداول فقط (مطلوب لـ ParagraphTable عند التحميل من الكاش)
     // الفقرات العادية لا تحتاج XML محفوظ - يتم بناؤها من runs
-    if (paragraphXml.name.local == 'tbl') {
-      xmlString = paragraphXml.toXmlString(pretty: false); // compact للتوفير
+    // حفظ XML لجميع الفقرات لأغراض التصحيح (Debugging)
+    // كان سابقاً: if (tbl) ... else xmlString = "";
+    xmlString = paragraphXml.toXmlString(pretty: false);
+    if (xmlString.isNotEmpty) {
+      // Only print occasionally to avoid spam, or print specific markers
+      if (xmlString.contains("PG:")) {
+        debugPrint(
+          "DEBUG: Parsed Paragraph with Marker. XML len: ${xmlString.length}",
+        );
+      }
     } else {
-      xmlString = ""; // لا نحفظ للفقرات العادية
+      debugPrint("DEBUG: Parsed Paragraph produced EMPTY XML!");
     }
+
+    // debugPrint("DEBUG: Parsed Paragraph from XML. String length: ${xmlString.length}");
     XmlElement? xmlpPr = paragraphXml.getElement("w:pPr");
     if (xmlpPr != null)
       pPr = PPr(
@@ -150,10 +160,12 @@ class Paragraph {
 
     _setSectionType();
 
-    XmlElement? xmlprPr = pPr?.xmlprPr;
+    XmlElement? xmlprPr = pPr?.styleRunProperties;
     text = paragraphXml.text; // Re-add text assignment
 
-    if (xmlprPr != null) prPr = RPr(pPr!.getEmptyRun()).fromXml(xmlprPr);
+    if (xmlprPr != null) {
+      prPr = RPr(pPr!.getEmptyRun()).fromXml(xmlprPr);
+    }
 
     // Fallback to defaultRPr if font is missing
     if (prPr != null && prPr!.font == null) {
@@ -166,6 +178,10 @@ class Paragraph {
     bool pendingPageNum = false;
     bool pageNumReplaced =
         false; // Track if we already replaced the page number
+
+    // Track HYPERLINK field codes
+    bool inHyperlinkField = false;
+    String? hyperlinkFieldUrl;
 
     paragraphXml.childElements.forEach((element) {
       if (element.name.local == "r") {
@@ -199,12 +215,51 @@ class Paragraph {
           }
         }
 
-        runT runt0 = runT(
-          this,
-          prPr: prPr,
-          pPr: pPr,
-          customRelIdList: customRelIdList,
-        ).fromXml(element);
+        // Check for HYPERLINK instruction in field code
+        if (inFieldCode || hasBegin) {
+          for (var instrEl in element.findAllElements("w:instrText")) {
+            String instrText = instrEl.text;
+            if (instrText.toUpperCase().contains("HYPERLINK")) {
+              // Extract URL from: HYPERLINK "url" or HYPERLINK "url" \l "bookmark"
+              final urlRegex = RegExp(
+                r'HYPERLINK.*?"([^"]+)"',
+                caseSensitive: false,
+              );
+              final match = urlRegex.firstMatch(instrText);
+              if (match != null) {
+                hyperlinkFieldUrl = match.group(1);
+                inHyperlinkField = true;
+              }
+            }
+          }
+        }
+
+        // Create the run
+        runT runt0;
+
+        // If we're in a hyperlink field (after separate, before end), create HyperLinkRun
+        if (inHyperlinkField &&
+            !inFieldCode &&
+            !hasBegin &&
+            !hasSeparate &&
+            !hasEnd) {
+          runt0 = HyperLinkRun(this, prPr: prPr, pPr: pPr).fromXml(element);
+
+          // Check if this is an internal bookmark (e.g. _Toc...) or external URL
+          if (hyperlinkFieldUrl != null && hyperlinkFieldUrl!.startsWith("_")) {
+            hyperlinkAnchor = hyperlinkFieldUrl;
+            (runt0 as HyperLinkRun).url = null; // Don't style as link
+          } else {
+            (runt0 as HyperLinkRun).url = hyperlinkFieldUrl;
+          }
+        } else {
+          runt0 = runT(
+            this,
+            prPr: prPr,
+            pPr: pPr,
+            customRelIdList: customRelIdList,
+          ).fromXml(element);
+        }
 
         if (inFieldCode && !hasSeparate && !hasEnd && !hasBegin) {
           runt0.text = "";
@@ -219,6 +274,9 @@ class Paragraph {
             String? pageStr = match.group(1);
             if (pageStr != null) {
               pageNum = pageStr; // Set the paragraph's page number
+              // print(
+              //   "DEBUG PARA: Found marker {{PG:$pageNum}} - text preview: ${text.substring(0, text.length > 30 ? 30 : text.length)}...",
+              // );
               // Remove the marker from the text so it doesn't show up
               runt0.text = runt0.text!.replaceAll(match.group(0)!, "");
             }
@@ -255,6 +313,9 @@ class Paragraph {
         if (hasEnd) {
           pendingPageNum = false;
           pageNumReplaced = false; // Reset for next field
+          // Reset hyperlink field tracking
+          inHyperlinkField = false;
+          hyperlinkFieldUrl = null;
         }
 
         runt0.parent = this;
@@ -263,7 +324,37 @@ class Paragraph {
         runs.add(runt0);
       } else if (element.name.local == "fldSimple") {
         String? instr = element.getAttribute("w:instr");
-        if (instr != null &&
+
+        // Check for HYPERLINK in fldSimple
+        if (instr != null && instr.toUpperCase().contains("HYPERLINK")) {
+          // Extract URL from: HYPERLINK "url"
+          final urlRegex = RegExp(
+            r'HYPERLINK\s+"([^"]+)"',
+            caseSensitive: false,
+          );
+          final match = urlRegex.firstMatch(instr);
+          String? url = match?.group(1);
+
+          // Process children as HyperLinkRun
+          element.childElements.forEach((child) {
+            if (child.name.local == "r") {
+              HyperLinkRun run = HyperLinkRun(
+                this,
+                prPr: prPr,
+                pPr: pPr,
+              ).fromXml(child);
+
+              if (url != null && url.startsWith("_")) {
+                hyperlinkAnchor = url;
+                run.url = null;
+              } else {
+                run.url = url;
+              }
+              run.parent = this;
+              runs.add(run);
+            }
+          });
+        } else if (instr != null &&
             instr.contains("PAGE") &&
             customPageNumber != null) {
           runT runt0 = runT(
@@ -316,12 +407,53 @@ class Paragraph {
           _processSdtContent(sdtContent, isPageNumberSdt, prPr, pPr);
         }
       }
+      // Handle w:hyperlink - External links
+      else if (element.name.local == "hyperlink") {
+        // Extract Relationship ID (r:id) to find external URL
+        String? rId = element.getAttribute("r:id");
+        String? url;
+
+        // Extract tooltip text (w:tooltip attribute)
+        String? tooltip = element.getAttribute("w:tooltip");
+
+        // Look up URL in document relationships
+        // Use customRelIdList for headers/footers, fall back to main document
+        if (rId != null) {
+          final rels = customRelIdList ?? parent.parent.relIdList;
+          if (rels.containsKey(rId)) {
+            url = rels[rId]?.Target;
+          }
+        }
+
+        // Also extract anchor for TOC navigation
+        String? anchor = element.getAttribute("w:anchor");
+        if (anchor != null) {
+          hyperlinkAnchor = anchor;
+        }
+
+        // Process child runs as HyperLinkRun
+        element.childElements.forEach((child) {
+          if (child.name.local == "r") {
+            HyperLinkRun run = HyperLinkRun(
+              this,
+              prPr: prPr,
+              pPr: pPr,
+            ).fromXml(child);
+            run.url = url;
+            run.tooltip = tooltip;
+            run.parent = this;
+            runs.add(run);
+          }
+        });
+      }
     });
     fixPDirection();
     getPAlign();
     getPTextDirection();
     getPageNum();
-    checkHyperLink();
+    // Note: checkHyperLink() was removed because hyperlinks are already processed
+    // in the main loop above (element.name.local == "hyperlink").
+    // Calling it here would cause duplicate hyperlink runs.
     _extractBookmarks(); // Extract bookmarks from paragraph level
     getPRunsByType();
     return this;
@@ -503,9 +635,21 @@ class Paragraph {
     imageRunTs = [];
     textRunTs = [];
     runs.forEach((runt) {
-      if (runt.image != null && runt.isRelativeFromVParagraph()) {
-        imageRunTs.add(runt);
-      } else {
+      // 1. Floating Images (wrapMode != null)
+      if (runt.image != null && runt.image!.wrapMode != null) {
+        // If relative to paragraph/line OR IS GROUP, add to Paragraph Stack
+        // Groups in headers often have page-relative settings but are treated as floating elements
+        // that this paragraph is responsible for rendering.
+        if (runt.isRelativeFromVParagraph() ||
+            (runt.image != null && runt.image!.isGroup)) {
+          // print("DEBUG_PARA: Adding floated image/group to imageRunTs. Group: ${runt.image!.isGroup}");
+          imageRunTs.add(runt);
+        }
+        // If relative to page/margin, IGNORE here (handled by WordPage.dart)
+        // This prevents them from polluting textRunTs and triggering inline logic.
+      }
+      // 2. Text and Inline Images (wrapMode == null)
+      else {
         textRunTs.add(runt);
       }
     });
@@ -556,7 +700,7 @@ class Paragraph {
 
     return GestureDetector(
       onLongPress: () {
-        _printParagraphXml();
+        printParagraphXml();
       },
       child: Padding(
         padding: _getPPaddings(),
@@ -638,7 +782,7 @@ class Paragraph {
     );
 
     return GestureDetector(
-      onLongPress: () => _printParagraphXml(),
+      onLongPress: () => printParagraphXml(),
       child: Padding(
         padding: _getPPaddings(),
         child: Container(
@@ -1052,6 +1196,16 @@ class Paragraph {
               },
               child: Builder(
                 builder: (context) {
+                  // NEW: Handle Group Images via ImageToWidget logic
+                  if (img.isGroup) {
+                    return getImageWidget(img);
+                  }
+
+                  // NEW: Handle Vector Shapes (Freeform etc.)
+                  if (img.isVectorShape && img.vectorPath != null) {
+                    return getImageWidget(img);
+                  }
+
                   // عرض Text Box (تمت إعادته ليعمل داخل Stack)
                   if (img.textBoxText != null && img.textBoxText!.isNotEmpty) {
                     Color textColor = Colors.black;
@@ -1226,21 +1380,96 @@ class Paragraph {
     return widgets;
   }
 
-  /// طباعة XML الفقرة في الـ console
-  void _printParagraphXml() {
-    print(
-      "╔══════════════════════════════════════════════════════════════════╗",
+  /// حفظ XML الفقرة في ملف للديبوج
+  void printParagraphXml() async {
+    StringBuffer buffer = StringBuffer();
+    buffer.writeln("=== Paragraph XML Debug ===");
+    buffer.writeln("Section Type: $sectionType");
+    buffer.writeln("Is Header: $isHeaderParagraph");
+    buffer.writeln("");
+
+    if (xmlString.isNotEmpty) {
+      buffer.writeln(xmlString);
+    } else if (pXml != null) {
+      buffer.writeln(pXml!.toXmlString(pretty: true));
+    } else {
+      buffer.writeln("No XML found for this paragraph.");
+    }
+
+    buffer.writeln("");
+    buffer.writeln("--- FONTS USED ---");
+    int runIndex = 1;
+    for (var run in textRunTs) {
+      String preview = run.text ?? "";
+      if (preview.length > 20) preview = preview.substring(0, 20) + "...";
+      preview = preview.replaceAll("\n", "\\n");
+
+      String? arFont = run.rpr?.font;
+      String? enFont = run.rpr?.enFont;
+
+      if (preview.trim().isNotEmpty) {
+        buffer.writeln(
+          "Run $runIndex (\"$preview\"): Ar: $arFont | En: $enFont",
+        );
+        runIndex++;
+      }
+    }
+
+    buffer.writeln("");
+    buffer.writeln("--- ALL RUNS (${runs.length} total) ---");
+    int idx = 0;
+    for (var run in runs) {
+      idx++;
+      bool hasImage = run.image != null;
+      String imgInfo = hasImage
+          ? "rId=${run.image!.rId}, wrapMode=${run.image!.wrapMode}, relFromV=${run.image!.relativeFromV}, mem=${run.image!.imageMemory != null ? '${run.image!.imageMemory!.length}b' : 'null'}"
+          : "NO IMAGE";
+      String textPreview = run.text ?? "";
+      if (textPreview.length > 15)
+        textPreview = textPreview.substring(0, 15) + "...";
+      buffer.writeln("Run $idx: text=\"$textPreview\" | $imgInfo");
+    }
+
+    buffer.writeln("");
+    buffer.writeln(
+      "--- imageRunTs (${imageRunTs.length}) | textRunTs (${textRunTs.length}) ---",
     );
-    print(
-      "║                  PARAGRAPH XML (Long Press)                      ║",
-    );
-    print(
-      "╚══════════════════════════════════════════════════════════════════╝",
-    );
-    print(xmlString);
-    print(
+    for (var run in imageRunTs) {
+      if (run.image != null) {
+        buffer.writeln("Image rId: ${run.image!.rId}");
+        buffer.writeln(
+          "  Width: ${run.image!.width}, Height: ${run.image!.height}",
+        );
+        buffer.writeln("  Has imageMemory: ${run.image!.imageMemory != null}");
+        if (run.image!.imageMemory != null) {
+          buffer.writeln(
+            "  imageMemory length: ${run.image!.imageMemory!.length} bytes",
+          );
+          if (run.image!.imageMemory!.length > 4) {
+            buffer.writeln(
+              "  First 4 bytes: ${run.image!.imageMemory!.take(4).toList()}",
+            );
+          }
+        }
+      }
+    }
+
+    buffer.writeln(
       "═══════════════════════════════════════════════════════════════════",
     );
+
+    // حفظ في ملف
+    try {
+      final file = File(
+        'd:/ImportantProjects/golden_shamela/paragraph_debug.xml',
+      );
+      await file.writeAsString(buffer.toString());
+      print("DEBUG: Paragraph XML saved to ${file.path}");
+    } catch (e) {
+      print("DEBUG: Error saving paragraph XML: $e");
+      // Fallback to console
+      print(buffer.toString());
+    }
   }
 
   void fixPDirection() {
@@ -1320,7 +1549,7 @@ class Paragraph {
 
     List<InlineSpan> spans = [
       pPr?.getNumberingW() ?? TextSpan(text: ""),
-      ...textRunTs.map((e) => e.toWidget()).toList(),
+      ...textRunTs.map((e) => e.toWidgetWithImg()).toList(),
     ];
     spans = fixRtlWidgetSpan(spans);
     return spans;
@@ -1353,6 +1582,21 @@ class Paragraph {
   }
 
   _getTRunsW(List<InlineSpan> spans) {
+    // Use Word 2007+ default (1.15) if lineHeight is not specified
+    double effectiveLineHeight = pPr?.lineHeight ?? 1.15;
+
+    // Calculate max font size from runs to ensure StrutStyle fits the largest text
+    // This fixes the issue where paragraph default (e.g. 13.5pt) is used for Strut,
+    // causing 20pt text runs to overlap because the line box is too small.
+    double maxFontSize = prPr?.fontSize ?? 14.0;
+    for (var run in textRunTs) {
+      if (run.rpr?.fontSize != null) {
+        if (run.rpr!.fontSize! > maxFontSize) {
+          maxFontSize = run.rpr!.fontSize!;
+        }
+      }
+    }
+
     return SizedBox(
       width: double.infinity,
       child: SelectableText.rich(
@@ -1360,12 +1604,13 @@ class Paragraph {
         textAlign: textAlign,
         textDirection: textDirection,
         strutStyle: StrutStyle(
-          forceStrutHeight: true,
-          height: pPr?.lineHeight,
-          fontFamily: prPr?.enFont, // ASCII font
-          fontFamilyFallback: prPr?.font != null
-              ? [prPr!.font!]
-              : null, // Arabic font
+          forceStrutHeight: !textRunTs.any(
+            (r) => r.image != null,
+          ), // Strict height only if no images (true inline images)
+          height: effectiveLineHeight,
+          fontSize: maxFontSize, // Explicitly set font size from max run size
+          fontFamily: prPr?.enFont,
+          fontFamilyFallback: prPr?.font != null ? [prPr!.font!] : null,
         ),
         selectionControls: CustomTextSelectionControls(
           bookTitle: parent.parent.title,

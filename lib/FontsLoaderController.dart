@@ -9,23 +9,19 @@ final List<String> _fontFiles = [
   "Tholoth Rounded.ttf",
   "Simplified Arabic.ttf",
   "Farsi Simple Bold.ttf",
-  "Aljazeera.ttf",
   "AL-Qairwan.otf",
-  "Al-Jazeera-Arabic-Bold.ttf",
   "AGA-Arabesque.otf",
   "(A) Arslan Wessam B.ttf",
 ];
 
-
 Future<void> loadFonts(List<String> fonts) async {
-
   for (String assetFont in _fontFiles) {
     await _loadCustomFont(assetFont);
   }
 }
 
 Future<void> _loadCustomFont(String assetFont) async {
- // print(assetFont);
+  // print(assetFont);
   final ByteData fontData = await rootBundle.load('assets/fonts/$assetFont');
   String nameNoExt = removeExt(assetFont);
   // تحميل الخط باستخدام FontLoader

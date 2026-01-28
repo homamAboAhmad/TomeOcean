@@ -9,7 +9,9 @@ part of 'PPr.dart';
 PPr _$PPrFromJson(Map<String, dynamic> json) => PPr.empty()
   ..textAlign = json['textAlign'] as String?
   ..rtl = json['rtl'] as bool?
+  ..bidi = json['bidi'] as bool?
   ..paddingLeft = (json['paddingLeft'] as num?)?.toDouble()
+  ..forceStrutHeight = json['forceStrutHeight'] as bool
   ..paddingRight = (json['paddingRight'] as num?)?.toDouble()
   ..pStyle = json['pStyle'] as String?
   ..numId = (json['numId'] as num?)?.toInt()
@@ -27,7 +29,9 @@ PPr _$PPrFromJson(Map<String, dynamic> json) => PPr.empty()
 Map<String, dynamic> _$PPrToJson(PPr instance) => <String, dynamic>{
   'textAlign': instance.textAlign,
   'rtl': instance.rtl,
+  'bidi': instance.bidi,
   'paddingLeft': instance.paddingLeft,
+  'forceStrutHeight': instance.forceStrutHeight,
   'paddingRight': instance.paddingRight,
   'pStyle': instance.pStyle,
   'numId': instance.numId,

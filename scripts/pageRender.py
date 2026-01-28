@@ -1,115 +1,51 @@
+"""
+pageRender.py - الحل الهجين لترقيم الصفحات
+===========================================
+1. COM: فتح Word وعمل Repaginate() لتحديث lastRenderedPageBreak
+2. حفظ الملف (لتحديث الـ breaks)
+3. XML: قراءة document.xml وعد lastRenderedPageBreak + w:br type="page"
+4. حقن {{PG:X}} بناءً على العدّ
+"""
+
 import sys
 import os
 import shutil
 import tempfile
-import stat
+import re
 import zipfile
-from lxml import etree as ET  # استخدام lxml بدلاً من ElementTree للحفاظ على namespaces
-import win32com.client as win32
 import psutil
-# Namespaces for OpenXML
+from lxml import etree as ET
+
+# Force UTF-8 for stdout/stderr (Fix for Windows UnicodeEncodeError)
+# Force UTF-8 for stdout/stderr (Fix for Windows UnicodeEncodeError)
+# We use io.TextIOWrapper to override the default cp1252 on Windows consoles
+import io
+if sys.platform == "win32":
+    try:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    except Exception as e:
+        pass
+
+# Namespaces
 NS = {
     'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
     'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 }
 
 def register_namespaces():
-    """تسجيل جميع namespaces المطلوبة لـ Word XML"""
     for prefix, uri in NS.items():
         ET.register_namespace(prefix, uri)
-    # إضافة namespaces أخرى ضرورية
-    ET.register_namespace('mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
     ET.register_namespace('w14', 'http://schemas.microsoft.com/office/word/2010/wordml')
-    ET.register_namespace('w15', 'http://schemas.microsoft.com/office/word/2012/wordml')
-    ET.register_namespace('wp', 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing')
-    ET.register_namespace('a', 'http://schemas.openxmlformats.org/drawingml/2006/main')
-    ET.register_namespace('pic', 'http://schemas.openxmlformats.org/drawingml/2006/picture')
-    ET.register_namespace('wps', 'http://schemas.microsoft.com/office/word/2010/wordprocessingShape')
-    ET.register_namespace('wpg', 'http://schemas.microsoft.com/office/word/2010/wordprocessingGroup')
-    ET.register_namespace('wpc', 'http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas')
-
-
-# ================== VBA MACRO للحصول السريع على أرقام الصفحات ==================
-VBA_CODE = '''
-Public Function GetAllPageNumbers() As String
-    On Error Resume Next
-    Application.ScreenUpdating = False
-    
-    Dim result As String
-    Dim para As Paragraph
-    Dim rng As Range
-    
-    result = ""
-    For Each para In ActiveDocument.Content.Paragraphs
-        Set rng = para.Range.Duplicate
-        rng.Collapse wdCollapseStart
-        result = result & rng.Information(wdActiveEndPageNumber) & ","
-    Next
-    
-    Application.ScreenUpdating = True
-    GetAllPageNumbers = result
-End Function
-'''
-
-def get_page_numbers_via_vba(doc, word_app):
-    """
-    الحصول على أرقام الصفحات لكل الفقرات باستخدام VBA macro.
-    هذا أسرع بكثير من استدعاء COM لكل فقرة.
-    يرجع قائمة بأرقام الصفحات أو None إذا فشل.
-    """
-    try:
-        # حذف module قديم إن وجد
-        try:
-            for mod in doc.VBProject.VBComponents:
-                if mod.Name == "PageHelper":
-                    doc.VBProject.VBComponents.Remove(mod)
-                    break
-        except:
-            pass
-        
-        # إنشاء module جديد
-        vb_module = doc.VBProject.VBComponents.Add(1)  # vbext_ct_StdModule
-        vb_module.Name = "PageHelper"
-        vb_module.CodeModule.AddFromString(VBA_CODE)
-        
-        # تشغيل الماكرو
-        result = word_app.Application.Run("GetAllPageNumbers")
-        
-        # حذف الـ module
-        try:
-            for mod in doc.VBProject.VBComponents:
-                if mod.Name == "PageHelper":
-                    doc.VBProject.VBComponents.Remove(mod)
-                    break
-        except:
-            pass
-        
-        # تحليل النتيجة
-        if result:
-            parts = result.strip(',').split(',')
-            page_numbers = [int(p) for p in parts if p.strip().isdigit()]
-            return page_numbers
-        
-        return None
-        
-    except Exception as e:
-        print(f"WARNING: VBA failed: {e}", flush=True)
-        print("TIP: Enable 'Trust access to VBA project' in Word Trust Center", flush=True)
-        return None
-
-
+    ET.register_namespace('mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
 
 def kill_word_processes():
-    """إغلاق نسخ الوورد المفتوحة"""
-    # طريقة 1: psutil
     for process in psutil.process_iter():
         try:
             if process.name().lower() == "winword.exe":
                 process.kill()
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        except:
             pass
-    
-    # طريقة 2: taskkill (أقوى)
     try:
         import subprocess
         subprocess.run(['taskkill', '/F', '/IM', 'WINWORD.EXE'], 
@@ -117,697 +53,577 @@ def kill_word_processes():
     except:
         pass
 
-
-def validate_input():
-    """التحقق من المدخلات"""
-    if len(sys.argv) < 3:
-        print("ERROR: يرجى توفير مسار ملف الوورد كوسيط.")
-        sys.exit(1)
-
-    books_folder = sys.argv[1]
-    word_file_path = sys.argv[2]
-
-    if not os.path.exists(word_file_path):
-        print(f"ERROR: الملف غير موجود: {word_file_path}")
-        sys.exit(1)
-
-    file_name = os.path.splitext(os.path.basename(word_file_path))[0]
-    output_file_path = os.path.join(books_folder, f"{file_name}.docx")
-    
-    return word_file_path, output_file_path
-
-def create_temp_copy(word_file_path):
-    """إنشاء نسخة مؤقتة للعمل عليها"""
-    temp_dir = tempfile.gettempdir()
-    file_name = os.path.basename(word_file_path)
-    temp_path = os.path.join(temp_dir, f"pageRender_{file_name}")
-    
-    if os.path.exists(temp_path):
-        os.remove(temp_path)
-    
-    shutil.copy2(word_file_path, temp_path)
-    os.chmod(temp_path, stat.S_IWRITE | stat.S_IREAD)
-    
-    return temp_path
-
-def open_word_document(word_file_path):
-    """فتح الملف في Word"""
-    import time
-    import threading
-    
-    # التحقق من حجم الملف
-    file_size_mb = os.path.getsize(word_file_path) / (1024 * 1024)
-    print(f"STATUS:حجم الملف: {file_size_mb:.1f} MB", flush=True)
-    
-    # للملفات الكبيرة جداً (>40MB)، نفتحها Visible لأنها أحياناً أسرع
-    use_visible = file_size_mb > 40
-    
-    if use_visible:
-        print(f"STATUS:ملف كبير - سيتم فتح Word مرئياً للأداء الأفضل", flush=True)
-        print(f"STATUS:قد يستغرق الفتح عدة دقائق، من فضلك لا تتفاعل مع Word", flush=True)
+def repaginate_and_save(docx_path):
+    """
+    فتح Word وعمل Repaginate ثم حفظ لتحديث lastRenderedPageBreak
+    """
+    import win32com.client as win32
     
     word_app = win32.Dispatch('Word.Application')
     try:
-        word_app.Visible = use_visible  # مرئي للملفات الكبيرة
-        # لا نقوم بـ minimize - نتركه مرئي بالكامل لرؤية المشاكل
-        word_app.DisplayAlerts = 0  # wdAlertsNone - تعطيل جميع التنبيهات
+        word_app.Visible = False
+        word_app.DisplayAlerts = 0
     except:
         pass
     
     doc = None
+    total_pages = 0
+    
     try:
-        print(f"STATUS:فتح المستند...", flush=True)
+        print("STATUS:Opening Word for Repaginate...", flush=True)
+        doc = word_app.Documents.Open(docx_path, ReadOnly=False, AddToRecentFiles=False)
         
-        # إنشاء thread للطباعة الدورية
-        stop_printing = threading.Event()
-        def print_waiting():
-            counter = 0
-            while not stop_printing.is_set():
-                time.sleep(15)  # كل 15 ثانية
-                if not stop_printing.is_set():
-                    counter += 15
-                    print(f"STATUS:لا يزال يفتح... ({counter}s)", flush=True)
-        
-        printer_thread = threading.Thread(target=print_waiting, daemon=True)
-        printer_thread.start()
-        
+        # تحديث التخطيط
         try:
-            # محاولة فتح الملف
-            doc = word_app.Documents.Open(
-                word_file_path, 
-                ReadOnly=False,
-                ConfirmConversions=False,
-                AddToRecentFiles=False
-            )
-            stop_printing.set()
-            print(f"STATUS:تم فتح المستند بنجاح!", flush=True)
-        finally:
-            stop_printing.set()
-            
-    except Exception as e:
-        print(f"ERROR:فشل فتح المستند: {e}", flush=True)
-        try:
-            word_app.Quit()
-        except:
-            pass
-        raise Exception(f"فشل فتح الملف: {e}")
-    
-    # إيقاف تضمين الخطوط المقيدة
-    try:
-        doc.EmbedTrueTypeFonts = False
-        if doc.Final:
-            doc.Final = False
-    except:
-        pass
-    
-    return word_app, doc
-
-def force_pagination(word_app, doc):
-    """إجبار Word على حساب التخطيط وإدراج w:lastRenderedPageBreak"""
-    import time
-    
-    # 1. تعيين وضع العرض إلى Print Layout
-    try:
-        word_app.ActiveWindow.View.Type = 3  # wdPrintView
-    except Exception as e:
-        pass
-    
-    # 2. للملفات الكبيرة، Repaginate أفضل من cursor movement
-    # لأنه يجبر Word على إعادة حساب كل الصفحات بدقة
-    print("STATUS:إعادة حساب التخطيط (Repaginate)...", flush=True)
-    try:
-        doc.Repaginate()
-        print("STATUS:تم Repaginate بنجاح", flush=True)
-        time.sleep(2)  # انتظار لضمان الانتهاء
-    except Exception as e:
-        print(f"WARNING: Repaginate failed: {e}", flush=True)
-        # fallback: cursor movement
-        try:
-            print("STATUS:محاولة cursor movement كبديل...", flush=True)
-            selection = word_app.Selection
-            selection.EndKey(Unit=6)
-            time.sleep(1)
-            selection.HomeKey(Unit=6)
-        except:
-            pass
-    
-    # 3. الحصول على عدد الصفحات حسب حسابات Word
-    total_pages_word = None
-    max_retries = 5
-    
-    for attempt in range(max_retries):
-        try:
-            print(f"STATUS:محاولة {attempt + 1}/{max_retries} للحصول على عدد الصفحات...", flush=True)
-            total_pages_word = doc.ComputeStatistics(2)  # wdStatisticPages
-            print(f"STATUS_INITIAL_PAGES:{total_pages_word}", flush=True)
-            break
+            word_app.ActiveWindow.View.Type = 3  # wdPrintView
+            doc.Repaginate()
         except Exception as e:
-            print(f"WARNING: محاولة {attempt + 1} فشلت: {e}", flush=True)
-            if attempt < max_retries - 1:
-                wait_time = 3 + (attempt * 2)
-                print(f"STATUS:انتظار {wait_time} ثانية قبل إعادة المحاولة...", flush=True)
-                time.sleep(wait_time)
-                try:
-                    word_app.ScreenRefresh()
-                except:
-                    pass
-            else:
-                print(f"ERROR: فشل الحصول على عدد الصفحات بعد {max_retries} محاولات", flush=True)
-    
-    # 4. حفظ التغييرات لضمان كتابة علامات lastRenderedPageBreak في ملف XML
-    # هذا الحفظ يحدث قبل إضافة VBA module، لذا الملف نظيف
-    print("STATUS:جاري حفظ المستند...", flush=True)
-    try:
+            print(f"WARNING: Repaginate failed: {e}", flush=True)
+        
+        # الحصول على عدد الصفحات
+        total_pages = doc.ComputeStatistics(2)
+        print(f"STATUS:Total Pages: {total_pages}", flush=True)
+
+        # ---------------------------------------------------------
+        # Active Tagging: حقن إشارات مرجعية في بداية كل صفحة
+        # ---------------------------------------------------------
+        try:
+            print(f"STATUS:Injecting bookmarks for {total_pages} pages...", flush=True)
+            # wdGoToPage = 1, wdGoToAbsolute = 1
+            for p in range(1, total_pages + 1):
+                word_app.Selection.GoTo(1, 1, p)
+                # استخدام Selection.Range يضمن وضع الإشارة في مكان المؤشر الحالي
+                doc.Bookmarks.Add(Name=f"ShamelaPage_{p}", Range=word_app.Selection.Range)
+            print("STATUS:Bookmarks injection complete.", flush=True)
+        except Exception as e:
+             print(f"ERROR: Bookmark injection failed: {e}", flush=True)
+        # ---------------------------------------------------------
+        
+        # حفظ لتحديث الملف بالـ Bookmarks
         doc.Save()
-        print("STATUS:تم حفظ المستند بنجاح", flush=True)
+        print("STATUS:Document saved with updated page breaks.", flush=True)
+        
+        doc.Close(False)
+        
     except Exception as e:
-        print(f"WARNING: Save failed: {e}", flush=True)
+        print(f"ERROR: Word operation failed: {e}", flush=True)
+        if doc:
+            try:
+                doc.Close(False)
+            except:
+                pass
+    finally:
+        if word_app:
+            try:
+                word_app.Quit()
+            except:
+                pass
     
-    return total_pages_word
+    return total_pages
 
 def create_hidden_run_element(text_content):
-    """إنشاء عنصر Run مخفي يحتوي على رقم الصفحة"""
-    # <w:r>
+    """إنشاء run مخفي يحتوي على الـ marker"""
     run = ET.Element(f"{{{NS['w']}}}r")
-    
-    # <w:rPr>
     rPr = ET.SubElement(run, f"{{{NS['w']}}}rPr")
-    # <w:vanish/> (Hidden text)
     ET.SubElement(rPr, f"{{{NS['w']}}}vanish")
-    
-    # <w:t>{PG:X}</w:t>
     t = ET.SubElement(run, f"{{{NS['w']}}}t")
     t.text = text_content
-    
     return run
 
-def process_with_native_xml(docx_path, total_pages_word=None, vba_page_numbers=None):
+def split_paragraph_at_break(para, break_elem):
     """
-    معالجة XML وحقن أرقام الصفحات.
-    
-    إذا توفرت vba_page_numbers (من VBA macro)، نستخدمها مباشرة.
-    وإلا نستخدم المنطق القديم (عد الفواصل).
-    
-    هذا يضمن:
-    1. كل فقرة تحصل على رقم صفحتها الصحيح من Word
-    2. خطأ في فقرة لا يؤثر على الفقرات التالية
-    3. دعم الفقرات الممتدة بين صفحتين
+    تقسيم الفقرة عند lastRenderedPageBreak إلى فقرتين
+    الـ lastRenderedPageBreak يأتي داخل <w:r> ويفصل بين <w:t> elements
+    مثال:
+    <w:r>
+      <w:t>This is the end</w:t>
+      <w:lastRenderedPageBreak/>
+      <w:t> of the page</w:t>
+    </w:r>
+    تُرجع (para_before, para_after) أو None إذا فشل التقسيم
     """
-    print("STATUS:جاري المعالجة باستخدام Native XML...", flush=True)
+    from copy import deepcopy
     
-    # تسجيل الـ Namespaces لضمان قراءة/كتابة صحيحة
-    register_namespaces()
-
+    # إيجاد الـ run الذي يحتوي على الفاصل
+    break_run = break_elem.getparent()
+    if break_run is None or break_run.tag != f"{{{NS['w']}}}r":
+        return None
     
-    temp_dir = os.path.dirname(docx_path)
-    extract_dir = os.path.join(temp_dir, "docx_extract")
-    
-    # حذف مجلد الاستخراج القديم مع إعادة المحاولة
-    if os.path.exists(extract_dir):
-        import time as time_module
-        for attempt in range(3):
-            try:
-                shutil.rmtree(extract_dir)
+    # إيجاد موقع الـ run في الفقرة
+    # نبحث فقط في الأبناء المباشرين للفقرة
+    direct_children = list(para)
+    break_run_index = None
+    for i, child in enumerate(direct_children):
+        if child.tag == f"{{{NS['w']}}}r":
+            if child.find(f".//{{{NS['w']}}}lastRenderedPageBreak") is not None:
+                break_run_index = i
                 break
-            except Exception as e:
-                if attempt < 2:
-                    time_module.sleep(1)
-                else:
-                    print(f"WARNING: Could not delete old extract dir: {e}", flush=True)
     
+    if break_run_index is None:
+        return None
+    
+    # إنشاء نسختين من الفقرة
+    para_before = deepcopy(para)
+    para_after = deepcopy(para)
+    
+    # الحصول على الأبناء المباشرين في كل نسخة
+    children_before = list(para_before)
+    children_after = list(para_after)
+    
+    # معالجة para_before:
+    # - إزالة كل العناصر بعد الـ run الذي يحتوي على الفاصل
+    # - في الـ run نفسه: إزالة كل ما بعد lastRenderedPageBreak
+    for i in range(len(children_before) - 1, break_run_index, -1):
+        para_before.remove(children_before[i])
+    
+    # معالجة الـ run المقسوم في para_before
+    split_run_before = children_before[break_run_index]
+    run_children = list(split_run_before)
+    found_break = False
+    for child in run_children:
+        if child.tag == f"{{{NS['w']}}}lastRenderedPageBreak":
+            found_break = True
+            split_run_before.remove(child)
+        elif found_break:
+            split_run_before.remove(child)
+    
+    # معالجة para_after:
+    # - إزالة كل العناصر قبل الـ run الذي يحتوي على الفاصل (ما عدا pPr)
+    # - في الـ run نفسه: إزالة كل ما قبل وبما فيه lastRenderedPageBreak
+    for i in range(break_run_index - 1, -1, -1):
+        if children_after[i].tag != f"{{{NS['w']}}}pPr":
+            para_after.remove(children_after[i])
+    
+    # معالجة الـ run المقسوم في para_after
+    split_run_after = None
+    for child in para_after:
+        if child.tag == f"{{{NS['w']}}}r" and child.find(f".//{{{NS['w']}}}lastRenderedPageBreak") is not None:
+            split_run_after = child
+            break
+    
+    if split_run_after is not None:
+        run_children = list(split_run_after)
+        found_break = False
+        for child in run_children:
+            if child.tag == f"{{{NS['w']}}}lastRenderedPageBreak":
+                found_break = True
+                split_run_after.remove(child)
+            elif not found_break:
+                # إزالة ما قبل الفاصل (ما عدا rPr)
+                if child.tag != f"{{{NS['w']}}}rPr":
+                    split_run_after.remove(child)
+    
+    # --- إصلاح الخصائص (Sanitize pPr) لمنع تغيير التنسيق وزيادة الصفحات ---
+    # المشكلة: تقسيم الفقرة يكرر المسافات (Spacing) والبادئة (Indentation) مما يزيد الطول العمودي ويضرب الترقيم
+    # الحل: فرض قيم صفرية بدلاً من الحذف (لأن الحذف يعيد القيم الافتراضية للنمط)
+
+    # 1. معالجة الجزء الأول (P1): إزالة المسافة البعدية (Spacing After)
+    pPr_before = para_before.find(f"{{{NS['w']}}}pPr")
+    if pPr_before is not None:
+        spacing = pPr_before.find(f"{{{NS['w']}}}spacing")
+        if spacing is None:
+            spacing = ET.SubElement(pPr_before, f"{{{NS['w']}}}spacing")
+        
+        # فرض مسافة بعدية 0
+        spacing.attrib[f"{{{NS['w']}}}after"] = "0"
+        # إزالة afterLines إذا وجدت لتجنب التعارض
+        if f"{{{NS['w']}}}afterLines" in spacing.attrib:
+            del spacing.attrib[f"{{{NS['w']}}}afterLines"]
+
+    # 2. معالجة الجزء الثاني (P2): إزالة المسافة القبلية (Spacing Before) والبادئة (Indentation)
+    pPr_after = para_after.find(f"{{{NS['w']}}}pPr")
+    if pPr_after is not None:
+        # إزالة البادئة (First Line Indent)
+        ind = pPr_after.find(f"{{{NS['w']}}}ind")
+        if ind is not None:
+            # فرض بادئة 0 للسطر الأول
+            ind.attrib[f"{{{NS['w']}}}firstLine"] = "0"
+            if f"{{{NS['w']}}}firstLineChars" in ind.attrib:
+                del ind.attrib[f"{{{NS['w']}}}firstLineChars"]
+        
+        # إزالة المسافة قبل (Spacing Before)
+        spacing = pPr_after.find(f"{{{NS['w']}}}spacing")
+        if spacing is None:
+            spacing = ET.SubElement(pPr_after, f"{{{NS['w']}}}spacing")
+        
+        # فرض مسافة قبلية 0
+        spacing.attrib[f"{{{NS['w']}}}before"] = "0"
+        # إزالة beforeLines إذا وجدت
+        if f"{{{NS['w']}}}beforeLines" in spacing.attrib:
+            del spacing.attrib[f"{{{NS['w']}}}beforeLines"]
+    
+    return para_before, para_after
+
+
+def process_xml_with_page_breaks(docx_path, output_path):
+    """
+    قراءة XML وحقن أرقام الصفحات بناءً على lastRenderedPageBreak و w:br type="page"
+    """
+    print("STATUS:Processing XML with page break detection...", flush=True)
+    
+    temp_dir = tempfile.gettempdir()
+    extract_dir = os.path.join(temp_dir, "xml_extract")
+    
+    if os.path.exists(extract_dir):
+        shutil.rmtree(extract_dir)
     os.makedirs(extract_dir, exist_ok=True)
-
-
-    # 1. فك الضغط extraction
+    
     try:
-        with zipfile.ZipFile(docx_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_dir)
-    except Exception as e:
-        print(f"ERROR: فشل فك ضغط الملف: {e}", flush=True)
-        raise e
-
-    # 2. قراءة document.xml
-    doc_xml_path = os.path.join(extract_dir, 'word', 'document.xml')
-    if not os.path.exists(doc_xml_path):
-        print("ERROR: document.xml غير موجود داخل الـ docx", flush=True)
-        return
-
-    tree = ET.parse(doc_xml_path)
-    root = tree.getroot()
-    body = root.find(f"{{{NS['w']}}}body")
-
-    if body is None:
-        print("ERROR: لا يوجد body في ملف الـ XML", flush=True)
-        return
-
-    injected_count = 0
-    total_elements = len(list(body))
-    processed_elements = 0
-
-    # 3. جمع كل الفقرات باستخدام iter() للوصول لكل الفقرات بما فيها المتداخلة
-    all_paragraphs = list(body.iter(f"{{{NS['w']}}}p"))
-    print(f"STATUS:إجمالي الفقرات للمعالجة: {len(all_paragraphs)}", flush=True)
-
-    # ================== منطق VBA (الطريقة الجديدة) ==================
-    if vba_page_numbers is not None and len(vba_page_numbers) > 0:
-        print(f"STATUS:استخدام أرقام VBA ({len(vba_page_numbers)} رقم)...", flush=True)
-        
-        # قراءة XML مباشرة من الـ zip (مثل inject_vba.py)
+        # فك ضغط الملف
         with zipfile.ZipFile(docx_path, 'r') as z:
-            content = z.read('word/document.xml')
+            z.extractall(extract_dir)
         
-        root = ET.fromstring(content)
+        doc_xml = os.path.join(extract_dir, 'word', 'document.xml')
+        register_namespaces()
+        tree = ET.parse(doc_xml)
+        root = tree.getroot()
         body = root.find(f"{{{NS['w']}}}body")
         
         if body is None:
-            print("ERROR: لا يوجد body في ملف الـ XML", flush=True)
-            return
+            raise Exception("No body found in document.xml")
         
-        all_paragraphs = list(body.iter(f"{{{NS['w']}}}p"))
-        print(f"STATUS:إجمالي الفقرات للمعالجة: {len(all_paragraphs)}", flush=True)
-        
+        current_page = 1
         injected_count = 0
-        for i, para in enumerate(all_paragraphs):
-            # تحديد رقم الصفحة
-            if i < len(vba_page_numbers):
-                page_num = vba_page_numbers[i]
-            else:
-                page_num = vba_page_numbers[-1] if vba_page_numbers else 1
-            
-            # حقن hidden run
-            hidden_run = create_hidden_run_element(f"{{{{PG:{page_num}}}}}")
-            
-            pPr = para.find(f"{{{NS['w']}}}pPr")
-            insert_index = 0
-            if pPr is not None:
-                for idx, child in enumerate(para):
-                    if child == pPr:
-                        insert_index = idx + 1
-                        break
-            
-            para.insert(insert_index, hidden_run)
-            injected_count += 1
-            
-            if injected_count % 500 == 0:
-                print(f"STATUS:التقدم {(injected_count * 100) // len(all_paragraphs)}%", flush=True)
+        para_index = 0
         
-        # حساب أقصى صفحة محقونة
-        max_injected_page = max(vba_page_numbers) if vba_page_numbers else 0
+        # جمع كل الفقرات أولاً (لأننا سنضيف عناصر جديدة)
+        all_paras = list(body.findall(f".//{{{NS['w']}}}p"))
         
-        print(f"STATUS:تم حقن {injected_count} فقرة بطريقة VBA", flush=True)
-        print(f"STATUS:=== مقارنة الصفحات ===", flush=True)
-        print(f"STATUS:صفحات Word الأصلية: {total_pages_word}", flush=True)
-        print(f"STATUS:أقصى صفحة VBA: {max_injected_page}", flush=True)
-        print(f"STATUS:فقرات XML: {len(all_paragraphs)}", flush=True)
-        print(f"STATUS:فقرات VBA: {len(vba_page_numbers)}", flush=True)
-        
-        if total_pages_word and max_injected_page:
-            if max_injected_page == total_pages_word:
-                print(f"STATUS:✓ تطابق تام!", flush=True)
-            else:
-                diff = abs(total_pages_word - max_injected_page)
-                error_pct = (diff / total_pages_word) * 100
-                print(f"STATUS:الفرق: {diff} صفحات ({error_pct:.1f}%)", flush=True)
-
-        
-        # حفظ مباشرة في zip (بدون ملفات مؤقتة)
-        try:
-            new_zip_path = docx_path + "_new"
-            with zipfile.ZipFile(new_zip_path, 'w', zipfile.ZIP_DEFLATED) as zip_out:
-                with zipfile.ZipFile(docx_path, 'r') as zip_in:
-                    for item in zip_in.infolist():
-                        if item.filename == 'word/document.xml':
-                            # كتابة XML المعدل باستخدام lxml
-                            xml_bytes = ET.tostring(root, encoding='UTF-8', xml_declaration=True)
-                            zip_out.writestr(item.filename, xml_bytes)
-                        else:
-                            # نسخ الملفات الأخرى كما هي
-                            zip_out.writestr(item, zip_in.read(item.filename))
+        for para in all_paras:
+            para_index += 1
             
-            if os.path.exists(docx_path):
-                os.remove(docx_path)
-            shutil.move(new_zip_path, docx_path)
+            # 1. إزالة أي markers قديمة أولاً
+            for run in para.findall(f".//{{{NS['w']}}}r"):
+                t_elem = run.find(f"{{{NS['w']}}}t")
+                if t_elem is not None and t_elem.text and "{{PG:" in t_elem.text:
+                    t_elem.text = re.sub(r'\{\{PG:\d+\}\}', '', t_elem.text)
+                    if not t_elem.text.strip():
+                        parent = run.getparent()
+                        if parent is not None:
+                            parent.remove(run)
             
-            # تنظيف مجلد الاستخراج إن وجد
-            if os.path.exists(extract_dir):
+            # 2. البحث عن bookmarks المحقونة (ShamelaPage_X)
+            bookmarks_in_para = []
+            all_bookmarks = para.findall(f".//{{{NS['w']}}}bookmarkStart")
+            for bm in all_bookmarks:
+                name = bm.attrib.get(f"{{{NS['w']}}}name", "")
+                if name.startswith("ShamelaPage_"):
+                    bookmarks_in_para.append(bm)
+            
+            # 3. البحث عن w:br type="page" (فاصل صفحة صريح) - احتياط
+            explicit_breaks = para.findall(f".//{{{NS['w']}}}br[@{{{NS['w']}}}type='page']")
+            
+            # DEBUG: أول 15 فقرة
+            para_text = "".join([t.text for t in para.findall(f".//{{{NS['w']}}}t") if t.text])[:30]
+            if para_index <= 15:
+                # print(f"[P{para_index}] bookmarks={len(bookmarks_in_para)}, explicitBreaks={len(explicit_breaks)}, page={current_page}, text='{para_text}'", flush=True)
+                pass
+            
+            # 4. معالجة الفقرة
+            if len(bookmarks_in_para) > 0:
+                # الفقرة تحتوي على bookmark لصفحة جديدة
+                # نأخذ أول bookmark (عادة لا يوجد أكثر من واحد في الفقرة إلا نادراً)
+                target_bookmark = bookmarks_in_para[0]
+                bm_name = target_bookmark.attrib.get(f"{{{NS['w']}}}name", "")
+                
+                # استخراج رقم الصفحة
                 try:
-                    shutil.rmtree(extract_dir)
+                    new_page_num = int(bm_name.split("_")[1])
+                    current_page = new_page_num
                 except:
                     pass
-            
-        except Exception as e:
 
-            print(f"ERROR: فشل في إعادة بناء ملف الـ docx: {e}", flush=True)
-            raise e
-        
-        return  # انتهى بنجاح مع VBA
-    
-    # ================== المنطق القديم (fallback) ==================
-    print("STATUS:استخدام طريقة عد الفواصل (fallback)...", flush=True)
-    
-    current_page = 1
-    xml_page_count = 1
-    prev_para_ended_with_manual = False
-    
-    for element in body:
-        processed_elements += 1
-        tag_name = element.tag
-        
-        # البحث عن جميع الفقرات
-        for para in [element] if element.tag == f"{{{NS['w']}}}p" else element.findall(f".//{{{NS['w']}}}p"):
-            breaks_sequence = []
-            
-            for run_idx, run in enumerate(para.findall(f".//{{{NS['w']}}}r")):
-                has_manual = False
-                has_lastRendered = False
+                # تقسيم الـ run عند Bookmark وحقن marker في المنتصف
+                bm_run = target_bookmark.getparent()
                 
-                for br in run.findall(f".//{{{NS['w']}}}br"):
-                    if br.get(f"{{{NS['w']}}}type") == "page":
-                        has_manual = True
-                        break
-                
-                if run.find(f".//{{{NS['w']}}}lastRenderedPageBreak") is not None:
-                    has_lastRendered = True
-                
-                if has_manual:
-                    breaks_sequence.append(('manual', run_idx))
-                if has_lastRendered:
-                    breaks_sequence.append(('lastRendered', run_idx))
-            
-            # عد بذكاء
-            i = 0
-            while i < len(breaks_sequence):
-                xml_page_count += 1
-                if (i + 1 < len(breaks_sequence) and 
-                    breaks_sequence[i][0] == 'manual' and 
-                    breaks_sequence[i + 1][0] == 'lastRendered' and
-                    breaks_sequence[i + 1][1] - breaks_sequence[i][1] <= 1):
-                    i += 2
-                else:
-                    i += 1
-    
-    # مقارنة مع Word count
-    if total_pages_word:
-        diff = abs(total_pages_word - xml_page_count)
-        if diff > 1:
-            print(f"WARNING:فرق بين Word ({total_pages_word}) و XML ({xml_page_count}): {diff} صفحات", flush=True)
-            print(f"WARNING:قد يكون الملف يحتاج إعادة فتح/حفظ في Word", flush=True)
-        else:
-            print(f"STATUS:Word و XML متطابقان ({total_pages_word} صفحات)", flush=True)
-    
-    current_page = 1
-    prev_para_ended_with_manual = False
-    
-    for element in body:
-        processed_elements += 1
-        tag_name = element.tag
-        
-        # طباعة التقدم كل 100 عنصر
-        if processed_elements % 100 == 0:
-            progress = (processed_elements * 100) // total_elements
-            print(f"STATUS:التقدم {progress}% ({processed_elements}/{total_elements}) - الصفحة الحالية: {current_page}", flush=True)
-        
-        # معالجة الفقرات <w:p>
-        if tag_name == f"{{{NS['w']}}}p":
-            para = element
-            
-            # 1. حقن hidden run يحتوي على {PG:X}
-            hidden_run = create_hidden_run_element(f"{{{{PG:{current_page}}}}}")
-            
-            # إدراج بعد properties مباشرة إن وجدت، أو في البداية
-            pPr = para.find(f"{{{NS['w']}}}pPr")
-            insert_index = 0
-            if pPr is not None:
-                # البحث عن اندكس pPr للإدراج بعده
-                for idx, child in enumerate(para):
-                    if child == pPr:
-                        insert_index = idx + 1
-                        break
-            
-            para.insert(insert_index, hidden_run)
-            injected_count += 1
-            
-            # 2. البحث عن فواصل الصفحات داخل الفقرة
-            # تحديث: يشمل البحث داخل الصور (drawings)
-            
-            breaks_sequence = []  # قائمة بترتيب: ('type', run_index)
-            has_text_content = False # هل الفقرة تحتوي على نص حقيقي؟
-            
-            for run_idx, run in enumerate(para.findall(f".//{{{NS['w']}}}r")):
-                # التحقق من وجود نص
-                if run.find(f".//{{{NS['w']}}}t") is not None:
-                     text_val = run.find(f".//{{{NS['w']}}}t").text
-                     if text_val and text_val.strip(): # نص حقيقي ليس مسافات فقط
-                         has_text_content = True
-                
-                has_manual = False
-                has_lastRendered = False
-                
-                # فحص عادي
-                for br in run.findall(f".//{{{NS['w']}}}br"):
-                    if br.get(f"{{{NS['w']}}}type") == "page":
-                        has_manual = True
-                        break
-                
-                if run.find(f".//{{{NS['w']}}}lastRenderedPageBreak") is not None:
-                    has_lastRendered = True
-                
-                # فحص داخل الصور (drawings)
-                # أحياناً يكون الفاصل داخل textbox داخل drawing
-                for drawing in run.findall(f".//{{{NS['w']}}}drawing"):
-                    if drawing.find(f".//{{{NS['w']}}}lastRenderedPageBreak") is not None:
-                        has_lastRendered = True
-                    # نادراً ما يكون manual داخل drawing لكن للاحتياط
-                    for d_br in drawing.findall(f".//{{{NS['w']}}}br"):
-                         if d_br.get(f"{{{NS['w']}}}type") == "page":
-                             has_manual = True
-
-                if has_manual:
-                    breaks_sequence.append(('manual', run_idx))
-                if has_lastRendered:
-                    breaks_sequence.append(('lastRendered', run_idx))
-            
-            # معالجة الفواصل
-            current_i = 0
-            paragraph_has_manual = False
-            
-            while current_i < len(breaks_sequence):
-                b_type, b_idx = breaks_sequence[current_i]
-                
-                if b_type == 'manual':
-                    paragraph_has_manual = True
-                    current_page += 1
-                    # Intra-paragraph deduplication
-                    if (current_i + 1 < len(breaks_sequence) and 
-                        breaks_sequence[current_i + 1][0] == 'lastRendered' and
-                        breaks_sequence[current_i + 1][1] - breaks_sequence[current_i][1] <= 1):
-                        current_i += 2
-                    else:
-                        current_i += 1
-                        
-                elif b_type == 'lastRendered':
-                    # Inter-paragraph Smart Deduplication
-                    # نتجاهل lastRendered فقط إذا:
-                    # 1. الفقرة السابقة انتهت بفاصل يدوي
-                    # 2. الفقرة الحالية *لا* تحتوي على نص حقيقي (مجرد وعاء للفاصل)
-                    # 3. الفاصل هو أول شيء في الفقرة
-                    if (prev_para_ended_with_manual and 
-                        not has_text_content and 
-                        current_i == 0 and b_idx <= 1):
-                        
-                        print(f"STATUS:Smart Deduplication: Ignored redundant lastRendered at page {current_page} (empty para after manual)", flush=True)
-                        current_i += 1
-                    else:
-                        current_page += 1
-                        current_i += 1
-            
-            # تحديث الحالة للفقرة القادمة
-            prev_para_ended_with_manual = False
-            if breaks_sequence:
-                 if breaks_sequence[-1][0] == 'manual':
-                     prev_para_ended_with_manual = True
-            
-            # ملاحظة: إذا كانت الفقرة فارغة تماماً (لا فواصل)، نحتفظ بالحالة السابقة؟
-            # لا، لأن السطر الفارغ يعتبر محتوى يفصل بين الفاصلين
-            if not breaks_sequence and has_text_content:
-                prev_para_ended_with_manual = False
-
-        # معالجة الجداول <w:tbl>
-        elif tag_name == f"{{{NS['w']}}}tbl":
-            prev_para_ended_with_manual = False
-            # البحث عن page breaks في الجدول
-            for tbl_para in element.findall(f".//{{{NS['w']}}}p"):
-                breaks_sequence = []
-                for run_idx, run in enumerate(tbl_para.findall(f".//{{{NS['w']}}}r")):
-                    has_manual = False
-                    has_lastRendered = False
+                # حالة: Bookmark inside a Run (common) -> Split Run
+                if bm_run is not None and bm_run.tag == f"{{{NS['w']}}}r":
+                     # تقسيم الـ run: run_before + marker + run_after
+                    from copy import deepcopy
                     
-                    for br in run.findall(f".//{{{NS['w']}}}br"):
-                        if br.get(f"{{{NS['w']}}}type") == "page":
-                            has_manual = True
+                    run_before = ET.Element(f"{{{NS['w']}}}r")
+                    run_after = ET.Element(f"{{{NS['w']}}}r")
+                    
+                    found_bm = False
+                    rPr = bm_run.find(f"{{{NS['w']}}}rPr")
+                    
+                    # نسخ rPr
+                    if rPr is not None:
+                        run_before.append(deepcopy(rPr))
+                        run_after.append(deepcopy(rPr))
+                    
+                    for child in list(bm_run):
+                        if child.tag == f"{{{NS['w']}}}rPr":
+                            continue
+                        elif child == target_bookmark:
+                            found_bm = True
+                            # Bookmark itself goes to run_before or explicitly removed? 
+                            # We can leave it in run_before to persist valid doc structure
+                            run_before.append(deepcopy(child)) 
+                        elif not found_bm:
+                            run_before.append(deepcopy(child))
+                        else:
+                            run_after.append(deepcopy(child))
+                    
+                    # إيجاد موقع bm_run في الفقرة
+                    direct_children = list(para)
+                    for i, child in enumerate(direct_children):
+                        if child == bm_run:
+                            para.remove(bm_run)
+                            
+                            # إدراج run_before
+                            has_before_content = len([c for c in run_before if c.tag != f"{{{NS['w']}}}rPr"]) > 0
+                            if has_before_content:
+                                para.insert(i, run_before)
+                                i += 1
+                            
+                            # إدراج marker للصفحة الجديدة
+                            marker_after = create_hidden_run_element(f"{{{{PG:{current_page}}}}}")
+                            para.insert(i, marker_after)
+                            i += 1
+                            injected_count += 1
+                            
+                            # إدراج run_after
+                            has_after_content = len([c for c in run_after if c.tag != f"{{{NS['w']}}}rPr"]) > 0
+                            if has_after_content:
+                                para.insert(i, run_after)
+                            
                             break
-                    if run.find(f".//{{{NS['w']}}}lastRenderedPageBreak") is not None:
-                        has_lastRendered = True
-                    
-                    if has_manual:
-                        breaks_sequence.append(('manual', run_idx))
-                    if has_lastRendered:
-                         breaks_sequence.append(('lastRendered', run_idx))
+                # حالة: Bookmark direct child of Paragraph (less common but possible)
+                else: 
+                     # Bookmark is directly in P
+                     # Just insert marker after it
+                     direct_children = list(para)
+                     for i, child in enumerate(direct_children):
+                         if child == target_bookmark:
+                             marker = create_hidden_run_element(f"{{{{PG:{current_page}}}}}")
+                             para.insert(i + 1, marker)
+                             injected_count += 1
+                             break
+
+            else:
+                # لا يوجد bookmark - نحقن marker للصفحة الحالية (عادة للصفحة 1)
+                # إذا كنا في الصفحة 1 ولم نحقن بعد
+                if current_page == 1 and injected_count == 0:
+                     marker_text = f"{{{{PG:{current_page}}}}}"
+                     hidden_run = create_hidden_run_element(marker_text)
+                     para.insert(0, hidden_run) # Insert at very start
+                     injected_count += 1
                 
-                i = 0
-                while i < len(breaks_sequence):
-                    current_page += 1
-                    if (i + 1 < len(breaks_sequence) and 
-                        breaks_sequence[i][0] == 'manual' and 
-                        breaks_sequence[i + 1][0] == 'lastRendered' and
-                        breaks_sequence[i + 1][1] - breaks_sequence[i][1] <= 1):
-                        i += 2
-                    else:
-                        i += 1
-
-    # استخدام عدد الصفحات من Word كمرجع نهائي
-    if total_pages_word is not None:
-        final_page_count = total_pages_word
-    else:
-        # Fallback: استخدام الحساب من XML فقط إذا فشل Word
-        final_page_count = current_page
-
-    print(f"STATUS:تم حقن {injected_count} علامة صفحة. عدد الصفحات الكلي: {final_page_count}", flush=True)
-
-    # 4. حفظ XML المعدل
-    tree.write(doc_xml_path, encoding='UTF-8', xml_declaration=True)
-
-    # 5. إعادة الضغط Re-zip
-    # نقوم بإنشاء ملف zip جديد من المجلد المستخرج واستبدال الملف الأصلي
-    try:
-        new_zip_path = docx_path + "_new"
-        with zipfile.ZipFile(new_zip_path, 'w', zipfile.ZIP_DEFLATED) as zip_out:
-            for foldername, subfolders, filenames in os.walk(extract_dir):
-                for filename in filenames:
-                    file_path = os.path.join(foldername, filename)
-                    # نحسب المسار النسبي داخل الـ zip
-                    arcname = os.path.relpath(file_path, extract_dir)
-                    zip_out.write(file_path, arcname)
+                # إذا وجدنا explicit break، هل نزيد الصفحة؟
+                # في نظام Active Tagging الجديد، Bookmarks هي الأساس.
+                # explicit breaks قد تكون مكررة أو غير متزامنة.
+                # الأفضل الاعتماد كلياً على Bookmarks.
+                # لكن، إذا كان هناك صفحات فارغة؟
+                # Bookmarks injected by GoTo Loop should cover all pages.
+                pass
         
-        # استبدال القديم بالجديد
-        if os.path.exists(docx_path):
-            os.remove(docx_path)
-        shutil.move(new_zip_path, docx_path)
+        print(f"STATUS:Injected {injected_count} markers. Last Page: {current_page}", flush=True)
         
-        # تنظيف
-        shutil.rmtree(extract_dir)
+        # كتابة XML
+        tree.write(doc_xml, encoding='UTF-8', xml_declaration=True)
+        
+        # إعادة ضغط الملف
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        
+        with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as z:
+            for folder, subs, files in os.walk(extract_dir):
+                for f in files:
+                    fp = os.path.join(folder, f)
+                    an = os.path.relpath(fp, extract_dir)
+                    z.write(fp, an)
+        
+        print("SUCCESS", flush=True)
         
     except Exception as e:
-        print(f"ERROR: فشل في إعادة بناء ملف الـ docx: {e}", flush=True)
-        raise e
+        print(f"ERROR: XML Processing failed: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+    finally:
+        if os.path.exists(extract_dir):
+            shutil.rmtree(extract_dir)
 
-def main():
+def process_file(docx_path, output_path):
+    """
+    المعالجة الكاملة: COM + XML
+    """
     print("START", flush=True)
     
-    # 1. تنظيف العمليات السابقة
+    if not os.path.exists(docx_path):
+        print(f"ERROR: File not found: {docx_path}")
+        return
+
+    # إغلاق Word إذا كان مفتوحاً (لتحرير الملفات العالقة)
     kill_word_processes()
     
-    # 2. التحقق من المدخلات
-    word_file_path, output_file_path = validate_input()
+    # نسخ الملف للعمل عليه
+    # استخدام مجلد مؤقت محلي لتجنب مشاكل صلاحيات النظام أو المسارات الطويلة
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    temp_dir = os.path.join(script_dir, "temp_work")
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+        
+    import uuid
+    work_docx = os.path.join(temp_dir, f"work_{uuid.uuid4().hex}.docx")
     
-    # 3. إنشاء نسخة مؤقتة
-    print("STATUS:جاري إنشاء نسخة مؤقتة...", flush=True)
-    temp_file_path = create_temp_copy(word_file_path)
+    # تأكد من أن المسار مطلق
+    work_docx = os.path.abspath(work_docx)
+    print(f"DEBUG: Working file path: {work_docx}", flush=True)
+
+    
+    shutil.copy2(docx_path, work_docx)
+    
+    if not os.path.exists(work_docx):
+         print(f"ERROR: Failed to create working file at {work_docx}")
+         return
+    total_pages = repaginate_and_save(work_docx)
+    
+    # إغلاق Word مرة أخرى
+    kill_word_processes()
+    
+    # الخطوة 2: معالجة XML
+    process_xml_with_page_breaks(work_docx, output_path)
+    
+    # تنظيف
+    if os.path.exists(work_docx):
+        try:
+            os.remove(work_docx)
+        except:
+            pass
+
+def process_word_only(docx_path, output_path):
+    """
+    المرحلة 1 فقط: Word Repaginate
+    يخرج ملف مؤقت جاهز للـ XML processing
+    """
+    print("START:WORD_STAGE", flush=True)
+    print(f"DEBUG: Input path: {docx_path}", flush=True)
+    print(f"DEBUG: Output path: {output_path}", flush=True)
+    
+    if not os.path.exists(docx_path):
+        print(f"ERROR: File not found: {docx_path}", flush=True)
+        return
+    
+    kill_word_processes()
+    
+    # نسخ للعمل
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    temp_dir = os.path.join(script_dir, "temp_work")
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+    
+    import uuid
+    work_docx = os.path.join(temp_dir, f"work_{uuid.uuid4().hex}.docx")
+    work_docx = os.path.abspath(work_docx)
     
     try:
-        # 4. استخدام Word (COM) لإجبار الترقيم وتوليد lastRenderedPageBreak
-        # نحاول دائماً استخدام Word للحصول على العدد الدقيق
-        file_size_mb = os.path.getsize(temp_file_path) / (1024 * 1024)
-        print(f"STATUS:حجم الملف: {file_size_mb:.1f} MB", flush=True)
-        
-        if file_size_mb > 40:
-            print(f"STATUS:ملف كبير - قد يستغرق Word عدة دقائق...", flush=True)
-        
-        print("STATUS:جاري تشغيل Word لحساب التخطيط...", flush=True)
-        
-        total_pages_word = None
-        vba_page_numbers = None
-        
-        try:
-            word_app, doc = open_word_document(temp_file_path)
-            
-            try:
-                total_pages_word = force_pagination(word_app, doc)
-                
-                # =============== استخدام VBA للحصول على أرقام الصفحات ===============
-                print("STATUS:جاري الحصول على أرقام الصفحات عبر VBA...", flush=True)
-                vba_page_numbers = get_page_numbers_via_vba(doc, word_app)
-                
-                if vba_page_numbers:
-                    print(f"STATUS:تم الحصول على {len(vba_page_numbers)} رقم صفحة", flush=True)
-                else:
-                    print("WARNING:فشل VBA، سيتم استخدام الطريقة القديمة", flush=True)
-                
-                # إغلاق Word بعد الحصول على النتيجة
-                try:
-                    doc.Close(False)  # لا نحفظ التغييرات
-                    word_app.Quit()
-                except:
-                    pass
-
-                    
-            except Exception as e:
-                print(f"WARNING: خطأ في force_pagination: {e}", flush=True)
-                try:
-                    doc.Close(False)
-                    word_app.Quit()
-                except:
-                    pass
-                total_pages_word = None
-        
-        except Exception as e:
-            print(f"WARNING: فشل Word COM: {e}", flush=True)
-            total_pages_word = None
-            vba_page_numbers = None
-            try:
-                kill_word_processes()
-            except:
-                pass
-        
-        # إذا فشل Word، نستخدم XML fallback
-        if total_pages_word is None:
-            print("WARNING: سيتم استخدام حساب XML كبديل", flush=True)
-        
-        # تنظيف Word قبل معالجة XML
-        try:
-            kill_word_processes()
-        except:
-            pass
-        
-        import time as time_mod
-        time_mod.sleep(1)  # انتظار لتحرير الملفات
-        
-        # 5. المعالجة بـ Native XML (مع أرقام VBA إن توفرت)
-        process_with_native_xml(temp_file_path, total_pages_word, vba_page_numbers)
-
-
-        
-        # 6. نقل الملف الناتج
-        print("STATUS:جاري حفظ الملف النهائي...", flush=True)
-        if os.path.exists(output_file_path):
-            os.remove(output_file_path)
-        
-        shutil.move(temp_file_path, output_file_path)
-        print("SUCCESS", flush=True)
-
+        shutil.copy2(docx_path, work_docx)
     except Exception as e:
-        print(f"ERROR:Final Exception: {e}", flush=True)
-        # محاولة تنظيف
-        try:
-            kill_word_processes()
-        except:
-            pass
-        if os.path.exists(temp_file_path):
+        print(f"ERROR: Failed to copy source file: {e}", flush=True)
+        return
+    
+    if not os.path.exists(work_docx):
+        print(f"ERROR: Failed to create working file at {work_docx}", flush=True)
+        return
+    
+    try:
+        total_pages = repaginate_and_save(work_docx)
+        if total_pages == 0:
+            print("WARNING: repaginate_and_save returned 0 pages - Word may have failed", flush=True)
+    except Exception as e:
+        print(f"ERROR: repaginate_and_save failed: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        # تنظيف الملف المؤقت
+        if os.path.exists(work_docx):
             try:
-                os.remove(temp_file_path)
+                os.remove(work_docx)
             except:
                 pass
-        sys.exit(1)
+        return
+    
+    kill_word_processes()
+    
+    # التحقق من أن الملف المعالج موجود قبل نسخه
+    if not os.path.exists(work_docx):
+        print(f"ERROR: Working file disappeared after Word processing: {work_docx}", flush=True)
+        return
+    
+    # نسخ الملف المعالج للـ output
+    try:
+        shutil.copy2(work_docx, output_path)
+        print(f"DEBUG: Copied to output: {output_path}", flush=True)
+    except Exception as e:
+        print(f"ERROR: Failed to copy to output: {e}", flush=True)
+        return
+    
+    # التحقق من أن الملف الناتج تم إنشاؤه
+    if not os.path.exists(output_path):
+        print(f"ERROR: Output file was not created: {output_path}", flush=True)
+        return
+    
+    # تنظيف
+    if os.path.exists(work_docx):
+        try:
+            os.remove(work_docx)
+        except:
+            pass
+    
+    print(f"WORD_DONE:{output_path}", flush=True)
+
+def process_xml_only(input_path, output_path):
+    """
+    المرحلة 2 فقط: XML Processing
+    يأخذ ملف تم عمل Repaginate له مسبقاً
+    """
+    print("START:XML_STAGE", flush=True)
+    
+    if not os.path.exists(input_path):
+        print(f"ERROR: File not found: {input_path}")
+        return
+    
+    process_xml_with_page_breaks(input_path, output_path)
+    
+    # لا نحذف input_path لأنه قد يكون ملف المستخدم الأصلي
+    print("XML_DONE", flush=True)
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Page Render Script')
+    parser.add_argument('books_folder', help='Books output folder')
+    parser.add_argument('docx_path', help='Input docx file path')
+    parser.add_argument('--stage', choices=['word', 'xml', 'full'], default='full',
+                        help='Processing stage: word (repaginate only), xml (parse only), full (both)')
+    
+    args = parser.parse_args()
+    
+    # Ensure output folder exists
+    if not os.path.exists(args.books_folder):
+        try:
+            os.makedirs(args.books_folder, exist_ok=True)
+            print(f"STATUS: Created output directory: {args.books_folder}", flush=True)
+        except Exception as e:
+            print(f"WARNING: Failed to create output directory {args.books_folder}: {e}", flush=True)
+
+    file_name = os.path.splitext(os.path.basename(args.docx_path))[0]
+    
+    # Fix: If stage is XML, we are receiving a temp file (e.g., _temp_Book), 
+    # but we want the output to be the original name (Book).
+    if args.stage == 'xml' and file_name.startswith('_temp_'):
+        file_name = file_name[6:] # len('_temp_') == 6
+
+    output_file = os.path.join(args.books_folder, f"{file_name}.docx")
+    
+    if args.stage == 'word':
+        # مرحلة Word فقط - الخرج ملف مؤقت
+        temp_output = os.path.join(args.books_folder, f"_temp_{file_name}.docx")
+        process_word_only(args.docx_path, temp_output)
+    elif args.stage == 'xml':
+        # مرحلة XML فقط - المدخل ملف مؤقت من مرحلة Word
+        process_xml_only(args.docx_path, output_file)
+    else:
+        # المعالجة الكاملة (الوضع القديم)
+        process_file(args.docx_path, output_file)
+

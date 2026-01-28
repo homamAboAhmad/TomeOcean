@@ -6,6 +6,7 @@ import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import '../Controllers/PathController.dart';
 import 'dialogs/file_processing_dialog.dart';
+import 'dialogs/batch_file_processing_dialog.dart';
 
 class BooksDrawer extends StatefulWidget {
   final void Function(File) onBookSelected;
@@ -70,27 +71,17 @@ class _BooksDrawerState extends State<BooksDrawer> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(3),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: secondaryColor, width: 2),
-            ),
-            child: const CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.white,
-              child: Icon(
-                Icons.menu_book_rounded,
-                color: primaryColor,
-                size: 32,
-              ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              'assets/icons/logo.png',
+              height: 80,
+              width: 80,
+              fit: BoxFit.contain,
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            'البحر المحيط',
-            style: bigStyle(color: Colors.white, fontSize: 22),
-          ),
+          Text('المكتبة', style: bigStyle(color: Colors.white, fontSize: 22)),
           const SizedBox(height: 4),
           Text(
             'مكتبتك الرقمية المتكاملة',
@@ -221,24 +212,30 @@ class _BooksDrawerState extends State<BooksDrawer> {
       result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['docx'],
+        allowMultiple: true,
       );
-      if (result != null) {
-        final filePath = result!.files.single.path!;
+
+      if (result != null && result!.files.isNotEmpty) {
+        // Use the new World-Class Batch Dialog
         if (mounted) {
-          final processingResult = await showFileProcessDailog(
-            context,
-            filePath,
-            update: true,
+          final List<String> paths = result!.files.map((f) => f.path!).toList();
+
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => BatchFileProcessingDialog(filePaths: paths),
           );
 
           loadBooks();
 
-          if (processingResult != null && processingResult.success) {
-            if (mounted) Navigator.pop(context);
-
-            final fileName = filePath.split('\\').last.split('/').last;
-            final bookFile = File('$BOOKS_FOLDER_PATH\\$fileName');
-            if (await bookFile.exists()) {
+          // Auto-select the last added book if success
+          // Logic to find last added book:
+          final lastPath = paths.last;
+          final fileName = lastPath.split('\\').last.split('/').last;
+          final bookFile = File('$BOOKS_FOLDER_PATH\\$fileName');
+          if (await bookFile.exists()) {
+            if (mounted) {
+              Navigator.pop(context);
               widget.onBookSelected(bookFile);
             }
           }

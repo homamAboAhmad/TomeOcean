@@ -12,6 +12,8 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 import 'package:golden_shamela/core/app_state.dart';
+import 'package:flutter/gestures.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 part 'runT.g.dart';
 
@@ -120,6 +122,10 @@ class runT {
   isRelativeFromVParagraph() {
     if (image == null) return false;
 
+    // Inline images (wrapMode is null) should NEVER be treated as relative/positioned.
+    // They must flow with the text.
+    if (image?.wrapMode == null) return false;
+
     // Reverted: Allow text boxes to be relative/positioned if the XML says so.
     // This allows them to overlap images correctly.
     // if (image!.textBoxText != null && image!.textBoxText!.isNotEmpty) return false;
@@ -165,55 +171,56 @@ class runT {
     List<InlineSpan> contentSpans = [];
 
     List<String> highlightTerms = AppState().searchHighlightTerms;
-    if (highlightTerms.isNotEmpty && fixedText.isNotEmpty) {
-      // Build regex pattern from terms
-      // Use logical OR to match any term
-      String pattern = highlightTerms.map(RegExp.escape).join('|');
-      RegExp regex = RegExp(pattern); // Unicode safe by default in Dart?
 
-      int lastMatchEnd = 0;
-      bool hasMatch = false;
-
-      for (final match in regex.allMatches(fixedText)) {
-        hasMatch = true;
-        // Text before match
-        if (match.start > lastMatchEnd) {
+    // Check for URLs in the text (simple check first for optimization)
+    bool customUrlCheck =
+        fixedText.contains("http") || fixedText.contains("www");
+    if (customUrlCheck) {
+      contentSpans = _buildContentSpansWithIds(
+        fixedText,
+        effectiveStyle,
+        highlightTerms,
+      );
+    } else {
+      // Standard highlighting logic (refactored or inline)
+      if (highlightTerms.isNotEmpty && fixedText.isNotEmpty) {
+        String pattern = highlightTerms.map(RegExp.escape).join('|');
+        RegExp regex = RegExp(pattern);
+        int lastMatchEnd = 0;
+        bool hasMatch = false;
+        for (final match in regex.allMatches(fixedText)) {
+          hasMatch = true;
+          if (match.start > lastMatchEnd) {
+            contentSpans.add(
+              TextSpan(
+                text: fixedText.substring(lastMatchEnd, match.start),
+                style: effectiveStyle,
+              ),
+            );
+          }
           contentSpans.add(
             TextSpan(
-              text: fixedText.substring(lastMatchEnd, match.start),
+              text: fixedText.substring(match.start, match.end),
+              style: (rpr?.getTextStyle() ?? effectiveStyle).copyWith(
+                backgroundColor: const Color(0xFFFFE082),
+              ),
+            ),
+          );
+          lastMatchEnd = match.end;
+        }
+        if (lastMatchEnd < fixedText.length) {
+          contentSpans.add(
+            TextSpan(
+              text: fixedText.substring(lastMatchEnd),
               style: effectiveStyle,
             ),
           );
         }
-        // Matched text
-        contentSpans.add(
-          TextSpan(
-            text: fixedText.substring(match.start, match.end),
-            style: (rpr?.getTextStyle() ?? effectiveStyle).copyWith(
-              backgroundColor: const Color(0xFFFFE082),
-            ),
-          ),
-        );
-        lastMatchEnd = match.end;
-      }
-
-      // Remaining text
-      if (lastMatchEnd < fixedText.length) {
-        contentSpans.add(
-          TextSpan(
-            text: fixedText.substring(lastMatchEnd),
-            style: effectiveStyle,
-          ),
-        );
-      }
-
-      if (!hasMatch) {
-        // Clear previous spans if no match found but we entered the loop (just to be safe, though logic should prevent this)
-        contentSpans.clear();
+        if (!hasMatch)
+          contentSpans.add(TextSpan(text: fixedText, style: effectiveStyle));
+      } else {
         contentSpans.add(TextSpan(text: fixedText, style: effectiveStyle));
       }
-    } else {
-      contentSpans.add(TextSpan(text: fixedText, style: effectiveStyle));
     }
 
     if (vAlign != 0) {
@@ -270,16 +277,8 @@ class runT {
       style = TextStyle(color: Colors.black, fontSize: 14, fontFamily: "jreg");
     }
 
-    // Apply paragraph properties (line height) from parent Paragraph's PPr
-    double? lineHeight = pPr?.lineHeight;
-    // Fallback to parent paragraph's PPr if run's pPr doesn't have it
-    if (lineHeight == null && parent.pPr != null) {
-      lineHeight = parent.pPr!.lineHeight;
-    }
-    // Final fallback: Word 2007+ default spacing (1.15, not 1.0!)
-    lineHeight ??= 1.15;
-
-    style = style.copyWith(height: lineHeight);
+    // Note: Line height is controlled by StrutStyle in Paragraph._getTRunsW()
+    // Do NOT set height here to avoid doubling the line spacing effect
 
     return style;
   }
@@ -481,25 +480,83 @@ class runT {
   }
 
   void checkParaRpr() {
-    rpr?.b ??= prPr?.b;
-    rpr?.i ??= prPr?.i;
+    // Logic for Toggle Properties (Bold, Italic, Strike, Vanish)
+    // Spec: If run property is present (true/false), it toggles or overrides the style property.
+    // However, typically <w:b/> (true) means "Toggle my state relative to parent".
+    // <w:b w:val="0"/> (false) explicitly turns it off.
+
+    // Bold Logic
+    bool styleB = prPr?.b ?? false;
+    if (rpr?.b == true) {
+      // Toggle logic: If style is Bold, and run says "Bold" (Toggle), result is Not Bold.
+      // If style is Not Bold, and run says "Bold", result is Bold.
+      rpr?.b = !styleB;
+    } else if (rpr?.b == false) {
+      // Explicitly OFF
+      rpr?.b = false;
+    } else {
+      // Not specified in Run -> Inherit from Style
+      rpr?.b = styleB;
+    }
+
+    // Italic Logic
+    bool styleI = prPr?.i ?? false;
+    if (rpr?.i == true) {
+      rpr?.i = !styleI;
+    } else if (rpr?.i == false) {
+      rpr?.i = false;
+    } else {
+      rpr?.i = styleI;
+    }
+
+    // Inherit other properties (Overrides)
     rpr?.u ??= prPr?.u;
     rpr?.uColor ??= prPr?.uColor;
     rpr?.color ??= prPr?.color;
     rpr?.highlightColor ??= prPr?.highlightColor;
     rpr?.rtl ??= prPr?.rtl;
     rpr?.font ??= prPr?.font;
+
+    // Size Logic: w:sz is often additive (or relative) in complex scenarios, but usually absolute in simple Word usage.
+    // However, we treat it as override here unless we implement full complex logic.
     rpr?.fontSize ??= prPr?.fontSize;
+
     rpr?.vertAlign ??= prPr?.vertAlign;
+
+    // Strike Logic (XOR)
+    bool styleStrike = prPr?.strike ?? false;
+    if (rpr?.strike == true) {
+      rpr?.strike = !styleStrike;
+    } else if (rpr?.strike == false) {
+      rpr?.strike = false;
+    } else {
+      rpr?.strike = styleStrike;
+    }
+
+    // Vanish Logic (XOR)
+    bool styleVanish = prPr?.vanish ?? false;
+    if (rpr?.vanish == true) {
+      rpr?.vanish = !styleVanish;
+    } else if (rpr?.vanish == false) {
+      rpr?.vanish = false;
+    } else {
+      rpr?.vanish = styleVanish;
+    }
   }
 
   String? changeFontByTxt(String? text) {
     if (text == null) return null;
+
     if (isArabic(text)) {
       return rpr?.font; // خط عربي
     } else if (text.contains(RegExp(r'[a-zA-Z]'))) {
       return rpr?.enFont; // خط إنجليزي
     } else {
+      // FIX: في حالة النص العربي (RTL)، نستخدم الخط العربي (cs) للرموز أيضاً
+      // بدلاً من uniqueFont (hAnsi) الذي قد يحتوي على glyphs غير متوقعة (مثل صدق الله العظيم بدلاً من النقطة)
+      if (rpr?.rtl == true) {
+        return rpr?.font;
+      }
       return rpr?.uniqueFont; // إذا كان النص غير محدد، نختار خط افتراضي
     }
   }
@@ -516,5 +573,124 @@ class runT {
       return text ?? "";
     else
       return removeDiacritics(text ?? "");
+  }
+
+  /// Build spans checking for URLs first, then search highlights
+  List<InlineSpan> _buildContentSpansWithIds(
+    String text,
+    TextStyle style,
+    List<String> highlightTerms,
+  ) {
+    List<InlineSpan> spans = [];
+    // Regex for URLs (http/https or www)
+    final urlRegex = RegExp(r'(https?:\/\/[^\s]+|www\.[^\s]+)');
+    final matches = urlRegex.allMatches(text);
+
+    int lastMatchEnd = 0;
+
+    for (final match in matches) {
+      // Process text before the URL (apply highlighting)
+      if (match.start > lastMatchEnd) {
+        String preText = text.substring(lastMatchEnd, match.start);
+        spans.addAll(_buildHighlightSpans(preText, style, highlightTerms));
+      }
+
+      // Process the URL itself (make clickable)
+      String urlText = text.substring(match.start, match.end);
+      spans.add(_buildLinkSpan(urlText, style));
+
+      lastMatchEnd = match.end;
+    }
+
+    // Process remaining text
+    if (lastMatchEnd < text.length) {
+      String postText = text.substring(lastMatchEnd);
+      spans.addAll(_buildHighlightSpans(postText, style, highlightTerms));
+    }
+
+    return spans;
+  }
+
+  /// Helper to build search highlight spans for non-link text
+  List<InlineSpan> _buildHighlightSpans(
+    String text,
+    TextStyle style,
+    List<String> highlightTerms,
+  ) {
+    if (highlightTerms.isEmpty || text.isEmpty) {
+      return [TextSpan(text: text, style: style)];
+    }
+
+    List<InlineSpan> spans = [];
+    String pattern = highlightTerms.map(RegExp.escape).join('|');
+    RegExp regex = RegExp(pattern);
+
+    int lastMatchEnd = 0;
+    bool hasMatch = false;
+
+    for (final match in regex.allMatches(text)) {
+      hasMatch = true;
+      if (match.start > lastMatchEnd) {
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: style,
+          ),
+        );
+      }
+      spans.add(
+        TextSpan(
+          text: text.substring(match.start, match.end),
+          style: (rpr?.getTextStyle() ?? style).copyWith(
+            backgroundColor: const Color(0xFFFFE082),
+          ),
+        ),
+      );
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastMatchEnd), style: style));
+    }
+
+    if (!hasMatch) {
+      return [TextSpan(text: text, style: style)];
+    }
+    return spans;
+  }
+
+  /// Helper to build a clickable link span
+  InlineSpan _buildLinkSpan(String urlText, TextStyle baseStyle) {
+    String url = urlText;
+    // Only add https:// for web URLs, not for mailto:, tel:, or other schemes
+    if (!url.startsWith("http") &&
+        !url.startsWith("mailto:") &&
+        !url.startsWith("tel:") &&
+        !url.startsWith("ftp:") &&
+        !url.startsWith("file:")) {
+      url = "https://$urlText";
+    }
+
+    return TextSpan(
+      text: urlText,
+      style: baseStyle.copyWith(
+        color: Colors.blue,
+        decoration: TextDecoration.underline,
+        decorationColor: Colors.blue,
+      ),
+      recognizer: TapGestureRecognizer()
+        ..onTap = () async {
+          try {
+            final uri = Uri.parse(url);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri);
+            } else {
+              print("Could not launch detected URL: $url");
+            }
+          } catch (e) {
+            print("Error launching detected URL: $e");
+          }
+        },
+    );
   }
 }

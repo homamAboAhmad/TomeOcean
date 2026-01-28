@@ -27,7 +27,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1536, 864);
-  if (!window.Create(L"golden_shamela", origin, size)) {
+  if (!window.Create(L"\u0627\u0644\u0645\u0643\u062a\u0628\u0629", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

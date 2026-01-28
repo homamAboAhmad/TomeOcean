@@ -4,12 +4,13 @@ import 'dart:io';
 
 String DOCUMENTS_PATH = getAssetsPath();
 String BOOKS_FOLDER_PATH = getBooksFolderPath();
-const BOOKS_FOLDER_NAME = 'البحر المحيط';
+const BOOKS_FOLDER_NAME = 'المكتبة';
 
 String getBooksFolderPath() {
   print("dp: $DOCUMENTS_PATH");
   return '${DOCUMENTS_PATH}\\${BOOKS_FOLDER_NAME}';
 }
+
 // for test
 // String getBooksFolderPath() {
 //   print("dp: $DOCUMENTS_PATH");

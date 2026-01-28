@@ -1,19 +1,18 @@
 import 'dart:typed_data';
-import 'dart:ui';
+import 'dart:ui'; // For FontWeight
+import 'package:archive/archive.dart';
+
 import 'dart:io';
 import 'dart:convert';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:golden_shamela/Models/IndexItem.dart';
-import 'package:golden_shamela/main.dart';
+
 import 'package:golden_shamela/wordToHTML/PPr.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
-import '../FontsLoaderController.dart';
 import '../Utils/json_converters.dart';
 import '../wordToHTML/DocRelations.dart';
 import '../wordToHTML/FootNote.dart';
@@ -28,6 +27,9 @@ class WordDocument {
   String title = "BOOK";
   @JsonKey(ignore: true)
   List<WordPage> _loadedPages = []; // Cache for loaded pages
+  @JsonKey(ignore: true)
+  Archive? archive; // The source archive for this document
+
   @JsonKey(ignore: true)
   List<String> pageFilePaths = []; // Paths to page JSON files
   @JsonKey(ignore: true)
@@ -349,24 +351,85 @@ class WordDocument {
   }
 
   addBookMark(String bookMarkToc, {int? pageIndex}) {
-    // pageIndex is 1-based (from pageNum in parsing), but we need 0-based for navigation
-    int page = (pageIndex ?? pageFilePaths.length) - 1;
+    // pageIndex comes from internal 0-based index (e.g. from Paragraph.parent.pageIndex)
+    // So we use it directly. If not provided, we fallback to the last page index.
+    int page = pageIndex ?? (pageFilePaths.length - 1);
     if (page < 0) page = 0;
     bookMarksMap[bookMarkToc] = page;
   }
 }
 
 String getFixedFontName(String font) {
-  return font
+  String fixed = font
       .replaceAll(" ", "_")
       .replaceAll(")", "")
       .replaceAll("(", "")
       .replaceAll("-", "_")
       .toLowerCase();
+
+  return fixed;
 }
 
 List<String> problemFontsList = [/*"Tholoth Rounded", "AL-Qairwan"*/];
 
 bool isProblemFont(String font) {
   return problemFontsList.contains(font);
+}
+
+/// Normalizes font family name by removing style suffixes.
+/// Word often uses PostScript names (e.g. "Al-Jazeera-Arabic-Bold")
+/// Flutter/Windows expects Family Name (e.g. "Al-Jazeera-Arabic") + fontWeight/Style
+String normalizeFontFamily(String font) {
+  // 1. Remove common style suffixes (case-insensitive)
+  // We handle both hyphenated (-Bold) and spaced ( Bold) suffixes
+  final suffixes = [
+    RegExp(r'[- ]?Bold', caseSensitive: false),
+    RegExp(r'[- ]?Italic', caseSensitive: false),
+    RegExp(r'[- ]?Regular', caseSensitive: false),
+    RegExp(r'[- ]?Medium', caseSensitive: false),
+    RegExp(r'[- ]?Light', caseSensitive: false),
+    RegExp(r'[- ]?Semibold', caseSensitive: false),
+    RegExp(r'[- ]?ExtraBold', caseSensitive: false),
+    RegExp(r'[- ]?Black', caseSensitive: false),
+  ];
+
+  String normalized = font;
+  for (var regex in suffixes) {
+    normalized = normalized.replaceAll(regex, '');
+  }
+
+  // 2. Trim potentially left over spaces
+  return normalized.trim();
+}
+
+/// Detects if the font name implies a specific font weight (Bold/Black).
+/// This is necessary when the XML <w:b/> tag is invalid or missing, but the font name specifies weight.
+FontWeight? getImplicitFontWeight(String fontName) {
+  final lowerFont = fontName.toLowerCase();
+
+  // Check for Black/ExtraBold first as they are heavier
+  if (lowerFont.contains("black") || lowerFont.contains("extrabold")) {
+    return FontWeight.w900;
+  }
+
+  // Check for Bold
+  // Ensure it's not "SemiBold" treated as Bold if we want precision,
+  // but usually FontWeight.bold (w700) covers standard Bold.
+  if (lowerFont.contains("bold")) {
+    return FontWeight.bold;
+  }
+
+  if (lowerFont.contains("semibold")) {
+    return FontWeight.w600;
+  }
+
+  if (lowerFont.contains("medium")) {
+    return FontWeight.w500;
+  }
+
+  if (lowerFont.contains("light")) {
+    return FontWeight.w300;
+  }
+
+  return null;
 }
