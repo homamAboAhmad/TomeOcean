@@ -40,6 +40,73 @@ String? _normalizeColor(String? color) {
   return color.replaceAll("#", "");
 }
 
+/// resolveThemeColor with tint/shade
+String? resolveThemeColor(
+  Map<String, String> themeColors,
+  String? themeColorName,
+  String? themeTint,
+  String? themeShade,
+) {
+  if (themeColorName == null) return null;
+
+  // Word XML uses alternative names for theme colors
+  // e.g., "background1" in w:themeColor maps to "light1" in a:clrScheme
+  const themeColorAliases = {
+    'background1': 'light1',
+    'text1': 'dark1',
+    'background2': 'light2',
+    'text2': 'dark2',
+    'lt1': 'light1',
+    'dk1': 'dark1',
+    'lt2': 'light2',
+    'dk2': 'dark2',
+  };
+  String resolvedName = themeColorAliases[themeColorName] ?? themeColorName;
+
+  String? baseHex = themeColors[resolvedName];
+  if (baseHex == null || baseHex.length < 6) return null;
+
+  if (themeTint != null && themeTint.isNotEmpty) {
+    int tint = int.tryParse(themeTint, radix: 16) ?? 255;
+    baseHex = _applyTint(baseHex, tint);
+  }
+
+  if (themeShade != null && themeShade.isNotEmpty) {
+    int shade = int.tryParse(themeShade, radix: 16) ?? 255;
+    baseHex = _applyShade(baseHex, shade);
+  }
+
+  return baseHex;
+}
+
+String _applyTint(String hex, int tintValue) {
+  int r = int.parse(hex.substring(0, 2), radix: 16);
+  int g = int.parse(hex.substring(2, 4), radix: 16);
+  int b = int.parse(hex.substring(4, 6), radix: 16);
+
+  r = (r + (255 - r) * (255 - tintValue) / 255).round().clamp(0, 255);
+  g = (g + (255 - g) * (255 - tintValue) / 255).round().clamp(0, 255);
+  b = (b + (255 - b) * (255 - tintValue) / 255).round().clamp(0, 255);
+
+  return r.toRadixString(16).padLeft(2, '0') +
+      g.toRadixString(16).padLeft(2, '0') +
+      b.toRadixString(16).padLeft(2, '0');
+}
+
+String _applyShade(String hex, int shadeValue) {
+  int r = int.parse(hex.substring(0, 2), radix: 16);
+  int g = int.parse(hex.substring(2, 4), radix: 16);
+  int b = int.parse(hex.substring(4, 6), radix: 16);
+
+  r = (r * shadeValue / 255).round().clamp(0, 255);
+  g = (g * shadeValue / 255).round().clamp(0, 255);
+  b = (b * shadeValue / 255).round().clamp(0, 255);
+
+  return r.toRadixString(16).padLeft(2, '0') +
+      g.toRadixString(16).padLeft(2, '0') +
+      b.toRadixString(16).padLeft(2, '0');
+}
+
 @JsonSerializable(explicitToJson: true, constructor: 'empty')
 class RPr {
   @JsonKey(ignore: true)
@@ -254,7 +321,22 @@ class RPr {
   }
 
   String? getShdColor() {
-    String? shd = rPr?.getElement("w:shd")?.getAttribute("w:fill");
+    XmlElement? shdElem = rPr?.getElement("w:shd");
+    if (shdElem == null) return null;
+
+    // Resolve theme fill first
+    String? themeFill = shdElem.getAttribute("w:themeFill");
+    if (themeFill != null) {
+      String? resolved = resolveThemeColor(
+        wordDocument.themeColors,
+        themeFill,
+        shdElem.getAttribute("w:themeFillTint"),
+        shdElem.getAttribute("w:themeFillShade"),
+      );
+      if (resolved != null) return "#$resolved";
+    }
+
+    String? shd = shdElem.getAttribute("w:fill");
     if (shd == null) return null;
     return "#" + shd;
   }
