@@ -1,14 +1,16 @@
 import 'package:flutter/cupertino.dart';
-import 'package:golden_shamela/Utils/XmlElementUtils.dart';
-import 'package:golden_shamela/wordToHTML/MyInt.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/DocumentStyles.dart';
+import 'package:golden_shamela/wordToHTML/TableStyleHelper.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/SectPr.dart';
 import 'package:xml/xml.dart';
+
+import 'RPr.dart';
 
 class ParagraphTable extends Paragraph {
   ParagraphTable(super.parent);
@@ -129,13 +131,18 @@ class WordTableWidget extends StatelessWidget {
       }
     }
 
+    // Determine row direction from bidiVisual
+    bool bidi = isTableBidiVisual(tblXml);
+
     // Generate Rows
-    List<Widget> rowWidgets = getRowsWList(scaleFactor, gridColWidths);
+    List<Widget> rowWidgets = getRowsWList(scaleFactor, gridColWidths, bidi);
+
+    // Table alignment from w:jc in w:tblPr
+    Alignment tableAlign = getTableAlignment(tblXml);
 
     return Container(
-      width: screenWidth, // Container takes full width to allow centering
-      alignment:
-          Alignment.center, // Center the table if it's smaller than screen
+      width: screenWidth,
+      alignment: tableAlign,
       child: Container(
         width: finalTableWidth,
         child: Column(mainAxisSize: MainAxisSize.min, children: rowWidgets),
@@ -178,13 +185,30 @@ class WordTableWidget extends StatelessWidget {
     return (double.tryParse(heightVal), hRule);
   }
 
-  List<Widget> getRowsWList(double scaleFactor, List<double> gridColWidths) {
+  List<Widget> getRowsWList(
+    double scaleFactor,
+    List<double> gridColWidths,
+    bool bidi,
+  ) {
     List<XmlElement> rows = tblXml.childElements
         .where((n) => n.name.local == 'tr')
         .toList();
 
     List<Widget> rowsW = [];
     int totalRows = rows.length;
+
+    // Compute totalCols from the first row (for conditional formatting)
+    int totalCols = 0;
+    if (rows.isNotEmpty) {
+      for (var cell in rows.first.childElements.where(
+        (n) => n.name.local == 'tc',
+      )) {
+        totalCols += _getGridSpan(cell);
+      }
+    }
+    if (totalCols == 0 && gridColWidths.isNotEmpty) {
+      totalCols = gridColWidths.length;
+    }
 
     for (int rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       var row = rows[rowIndex];
@@ -193,41 +217,39 @@ class WordTableWidget extends StatelessWidget {
           .toList();
       List<Widget> cellsW = [];
       int gridColIndex = 0;
-      int totalCols = rowCells.length;
 
       for (int colIndex = 0; colIndex < rowCells.length; colIndex++) {
         var cell = rowCells[colIndex];
-        double cellTwips = 0;
         int span = _getGridSpan(cell);
 
-        // 1. Try explicit width from w:tcW
-        var tcW = cell.getElement('w:tcPr')?.getElement('w:tcW');
-        double explicitW =
-            double.tryParse(tcW?.getAttribute('w:w') ?? '0') ?? 0;
-        String type = tcW?.getAttribute('w:type') ?? 'auto';
-
-        // Word logic: if type is NOT auto, or if it is auto but has a value > 0 and no grid?
-        // Usually if grid exists, we prefer grid for 'auto' or '0' widths.
-        if (explicitW > 0 && type != 'auto') {
-          cellTwips = explicitW;
-        } else {
-          // 2. Fallback to Grid Width
-          if (gridColWidths.isNotEmpty) {
-            for (int i = 0; i < span; i++) {
-              if (gridColIndex + i < gridColWidths.length) {
-                cellTwips += gridColWidths[gridColIndex + i];
-              }
-            }
-          } else {
-            // Backup backup: use explicit even if 0 (will trigger 10px min later)
-            cellTwips = explicitW;
+        // --- vMerge: skip continuation cells ---
+        var vMerge = cell.getElement('w:tcPr')?.getElement('w:vMerge');
+        if (vMerge != null) {
+          String? val = vMerge.getAttribute('w:val');
+          if (val != 'restart') {
+            // This cell continues a vertical merge — skip rendering,
+            // but still advance grid index and add an empty placeholder
+            // so column widths remain aligned.
+            double cellTwips = _getCellTwips(
+              cell,
+              gridColIndex,
+              span,
+              gridColWidths,
+            );
+            gridColIndex += span;
+            cellsW.add(SizedBox(width: cellTwips * scaleFactor));
+            continue;
           }
         }
 
-        // Advance grid index
+        double cellTwips = _getCellTwips(
+          cell,
+          gridColIndex,
+          span,
+          gridColWidths,
+        );
         gridColIndex += span;
 
-        // Calculate pixels
         double cellWidthPx = cellTwips * scaleFactor;
 
         cellsW.add(
@@ -235,7 +257,7 @@ class WordTableWidget extends StatelessWidget {
             cell,
             cellWidthPx,
             rowIndex: rowIndex,
-            colIndex: colIndex,
+            colIndex: gridColIndex - span, // use grid-based col index
             totalRows: totalRows,
             totalCols: totalCols,
           ),
@@ -248,24 +270,19 @@ class WordTableWidget extends StatelessWidget {
           ? rowHeightTwips * 0.0667
           : null;
 
-      // Use IntrinsicHeight to make all cells in a row the same height
-      // CrossAxisAlignment.stretch makes cells expand to fill row height
       Widget rowWidget = IntrinsicHeight(
         child: Row(
           mainAxisSize: MainAxisSize.min,
-          textDirection: TextDirection.rtl,
+          textDirection: bidi ? TextDirection.rtl : TextDirection.ltr,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: cellsW,
         ),
       );
 
-      // Apply row height constraints based on hRule
       if (rowHeightPx != null && rowHeightPx > 0) {
         if (hRule == 'exact') {
-          // Exact height: fixed, content may be clipped
           rowsW.add(SizedBox(height: rowHeightPx, child: rowWidget));
         } else {
-          // atLeast or default: minimum height, can grow
           rowsW.add(
             ConstrainedBox(
               constraints: BoxConstraints(minHeight: rowHeightPx),
@@ -280,6 +297,35 @@ class WordTableWidget extends StatelessWidget {
     return rowsW;
   }
 
+  /// Calculate cell width in twips from tcW or grid columns
+  double _getCellTwips(
+    XmlElement cell,
+    int gridColIndex,
+    int span,
+    List<double> gridColWidths,
+  ) {
+    var tcW = cell.getElement('w:tcPr')?.getElement('w:tcW');
+    double explicitW =
+        double.tryParse(tcW?.getAttribute('w:w') ?? '0') ?? 0;
+    String type = tcW?.getAttribute('w:type') ?? 'auto';
+
+    if (explicitW > 0 && type != 'auto') {
+      return explicitW;
+    }
+
+    if (gridColWidths.isNotEmpty) {
+      double total = 0;
+      for (int i = 0; i < span; i++) {
+        if (gridColIndex + i < gridColWidths.length) {
+          total += gridColWidths[gridColIndex + i];
+        }
+      }
+      return total;
+    }
+
+    return explicitW;
+  }
+
   Widget getCellWidget(
     XmlElement rowCell,
     double cellWidthPx, {
@@ -288,10 +334,11 @@ class WordTableWidget extends StatelessWidget {
     int totalRows = 1,
     int totalCols = 1,
   }) {
-    if (cellWidthPx <= 0) cellWidthPx = 10; // Minimal width fallback
+    if (cellWidthPx <= 0) cellWidthPx = 10;
+
+    WordDocument wordDocument = parent.parent;
 
     // --- Cell Decoration (Borders & Background) ---
-    // This is purely visual and should not affect layout
     BoxDecoration? decoration = _getCellDecoration(
       rowCell,
       rowIndex: rowIndex,
@@ -301,7 +348,6 @@ class WordTableWidget extends StatelessWidget {
     );
 
     // --- Cell Text Direction ---
-    // Check for vertical text direction in the cell
     String? cellTextDirection = _getCellTextDirection(rowCell);
     bool isVerticalText =
         cellTextDirection != null &&
@@ -309,6 +355,33 @@ class WordTableWidget extends StatelessWidget {
             cellTextDirection == 'tbRlV' ||
             cellTextDirection == 'btLr' ||
             cellTextDirection == 'tbLrV');
+
+    // --- Cell Margins (per Word XML spec §17.4.42, §17.4.68) ---
+    EdgeInsets cellMargins = getTableCellMargins(
+      cell: rowCell,
+      tblXml: tblXml,
+      wordDocument: wordDocument,
+    );
+
+    // --- Resolve table style rPr for this cell position ---
+    XmlElement? tableStyleRPr = getTableStyleRPr(
+      tblXml: tblXml,
+      wordDocument: wordDocument,
+      rowIndex: rowIndex,
+      colIndex: colIndex,
+      totalRows: totalRows,
+      totalCols: totalCols,
+    );
+
+    // --- Resolve table style pPr for this cell position ---
+    XmlElement? tableStylePPr = getTableStylePPr(
+      tblXml: tblXml,
+      wordDocument: wordDocument,
+      rowIndex: rowIndex,
+      colIndex: colIndex,
+      totalRows: totalRows,
+      totalCols: totalCols,
+    );
 
     var paragraphsXml = rowCell.findAllElements("w:p");
 
@@ -321,87 +394,63 @@ class WordTableWidget extends StatelessWidget {
 
     List<Widget> pWidgets = [];
     for (var pXml in paragraphsXml) {
-      // Skip numbering counter for table cells to prevent counter increment on re-renders
       Paragraph paragraph = Paragraph(
         parent,
       ).fromXml(pXml, skipNumberingCounter: true);
 
-      // For table cells with numbering, set paragraphNumber based on row index (1-based)
-      // This ensures correct sequential numbering (1, 2, 3...) for table rows
+      // For table cells with numbering, set paragraphNumber based on row index
       if (paragraph.pPr?.numId != null &&
           paragraph.pPr?.paragraphNumber == null) {
         paragraph.pPr!.paragraphNumber = rowIndex + 1;
       }
 
-      // Skip fully empty paragraphs (no text, no br)
-      if ((paragraph.text.trim().isEmpty) &&
-          paragraph.runs.every(
-            (r) =>
-                (r.text ?? "").trim().isEmpty &&
-                r.hasBrBefore == false &&
-                r.hasBrAfter == false,
-          )) {
-        continue;
+      // --- Apply table style rPr as fallback for runs without explicit formatting ---
+      // Per Word spec: table style rPr sits between document defaults and paragraph style
+      if (tableStyleRPr != null) {
+        _applyTableStyleRPrToRuns(paragraph, tableStyleRPr);
       }
 
-      // Fix Helper Alignments
-      if (paragraph.textAlign == TextAlign.justify) {
-        paragraph.textAlign = TextAlign.center;
-      }
-      if (paragraph.textDirection != TextDirection.rtl) {
-        paragraph.textDirection = TextDirection.rtl;
+      // --- Apply table style pPr (alignment, spacing) as fallback ---
+      if (tableStylePPr != null) {
+        _applyTableStylePPrToParagraph(paragraph, pXml, tableStylePPr);
       }
 
-      // IMPORTANT: Reset numbering indentation for table cells
-      // Word behavior: When a ListParagraph is inside a table cell,
-      // indentation is applied RELATIVE to the cell boundaries, not the page.
+      // Reset indentation for table cells — Word applies indentation relative to cell
       if (paragraph.pPr != null) {
         paragraph.pPr!.paddingLeft = 0;
         paragraph.pPr!.paddingRight = 0;
 
-        // --- HEIGHT FIX: Remove default spacing in table cells ---
-        // PPr.dart defaults to "Normal" style spacing (10pt after) if not present.
-        // In tables, this causes excessive height. We force 0 here ONLY if not explicitly set.
+        // If paragraph has no explicit spacing AND no table style spacing,
+        // use 0 (Word's default for table cells without explicit spacing)
         bool hasExplicitSpacing =
             pXml.getElement('w:pPr')?.getElement('w:spacing') != null;
-        if (!hasExplicitSpacing) {
+        bool hasStyleSpacing =
+            tableStylePPr?.getElement('w:spacing') != null;
+        if (!hasExplicitSpacing && !hasStyleSpacing) {
           paragraph.pPr!.spacingBefore = 0;
           paragraph.pPr!.spacingAfter = 0;
         }
       }
 
-      // --- HEIGHT FIX: Remove trailing breaks (w:br) in table cells ---
-      // These are often used in Word tables (e.g. <w:br/><w:t> </w:t>) but cause double height in Flutter.
+      // Remove trailing breaks that cause double height in Flutter
       if (paragraph.runs.isNotEmpty) {
         for (int i = paragraph.runs.length - 1; i >= 0; i--) {
           var run = paragraph.runs[i];
           String txt = run.text ?? "";
-
-          // Check for "tiny" or "hidden" text often used as anchors/markers (e.g. 1pt)
-          // w:sz in XML is half-points. 4 = 2pt. We treat anything <= 4 as hidden.
-          // Default to 20 (10pt) if null so we don't accidentally hide normal text.
           double size = run.rpr?.fontSize ?? 20.0;
           bool isTiny = size <= 4.0;
 
           if (txt.trim().isEmpty || isTiny) {
-            // Empty, whitespace, or tiny run: remove all breaks and continue backwards
-            // We want to clear the break even if this specific run is where it lives
             run.hasBrAfter = false;
             run.hasBrBefore = false;
           } else {
-            // Content run: remove trailing break only, then stop
             run.hasBrAfter = false;
             break;
           }
         }
       }
 
-      pWidgets.add(
-        DefaultTextStyle.merge(
-          style: const TextStyle(height: 0.9),
-          child: paragraph.toWidget(),
-        ),
-      );
+      pWidgets.add(paragraph.toWidget());
     }
 
     Widget cellContent = Column(
@@ -412,26 +461,98 @@ class WordTableWidget extends StatelessWidget {
 
     // Apply rotation for vertical text direction
     if (isVerticalText) {
-      // tbRl = Top to Bottom, Right to Left (rotate 90 degrees clockwise)
-      // btLr = Bottom to Top, Left to Right (rotate 90 degrees counter-clockwise)
       int quarterTurns =
           (cellTextDirection == 'btLr' || cellTextDirection == 'tbLrV')
-          ? 3 // 270 degrees = -90 degrees
-          : 1; // 90 degrees
-
+          ? 3
+          : 1;
       cellContent = RotatedBox(quarterTurns: quarterTurns, child: cellContent);
     }
 
     // --- Cell Vertical Alignment (vAlign) ---
-    // Get vertical alignment from tcPr/vAlign
     Alignment verticalAlign = _getCellVerticalAlignment(rowCell);
 
     return Container(
       width: cellWidthPx,
       decoration: decoration,
-      padding: EdgeInsets.symmetric(horizontal: 1, vertical: 0), // UNCHANGED
+      padding: cellMargins,
       child: Align(alignment: verticalAlign, child: cellContent),
     );
+  }
+
+  /// Apply table style rPr to all runs in a paragraph as a fallback layer.
+  /// Only sets properties that are not already explicitly set on the run.
+  void _applyTableStyleRPrToRuns(
+    Paragraph paragraph,
+    XmlElement tableStyleRPr,
+  ) {
+    // Parse the table style rPr once
+    RPr styleRPr = RPr(paragraph.runs.isNotEmpty
+            ? paragraph.runs.first
+            : paragraph.pPr?.getEmptyRun() ?? paragraph.runs.first)
+        .fromXml(tableStyleRPr);
+
+    for (var run in paragraph.runs) {
+      if (run.rpr == null) continue;
+      // Only fill in properties that the run doesn't already have
+      run.rpr!.b ??= styleRPr.b;
+      run.rpr!.i ??= styleRPr.i;
+      run.rpr!.fontSize ??= styleRPr.fontSize;
+      run.rpr!.font ??= styleRPr.font;
+      run.rpr!.enFont ??= styleRPr.enFont;
+      run.rpr!.color ??= styleRPr.color;
+      run.rpr!.strike ??= styleRPr.strike;
+      run.rpr!.u ??= styleRPr.u;
+    }
+
+    // Also apply to paragraph's prPr (the paragraph-level default run props)
+    if (paragraph.prPr != null) {
+      paragraph.prPr!.b ??= styleRPr.b;
+      paragraph.prPr!.i ??= styleRPr.i;
+      paragraph.prPr!.fontSize ??= styleRPr.fontSize;
+      paragraph.prPr!.font ??= styleRPr.font;
+      paragraph.prPr!.enFont ??= styleRPr.enFont;
+      paragraph.prPr!.color ??= styleRPr.color;
+    }
+  }
+
+  /// Apply table style pPr to a paragraph as a fallback layer.
+  /// Respects the paragraph's own explicit properties.
+  void _applyTableStylePPrToParagraph(
+    Paragraph paragraph,
+    XmlElement pXml,
+    XmlElement tableStylePPr,
+  ) {
+    if (paragraph.pPr == null) return;
+
+    // Alignment: only apply if paragraph has no explicit jc
+    if (pXml.getElement('w:pPr')?.getElement('w:jc') == null) {
+      String? jcVal = tableStylePPr.getElement('w:jc')?.getAttribute('w:val');
+      if (jcVal != null) {
+        paragraph.textAlign = _parseTextAlign(jcVal);
+      }
+    }
+  }
+
+  TextAlign _parseTextAlign(String jcVal) {
+    switch (jcVal) {
+      case 'center':
+        return TextAlign.center;
+      case 'right':
+      case 'end':
+        return TextAlign.right;
+      case 'left':
+      case 'start':
+        return TextAlign.left;
+      case 'both':
+      case 'distribute':
+      case 'lowKashida':
+      case 'mediumKashida':
+      case 'highKashida':
+      case 'thaiDistribute':
+        return TextAlign.justify;
+      default:
+        return TextAlign.start;
+    }
   }
 
   /// Get cell text direction from tcPr/textDirection
@@ -460,14 +581,6 @@ class WordTableWidget extends StatelessWidget {
 
   // --- Helper Methods for Cell Decoration ---
 
-  /// Get the table style ID if one is defined
-  String? _getTableStyleId() {
-    return tblXml
-        .getElement('w:tblPr')
-        ?.getElement('w:tblStyle')
-        ?.getAttribute('w:val');
-  }
-
   /// Creates BoxDecoration with borders and background color from XML
   BoxDecoration? _getCellDecoration(
     XmlElement cell, {
@@ -483,15 +596,21 @@ class WordTableWidget extends StatelessWidget {
       totalRows: totalRows,
       totalCols: totalCols,
     );
-    Border? border = _getCellBorder(cell);
+    Border? border = _getCellBorder(
+      cell,
+      rowIndex: rowIndex,
+      colIndex: colIndex,
+      totalRows: totalRows,
+      totalCols: totalCols,
+    );
 
     if (bgColor == null && border == null) return null;
 
     return BoxDecoration(color: bgColor, border: border);
   }
 
-  /// Parses w:shd to get cell background color
-  /// Checks: 1) Direct cell shd, 2) Table style conditional formatting
+  /// Parses w:shd to get cell background color.
+  /// Priority: 1) Direct cell shd → 2) Table style conditional tcPr (via tblLook-aware helper)
   Color? _getCellColor(
     XmlElement cell, {
     int rowIndex = 0,
@@ -499,73 +618,52 @@ class WordTableWidget extends StatelessWidget {
     int totalRows = 1,
     int totalCols = 1,
   }) {
+    final themeColors = parent.parent.themeColors;
+
     // Priority 1: Direct cell shading
     var tcPr = cell.getElement('w:tcPr');
     var shd = tcPr?.getElement('w:shd');
     if (shd != null) {
-      String? fill = shd.getAttribute('w:fill');
-      if (fill != null && fill != "auto" && fill.toLowerCase() != "ffffff") {
-        return _parseHexColor(fill);
-      }
+      Color? direct = _parseShdColor(shd, themeColors);
+      if (direct != null) return direct;
     }
 
-    // Priority 2: Table style conditional formatting
-    String? styleId = _getTableStyleId();
-    if (styleId != null) {
-      // Determine which conditional type applies to this cell
-      // Check firstRow, firstCol, lastRow, lastCol in order of priority
-      List<String> conditionTypes = [];
-
-      if (rowIndex == 0) conditionTypes.add('firstRow');
-      if (rowIndex == totalRows - 1) conditionTypes.add('lastRow');
-      if (colIndex == 0)
-        conditionTypes.add('firstCol'); // RTL: first column is rightmost
-      if (colIndex == totalCols - 1) conditionTypes.add('lastCol');
-
-      // Try each condition type
-      for (String condType in conditionTypes) {
-        Color? styleColor = _getTableStyleCellShading(styleId, condType);
-        if (styleColor != null) return styleColor;
+    // Priority 2: Table style conditional tcPr shading (tblLook-aware)
+    XmlElement? styleTcPr = getTableStyleTcPr(
+      tblXml: tblXml,
+      wordDocument: parent.parent,
+      rowIndex: rowIndex,
+      colIndex: colIndex,
+      totalRows: totalRows,
+      totalCols: totalCols,
+    );
+    if (styleTcPr != null) {
+      var styleShd = styleTcPr.getElement('w:shd');
+      if (styleShd != null) {
+        return _parseShdColor(styleShd, themeColors);
       }
-
-      // Try whole table tcPr shading as fallback
-      Color? tableShading = _getTableStyleCellShading(styleId, null);
-      if (tableShading != null) return tableShading;
     }
 
     return null;
   }
 
-  /// Get cell shading from table style conditional formatting
-  Color? _getTableStyleCellShading(String styleId, String? conditionType) {
-    XmlElement? style = getDocumentStyle(styleId, parent.parent);
-    if (style == null) return null;
-
-    XmlElement? tcPr;
-
-    if (conditionType != null) {
-      // Look for tblStylePr with matching type
-      for (var tblStylePr in style.findAllElements('w:tblStylePr')) {
-        if (tblStylePr.getAttribute('w:type') == conditionType) {
-          tcPr = tblStylePr.getElement('w:tcPr');
-          break;
-        }
-      }
-    } else {
-      // Look for tcPr directly in style (whole table default)
-      tcPr = style.getElement('w:tcPr');
+  /// Parse a w:shd element into a Color, handling theme colors
+  Color? _parseShdColor(XmlElement shd, Map<String, String> themeColors) {
+    String? themeFill = shd.getAttribute('w:themeFill');
+    if (themeFill != null) {
+      String? resolved = resolveThemeColor(
+        themeColors,
+        themeFill,
+        shd.getAttribute('w:themeFillTint'),
+        shd.getAttribute('w:themeFillShade'),
+      );
+      if (resolved != null) return _parseHexColor(resolved);
     }
 
-    if (tcPr == null) return null;
-
-    var shd = tcPr.getElement('w:shd');
-    if (shd != null) {
-      String? fill = shd.getAttribute('w:fill');
-      if (fill != null && fill != "auto" && fill.toLowerCase() != "ffffff") {
-        return _parseHexColor(fill);
-      }
+    String? fill = shd.getAttribute('w:fill');
+    if (fill != null && fill != "auto" && fill.toLowerCase() != "ffffff") {
+      return _parseHexColor(fill);
     }
-
     return null;
   }
 
@@ -584,7 +682,13 @@ class WordTableWidget extends StatelessWidget {
   }
 
   /// Parses cell borders from tcBorders, tblBorders, or table style
-  Border? _getCellBorder(XmlElement cell) {
+  Border? _getCellBorder(
+    XmlElement cell, {
+    int rowIndex = 0,
+    int colIndex = 0,
+    int totalRows = 1,
+    int totalCols = 1,
+  }) {
     var tcPr = cell.getElement('w:tcPr');
     var tcBorders = tcPr?.getElement('w:tcBorders');
 
@@ -592,9 +696,21 @@ class WordTableWidget extends StatelessWidget {
     var tblPr = tblXml.getElement('w:tblPr');
     var tblBorders = tblPr?.getElement('w:tblBorders');
 
-    // Priority 3: Get borders from table style (e.g., "PlainTable11", "TableGrid")
+    // Priority 3: Get borders from table style (tblLook-aware conditional tcPr)
     XmlElement? styleBorders;
-    if (tblBorders == null) {
+    XmlElement? styleTcPr = getTableStyleTcPr(
+      tblXml: tblXml,
+      wordDocument: parent.parent,
+      rowIndex: rowIndex,
+      colIndex: colIndex,
+      totalRows: totalRows,
+      totalCols: totalCols,
+    );
+    if (styleTcPr != null) {
+      styleBorders = styleTcPr.getElement('w:tcBorders');
+    }
+    // Fallback to table-level style borders if no conditional borders
+    if (styleBorders == null && tblBorders == null) {
       var tblStyleId = tblPr?.getElement('w:tblStyle')?.getAttribute('w:val');
       if (tblStyleId != null) {
         styleBorders = getTableStyleBorders(tblStyleId, parent.parent);
@@ -643,8 +759,17 @@ class WordTableWidget extends StatelessWidget {
 
       // Parse color
       String? colorHex = borderEl.getAttribute('w:color');
+      String? themeColor = borderEl.getAttribute('w:themeColor');
       Color color = Colors.black;
-      if (colorHex != null && colorHex != "auto") {
+      if (themeColor != null) {
+        String? resolved = resolveThemeColor(
+          parent.parent.themeColors,
+          themeColor,
+          borderEl.getAttribute('w:themeTint'),
+          borderEl.getAttribute('w:themeShade'),
+        );
+        color = _parseHexColor(resolved ?? "") ?? Colors.black;
+      } else if (colorHex != null && colorHex != "auto") {
         color = _parseHexColor(colorHex) ?? Colors.black;
       }
 
