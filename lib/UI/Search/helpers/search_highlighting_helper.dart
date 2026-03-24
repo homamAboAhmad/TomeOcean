@@ -17,7 +17,6 @@ class SearchHighlightingHelper {
     List<String> searchQueries,
   ) async {
     if (text.isEmpty) return Text('', style: smallStyle());
-    print('DEBUG: extractSnippetWithHighlight text length: ${text.length}');
 
     final wordsToHighlight = _collectWordsToHighlight(searchQueries);
     final matches = await _findAllMatches(text, wordsToHighlight);
@@ -90,8 +89,6 @@ class SearchHighlightingHelper {
 
       // Split text into words and find those with matching roots
       final wordPattern = RegExp(r'[\u0600-\u06FF]+');
-      int matchCount = 0;
-
       for (final match in wordPattern.allMatches(text)) {
         final textWord = match.group(0)!;
         final textWordRoot = await ArabicMorphologicalAnalyzer.stem(textWord);
@@ -127,7 +124,6 @@ class SearchHighlightingHelper {
           final wordContainsQuery = normalizedWord.contains(entry.key);
 
           if (rootMatches || wordContainsQuery) {
-            matchCount++;
             matches.add({
               'word': entry.key,
               'index': match.start,

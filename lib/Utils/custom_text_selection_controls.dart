@@ -65,7 +65,7 @@ class CustomTextSelectionControls extends MaterialTextSelectionControls {
     );
     if (selectedText.isNotEmpty) {
       final String textToCopy =
-          '"$selectedText"\n(${bookTitle}, ${pageNumber})';
+          '«$selectedText» [$bookTitle (ص $pageNumber)]';
       Clipboard.setData(ClipboardData(text: textToCopy));
       delegate.hideToolbar();
     }

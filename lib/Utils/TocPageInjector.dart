@@ -49,37 +49,80 @@ class TocPageInjector {
     int tocRowsCount = 0;
     int breaksFound = 0;
 
+    // If the paragraph immediately before TOC ends with a break (rendered or hard),
+    // the TOC starts on the next page even if the marker is previous.
+    if (firstTocIndex > 0) {
+      final prevPara = allPs[firstTocIndex - 1];
+      final prevHasBreak = _hasAnyBreak(prevPara);
+      final prevBreakAtStart = prevHasBreak ? _isBreakAtStart(prevPara) : false;
+
+      debugPrint(
+        "TOC DIAG: prevPara index=${firstTocIndex - 1}, hasBreak=$prevHasBreak, breakAtStart=$prevBreakAtStart",
+      );
+
+      if (prevHasBreak && !prevBreakAtStart) {
+        currentPage++;
+        debugPrint(
+          "TOC Adjustment: Previous paragraph ends with break. Start page shifted to $currentPage",
+        );
+      }
+    }
+
     // 3. Process TOC Rows ONLY
     // We only iterate effectively through the TOC section
     for (int i = firstTocIndex; i < allPs.length; i++) {
       var para = allPs[i];
       bool isTocRow = para.getAttribute("isSdtRow") == "True";
 
-      // If we hit a non-TOC row after starting TOC, we might be done.
-      // However, sometimes TOC is split or there are loose paragraphs.
-      // For safety, we only process if it IS a TOC row.
+      // If we hit a non-TOC row after starting TOC, we still need to respect
+      // page breaks or explicit markers inside it to keep `currentPage` aligned
+      // for the next TOC rows.
       if (!isTocRow) {
+        // Honor explicit page marker if present
+        int? markerPage = _extractPageNumber(para);
+        if (markerPage != null) {
+          currentPage = markerPage;
+        }
+
+        // Honor breaks inside non-TOC paragraphs (e.g., standalone page break paragraph)
+        bool nonTocHasBreak = _hasAnyBreak(para);
+        if (nonTocHasBreak) {
+          bool nonTocBreakAtStart = _isBreakAtStart(para);
+          if (nonTocBreakAtStart) {
+            currentPage++;
+          } else {
+            // break after content -> next page for following paragraphs
+            currentPage++;
+          }
+        }
+
         continue;
       }
 
       tocRowsCount++;
 
-      // Check for breaks
-      bool hasBreak = _hasRenderedBreak(para);
+      // Check for breaks (rendered or hard) and isLastPageLine hint
+      bool hasBreak = _hasAnyBreak(para);
       bool breakAtStart = false;
+      bool isLastPageLine =
+          (para.getAttribute('isLastPageLine') ?? para.getAttribute('islastpageline'))
+                  ?.toLowerCase() ==
+              'true';
 
       if (hasBreak) {
         breakAtStart = _isBreakAtStart(para);
-        // If break is at the very beginning (before text), we are already on the NEXT page
         if (breakAtStart) {
           currentPage++;
           breaksFound++;
-          // debugPrint("TOC: Found START break in para. Moving to $currentPage");
         }
       }
 
-      // Inject Marker
-      if (!_hasPageMarker(para)) {
+      // Align marker: if a marker exists, trust it and sync currentPage upward; otherwise inject
+      int? existingMarker = _extractPageNumber(para);
+      if (existingMarker != null) {
+        currentPage = existingMarker;
+        _replacePageMarker(para, currentPage); // normalize any duplicates
+      } else {
         _injectMarker(para, currentPage);
       }
 
@@ -87,7 +130,11 @@ class TocPageInjector {
       if (hasBreak && !breakAtStart) {
         currentPage++;
         breaksFound++;
-        // debugPrint("TOC: Found END/MID break in para. Next para will be ${currentPage}");
+      }
+
+      // If Word marked this row as the last line on the visual page, advance page
+      if (isLastPageLine) {
+        currentPage++;
       }
     }
 
@@ -131,6 +178,22 @@ class TocPageInjector {
     }
   }
 
+  /// Replaces any existing {{PG:X}} occurrences inside the paragraph with {{PG:pageNum}}.
+  static void _replacePageMarker(XmlElement para, int pageNum) {
+    // Replace in text nodes inside runs
+    for (var t in para.findAllElements('w:t')) {
+      var updated = t.text.replaceAll(RegExp(r'\{\{PG:\d+\}\}'), '{{PG:$pageNum}}');
+      t.children
+        ..clear()
+        ..add(XmlText(updated));
+    }
+
+    // If no marker was present after replacement (e.g., stripped), ensure injection
+    if (!_hasPageMarker(para)) {
+      _injectMarker(para, pageNum);
+    }
+  }
+
   /// Checks for the existence of `w:lastRenderedPageBreak` in any descendant.
   static bool _hasRenderedBreak(XmlElement para) {
     // We search for local name "lastRenderedPageBreak" to avoid namespace prefix issues (w:...)
@@ -138,6 +201,14 @@ class TocPageInjector {
             .findAllElements('lastRenderedPageBreak', namespace: '*')
             .isNotEmpty ||
         para.findAllElements('w:lastRenderedPageBreak').isNotEmpty;
+  }
+
+  /// Checks for any break: rendered or hard page break.
+  static bool _hasAnyBreak(XmlElement para) {
+    if (_hasRenderedBreak(para)) return true;
+    return para
+        .findAllElements('w:br')
+        .any((br) => br.getAttribute('w:type') == 'page');
   }
 
   /// Checks if the page break is at the "start" of the paragraph.

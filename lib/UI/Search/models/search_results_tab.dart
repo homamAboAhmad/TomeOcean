@@ -1,11 +1,12 @@
 /// Class to represent a single search results tab
 class SearchResultsTab {
   final String id;
-  final List<Map<String, dynamic>> results;
-  final int totalCount;
-  final List<String> searchQueries;
-  final bool morphologicalSearch;
-  final String searchQueryString;
+  List<Map<String, dynamic>> results;
+  int totalCount;
+  List<String> searchQueries;
+  bool morphologicalSearch;
+  bool isSearching;
+  bool cancelled;
 
   SearchResultsTab({
     required this.id,
@@ -13,7 +14,11 @@ class SearchResultsTab {
     required this.totalCount,
     required this.searchQueries,
     required this.morphologicalSearch,
-  }) : searchQueryString = searchQueries.join(' | ');
+    this.isSearching = true,
+    this.cancelled = false,
+  });
+
+  String get searchQueryString => searchQueries.join(' | ');
 
   String get title => 'بحث عن: $searchQueryString';
 }

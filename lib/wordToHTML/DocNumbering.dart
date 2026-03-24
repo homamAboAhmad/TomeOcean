@@ -2,12 +2,13 @@
 import 'package:archive/archive.dart';
 import 'package:xml/xml.dart';
 
+import '../Models/WordDocument.dart';
 import '../Utils/ArchiveToXml.dart';
 import '../main.dart';
 import 'Num.dart';
 import 'abstractNum.dart';
 
-List<Map> addNumbering(ArchiveFile? archiveFile) {
+List<Map> addNumbering(ArchiveFile? archiveFile, {WordDocument? wordDocument}) {
   if (archiveFile == null) return[{},{}];
   XmlDocument xmlDocument = ArchiveToXml(archiveFile);
   XmlElement numbering = xmlDocument.getElement("w:numbering")!;
@@ -16,7 +17,7 @@ List<Map> addNumbering(ArchiveFile? archiveFile) {
 
   numbering.childElements.forEach((item) {
     if (item.name.local == "abstractNum") {
-      final abstractNum = AbstractNum.fromXml(item);
+      final abstractNum = AbstractNum.fromXml(item, wordDocument: wordDocument);
       abstractNumMap[abstractNum.abstractNumId] = abstractNum;
     } else if (item.name.local == "num") {
       Num num = Num.fromXml(item);

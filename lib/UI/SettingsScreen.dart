@@ -14,7 +14,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String? _booksDirectoryPath;
-  String _searchWindowMode = 'separate'; // 'separate' or 'in_app'
   bool _isLoading = true;
 
   @override
@@ -31,12 +30,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
       if (savedPath != null && await Directory(savedPath).exists()) {
         setState(() => _booksDirectoryPath = savedPath);
-      }
-      final savedSearchMode = PreferencesHelper.prefs.getString(
-        'search_window_mode',
-      );
-      if (savedSearchMode != null) {
-        setState(() => _searchWindowMode = savedSearchMode);
       }
     } catch (e) {
       debugPrint("Error loading settings: $e");
@@ -83,21 +76,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _updateSearchWindowMode(String? value) async {
-    if (value != null) {
-      await PreferencesHelper.prefs.setString('search_window_mode', value);
-      setState(() => _searchWindowMode = value);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(
-          0xFFF5F5F5,
-        ), // Lighter than standard grey for cleaner look
+        backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
           backgroundColor: primaryColor,
           elevation: 0,
@@ -122,11 +106,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _buildSectionHeader('المكتبة وإدارة الملفات'),
                   const SizedBox(height: 12),
                   _buildBookDirectoryCard(),
-                  const SizedBox(height: 32),
-
-                  _buildSectionHeader('تفضيلات العرض والبحث'),
-                  const SizedBox(height: 12),
-                  _buildSearchWindowCard(),
                 ],
               ),
       ),
@@ -239,6 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: Colors.transparent),
                   ),
                 ),
                 child: Row(
@@ -258,152 +238,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchWindowCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: const Offset(0, 4),
-            blurRadius: 12,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.indigo.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(
-                    Icons.search_rounded,
-                    color: Colors.indigo,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'نمط نافذة البحث',
-                        style: normalStyle(fontSize: 16, color: Colors.black87),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'اختر كيف تريد عرض نتائج البحث',
-                        style: smallStyle(
-                          color: Colors.grey[600]!,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _buildSelectionTile(
-              title: 'نافذة مستقلة',
-              subtitle: 'فتح البحث في نافذة منفصلة لسهولة التنقل',
-              value: 'separate',
-              icon: Icons.open_in_new_rounded,
-            ),
-            const SizedBox(height: 12),
-            _buildSelectionTile(
-              title: 'داخل التطبيق',
-              subtitle: 'فتح البحث كنافذة منبثقة داخل النافذة الحالية',
-              value: 'in_app',
-              icon: Icons.web_asset_rounded,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectionTile({
-    required String title,
-    required String subtitle,
-    required String value,
-    required IconData icon,
-  }) {
-    final isSelected = _searchWindowMode == value;
-    return InkWell(
-      onTap: () => _updateSearchWindowMode(value),
-      borderRadius: BorderRadius.circular(12),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? primaryColor.withOpacity(0.04)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? primaryColor : Colors.grey[200]!,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? primaryColor : Colors.grey[400],
-              size: 24,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: normalStyle(
-                      fontSize: 15,
-                      color: isSelected ? primaryColor : Colors.black87,
-                      fontWeight: isSelected
-                          ? FontWeight.w700
-                          : FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: smallStyle(
-                      fontSize: 11,
-                      color: isSelected
-                          ? primaryColor.withOpacity(0.7)
-                          : Colors.grey[500]!,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              const Icon(
-                Icons.check_circle_rounded,
-                color: primaryColor,
-                size: 20,
-              ),
           ],
         ),
       ),

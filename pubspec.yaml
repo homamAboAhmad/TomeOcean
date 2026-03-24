@@ -30,7 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  file_picker: any
+  file_picker: ^10.3.10
   archive: any
   xml: any
   flutter_html: any
@@ -53,6 +53,7 @@ dependencies:
   window_manager: ^0.3.7
   desktop_multi_window: ^0.3.0
   google_fonts: ^6.1.0
+  arabic_reshaper: ^0.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -115,7 +116,6 @@ flutter:
    - family: aga_old
      fonts:
        - asset: assets/fonts/AGA Arabesque_old.ttf
-
 
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

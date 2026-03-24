@@ -8,7 +8,9 @@ import 'package:golden_shamela/Helpers/FileHelper.dart';
 import 'package:golden_shamela/Utils/FileToArchive.dart';
 import 'package:golden_shamela/Utils/SnackBar.dart';
 import 'package:golden_shamela/core/app_state.dart';
-import 'package:golden_shamela/Services/BookProcessingService.dart';
+import 'package:golden_shamela/Services/BookProcessingService.dart'
+    show BookProcessingService, CACHE_VERSION;
+import 'package:golden_shamela/FontsLoaderController.dart';
 
 /// Book management operations for HomePage
 class HomePageBookManagement {
@@ -18,8 +20,11 @@ class HomePageBookManagement {
   HomePageBookManagement({required this.context, required this.onBookAdded});
 
   /// Read and process docx file
-  Future<void> readDocxFile(String? filePath) async {
-    if (filePath == null) return;
+  Future<WordDocument?> readDocxFile(
+    String? filePath, [
+    WordDocument? tempDoc,
+  ]) async {
+    if (filePath == null) return null;
 
     WordDocument wordDocument = WordDocument();
     wordDocument.title = getFileName(filePath);
@@ -43,33 +48,48 @@ class HomePageBookManagement {
         if (cacheLastModified.isAfter(docxLastModified)) {
           final jsonString = await metadataFile.readAsString();
           final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-          wordDocument = WordDocument.fromCacheJson(jsonMap);
 
-          // تحميل الـ Archive لتمكين قراءة ملفات التذييل/الترويسة
-          final appState = AppState();
-          appState.docArchive = await FileToArchive(filePath);
-          wordDocument.archive = appState.docArchive;
+          final cachedVersion = jsonMap['_cacheVersion'] as int? ?? 0;
+          if (cachedVersion < CACHE_VERSION) {
+            debugPrint(
+              'Cache outdated (v$cachedVersion < v$CACHE_VERSION), re-parsing...',
+            );
+            await bookCacheDir.delete(recursive: true);
+            loadedFromCache = false;
+          } else {
+            wordDocument = WordDocument.fromCacheJson(jsonMap);
 
-          wordDocument.pagesDirectory = pagesDir.path;
+            // تحميل الـ Archive لتمكين قراءة ملفات التذييل/الترويسة
+            final appState = AppState();
+            appState.docArchive = await FileToArchive(filePath);
+            wordDocument.archive = appState.docArchive;
 
-          final pageFiles = await pagesDir.list().toList();
-          pageFiles.sort((a, b) {
-            final aName = p.basename(a.path).split('.').first;
-            final bName = p.basename(b.path).split('.').first;
-            final aNum = int.tryParse(aName) ?? 0;
-            final bNum = int.tryParse(bName) ?? 0;
-            return aNum.compareTo(bNum);
-          });
-          wordDocument.pageFilePaths = pageFiles
-              .map((file) => p.basename(file.path))
-              .toList();
-          wordDocument.initLoadedPages();
+            wordDocument.pagesDirectory = pagesDir.path;
 
-          loadedFromCache = true;
+            final pageFiles = await pagesDir.list().toList();
+            pageFiles.sort((a, b) {
+              final aName = p.basename(a.path).split('.').first;
+              final bName = p.basename(b.path).split('.').first;
+              final aNum = int.tryParse(aName) ?? 0;
+              final bNum = int.tryParse(bName) ?? 0;
+              return aNum.compareTo(bNum);
+            });
+            wordDocument.pageFilePaths = pageFiles
+                .map((file) => p.basename(file.path))
+                .toList();
+            wordDocument.initLoadedPages();
+
+            // تحميل الخطوط المستخرجة إن وجدت
+            if (wordDocument.extractedFontPaths.isNotEmpty) {
+              await loadExtractedFonts(wordDocument.extractedFontPaths);
+            }
+
+            loadedFromCache = true;
+          }
         }
       }
     } catch (e) {
-      ShowSnackBar(context, "Error loading from cache, re-parsing: $e");
+      debugPrint("Error loading from cache, re-parsing: $e");
       if (await bookCacheDir.exists()) {
         await bookCacheDir.delete(recursive: true);
       }
@@ -79,21 +99,64 @@ class HomePageBookManagement {
     if (!loadedFromCache) {
       // إذا لم يكن في الكاش، نستخدم الخدمة المركزية للمعالجة
       try {
-        ShowSnackBar(context, "Cache missing or outdated, parsing...");
+        debugPrint("Cache missing or outdated, parsing...");
 
-        await BookProcessingService().parseAndCacheForOpening(filePath);
+        await BookProcessingService().parseAndCacheForOpening(
+          filePath,
+          emit: (state, progress, msg) {
+            tempDoc?.loadingProgress.value = progress;
+            tempDoc?.loadingMessage.value = msg;
+          },
+        );
 
         // بعد الانتهاء، نحاول التحميل مرة أخرى من الكاش
         // نعيد استدعاء الدالة لتنفيذ منطق التحميل (Recursion)
-        await readDocxFile(filePath);
-        return;
+        return await readDocxFile(filePath);
       } catch (e) {
-        ShowSnackBar(context, "Error processing book: $e");
-        return;
+        debugPrint("Error processing book: $e");
+        ShowSnackBar(context, "حدث خطأ أثناء فتح الكتاب");
+        return null;
       }
     }
 
-    onBookAdded(wordDocument);
-    await Future.delayed(Duration(milliseconds: 1500), () {});
+    // onBookAdded(wordDocument); // Deprecated, returning it instead
+    await Future.delayed(Duration(milliseconds: 100), () {});
+    return wordDocument;
+  }
+
+  /// Recursively collect books from a folder
+  static Future<List<File>> collectBooksFromFolder(
+    String folderPath, {
+    bool recursive = true,
+  }) async {
+    final List<File> books = [];
+    final dir = Directory(folderPath);
+
+    if (await dir.exists()) {
+      try {
+        final List<FileSystemEntity> entities = await dir
+            .list(recursive: recursive)
+            .toList();
+        for (var entity in entities) {
+          if (entity is File) {
+            final name = p.basename(entity.path);
+            if (name.toLowerCase().endsWith('.docx') &&
+                !name.startsWith(r'~$')) {
+              books.add(entity);
+            }
+          }
+        }
+        // Sort alphabetically
+        books.sort(
+          (a, b) => p
+              .basename(a.path)
+              .toLowerCase()
+              .compareTo(p.basename(b.path).toLowerCase()),
+        );
+      } catch (e) {
+        debugPrint("Error collecting books from folder: $e");
+      }
+    }
+    return books;
   }
 }

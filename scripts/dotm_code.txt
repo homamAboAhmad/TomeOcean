@@ -1,0 +1,105 @@
+--- Module1 ---
+Sub ShamelaPrepareDoc()
+    ' ÇáãÇßÑæ ÇáÔÇãá (Ultimate Edition)
+    ' íÞæã ÈÜ:
+    ' 1. ÅÚÏÇÏ ÇáÚÑÖ (PrintLayout)
+    ' 2. ÊÍÏíË ÇáÊÎØíØ (Repaginate)
+    ' 3. ÍÓÇÈ ÇáÕÝÍÇÊ
+    ' 4. ÍÞä ÅÔÇÑÇÊ ÇáÕÝÍÇÊ (ãÚ ÍãÇíÉ ÖÏ ÇáÃÎØÇÁ)
+    ' 5. ãÚÇáÌÉ ÇáÍæÇÔí
+    
+    Dim doc As Document
+    Set doc = ActiveDocument
+    
+    ' 1. ÅÚÏÇÏ ÇáÚÑÖ (ãåã áÍÓÇÈ ÇáÕÝÍÇÊ ÈÏÞÉ)
+    On Error Resume Next
+    If Application.Windows.Count > 0 Then
+        Application.ActiveWindow.View.Type = wdPrintView
+    End If
+    On Error GoTo 0
+    
+    Application.ScreenUpdating = False
+    
+    ' 2. ÊÍÏíË ÇáÊÎØíØ áÖãÇä ÏÞÉ ÇáÃÑÞÇã
+    doc.Repaginate
+    
+    ' 3. ÍÓÇÈ ÚÏÏ ÇáÕÝÍÇÊ ÇáÝÚáí
+    Dim totalPages As Long
+    totalPages = doc.ComputeStatistics(wdStatisticPages)
+    
+    ' 4. ÍÞä ÅÔÇÑÇÊ ÇáÕÝÍÇÊ (Robust Loop)
+    Dim p As Long
+    Dim r As Range
+    
+    For p = 1 To totalPages
+        On Error Resume Next
+        Err.Clear
+        
+        ' ÇÓÊÎÏÇã Range.GoTo ÈÏáÇð ãä Selection (ÃßËÑ ÇÓÊÞÑÇÑÇð)
+        Set r = doc.GoTo(What:=wdGoToPage, Which:=wdGoToAbsolute, Count:=p)
+        
+        If Err.Number = 0 Then
+            r.Collapse Direction:=wdCollapseStart
+            doc.Bookmarks.Add Name:="ShamelaPage_" & p, Range:=r
+        End If
+        
+        On Error GoTo 0
+    Next p
+    
+    ' 5. ãÚÇáÌÉ ÇáÍæÇÔí
+    Dim fnCount As Long
+    fnCount = doc.Footnotes.Count
+    Dim multiPageCount As Long
+    multiPageCount = 0
+    
+    If fnCount > 0 Then
+        Dim i As Long
+        Dim prevPos As Long
+        Dim vPos As Long
+        Dim pageNum As Long
+        Dim refPage As Long
+        
+        For i = 1 To fnCount
+            Dim fn As Footnote
+            Set fn = doc.Footnotes(i)
+            
+            refPage = fn.Reference.Information(wdActiveEndPageNumber)
+            pageNum = refPage
+            prevPos = -1
+            
+            Dim fnRange As Range
+            Set fnRange = fn.Range
+            Dim para As Paragraph
+            
+            For Each para In fnRange.Paragraphs
+                On Error Resume Next
+                vPos = para.Range.Information(wdVerticalPositionRelativeToPage)
+                
+                If prevPos > 0 And vPos < prevPos - 50 Then
+                    pageNum = pageNum + 1
+                    multiPageCount = multiPageCount + 1
+                End If
+                
+                If prevPos = -1 Or (prevPos > 0 And vPos < prevPos - 50) Then
+                    doc.Bookmarks.Add Name:="ShamelaFN_" & i & "_P" & pageNum, _
+                                    Range:=para.Range.Duplicate.Characters(1)
+                End If
+                prevPos = vPos
+                On Error GoTo 0
+            Next para
+        Next i
+    End If
+    
+    Application.ScreenUpdating = True
+    
+    ' ÍÝÙ ÇáäÊíÌÉ (ÚÏÏ ÇáÕÝÍÇÊ + ÇáÍæÇÔí) áíÞÑÃåÇ ÇáÈÇíËæä
+    Dim result As String
+    result = "Pages: " & totalPages & ", Multi-page FN: " & multiPageCount
+    
+    On Error Resume Next
+    doc.CustomDocumentProperties("ShamelaResult").Delete
+    On Error GoTo 0
+    doc.CustomDocumentProperties.Add Name:="ShamelaResult", _
+        LinkToContent:=False, Type:=msoPropertyTypeString, Value:=result
+End Sub
+

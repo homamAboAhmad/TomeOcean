@@ -20,6 +20,7 @@ WordDocument _$WordDocumentFromJson(Map<String, dynamic> json) => WordDocument()
   ..minorFontCS = json['minorFontCS'] as String?
   ..autoDarkColor = json['autoDarkColor'] as String
   ..autoLightColor = json['autoLightColor'] as String
+  ..themeColors = Map<String, String>.from(json['themeColors'] as Map)
   ..abstractNumMap = (json['abstractNumMap'] as Map<String, dynamic>).map(
     (k, e) =>
         MapEntry(int.parse(k), AbstractNum.fromJson(e as Map<String, dynamic>)),
@@ -49,10 +50,14 @@ WordDocument _$WordDocumentFromJson(Map<String, dynamic> json) => WordDocument()
   )
   ..evenAndOddHeaders = json['evenAndOddHeaders'] as bool?
   ..withDiacritics = json['withDiacritics'] as bool
+  ..useArabicNumerals = json['useArabicNumerals'] as bool
   ..index = (json['index'] as List<dynamic>)
       .map((e) => IndexItem.fromJson(e as Map<String, dynamic>))
       .toList()
-  ..selectedIndexItem = json['selectedIndexItem'] as String?;
+  ..selectedIndexItem = json['selectedIndexItem'] as String?
+  ..extractedFontPaths = Map<String, String>.from(
+    json['extractedFontPaths'] as Map,
+  );
 
 Map<String, dynamic> _$WordDocumentToJson(
   WordDocument instance,
@@ -66,6 +71,7 @@ Map<String, dynamic> _$WordDocumentToJson(
   'minorFontCS': instance.minorFontCS,
   'autoDarkColor': instance.autoDarkColor,
   'autoLightColor': instance.autoLightColor,
+  'themeColors': instance.themeColors,
   'abstractNumMap': instance.abstractNumMap.map(
     (k, e) => MapEntry(k.toString(), e.toJson()),
   ),
@@ -80,6 +86,8 @@ Map<String, dynamic> _$WordDocumentToJson(
   'documentStyles': WordDocument._documentStylesToJson(instance.documentStyles),
   'evenAndOddHeaders': instance.evenAndOddHeaders,
   'withDiacritics': instance.withDiacritics,
+  'useArabicNumerals': instance.useArabicNumerals,
   'index': instance.index.map((e) => e.toJson()).toList(),
   'selectedIndexItem': instance.selectedIndexItem,
+  'extractedFontPaths': instance.extractedFontPaths,
 };

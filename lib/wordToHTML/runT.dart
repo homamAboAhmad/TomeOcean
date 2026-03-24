@@ -38,6 +38,10 @@ class runT {
   /// This is serialized to cache since xmlRun is ignored
   bool hasTab = false;
 
+  /// Whether this run is a symbol run (w:sym). Serialized to cache.
+  /// Prevents changeFontByTxt() from overriding the symbol's font when loading from cache.
+  bool isSymbolRun = false;
+
   @JsonKey(ignore: true)
   Paragraph parent;
 
@@ -70,9 +74,9 @@ class runT {
       );
     }
 
-    // التحقق من الرموز عند التحميل من الكاش أيضاً
-    // (xmlRun سيكون null، لكن rpr?.font يجب أن يكون محفوظاً)
-    runT.checkSymbol();
+    // لا نستدعي checkSymbol() هنا لأن xmlRun=null من الكاش
+    // وستذهب الدالة لفرع else الذي قد يُفسد rpr.font للرموز.
+    // isSymbolRun محفوظ في الكاش ويحمي الخط.
 
     return runT;
   }
@@ -160,7 +164,9 @@ class runT {
 
     Widget? tab = getTabWidget();
     // fixFnr() removed - parentheses are now fixed in addFnToPage
-    checkSymbol();
+    // NOTE: checkSymbol() is intentionally NOT called here again.
+    // It is already called in fromXml() and the font/text are persisted in rpr.
+    // Calling it again here would override rpr.font via changeFontByTxt() for symbol runs.
 
     double vAlign = rpr?.getVertAlignNum() ?? 0;
     String fixedText = checkDiacritics();
@@ -208,19 +214,37 @@ class runT {
           );
           lastMatchEnd = match.end;
         }
-        if (lastMatchEnd < fixedText.length) {
-          contentSpans.add(
-            TextSpan(
-              text: fixedText.substring(lastMatchEnd),
-              style: effectiveStyle,
-            ),
-          );
-        }
-        if (!hasMatch)
+        if (hasMatch) {
+          if (lastMatchEnd < fixedText.length) {
+            contentSpans.add(
+              TextSpan(
+                text: fixedText.substring(lastMatchEnd),
+                style: effectiveStyle,
+              ),
+            );
+          }
+        } else {
           contentSpans.add(TextSpan(text: fixedText, style: effectiveStyle));
+        }
       } else {
         contentSpans.add(TextSpan(text: fixedText, style: effectiveStyle));
       }
+    }
+
+    if (footNoteId != null && vAlign != 0) {
+      // Footnote reference marks must use TextSpan to get correct BiDi position
+      // in RTL SelectableText. WidgetSpan (U+FFFC placeholder) always drifts to
+      // the visual start of an RTL paragraph, regardless of its logical position.
+      // Vertical elevation is achieved via Shadow(blurRadius:0) — the actual
+      // glyph is transparent and a crisp shadow renders at the vAlign offset.
+      final Color textColor = effectiveStyle.color ?? Colors.black;
+      final TextStyle shadowStyle = effectiveStyle.copyWith(
+        color: Colors.transparent,
+        shadows: [
+          Shadow(color: textColor, offset: Offset(0, vAlign), blurRadius: 0),
+        ],
+      );
+      return TextSpan(text: fixedText, style: shadowStyle);
     }
 
     if (vAlign != 0) {
@@ -359,6 +383,8 @@ class runT {
         rpr = RPr(this);
       }
 
+      isSymbolRun = true; // علامة تُحفظ في الكاش لحماية الخط
+
       var symElement = xmlRun!.findElements("w:sym").firstOrNull;
       String? fontName = symElement?.getAttribute("w:font");
       String? charHex = symElement?.getAttribute("w:char");
@@ -383,8 +409,9 @@ class runT {
           text = "?";
         }
       }
-    } else {
+    } else if (!isSymbolRun) {
       // تحديد الخط المناسب حسب نوع النص
+      // للرموز المُحملة من الكاش (isSymbolRun=true)، لا نُعدّل الخط أبداً
       if (rpr != null) {
         String? appropriateFont = changeFontByTxt(text);
         if (appropriateFont != null && appropriateFont.isNotEmpty) {
@@ -542,6 +569,52 @@ class runT {
     } else {
       rpr?.vanish = styleVanish;
     }
+
+    // Auto-contrast: if text has no explicit color and paragraph has dark shading,
+    // use white text. This matches Word's behavior for "auto" color.
+    if (rpr?.color == null) {
+      Color? paragraphBg = _getParagraphShadingColor();
+      if (paragraphBg != null && _isDarkColor(paragraphBg)) {
+        rpr?.color = "FFFFFF";
+      }
+    }
+  }
+
+  /// Get paragraph shading color from w:pPr/w:shd (for auto-contrast)
+  Color? _getParagraphShadingColor() {
+    final shd = parent.pPr?.xmlpPr?.getElement("w:shd");
+    if (shd == null) return null;
+
+    // Try themeFill first
+    String? themeFill = shd.getAttribute("w:themeFill");
+    if (themeFill != null) {
+      var wordDocument = parent.parent.parent;
+      String? resolved = resolveThemeColor(
+        wordDocument.themeColors,
+        themeFill,
+        shd.getAttribute("w:themeFillTint"),
+        shd.getAttribute("w:themeFillShade"),
+      );
+      if (resolved != null && resolved.length == 6) {
+        try {
+          return Color(int.parse("FF$resolved", radix: 16));
+        } catch (_) {}
+      }
+    }
+
+    // Fallback: w:fill
+    final fill = shd.getAttribute("w:fill");
+    if (fill == null || fill.isEmpty || fill == "auto") return null;
+    try {
+      return Color(int.parse("FF$fill", radix: 16));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Check if a color is "dark" (luminance < 0.5)
+  bool _isDarkColor(Color color) {
+    return color.computeLuminance() < 0.4;
   }
 
   String? changeFontByTxt(String? text) {
@@ -562,17 +635,25 @@ class runT {
   }
 
   // دالة لتحديد ما إذا كان النص عربيًا
+  // يشمل: Arabic (U+0600-U+06FF), Arabic Supplement (U+0750-U+077F),
+  // Arabic Extended-A (U+08A0-U+08FF), Arabic Presentation Forms-A (U+FB50-U+FDFF),
+  // Arabic Presentation Forms-B (U+FE70-U+FEFF)
   bool isArabic(String text) {
-    final arabicRegex = RegExp(r'[\u0600-\u06FF]');
+    final arabicRegex = RegExp(
+      r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]',
+    );
     return arabicRegex.hasMatch(text);
   }
 
   String checkDiacritics() {
-    bool withDiacritics = parent.parent.parent.withDiacritics;
-    if (withDiacritics)
-      return text ?? "";
-    else
-      return removeDiacritics(text ?? "");
+    final doc = parent.parent.parent;
+    String result = doc.withDiacritics
+        ? (text ?? "")
+        : removeDiacritics(text ?? "");
+    if (doc.useArabicNumerals && rpr?.rtl == true) {
+      result = toArabicNumbers(result);
+    }
+    return result;
   }
 
   /// Build spans checking for URLs first, then search highlights

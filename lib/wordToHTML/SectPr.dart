@@ -418,11 +418,11 @@ class SectPr {
   Widget getSectHeaderWidget(WordPage wordPage, [String? pageNumStr]) {
     // Load relationship file for this header
     Map<String, RelId>? headerRelations;
-    XmlElement? currentHeader = getRequestedHeader(wordPage.pageIndex - 1);
+    XmlElement? currentHeader = getRequestedHeader(wordPage.pageIndex);
 
     // Resolve the path again to get the relationships
     String? path;
-    int pageInSection = (wordPage.pageIndex - 1) - firstRange + 1;
+    int pageInSection = wordPage.pageIndex - firstRange + 1;
     bool titlePg = sectPrElement?.findElements("w:titlePg").isNotEmpty ?? false;
     bool evenAndOddHeaders = parent.evenAndOddHeaders ?? false;
 
@@ -533,7 +533,7 @@ class SectPr {
   }
 
   Widget getSectFooterWidget(WordPage wordPage, String pageNumStr) {
-    XmlElement? currentFooter = getRequestedFooter(wordPage.pageIndex - 1);
+    XmlElement? currentFooter = getRequestedFooter(wordPage.pageIndex);
 
     if (currentFooter == null) {
       return Container();
@@ -580,7 +580,7 @@ class SectPr {
 
   /// حساب ارتفاع الهيدر بناءً على الصور الموجودة فيه
   double getHeaderHeight(WordPage wordPage) {
-    XmlElement? currentHeader = getRequestedHeader(wordPage.pageIndex - 1);
+    XmlElement? currentHeader = getRequestedHeader(wordPage.pageIndex);
     if (currentHeader == null) return 0;
 
     double maxHeight = 0;
@@ -596,6 +596,13 @@ class SectPr {
       for (var run in p.runs) {
         if (run.image != null) {
           var img = run.image!;
+
+          // الأهم: تجاهل الصور العائمة التي تكون خلف النص (مثل إطارات البيان والتبيين)
+          // لأنها خلفيات ولا يجب أن تدفع النص الرئيسي للأسفل
+          if (img.behindDoc) continue;
+          
+          // تجاهل الصور/الإطارات الطويلة جداً التي تغطي معظم الصفحة
+          if (img.height > (this.height ?? 842) * 0.5) continue;
 
           double imageBottom;
           if (img.relativeFromV == "page") {
@@ -791,6 +798,22 @@ class SectPr {
       return result;
     }
     return null;
+  }
+
+  /// للتمييز بين الهيدر المعقد (زخارف VML/صور عائمة) الذي يحتاج إزاحة headerMargin
+  /// والهيدر النصي (مثل كتاب البيان) الذي يستخدم إطارات نصية أو يبني موضعه بنفسه.
+  bool hasVmlFrameInHeader(int docPageIndex) {
+    XmlElement? currentHeader = getRequestedHeader(docPageIndex);
+    if (currentHeader == null) return false;
+
+    // كتاب البيان يحتوي على <w:framePr> مما يعني أنه إطار نصي يعتمد على موقعه الذاتي
+    bool hasFramePr = currentHeader.descendants.whereType<XmlElement>().any((e) => e.name.local == "framePr");
+    if (hasFramePr) return false;
+
+    // كتب مثل ex7 تحتوي على زخارف بداخل <w:pict> أو <w:drawing>
+    bool hasPictOrDrawing = currentHeader.descendants.whereType<XmlElement>().any((e) => e.name.local == "pict" || e.name.local == "drawing");
+    
+    return hasPictOrDrawing;
   }
 
   String calculatePageNumber(int pageIndex) {

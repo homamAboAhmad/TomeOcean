@@ -8,6 +8,8 @@ import 'package:golden_shamela/core/window_manager_helper.dart';
 import 'package:golden_shamela/core/preferences_helper.dart';
 import 'package:golden_shamela/core/startup_indexer.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
+import 'package:golden_shamela/Helpers/BookFilesHelper.dart'
+    as book_files_helper;
 import 'package:window_manager/window_manager.dart';
 
 /// مسؤول عن تهيئة التطبيق بالكامل
@@ -28,7 +30,7 @@ class AppInitialization {
 
     if (!windowInfo.isSubWindow) {
       await _windowManagerHelper.initializeMainWindow();
-      _initializePaths();
+      await _initializePaths();
       _indexedBooksLoader.loadInBackground();
 
       // فهرسة الكتب الجديدة في الخلفية (لا تؤثر على بداية التطبيق)
@@ -51,8 +53,10 @@ class AppInitialization {
     PreferencesHelper.initialize(_prefs!);
   }
 
-  void _initializePaths() {
-    getPaths();
+  Future<void> _initializePaths() async {
+    await getPaths();
+    // تنظيف الملفات المؤقتة المتبقية من أي عمليات فاشلة سابقة
+    await book_files_helper.cleanTempBooks();
   }
 
   Future<void> _initializeSearchEngine() async {

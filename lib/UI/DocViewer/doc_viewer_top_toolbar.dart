@@ -15,6 +15,7 @@ class DocViewerTopToolbar extends StatelessWidget {
   final VoidCallback onGoEnd;
   final VoidCallback onCopyPage;
   final VoidCallback onToggleDiacritics;
+  final VoidCallback onToggleNumerals;
   final VoidCallback onShowBookCard;
 
   const DocViewerTopToolbar({
@@ -30,6 +31,7 @@ class DocViewerTopToolbar extends StatelessWidget {
     required this.onGoEnd,
     required this.onCopyPage,
     required this.onToggleDiacritics,
+    required this.onToggleNumerals,
     required this.onShowBookCard,
   });
 
@@ -165,6 +167,8 @@ class DocViewerTopToolbar extends StatelessWidget {
                       tooltip: 'نسخ الصفحة',
                     ),
                     _buildDiacriticsButton(),
+                    const SizedBox(width: 4),
+                    _buildNumeralsButton(),
                     _buildBookCardButton(),
                   ],
                 ),
@@ -225,6 +229,39 @@ class DocViewerTopToolbar extends StatelessWidget {
             child: Image.asset(
               "assets/icons/ic_diacritics.png",
               color: isActive ? primaryColor : accentColor,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNumeralsButton() {
+    final isActive = wordDocument.useArabicNumerals;
+    return Tooltip(
+      message: isActive ? 'عرض أرقام غربية' : 'عرض أرقام عربية',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onToggleNumerals,
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: isActive
+                  ? primaryColor.withOpacity(0.1)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              isActive ? '١٢٣' : '123',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isActive ? primaryColor : accentColor,
+              ),
             ),
           ),
         ),

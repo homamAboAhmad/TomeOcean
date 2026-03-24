@@ -217,7 +217,7 @@ class ShamelaSearchIndexer {
         return false;
       }
 
-      onProgress?.call(0.1, "Preparing documents...");
+      onProgress?.call(0.1, "جارٍ تجهيز المستندات...");
 
       List<Map<String, dynamic>> documents = [];
       for (int i = 0; i < pages.length; i++) {
@@ -248,12 +248,12 @@ class ShamelaSearchIndexer {
           double progress = 0.1 + (0.4 * i / pages.length);
           onProgress?.call(
             progress,
-            "Processing page ${i + 1}/${pages.length}",
+            "جارٍ معالجة الصفحة ${i + 1}/${pages.length}",
           );
         }
       }
 
-      onProgress?.call(0.5, "Indexing ${documents.length} paragraphs...");
+      onProgress?.call(0.5, "جارٍ فهرسة ${documents.length} فقرة...");
 
       await _engine.indexBook(
         bookPath,
@@ -263,7 +263,7 @@ class ShamelaSearchIndexer {
           if (total > 0) {
             // Map from 50% to 100%
             double progress = 0.5 + (0.5 * current / total);
-            onProgress?.call(progress, "Indexing: $current/$total paragraphs");
+            onProgress?.call(progress, "جارٍ الفهرسة: $current/$total فقرة");
           }
         },
         shouldStop: shouldStop,
@@ -271,7 +271,7 @@ class ShamelaSearchIndexer {
         releaseLock: releaseLock,
       );
 
-      onProgress?.call(1.0, "Done!");
+      onProgress?.call(1.0, "اكتملت الفهرسة!");
       print("[Indexing] ✓ Indexed $bookName (${documents.length} paragraphs)");
       return true;
     } catch (e) {

@@ -71,7 +71,8 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
   };
 
   ProcessingStage _currentStage = ProcessingStage.preparing;
-  double _stageProgress = 0.0;
+  double _globalProgress = 0.0;
+  String _currentMessage = "جاري التجهيز...";
   String? _errorMessage;
   String? _warningMessage;
 
@@ -91,8 +92,15 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
   }
 
   void _startProcessing() {
+    _startWithWordCheck();
+  }
+
+  Future<void> _startWithWordCheck() async {
+    // DispatchEx ينشئ instance معزول — لم يعد ضرورياً تحذير المستخدم
+    final wordRunning = false;
+
     _subscription = _processingService
-        .processBook(widget.filePath)
+        .processBook(widget.filePath, allowWordRunning: wordRunning)
         .listen(
           (event) {
             if (mounted) {
@@ -152,7 +160,8 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
 
         _currentStage = stage;
         _setStageStatus(stage, StageStatus.active);
-        _stageProgress = event.progress;
+        _globalProgress = event.progress;
+        _currentMessage = event.message;
       });
     }
 
@@ -200,6 +209,9 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
           const SizedBox(height: 20),
 
           ..._buildStagesList(),
+
+          const SizedBox(height: 16),
+          _buildGlobalProgress(),
 
           if (_errorMessage != null) ...[
             const SizedBox(height: 16),
@@ -286,12 +298,12 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
       return _buildStageRow(
         stageNames[entry.key]!,
         entry.value,
-        entry.key == _currentStage ? _stageProgress : null,
+        entry.key == _currentStage,
       );
     }).toList();
   }
 
-  Widget _buildStageRow(String name, StageStatus status, double? progress) {
+  Widget _buildStageRow(String name, StageStatus status, bool isActive) {
     IconData icon;
     Color iconColor;
 
@@ -315,45 +327,75 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 22),
+          Icon(icon, color: iconColor, size: 20),
           const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: normalStyle().copyWith(
-                    color: status == StageStatus.pending
-                        ? Colors.grey[500]
-                        : Colors.black87,
-                  ),
-                ),
-                if (progress != null && status == StageStatus.active) ...[
-                  const SizedBox(height: 4),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 4,
-                      backgroundColor: Colors.grey[200],
-                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
-                    ),
-                  ),
-                ],
-              ],
+          Text(
+            name,
+            style: normalStyle().copyWith(
+              color: status == StageStatus.pending
+                  ? Colors.grey[500]
+                  : Colors.black87,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             ),
           ),
-          if (progress != null && status == StageStatus.active)
-            Text(
-              '${(progress * 100).toInt()}%',
-              style: normalStyle().copyWith(color: primaryColor, fontSize: 12),
+          const Spacer(),
+          if (status == StageStatus.completed)
+            const Icon(Icons.done, color: Colors.green, size: 16),
+          if (isActive)
+            SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+              ),
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildGlobalProgress() {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                _currentMessage,
+                style: normalStyle(fontSize: 12, color: Colors.grey[700]!),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              '${(_globalProgress * 100).toInt()}%',
+              style: bigStyle(fontSize: 14, color: primaryColor),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            tween: Tween<double>(begin: 0, end: _globalProgress),
+            builder: (context, value, _) {
+              return LinearProgressIndicator(
+                value: value,
+                minHeight: 10,
+                backgroundColor: Colors.grey[200],
+                valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 

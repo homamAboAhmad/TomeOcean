@@ -19,7 +19,7 @@ class IndexedBooksLoader {
   Future<void> _loadBooks() async {
     try {
       final books = await ShamelaSearchIndexer().getIndexedBooks();
-      _appState.cachedIndexedBooks = books;
+      _appState.cachedIndexedBooks = _filterOutTemp(books);
     } catch (e) {
       _appState.cachedIndexedBooks = [];
     } finally {
@@ -35,10 +35,21 @@ class IndexedBooksLoader {
 
     try {
       final books = await ShamelaSearchIndexer().getIndexedBooks();
-      _appState.cachedIndexedBooks = books;
-      return books;
+      final filtered = _filterOutTemp(books);
+      _appState.cachedIndexedBooks = filtered;
+      return filtered;
     } catch (e) {
       return [];
     }
+  }
+
+  List<Map<String, dynamic>> _filterOutTemp(List<Map<String, dynamic>> books) {
+    return books
+        .where((b) {
+          final path = b['book_path'] as String? ?? '';
+          final name = path.split(RegExp(r'[\\/]')).last;
+          return !name.startsWith('_temp_');
+        })
+        .toList();
   }
 }

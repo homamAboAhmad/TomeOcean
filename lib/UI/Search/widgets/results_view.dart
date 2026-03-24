@@ -3,14 +3,16 @@ import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_highlighting_helper.dart';
 
-/// Results view widget for search dialog
-class SearchResultsView extends StatelessWidget {
+/// Results view widget for search dialog — with optional preview callback
+class SearchResultsView extends StatefulWidget {
   final List<Map<String, dynamic>> results;
   final int totalCount;
   final Function(String, int) onResultTapped;
+  final Function(Map<String, dynamic>)? onResultPreviewed;
   final Function() onClose;
   final List<String> searchQueries;
   final bool morphologicalSearch;
+  final int? selectedIndex;
 
   const SearchResultsView({
     Key? key,
@@ -20,18 +22,70 @@ class SearchResultsView extends StatelessWidget {
     required this.onClose,
     required this.searchQueries,
     required this.morphologicalSearch,
+    this.onResultPreviewed,
+    this.selectedIndex,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final highlightingHelper = SearchHighlightingHelper(
-      morphologicalSearch: morphologicalSearch,
-    );
+  State<SearchResultsView> createState() => _SearchResultsViewState();
+}
 
+class _SearchResultsViewState extends State<SearchResultsView> {
+  late SearchHighlightingHelper _highlightingHelper;
+  final Map<int, Widget> _snippetCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _highlightingHelper = SearchHighlightingHelper(
+      morphologicalSearch: widget.morphologicalSearch,
+    );
+  }
+
+  @override
+  void didUpdateWidget(SearchResultsView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchQueries != widget.searchQueries ||
+        oldWidget.morphologicalSearch != widget.morphologicalSearch) {
+      _snippetCache.clear();
+      _highlightingHelper = SearchHighlightingHelper(
+        morphologicalSearch: widget.morphologicalSearch,
+      );
+    }
+  }
+
+  static final RegExp _pgMarkerRegex = RegExp(r'\{\{PG:\d+\}\}');
+
+  Widget _buildSnippet(int index, String content) {
+    if (_snippetCache.containsKey(index)) return _snippetCache[index]!;
+    final cleaned = content.replaceAll(_pgMarkerRegex, '');
+    final fallback = Text(
+      cleaned.length > 100 ? '${cleaned.substring(0, 100)}...' : cleaned,
+      style: smallStyle(),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+    );
+    return FutureBuilder<Widget>(
+      future: _highlightingHelper.extractSnippetWithHighlight(
+        cleaned,
+        widget.searchQueries,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          _snippetCache[index] = snapshot.data!;
+          return snapshot.data!;
+        }
+        return fallback;
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.all(8),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
@@ -39,10 +93,12 @@ class SearchResultsView extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('النتائج: $totalCount', style: mediumStyle()),
+              Text('النتائج: ${widget.results.length}', style: mediumStyle()),
               IconButton(
-                icon: Icon(Icons.close),
-                onPressed: onClose,
+                icon: Icon(Icons.close, size: 18),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
+                onPressed: widget.onClose,
                 tooltip: 'إغلاق',
               ),
             ],
@@ -50,79 +106,60 @@ class SearchResultsView extends StatelessWidget {
         ),
         Expanded(
           child: ListView.builder(
-            itemCount: results.length,
+            itemCount: widget.results.length,
             itemBuilder: (context, index) {
-              final result = results[index];
+              final result = widget.results[index];
               final content = result['content'] as String? ?? '';
-              final morphContent =
-                  result['morphological_content'] as String? ?? '';
-
-              // Debug: Log result keys and morphological content for first 3 results
-              if (index < 3) {
-                print('===== [ResultsView] Result #$index =====');
-                print('  Keys: ${result.keys.toList()}');
-                print(
-                  '  morphological_content is null: ${result['morphological_content'] == null}',
-                );
-                if (morphContent.isNotEmpty) {
-                  final morphPreview = morphContent.length > 200
-                      ? morphContent.substring(0, 200)
-                      : morphContent;
-                  print('  morphological_content: "$morphPreview..."');
-                } else {
-                  print('  morphological_content is EMPTY');
-                }
-              }
+              final bookName = result['book_name'] as String? ?? '';
+              final bookPath = result['book_path'] as String? ?? '';
+              final pageNumber = (result['page_number'] as num?)?.toInt() ?? 0;
+              final isSelected = widget.selectedIndex == index;
 
               return Card(
-                elevation: 1,
-                margin: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                elevation: isSelected ? 2 : 1,
+                color: isSelected ? primaryColor.withOpacity(0.08) : null,
+                margin: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 child: ListTile(
+                  dense: true,
                   title: Text(
-                    result['book_name'] as String,
+                    bookName,
                     style: normalStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Padding(
-                    padding: EdgeInsets.only(top: 4),
-                    child: FutureBuilder<Widget>(
-                      future: highlightingHelper.extractSnippetWithHighlight(
-                        content,
-                        searchQueries,
+                    padding: EdgeInsets.only(top: 2),
+                    child: _buildSnippet(index, content),
+                  ),
+                  leading: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'ص ${pageNumber + 1}',
+                        style: smallStyle(color: primaryColor),
                       ),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          return snapshot.data!;
-                        } else if (snapshot.hasError) {
-                          return Text(
-                            content.length > 100
-                                ? '${content.substring(0, 100)}...'
-                                : content,
-                            style: smallStyle(),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          );
-                        } else {
-                          return Text(
-                            content.length > 100
-                                ? '${content.substring(0, 100)}...'
-                                : content,
-                            style: smallStyle(),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          );
-                        }
-                      },
-                    ),
+                    ],
                   ),
-                  leading: Text(
-                    'ص ${(result['page_number'] as int? ?? 0) + 1}',
-                    style: normalStyle(color: primaryColor),
-                  ),
+                  trailing: widget.onResultPreviewed != null
+                      ? IconButton(
+                          icon: Icon(
+                            Icons.open_in_new,
+                            size: 16,
+                            color: primaryColor,
+                          ),
+                          tooltip: 'فتح في تبويب',
+                          padding: EdgeInsets.zero,
+                          constraints: BoxConstraints(),
+                          onPressed: () => widget.onResultTapped(
+                            bookPath,
+                            pageNumber,
+                          ),
+                        )
+                      : null,
                   onTap: () {
-                    onResultTapped(
-                      result['book_path'] as String,
-                      result['page_number'] as int,
-                    );
+                    if (widget.onResultPreviewed != null) {
+                      widget.onResultPreviewed!(result);
+                    } else {
+                      widget.onResultTapped(bookPath, pageNumber);
+                    }
                   },
                 ),
               );

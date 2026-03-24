@@ -1,13 +1,10 @@
-import 'package:flutter/cupertino.dart';
-import 'package:golden_shamela/wordToHTML/Paragraph.dart';
-import 'package:golden_shamela/wordToHTML/DocumentStyles.dart';
-import 'package:golden_shamela/wordToHTML/TableStyleHelper.dart';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
+import 'package:golden_shamela/wordToHTML/DocumentStyles.dart';
+import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/SectPr.dart';
+import 'package:golden_shamela/wordToHTML/TableStyleHelper.dart';
 import 'package:xml/xml.dart';
 
 import 'RPr.dart';
@@ -16,13 +13,13 @@ class ParagraphTable extends Paragraph {
   ParagraphTable(super.parent);
 
   @override
-  Widget toWidget() {
+  Widget toWidget({bool suppressParagraphBorder = false}) {
     // Ensure pXml is available. If loaded from cache, it might need parsing from xmlString
     if (pXml == null && xmlString.isNotEmpty) {
       try {
         pXml = XmlDocument.parse(xmlString).rootElement;
       } catch (e) {
-        print("Error parsing table XML: $e");
+        pXml = null;
       }
     }
 
@@ -52,7 +49,9 @@ class WordTableWidget extends StatelessWidget {
     if (gridColWidths.isNotEmpty) {
       totalGridTwips = gridColWidths.fold(0, (sum, w) => sum + w);
     } else {
-      // Fallback: Check first row if grid is missing
+      // Fallback: Check first row if grid is missing.
+      // MUST use the same fallback (1440) as _getCellTwips to keep
+      // scaleFactor consistent with actual cell widths.
       var firstRow = tblXml.findAllElements('w:tr').firstOrNull;
       if (firstRow != null) {
         for (var cell in firstRow.findAllElements('w:tc')) {
@@ -60,7 +59,8 @@ class WordTableWidget extends StatelessWidget {
               .getElement('w:tcPr')
               ?.getElement('w:tcW')
               ?.getAttribute('w:w');
-          totalGridTwips += double.tryParse(w ?? '0') ?? 0;
+          double explicitW = double.tryParse(w ?? '0') ?? 0;
+          totalGridTwips += explicitW > 0 ? explicitW : 1440;
         }
       }
     }
@@ -76,75 +76,66 @@ class WordTableWidget extends StatelessWidget {
     double finalTableWidth;
     double? targetWidthPx;
 
-    // --- NEW: Respect w:tblW (Total Table Width) ---
+    // Get page body width from SectPr (used for pct, auto, and capping)
+    SectPr sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
+    double pageBodyWidth =
+        (sectPr.width ?? screenWidth) -
+        (sectPr.leftMargin) -
+        (sectPr.rightMargin);
+    if (pageBodyWidth <= 0) pageBodyWidth = screenWidth;
+
+    // --- Respect w:tblW (Total Table Width) ---
     var tblPr = tblXml.getElement('w:tblPr');
     var tblW = tblPr?.getElement('w:tblW');
-    if (tblW != null) {
-      String type = tblW.getAttribute('w:type') ?? 'auto';
-      double val = double.tryParse(tblW.getAttribute('w:w') ?? '0') ?? 0;
+    String tblWType = tblW?.getAttribute('w:type') ?? 'auto';
+    double tblWVal = double.tryParse(tblW?.getAttribute('w:w') ?? '0') ?? 0;
 
-      if (val > 0) {
-        if (type == 'pct') {
-          // Percentage: val is in 1/50th of a percent (5000 = 100%)
-          // Relies on Page Width from SectPr
-          SectPr sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
-          // SectPr properties are already in Display Pixels (dp) ~ 0.0667 scale
-          double pageBodyWidth =
-              (sectPr.width ?? screenWidth) -
-              (sectPr.leftMargin) -
-              (sectPr.rightMargin);
-          if (pageBodyWidth <= 0) pageBodyWidth = screenWidth;
-
-          targetWidthPx = pageBodyWidth * (val / 5000.0);
-        } else if (type == 'dxa') {
-          // Twips
-          targetWidthPx = val * 0.0667;
-        }
+    if (tblWVal > 0 && tblWType == 'pct') {
+      // Percentage: val is in 1/50th of a percent (5000 = 100%)
+      targetWidthPx = pageBodyWidth * (tblWVal / 5000.0);
+    } else if (tblWVal > 0 && tblWType == 'dxa') {
+      // Explicit width in twips
+      targetWidthPx = tblWVal * 0.0667;
+    } else if (tblWType == 'auto' || tblWVal == 0) {
+      // Auto: Word uses the grid column widths but caps at page body width.
+      // If the natural width exceeds or is close to page width, fill the page.
+      if (naturalWidthPx >= pageBodyWidth * 0.85) {
+        targetWidthPx = pageBodyWidth;
       }
+      // Otherwise let it use natural width (small tables)
     }
 
     if (targetWidthPx != null && targetWidthPx > 0) {
-      // If we have an explicit target width (e.g. 92% of page), use it.
-      // But limit to screen width to prevent overflow
-      if (targetWidthPx > screenWidth) {
-        finalTableWidth = screenWidth;
-      } else {
-        finalTableWidth = targetWidthPx;
-      }
+      // Cap to page body width to prevent overflow
+      finalTableWidth = targetWidthPx > pageBodyWidth
+          ? pageBodyWidth
+          : targetWidthPx;
       // Re-calculate scale factor: distribute the target width across the grid twips
-      // if totalGridTwips is 0 or 1, avoid div/0
       if (totalGridTwips > 1) {
         scaleFactor = finalTableWidth / totalGridTwips;
       } else {
         scaleFactor = 0.0667;
       }
     } else {
-      // Fallback to old Grid Logic
-      if (naturalWidthPx <= screenWidth) {
-        // If table fits, use its natural size
-        scaleFactor = 0.0667;
-        finalTableWidth = naturalWidthPx;
-      } else {
-        // If table is too big, scale it down to fit screen
-        finalTableWidth = screenWidth;
-        scaleFactor = screenWidth / totalGridTwips;
-      }
+      // Small table — use natural size
+      scaleFactor = 0.0667;
+      finalTableWidth = naturalWidthPx;
     }
 
     // Determine row direction from bidiVisual
     bool bidi = isTableBidiVisual(tblXml);
 
     // Generate Rows
-    List<Widget> rowWidgets = getRowsWList(scaleFactor, gridColWidths, bidi);
+    List<Widget> rowWidgets =
+        getRowsWList(scaleFactor, gridColWidths, bidi, finalTableWidth);
 
-    // Table alignment from w:jc in w:tblPr
-    Alignment tableAlign = getTableAlignment(tblXml);
-
-    return Container(
-      width: screenWidth,
-      alignment: tableAlign,
+    // We MUST wrap the entire table in Directionality matching its bidi property.
+    // The page might be RTL, but a specific LTR table needs LTR context.
+    return Directionality(
+      textDirection: bidi ? TextDirection.rtl : TextDirection.ltr,
       child: Container(
         width: finalTableWidth,
+        decoration: const BoxDecoration(),
         child: Column(mainAxisSize: MainAxisSize.min, children: rowWidgets),
       ),
     );
@@ -189,6 +180,7 @@ class WordTableWidget extends StatelessWidget {
     double scaleFactor,
     List<double> gridColWidths,
     bool bidi,
+    double finalTableWidth,
   ) {
     List<XmlElement> rows = tblXml.childElements
         .where((n) => n.name.local == 'tr')
@@ -215,32 +207,29 @@ class WordTableWidget extends StatelessWidget {
       List<XmlElement> rowCells = row.childElements
           .where((n) => n.name.local == 'tc')
           .toList();
-      List<Widget> cellsW = [];
+
+      // Get row height info early (needed to handle Word exact row clipping)
+      var (rowHeightTwips, hRule) = _getRowHeightInfo(row);
+      double? rowHeightPx = rowHeightTwips != null
+          ? rowHeightTwips * 0.0667
+          : null;
+      final bool isExactRowHeight = hRule == 'exact' && rowHeightPx != null;
+
+      // --- Phase 1: Calculate all cell widths for this row ---
+      List<double> cellWidths = [];
+      List<int> cellSpans = [];
+      List<bool> isVMergeContinuation = [];
       int gridColIndex = 0;
 
       for (int colIndex = 0; colIndex < rowCells.length; colIndex++) {
         var cell = rowCells[colIndex];
         int span = _getGridSpan(cell);
+        cellSpans.add(span);
 
-        // --- vMerge: skip continuation cells ---
         var vMerge = cell.getElement('w:tcPr')?.getElement('w:vMerge');
-        if (vMerge != null) {
-          String? val = vMerge.getAttribute('w:val');
-          if (val != 'restart') {
-            // This cell continues a vertical merge — skip rendering,
-            // but still advance grid index and add an empty placeholder
-            // so column widths remain aligned.
-            double cellTwips = _getCellTwips(
-              cell,
-              gridColIndex,
-              span,
-              gridColWidths,
-            );
-            gridColIndex += span;
-            cellsW.add(SizedBox(width: cellTwips * scaleFactor));
-            continue;
-          }
-        }
+        bool isContinuation =
+            vMerge != null && vMerge.getAttribute('w:val') != 'restart';
+        isVMergeContinuation.add(isContinuation);
 
         double cellTwips = _getCellTwips(
           cell,
@@ -249,39 +238,65 @@ class WordTableWidget extends StatelessWidget {
           gridColWidths,
         );
         gridColIndex += span;
+        cellWidths.add(cellTwips * scaleFactor);
+      }
 
-        double cellWidthPx = cellTwips * scaleFactor;
+      // --- Phase 2: Normalize widths so the row never exceeds table width ---
+      double totalRowWidth = cellWidths.fold(0.0, (sum, w) => sum + w);
+      if (totalRowWidth > finalTableWidth && totalRowWidth > 0) {
+        double ratio = finalTableWidth / totalRowWidth;
+        for (int i = 0; i < cellWidths.length; i++) {
+          cellWidths[i] *= ratio;
+        }
+      }
+
+      // --- Phase 3: Build cell widgets with corrected widths ---
+      List<Widget> cellsW = [];
+      gridColIndex = 0;
+
+      for (int colIndex = 0; colIndex < rowCells.length; colIndex++) {
+        int span = cellSpans[colIndex];
+
+        if (isVMergeContinuation[colIndex]) {
+          cellsW.add(SizedBox(width: cellWidths[colIndex]));
+          gridColIndex += span;
+          continue;
+        }
 
         cellsW.add(
           getCellWidget(
-            cell,
-            cellWidthPx,
+            rowCells[colIndex],
+            cellWidths[colIndex],
             rowIndex: rowIndex,
-            colIndex: gridColIndex - span, // use grid-based col index
+            colIndex: gridColIndex,
             totalRows: totalRows,
             totalCols: totalCols,
+            clipContentHeight: isExactRowHeight,
           ),
         );
+        gridColIndex += span;
       }
 
-      // Get row height info
-      var (rowHeightTwips, hRule) = _getRowHeightInfo(row);
-      double? rowHeightPx = rowHeightTwips != null
-          ? rowHeightTwips * 0.0667
-          : null;
-
       Widget rowWidget = IntrinsicHeight(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          textDirection: bidi ? TextDirection.rtl : TextDirection.ltr,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: cellsW,
+        child: SizedBox(
+          width: finalTableWidth,
+          child: Row(
+            mainAxisSize: MainAxisSize.max,
+            textDirection: bidi ? TextDirection.rtl : TextDirection.ltr,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: cellsW,
+          ),
         ),
       );
 
       if (rowHeightPx != null && rowHeightPx > 0) {
         if (hRule == 'exact') {
-          rowsW.add(SizedBox(height: rowHeightPx, child: rowWidget));
+          rowsW.add(
+            SizedBox(
+              height: rowHeightPx,
+              child: ClipRect(child: rowWidget),
+            ),
+          );
         } else {
           rowsW.add(
             ConstrainedBox(
@@ -297,22 +312,17 @@ class WordTableWidget extends StatelessWidget {
     return rowsW;
   }
 
-  /// Calculate cell width in twips from tcW or grid columns
+  /// Calculate cell width in twips.
+  /// Per Word XML spec: tblGrid is the authoritative column width source.
+  /// tcW is only the "preferred" width. Since scaleFactor is computed from
+  /// tblGrid totals, we MUST use grid widths for proportional correctness.
   double _getCellTwips(
     XmlElement cell,
     int gridColIndex,
     int span,
     List<double> gridColWidths,
   ) {
-    var tcW = cell.getElement('w:tcPr')?.getElement('w:tcW');
-    double explicitW =
-        double.tryParse(tcW?.getAttribute('w:w') ?? '0') ?? 0;
-    String type = tcW?.getAttribute('w:type') ?? 'auto';
-
-    if (explicitW > 0 && type != 'auto') {
-      return explicitW;
-    }
-
+    // Priority 1: Grid columns (authoritative, matches scaleFactor denominator)
     if (gridColWidths.isNotEmpty) {
       double total = 0;
       for (int i = 0; i < span; i++) {
@@ -320,10 +330,14 @@ class WordTableWidget extends StatelessWidget {
           total += gridColWidths[gridColIndex + i];
         }
       }
-      return total;
+      if (total > 0) return total;
     }
 
-    return explicitW;
+    // Priority 2: Explicit tcW (fallback when grid is missing)
+    var tcW = cell.getElement('w:tcPr')?.getElement('w:tcW');
+    double explicitW = double.tryParse(tcW?.getAttribute('w:w') ?? '0') ?? 0;
+
+    return explicitW > 0 ? explicitW : 1440; // fallback 1 inch
   }
 
   Widget getCellWidget(
@@ -333,6 +347,7 @@ class WordTableWidget extends StatelessWidget {
     int colIndex = 0,
     int totalRows = 1,
     int totalCols = 1,
+    bool clipContentHeight = false,
   }) {
     if (cellWidthPx <= 0) cellWidthPx = 10;
 
@@ -383,7 +398,7 @@ class WordTableWidget extends StatelessWidget {
       totalCols: totalCols,
     );
 
-    var paragraphsXml = rowCell.findAllElements("w:p");
+    var paragraphsXml = rowCell.findAllElements("w:p").toList();
 
     if (paragraphsXml.isEmpty)
       return Container(
@@ -393,7 +408,8 @@ class WordTableWidget extends StatelessWidget {
       );
 
     List<Widget> pWidgets = [];
-    for (var pXml in paragraphsXml) {
+    for (int i = 0; i < paragraphsXml.length; i++) {
+      var pXml = paragraphsXml[i];
       Paragraph paragraph = Paragraph(
         parent,
       ).fromXml(pXml, skipNumberingCounter: true);
@@ -419,13 +435,13 @@ class WordTableWidget extends StatelessWidget {
       if (paragraph.pPr != null) {
         paragraph.pPr!.paddingLeft = 0;
         paragraph.pPr!.paddingRight = 0;
+        paragraph.pPr!.firstLineIndent = null;
 
         // If paragraph has no explicit spacing AND no table style spacing,
-        // use 0 (Word's default for table cells without explicit spacing)
+        // use Word's default for table cells without explicit spacing
         bool hasExplicitSpacing =
             pXml.getElement('w:pPr')?.getElement('w:spacing') != null;
-        bool hasStyleSpacing =
-            tableStylePPr?.getElement('w:spacing') != null;
+        bool hasStyleSpacing = tableStylePPr?.getElement('w:spacing') != null;
         if (!hasExplicitSpacing && !hasStyleSpacing) {
           paragraph.pPr!.spacingBefore = 0;
           paragraph.pPr!.spacingAfter = 0;
@@ -449,8 +465,49 @@ class WordTableWidget extends StatelessWidget {
           }
         }
       }
+      bool isSingleWord =
+          !paragraph.text.contains(' ') &&
+          !paragraph.text.contains('\u00A0') &&
+          !paragraph.text.contains('\t') &&
+          !paragraph.text.contains('\n') &&
+          paragraph.text.trim().isNotEmpty;
 
-      pWidgets.add(paragraph.toWidget());
+      if (isSingleWord && paragraph.text.length < 20) {
+        paragraph.preventWrap = true;
+      }
+
+      Widget w = paragraph.toWidget();
+
+      // If this is the last paragraph in the cell, and it is completely empty
+      // (or contains only tiny text like a single space),
+      // we remove its vertical margins and set line height to 0 to prevent it
+      // from artificially expanding the row height (a common Word XML quirk).
+      if (i == paragraphsXml.length - 1) {
+        bool isEmptyOrTiny = true;
+        if (paragraph.runs.isNotEmpty) {
+          for (var run in paragraph.runs) {
+            String txt = run.text ?? "";
+            double size = run.rpr?.fontSize ?? 20.0;
+            if (txt.trim().isNotEmpty && size > 4.0) {
+              isEmptyOrTiny = false;
+              break;
+            }
+          }
+        }
+        if (isEmptyOrTiny) {
+          // Wrap in a constrained box to squash it
+          w = ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 0, minHeight: 0),
+            child: OverflowBox(
+              maxHeight: 0,
+              alignment: Alignment.topCenter,
+              child: w,
+            ),
+          );
+        }
+      }
+
+      pWidgets.add(w);
     }
 
     Widget cellContent = Column(
@@ -462,20 +519,32 @@ class WordTableWidget extends StatelessWidget {
     // Apply rotation for vertical text direction
     if (isVerticalText) {
       int quarterTurns =
-          (cellTextDirection == 'btLr' || cellTextDirection == 'tbLrV')
-          ? 3
-          : 1;
+          (cellTextDirection == 'btLr' || cellTextDirection == 'tbLrV') ? 3 : 1;
       cellContent = RotatedBox(quarterTurns: quarterTurns, child: cellContent);
     }
 
     // --- Cell Vertical Alignment (vAlign) ---
     Alignment verticalAlign = _getCellVerticalAlignment(rowCell);
 
+    // For exact row heights (w:trHeight/@w:hRule="exact"), Word clips overflow.
+    // Flutter's Column would normally overflow during layout under a tight height.
+    // We allow the content to lay out at its natural height (OverflowBox), then
+    // rely on clipping at the row/cell level to match Word.
+    Widget finalCellChild = cellContent;
+    if (clipContentHeight) {
+      finalCellChild = OverflowBox(
+        maxHeight: double.infinity,
+        alignment: verticalAlign,
+        child: cellContent,
+      );
+    }
+
     return Container(
       width: cellWidthPx,
-      decoration: decoration,
+      decoration: decoration ?? const BoxDecoration(),
+      clipBehavior: Clip.hardEdge,
       padding: cellMargins,
-      child: Align(alignment: verticalAlign, child: cellContent),
+      child: Align(alignment: verticalAlign, child: finalCellChild),
     );
   }
 
@@ -486,17 +555,29 @@ class WordTableWidget extends StatelessWidget {
     XmlElement tableStyleRPr,
   ) {
     // Parse the table style rPr once
-    RPr styleRPr = RPr(paragraph.runs.isNotEmpty
-            ? paragraph.runs.first
-            : paragraph.pPr?.getEmptyRun() ?? paragraph.runs.first)
-        .fromXml(tableStyleRPr);
+    RPr styleRPr = RPr(
+      paragraph.runs.isNotEmpty
+          ? paragraph.runs.first
+          : paragraph.pPr?.getEmptyRun() ?? paragraph.runs.first,
+    ).fromXml(tableStyleRPr);
+
+    // Per Word spec §17.7.2: table style has higher priority than paragraph style.
+    // Capture old prPr fontSize to detect which runs inherited from paragraph style
+    // vs which have direct formatting (direct formatting should NOT be overridden).
+    double? paragraphInheritedFontSize = paragraph.prPr?.fontSize;
 
     for (var run in paragraph.runs) {
       if (run.rpr == null) continue;
-      // Only fill in properties that the run doesn't already have
+      // fontSize: table style overrides paragraph-inherited size (spec §17.7.2)
+      // but respects direct formatting on the run
+      if (styleRPr.fontSize != null &&
+          run.rpr!.fontSize == paragraphInheritedFontSize) {
+        run.rpr!.fontSize = styleRPr.fontSize;
+      }
+      run.rpr!.fontSize ??= styleRPr.fontSize;
+      // Other properties: fill in gaps only
       run.rpr!.b ??= styleRPr.b;
       run.rpr!.i ??= styleRPr.i;
-      run.rpr!.fontSize ??= styleRPr.fontSize;
       run.rpr!.font ??= styleRPr.font;
       run.rpr!.enFont ??= styleRPr.enFont;
       run.rpr!.color ??= styleRPr.color;
@@ -505,10 +586,13 @@ class WordTableWidget extends StatelessWidget {
     }
 
     // Also apply to paragraph's prPr (the paragraph-level default run props)
+    // Table style overrides paragraph style for fontSize
     if (paragraph.prPr != null) {
+      if (styleRPr.fontSize != null) {
+        paragraph.prPr!.fontSize = styleRPr.fontSize;
+      }
       paragraph.prPr!.b ??= styleRPr.b;
       paragraph.prPr!.i ??= styleRPr.i;
-      paragraph.prPr!.fontSize ??= styleRPr.fontSize;
       paragraph.prPr!.font ??= styleRPr.font;
       paragraph.prPr!.enFont ??= styleRPr.enFont;
       paragraph.prPr!.color ??= styleRPr.color;

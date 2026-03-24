@@ -23,7 +23,11 @@ class AuthorStorage {
     String? searchQuery,
   }) async {
     await _db.initialize();
-    return await _db.getAuthors(limit: limit, offset: offset, searchQuery: searchQuery);
+    return await _db.getAuthors(
+      limit: limit,
+      offset: offset,
+      searchQuery: searchQuery,
+    );
   }
 
   // دالة للحصول على جميع المؤلفين (للتوافق مع الكود القديم)
@@ -43,6 +47,17 @@ class AuthorStorage {
   // دالة لإضافة مؤلف جديد
   Future<void> addAuthor(Author author) async {
     await _db.initialize();
+
+    // فحص إذا كان هناك مؤلف بنفس الاسم مسبقاً
+    final existing = await _db.getAuthorByName(author.name);
+    if (existing != null) {
+      // إذا كان الاسم موجوداً، نقوم بتحديث البيانات فقط (مثل سنة الوفاة) إذا كانت مرسلة
+      if (author.deathYear != null && author.deathYear!.isNotEmpty) {
+        await _db.saveAuthor(existing.copyWith(deathYear: author.deathYear));
+      }
+      return;
+    }
+
     await _db.saveAuthor(author);
   }
 
@@ -72,17 +87,21 @@ class AuthorStorage {
       Author(name: "مؤلف غير معروف", description: "مؤلف غير معروف"),
     ];
     await _db.initialize();
-    print("addDefaultAuthors: Database initialized, inserting ${defaultAuthors.length} authors");
+    print(
+      "addDefaultAuthors: Database initialized, inserting ${defaultAuthors.length} authors",
+    );
     await _db.batchInsertAuthors(defaultAuthors);
     print("addDefaultAuthors: Authors inserted, verifying...");
-    
+
     // Verify insertion
     final count = await _db.countAuthors();
     print("addDefaultAuthors: Verification - database now has $count authors");
-    
+
     // Reload to return actual saved authors
     final savedAuthors = await _db.getAuthors(limit: 100);
-    print("addDefaultAuthors: Reloaded ${savedAuthors.length} authors from database");
+    print(
+      "addDefaultAuthors: Reloaded ${savedAuthors.length} authors from database",
+    );
     return savedAuthors;
   }
 }

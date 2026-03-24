@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
-import 'package:path/path.dart' as p;
+import 'package:golden_shamela/UI/Search/widgets/results_view.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Models/Section.dart';
 import 'package:golden_shamela/UI/Search/widgets/search_options_panel.dart';
-import 'package:golden_shamela/UI/Search/widgets/sidebar_navigation.dart';
 import 'package:golden_shamela/UI/Search/widgets/bottom_bar.dart';
-import 'package:golden_shamela/UI/Search/widgets/results_view.dart';
 import 'package:golden_shamela/UI/Search/widgets/middle_panel_content.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_state_manager.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_executor.dart';
@@ -22,12 +21,29 @@ class ShamelaSearchDialog extends StatefulWidget {
   final List<Map<String, dynamic>> indexedBooks;
   final Function(List<Map<String, dynamic>>, int, List<String>, bool)?
   onSearchCompleted;
+  final Function(
+    Map<String, dynamic> groupControllersMap,
+    String searchGrouping,
+    List<Map<String, dynamic>> selectedBooksForSearch,
+    Map<String, bool> searchSections,
+    bool morphologicalSearch,
+    bool affixSearch,
+    bool considerHamzas,
+    bool considerDiacritics,
+    bool considerNumbers,
+    bool allPhrasesRequired,
+    bool ordered,
+    bool proximity,
+    List<Map<String, dynamic>> indexedBooks,
+  )?
+  onDelegateSearch;
 
   const ShamelaSearchDialog({
     Key? key,
     required this.onResultTapped,
     required this.indexedBooks,
     this.onSearchCompleted,
+    this.onDelegateSearch,
   }) : super(key: key);
 
   @override
@@ -53,12 +69,15 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
   };
   String _searchGrouping = 'all';
   bool _isLoading = false;
-  bool _hasSearched = false; // Track if a search was performed
+  bool _hasSearched = false;
   List<Map<String, dynamic>> _results = [];
   int _totalCount = 0;
   String? _errorMessage;
   late Map<String, bool> _selectedBooks;
   List<Map<String, dynamic>> _filteredIndexedBooks = [];
+  Map<String, dynamic>? _previewedResult;
+  int? _previewedIndex;
+  double _previewFraction = 0.4; // نسبة ارتفاع لوحة المعاينة (قابلة للسحب)
   final SearchStateManager _stateManager = SearchStateManager();
   final SearchExecutor _searchExecutor = SearchExecutor();
   final SelectedBooksManager _selectedBooksManager = SelectedBooksManager();
@@ -314,8 +333,63 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
     super.dispose();
   }
 
+  Future<List<String>?> _resolveBooksToSearch() async {
+    final sectionIdsFromSearch = _selectedBooksForSearch
+        .where((item) => item['type'] == 'section' && item['sectionId'] != null)
+        .map((item) => item['sectionId'] as String)
+        .toList();
+
+    List<String>? booksFromSections;
+    if (sectionIdsFromSearch.isNotEmpty) {
+      await _metadataDb.initialize();
+      final allBookPaths = <String>[];
+      for (var sectionId in sectionIdsFromSearch) {
+        final bookPaths = await _metadataDb.getBookPaths(sectionId: sectionId);
+        allBookPaths.addAll(bookPaths);
+      }
+      booksFromSections = allBookPaths
+          .where((p) => _filteredIndexedBooks.any((b) => b['book_path'] == p))
+          .toList();
+    }
+
+    final bookPathsFromSearch = _selectedBooksForSearch
+        .where((item) => item['type'] == 'book' && item['bookPath'] != null)
+        .map((item) => item['bookPath'] as String)
+        .toList();
+
+    final authorIdsFromSearch = _selectedBooksForSearch
+        .where((item) => item['type'] == 'author' && item['authorId'] != null)
+        .map((item) => item['authorId'] as String)
+        .toSet();
+
+    List<String>? booksFromAuthors;
+    if (authorIdsFromSearch.isNotEmpty) {
+      await _metadataDb.initialize();
+      final allBookPaths = <String>[];
+      for (var authorId in authorIdsFromSearch) {
+        final bookPaths = await _metadataDb.getBookPaths(authorId: authorId);
+        allBookPaths.addAll(bookPaths);
+      }
+      booksFromAuthors = allBookPaths
+          .where((p) => _filteredIndexedBooks.any((b) => b['book_path'] == p))
+          .toList();
+    }
+
+    final Set<String> allBooks = {};
+    if (booksFromSections != null) allBooks.addAll(booksFromSections);
+    if (bookPathsFromSearch.isNotEmpty) allBooks.addAll(bookPathsFromSearch);
+    if (booksFromAuthors != null) allBooks.addAll(booksFromAuthors);
+
+    if (allBooks.isNotEmpty) return allBooks.toList();
+
+    return _searchExecutor.determineBooksToSearch(
+      filteredIndexedBooks: _filteredIndexedBooks,
+      allIndexedBooks: widget.indexedBooks,
+      selectedBooks: _selectedBooks,
+    );
+  }
+
   void _performSearch() async {
-    // Check if any group has non-empty queries
     bool hasQueries = false;
     for (var group in _groupControllers.values) {
       if (group.any((c) => c.text.trim().isNotEmpty)) {
@@ -324,6 +398,38 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
       }
     }
     if (!hasQueries) return;
+
+    // التحقق من تحديد كتب للبحث
+    if (_selectedBooksForSearch.isEmpty) {
+      setState(() => _errorMessage = 'يرجى تحديد كتاب واحد على الأقل من قائمة البحث');
+      return;
+    }
+
+    // إذا كان هناك delegate، أغلق النافذة فوراً وفوّض البحث للنافذة الرئيسية
+    if (widget.onDelegateSearch != null) {
+      final groupControllersMap = <String, dynamic>{};
+      _groupControllers.forEach((key, controllers) {
+        groupControllersMap[key] = controllers.map((c) => c.text).toList();
+      });
+
+      Navigator.of(context).pop();
+      widget.onDelegateSearch!(
+        groupControllersMap,
+        _searchGrouping,
+        List<Map<String, dynamic>>.from(_selectedBooksForSearch),
+        Map<String, bool>.from(_searchSections),
+        _morphologicalSearch,
+        _affixSearch,
+        _considerHamzas,
+        _considerDiacritics,
+        _considerNumbers,
+        _allPhrasesRequired,
+        _ordered,
+        _proximity,
+        widget.indexedBooks,
+      );
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -334,87 +440,19 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
     });
 
     try {
-      // Get section IDs from _selectedBooksForSearch
-      final sectionIdsFromSearch = _selectedBooksForSearch
-          .where(
-            (item) => item['type'] == 'section' && item['sectionId'] != null,
-          )
-          .map((item) => item['sectionId'] as String)
-          .toList();
-
-      // Get book paths from sections in _selectedBooksForSearch
-      List<String>? booksFromSections;
-      if (sectionIdsFromSearch.isNotEmpty) {
-        await _metadataDb.initialize();
-        final allBookPaths = <String>[];
-        for (var sectionId in sectionIdsFromSearch) {
-          final bookPaths = await _metadataDb.getBookPaths(
-            sectionId: sectionId,
-          );
-          allBookPaths.addAll(bookPaths);
-        }
-        // Filter to only include books that are in the filtered indexed books
-        booksFromSections = allBookPaths.where((bookPath) {
-          return _filteredIndexedBooks.any(
-            (book) => book['book_path'] == bookPath,
-          );
-        }).toList();
-      }
-
-      // Get books from _selectedBooksForSearch (books and authors)
-      final bookPathsFromSearch = _selectedBooksForSearch
-          .where((item) => item['type'] == 'book' && item['bookPath'] != null)
-          .map((item) => item['bookPath'] as String)
-          .toList();
-
-      // Get book paths from authors in _selectedBooksForSearch
-      final authorIdsFromSearch = _selectedBooksForSearch
-          .where((item) => item['type'] == 'author' && item['authorId'] != null)
-          .map((item) => item['authorId'] as String)
-          .toSet();
-
-      List<String>? booksFromAuthors;
-      if (authorIdsFromSearch.isNotEmpty) {
-        await _metadataDb.initialize();
-        final allBookPaths = <String>[];
-        for (var authorId in authorIdsFromSearch) {
-          final bookPaths = await _metadataDb.getBookPaths(authorId: authorId);
-          allBookPaths.addAll(bookPaths);
-        }
-        // Filter to only include books that are in the filtered indexed books
-        booksFromAuthors = allBookPaths.where((bookPath) {
-          return _filteredIndexedBooks.any(
-            (book) => book['book_path'] == bookPath,
-          );
-        }).toList();
-      }
-
-      // Combine all book paths
-      Set<String> allBooksToSearch = {};
-      if (booksFromSections != null) allBooksToSearch.addAll(booksFromSections);
-      if (bookPathsFromSearch.isNotEmpty)
-        allBooksToSearch.addAll(bookPathsFromSearch);
-      if (booksFromAuthors != null) allBooksToSearch.addAll(booksFromAuthors);
-
-      // If we have specific books from _selectedBooksForSearch, use them
-      // Otherwise, use the default logic
-      List<String>? booksToSearch;
-      if (allBooksToSearch.isNotEmpty) {
-        booksToSearch = allBooksToSearch.toList();
-      } else {
-        booksToSearch = _searchExecutor.determineBooksToSearch(
-          filteredIndexedBooks: _filteredIndexedBooks,
-          allIndexedBooks: widget.indexedBooks,
-          selectedBooks: _selectedBooks,
-        );
-      }
+      final booksToSearch = await _resolveBooksToSearch();
 
       final selectedSections = _searchSections.entries
           .where((e) => e.value)
           .map((e) => e.key)
           .toList();
 
-      final result = await _searchExecutor.performPageSearch(
+      final searchQueries = _groupControllers.values
+          .expand((group) => group.map((c) => c.text.trim()))
+          .where((q) => q.isNotEmpty)
+          .toList();
+
+      await for (final batch in _searchExecutor.performPageSearchStream(
         groupControllers: _groupControllers,
         searchGrouping: _searchGrouping,
         bookPaths: booksToSearch,
@@ -429,35 +467,31 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
         allPhrasesRequired: _allPhrasesRequired,
         ordered: _ordered,
         proximity: _proximity,
-      );
+        batchSize: 20,
+      )) {
+        if (!mounted) break;
+        setState(() {
+          _results.addAll(batch.results);
+          if (batch.totalCount > _totalCount) _totalCount = batch.totalCount;
+        });
+      }
 
-      // Get search queries for display
-      final searchQueries = _groupControllers.values
-          .expand((group) => group.map((c) => c.text.trim()))
-          .where((q) => q.isNotEmpty)
-          .toList();
+      if (!mounted) return;
 
-      // If onSearchCompleted is provided, send results to HomePage
-      if (widget.onSearchCompleted != null && result.results.isNotEmpty) {
-        Navigator.of(context).pop(); // Close dialog
+      if (widget.onSearchCompleted != null && _results.isNotEmpty) {
+        Navigator.of(context).pop();
         widget.onSearchCompleted!(
-          result.results,
-          result.totalCount,
+          _results,
+          _totalCount,
           searchQueries,
           _morphologicalSearch,
         );
-      } else {
-        // Fallback: show results in dialog panel
-        setState(() {
-          _results = result.results;
-          _totalCount = result.totalCount;
-        });
       }
     } catch (e) {
       print("خطأ في البحث: $e");
-      setState(() => _errorMessage = "خطأ في البحث: $e");
+      if (mounted) setState(() => _errorMessage = "خطأ في البحث: $e");
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -516,7 +550,7 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
       },
       isLoading: _isLoading,
       errorMessage: _errorMessage,
-      totalCount: _totalCount,
+      totalCount: _results.length,
       selectedBooksForSearch: _selectedBooksForSearch,
       onRemoveFromSelectedList: _removeFromSelectedList,
       onClearSelectedList: _clearSelectedList,
@@ -662,6 +696,182 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
     }
   }
 
+  List<String> get _currentSearchQueries => _groupControllers.values
+      .expand((group) => group.map((c) => c.text.trim()))
+      .where((q) => q.isNotEmpty)
+      .toList();
+
+  Widget _buildResultsArea() {
+    if (_results.isEmpty && _hasSearched && !_isLoading) {
+      return SearchDialogBuilder.buildNoResultsPanel(
+        searchQueries: _currentSearchQueries,
+        onClose: () => setState(() => _hasSearched = false),
+      );
+    }
+    if (_results.isEmpty) return const SizedBox.shrink();
+
+    final bool hasPreview = _previewedResult != null;
+
+    return Container(
+      height: 340,
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final totalHeight = constraints.maxHeight;
+          final previewHeight = hasPreview
+              ? (totalHeight * _previewFraction).clamp(60.0, totalHeight - 80.0)
+              : 0.0;
+          final dividerHeight = hasPreview ? 8.0 : 0.0;
+          final resultsHeight = totalHeight - previewHeight - dividerHeight;
+
+          return Column(
+            children: [
+              // Preview panel (top) — shows text of selected result
+              if (hasPreview)
+                SizedBox(
+                  height: previewHeight,
+                  child: _buildPreviewPanel(_previewedResult!),
+                ),
+
+              // Draggable divider
+              if (hasPreview)
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onVerticalDragUpdate: (details) {
+                    setState(() {
+                      _previewFraction += details.delta.dy / totalHeight;
+                      _previewFraction = _previewFraction.clamp(0.15, 0.75);
+                    });
+                  },
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.resizeRow,
+                    child: Container(
+                      height: dividerHeight,
+                      color: Colors.grey.shade200,
+                      child: Center(
+                        child: Container(
+                          width: 40,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade400,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Results list (bottom)
+              SizedBox(
+                height: resultsHeight,
+                child: SearchResultsView(
+                  results: _results,
+                  totalCount: _results.length,
+                  onResultTapped: (path, page) {
+                    widget.onResultTapped(path, page);
+                    Navigator.of(context).pop();
+                  },
+                  onResultPreviewed: (result) {
+                    setState(() {
+                      _previewedResult = result;
+                      _previewedIndex = _results.indexOf(result);
+                    });
+                  },
+                  onClose: () => setState(() {
+                    _results = [];
+                    _hasSearched = false;
+                    _previewedResult = null;
+                    _previewedIndex = null;
+                  }),
+                  searchQueries: _currentSearchQueries,
+                  morphologicalSearch: _morphologicalSearch,
+                  selectedIndex: _previewedIndex,
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPreviewPanel(Map<String, dynamic> result) {
+    final bookName = result['book_name'] as String? ?? '';
+    final pageNumber = (result['page_number'] as num?)?.toInt() ?? 0;
+    final bookPath = result['book_path'] as String? ?? '';
+    final rawContent = (result['raw_content'] as String? ??
+        result['content'] as String? ?? '')
+        .replaceAll(RegExp(r'\{\{PG:\d+\}\}'), '');
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            color: primaryColor.withOpacity(0.08),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '$bookName — ص ${pageNumber + 1}',
+                    style: normalStyle(
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.open_in_new, size: 14),
+                  label: const Text('فتح في تبويب'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: primaryColor,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    textStyle: const TextStyle(fontSize: 12),
+                  ),
+                  onPressed: () {
+                    widget.onResultTapped(bookPath, pageNumber);
+                    Navigator.of(context).pop();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 16),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => setState(() {
+                    _previewedResult = null;
+                    _previewedIndex = null;
+                  }),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Scrollbar(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(12),
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: SelectableText(
+                    rawContent,
+                    style: normalStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -699,36 +909,8 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
                       middlePanelContent: _buildMiddlePanelContent(),
                     ),
                     _buildBottomBar(),
-                    // Show results panel or no results message
-                    if (_results.isNotEmpty)
-                      SearchDialogBuilder.buildResultsPanel(
-                            results: _results,
-                            totalCount: _totalCount,
-                            onResultTapped: (path, page) {
-                              widget.onResultTapped(path, page);
-                              Navigator.of(context).pop();
-                            },
-                            onClose: () => setState(() {
-                              _results = [];
-                              _hasSearched = false;
-                            }),
-                            searchQueries: _groupControllers.values
-                                .expand(
-                                  (group) => group.map((c) => c.text.trim()),
-                                )
-                                .where((q) => q.isNotEmpty)
-                                .toList(),
-                            morphologicalSearch: _morphologicalSearch,
-                          ) ??
-                          SizedBox.shrink()
-                    else if (_hasSearched && !_isLoading && _results.isEmpty)
-                      SearchDialogBuilder.buildNoResultsPanel(
-                        searchQueries: _groupControllers.values
-                            .expand((group) => group.map((c) => c.text.trim()))
-                            .where((q) => q.isNotEmpty)
-                            .toList(),
-                        onClose: () => setState(() => _hasSearched = false),
-                      ),
+                    if (_results.isNotEmpty || (_hasSearched && !_isLoading))
+                      _buildResultsArea(),
                   ],
                 ),
               ),

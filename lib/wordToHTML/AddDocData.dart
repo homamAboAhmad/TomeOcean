@@ -3,6 +3,7 @@ import 'package:golden_shamela/Utils/ArchiveToXml.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Models/WordPage.dart'; // Import WordPage
 
+import '../Utils/TxtUtils.dart';
 import 'DocFonts.dart';
 import 'DocFootNotes.dart';
 import 'DocNumbering.dart';
@@ -31,7 +32,10 @@ Future<List<WordPage>> AddDocData(
   // print("AddDocData: Added defaults.");
   addTheme1(archiveMap[WORD_THEME1], wordDocument);
   // print("AddDocData: Added theme.");
-  List<Map?> numberingMap = addNumbering(archiveMap[WORD_NUMBERING]);
+  List<Map?> numberingMap = addNumbering(
+    archiveMap[WORD_NUMBERING],
+    wordDocument: wordDocument,
+  );
   // print("AddDocData: Added numbering.");
   wordDocument.abstractNumMap = numberingMap[0]!.cast();
   wordDocument.numsMap = numberingMap[1]!.cast();
@@ -112,6 +116,18 @@ Future<List<WordPage>> AddDocData(
 
       // print("DEBUG: After fix - Section $i: firstRange=${sect.firstRange}, lastRange=${sect.lastRange}");
     }
+  }
+
+  // كشف لغة الكتاب تلقائياً وتعيين القيمة الافتراضية لـ useArabicNumerals
+  // نأخذ عينة من نص أول 3 صفحات لتحديد اللغة السائدة
+  if (pages.isNotEmpty) {
+    String sampleText = pages
+        .take(3)
+        .expand((p) => p.ps)
+        .take(20)
+        .map((p) => p.text)
+        .join(' ');
+    wordDocument.useArabicNumerals = isArabicText(sampleText);
   }
 
   return pages;

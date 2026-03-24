@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
-import 'package:golden_shamela/Models/WordDocument.dart';
+import 'package:golden_shamela/wordToHTML/SectPr.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'VectorShapeWidget.dart';
 import 'GroupImageWidget.dart';
 
-getImageWidget(ImageData? imageData) {
-  if (imageData == null) return Container(child: Text("Empty Pic"));
-  WordDocument? wordDocument = imageData.parent?.parent?.parent?.parent;
-  ImageData image = imageData;
+SectPr? _resolveImageSectPr(ImageData imageData) {
+  final run = imageData.parent;
+  if (run == null) return null;
 
-  // NEW: Handle Group Images
-  if (image.isGroup && image.groupImages.isNotEmpty) {
-    return GroupImageWidget(imageData: image);
-  }
+  final paragraph = run.parent;
+  final wordPage = paragraph.parent;
+  final wordDocument = wordPage.parent;
+
+  return wordDocument.getSectPrForPage(wordPage.pageIndex);
+}
+
+Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
+  if (imageData == null) return Container(child: Text("Empty Pic"));
+  ImageData image = imageData;
 
   // NEW: Handle Vector Shapes (wps:wsp with a:custGeom)
   // هذا لعرض الأشكال المخصصة مثل الخط الزخرفي في الهيدر
@@ -70,12 +75,13 @@ getImageWidget(ImageData? imageData) {
   }
 
   // الحصول على أبعاد الصفحة والهوامش
-  double pageWidth = wordDocument?.getPageSectPr().width ?? 595;
-  double pageHeight = wordDocument?.getPageSectPr().height ?? 842;
-  double leftMargin = wordDocument?.getPageSectPr().leftMargin ?? 0;
-  double rightMargin = wordDocument?.getPageSectPr().rightMargin ?? 0;
-  double topMargin = wordDocument?.getPageSectPr().topMargin ?? 0;
-  double bottomMargin = wordDocument?.getPageSectPr().bottomMargin ?? 0;
+  final sectPr = _resolveImageSectPr(image);
+  double pageWidth = sectPr?.width ?? 595;
+  double pageHeight = sectPr?.height ?? 842;
+  double leftMargin = sectPr?.leftMargin ?? 0;
+  double rightMargin = sectPr?.rightMargin ?? 0;
+  double topMargin = sectPr?.topMargin ?? 0;
+  double bottomMargin = sectPr?.bottomMargin ?? 0;
 
   // حساب منطقة الهامش (margin area)
   double marginAreaWidth = pageWidth - leftMargin - rightMargin;
@@ -120,6 +126,14 @@ getImageWidget(ImageData? imageData) {
       posX = pageWidth - rightMargin - image.width;
     }
   } else {
+    if (image.isVml) {
+      if (image.relativeFromH == "page") {
+        posX = image.posX;
+      } else {
+        posX = image.posX + leftMargin;
+      }
+      alignment = Alignment.topLeft;
+    } else
     // posOffset Logic with Hybrid RTL/Strict
     // User Observation: Frame (Negative Offset) works with Right Anchor. Content (Positive Offset) needs Left Anchor.
     if (isRtl) {
@@ -179,9 +193,13 @@ getImageWidget(ImageData? imageData) {
   } else {
     // posOffset
     if (image.relativeFromV == "page" ||
-        image.relativeFromV == "paragraph" ||
         image.relativeFromV == "topMargin") {
       posY = image.posY;
+    } else if (image.relativeFromV == "paragraph") {
+      // OOXML Spec: relativeFrom="paragraph" means offset from the paragraph's position.
+      // At page level, the paragraph is at approximately topMargin from the page top.
+      // This handles wrapNone full-page images (e.g., covers with negative offsets).
+      posY = image.posY + topMargin;
     } else {
       posY = image.posY + topMargin;
     }
@@ -201,16 +219,7 @@ getImageWidget(ImageData? imageData) {
   Widget innerContent;
 
   if (image.isGroup) {
-    // Rebuild children for safety/simplicity in this flow
-    List<Widget> children = [];
-    for (var childImg in image.groupImages) {
-      children.add(getImageWidget(childImg));
-    }
-    innerContent = Container(
-      width: image.width > 0 ? image.width : 500,
-      height: image.height > 0 ? image.height : 300,
-      child: Stack(clipBehavior: Clip.none, children: children),
-    );
+    innerContent = GroupImageWidget(imageData: image);
   } else {
     if (image.imageMemory == null || image.imageMemory!.isEmpty) {
       print(
@@ -416,7 +425,7 @@ getImageWidget(ImageData? imageData) {
 
   // If wrapMode is null, it indicates an inline image (wp:inline).
   // We return the content directly so it flows with the text and respects Paragraph alignment (e.g. Center).
-  if (image.wrapMode == null) {
+  if (image.wrapMode == null || innerOnly) {
     return content;
   }
 

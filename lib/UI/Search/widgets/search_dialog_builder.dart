@@ -89,6 +89,8 @@ class SearchDialogBuilder {
     required VoidCallback onClose,
     required List<String> searchQueries,
     required bool morphologicalSearch,
+    Function(Map<String, dynamic>)? onResultPreviewed,
+    int? selectedIndex,
   }) {
     if (results.isEmpty) return null;
 
@@ -104,6 +106,8 @@ class SearchDialogBuilder {
         onClose: onClose,
         searchQueries: searchQueries,
         morphologicalSearch: morphologicalSearch,
+        onResultPreviewed: onResultPreviewed,
+        selectedIndex: selectedIndex,
       ),
     );
   }

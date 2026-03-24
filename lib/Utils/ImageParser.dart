@@ -9,6 +9,7 @@ import 'package:golden_shamela/wordToHTML/runT.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart' as xml;
 import 'package:xml/xml.dart';
+import 'package:golden_shamela/wordToHTML/RPr.dart';
 
 import '../wordToHTML/ExtractWordImages.dart';
 import 'json_converters.dart';
@@ -137,6 +138,7 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
     setOffsets(); // Will use wp:anchor info for the group
     // Actually, setDemenisions checks wp:extent which is correct for the container
     setDemenisions();
+    setRelativeHeight(); // Sets behindDoc and relativeHeight from wp:anchor
     checkWrapMode();
 
     return _imageData;
@@ -159,6 +161,7 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
       checkFromPage();
       checkRelativeFromV();
       setOffsets();
+      setRelativeHeight(); // Sets behindDoc and relativeHeight from wp:anchor
       checkWrapMode();
 
       // تحليل المسار
@@ -172,6 +175,7 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
   }
 
   if (isVml) {
+    _imageData.isVml = true;
     _parseVmlData();
     return _imageData;
   }
@@ -324,7 +328,14 @@ void parseTextBox() {
   }
 
   // محاولة استخراج النص من Text Box
-  var textElements = _drawingElement.findAllElements('w:t');
+  // نبحث أولاً داخل mc:Choice فقط لتجنب تكرار النص من mc:Fallback
+  xml.XmlElement? searchRoot = _drawingElement
+      .findAllElements('mc:Choice')
+      .firstOrNull;
+  // إذا لم يوجد mc:Choice، نستخدم العنصر الكامل
+  searchRoot ??= _drawingElement;
+
+  var textElements = searchRoot.findAllElements('w:t');
   if (textElements.isNotEmpty) {
     StringBuffer buffer = StringBuffer();
     for (var t in textElements) {
@@ -335,11 +346,11 @@ void parseTextBox() {
 
     // محاولة البحث عن خصائص التنسيق داخل w:txbxContent
     // نبحث عن الفقرة الأولى التي تحتوي على نص
-    var textRun = _drawingElement
+    var textRun = searchRoot
         .findAllElements('w:r')
         .firstWhere(
           (r) => r.findAllElements('w:t').isNotEmpty,
-          orElse: () => _drawingElement.findAllElements('w:r').first,
+          orElse: () => searchRoot!.findAllElements('w:r').first,
         );
 
     // نحاول اختيار أفضل run يملك معلومات خطوط واضحة
@@ -400,6 +411,99 @@ void parseTextBox() {
 }
 
 void _parseVmlData() {
+  var group = _drawingElement.descendants
+      .whereType<xml.XmlElement>()
+      .firstWhere(
+        (e) => e.name.local == 'group',
+        orElse: () => xml.XmlElement(xml.XmlName('null')),
+      );
+
+  if (group.name.local != 'null') {
+    String? groupStyle = group.getAttribute('style');
+    Map<String, String> groupStyleMap = {};
+    if (groupStyle != null) {
+      groupStyleMap = _parseVmlStyleMap(groupStyle);
+      _parseVmlStyle(groupStyle);
+    }
+
+    final coordSizeParts = (group.getAttribute('coordsize') ?? '1,1').split(',');
+
+    final double coordSizeX =
+        double.tryParse(coordSizeParts.firstOrNull ?? '1') ?? 1;
+    final double coordSizeY =
+        double.tryParse(coordSizeParts.length > 1 ? coordSizeParts[1] : '1') ?? 1;
+    final coordOriginParts =
+        (group.getAttribute('coordorigin') ?? '0,0').split(',');
+    final double coordOriginY =
+        double.tryParse(coordOriginParts.length > 1 ? coordOriginParts[1] : '0') ?? 0;
+
+    _imageData.isGroup = true;
+    _imageData.isVml = true;
+    _imageData.groupImages = [];
+    _imageData.posX = _parseUnit(groupStyleMap['margin-left'] ?? '0');
+    _imageData.posY = _parseUnit(groupStyleMap['margin-top'] ?? '0');
+    _parseVmlWrap(group);
+    _parseVmlZIndex(groupStyleMap['z-index']);
+
+    for (final shape in group.childElements.where((e) => e.name.local == 'shape')) {
+      final childImage = ImageData();
+      childImage.parent = _imageData.parent;
+      childImage.customRelIdList = _imageData.customRelIdList;
+
+      final styleMap = _parseVmlStyleMap(shape.getAttribute('style') ?? '');
+      final double leftRaw = _extractVmlStyleNumber(styleMap['left']);
+      final double topRaw = _extractVmlStyleNumber(styleMap['top']);
+      final double widthRaw = _extractVmlStyleNumber(styleMap['width']);
+      final double heightRaw = _extractVmlStyleNumber(styleMap['height']);
+
+      childImage.posX =
+          (leftRaw * _imageData.width) / (coordSizeX == 0 ? 1 : coordSizeX);
+      childImage.posY =
+          ((topRaw - coordOriginY) * _imageData.height) /
+          (coordSizeY == 0 ? 1 : coordSizeY);
+      childImage.width = (widthRaw * _imageData.width) / (coordSizeX == 0 ? 1 : coordSizeX);
+      childImage.height =
+          (heightRaw * _imageData.height) / (coordSizeY == 0 ? 1 : coordSizeY);
+      childImage.relativeFromH = _imageData.relativeFromH;
+      childImage.relativeFromV = _imageData.relativeFromV;
+      childImage.wrapMode = _imageData.wrapMode;
+      childImage.behindDoc = _imageData.behindDoc;
+      childImage.relativeHeight = _imageData.relativeHeight;
+      childImage.isVml = true;
+
+      final lockElement = shape.childElements.firstWhere(
+        (e) => e.name.local == 'lock',
+        orElse: () => xml.XmlElement(xml.XmlName('null')),
+      );
+      if (lockElement.name.local != 'null') {
+        final aspectRatio = lockElement.getAttribute('aspectratio')?.toLowerCase();
+        if (aspectRatio == 'f' || aspectRatio == 'false') {
+          childImage.isStretched = true;
+        }
+      }
+
+      var imageData = shape.descendants.whereType<xml.XmlElement>().firstWhere(
+        (e) => e.name.local == 'imagedata',
+        orElse: () => xml.XmlElement(xml.XmlName('null')),
+      );
+
+      if (imageData.name.local != 'null') {
+        String? rId = imageData.getAttribute('r:id');
+        if (rId != null) {
+          childImage.rId = rId;
+          childImage.setImageMemory(
+            _imageData.parent!,
+            customRelIdList: _imageData.customRelIdList,
+          );
+        }
+      }
+
+      _imageData.groupImages.add(childImage);
+    }
+
+    return;
+  }
+
   // 1. Find v:shape
   var shape = _drawingElement.descendants
       .whereType<xml.XmlElement>()
@@ -413,8 +517,51 @@ void _parseVmlData() {
   // 2. Extract Dimensions from style attribute
   // style="...width:261.35pt;height:42.3pt..."
   String? style = shape.getAttribute('style');
+  final wrapElement = shape.childElements.firstWhere(
+    (e) => e.name.local == 'wrap',
+    orElse: () => xml.XmlElement(xml.XmlName('null')),
+  );
   if (style != null) {
+    final styleMap = _parseVmlStyleMap(style);
     _parseVmlStyle(style);
+    _applyVmlHorizontalPositioningFromStyleMap(styleMap);
+
+    if (styleMap.containsKey('left')) {
+      _imageData.posX = _parseUnit(styleMap['left']!);
+    } else if (styleMap.containsKey('margin-left')) {
+      _imageData.posX = _parseUnit(styleMap['margin-left']!);
+    }
+
+    if (styleMap.containsKey('top')) {
+      _imageData.posY = _parseUnit(styleMap['top']!);
+    } else if (styleMap.containsKey('margin-top')) {
+      _imageData.posY = _parseUnit(styleMap['margin-top']!);
+    }
+
+    _parseVmlZIndex(styleMap['z-index']);
+  }
+
+  final hasAbsolutePositioning =
+      style?.toLowerCase().contains('position:absolute') == true;
+  if (hasAbsolutePositioning) {
+    if (wrapElement.name.local != 'null') {
+      _parseVmlWrap(shape);
+    } else {
+      _imageData.relativeFromH = 'column';
+      _imageData.relativeFromV = 'paragraph';
+      _imageData.wrapMode = 'None';
+    }
+  }
+
+  final lockElement = shape.childElements.firstWhere(
+    (e) => e.name.local == 'lock',
+    orElse: () => xml.XmlElement(xml.XmlName('null')),
+  );
+  if (lockElement.name.local != 'null') {
+    final aspectRatio = lockElement.getAttribute('aspectratio')?.toLowerCase();
+    if (aspectRatio == 'f' || aspectRatio == 'false') {
+      _imageData.isStretched = true;
+    }
   }
 
   // 3. Extract r:id from v:imagedata
@@ -436,21 +583,121 @@ void _parseVmlData() {
 }
 
 void _parseVmlStyle(String style) {
-  // Simple CSS style parser for width and height
-  List<String> parts = style.split(';');
-  for (String part in parts) {
-    List<String> kv = part.split(':');
-    if (kv.length == 2) {
-      String key = kv[0].trim().toLowerCase();
-      String value = kv[1].trim().toLowerCase();
+  final styleMap = _parseVmlStyleMap(style);
+  if (styleMap.containsKey('width')) {
+    _imageData.width = _parseUnit(styleMap['width']!);
+  }
+  if (styleMap.containsKey('height')) {
+    _imageData.height = _parseUnit(styleMap['height']!);
+  }
+}
 
-      if (key == 'width') {
-        _imageData.width = _parseUnit(value);
-      } else if (key == 'height') {
-        _imageData.height = _parseUnit(value);
-      }
+Map<String, String> _parseVmlStyleMap(String style) {
+  final Map<String, String> styleMap = {};
+  for (final part in style.split(';')) {
+    final kv = part.split(':');
+    if (kv.length == 2) {
+      styleMap[kv[0].trim().toLowerCase()] = kv[1].trim().toLowerCase();
     }
   }
+  return styleMap;
+}
+
+void _applyVmlHorizontalPositioningFromStyleMap(Map<String, String> styleMap) {
+  final horizontalAlign = _normalizeVmlHorizontalAlign(
+    styleMap['mso-position-horizontal'],
+  );
+
+  if (horizontalAlign == null) return;
+
+  _imageData.alignH = horizontalAlign;
+
+  final relative = styleMap['mso-position-horizontal-relative']?.trim().toLowerCase();
+  if (relative == 'page') {
+    _imageData.relativeFromH = 'page';
+  } else if (relative == 'margin') {
+    _imageData.relativeFromH = 'margin';
+  } else if (relative == 'text') {
+    _imageData.relativeFromH = 'column';
+  } else {
+    // In VML, style-based horizontal positioning commonly describes page-level placement
+    // even when the relative attribute is omitted.
+    _imageData.relativeFromH = 'page';
+  }
+}
+
+String? _normalizeVmlHorizontalAlign(String? value) {
+  switch (value?.trim().toLowerCase()) {
+    case 'left':
+      return 'left';
+    case 'center':
+      return 'center';
+    case 'right':
+      return 'right';
+    default:
+      return null;
+  }
+}
+
+double _extractVmlStyleNumber(String? value) {
+  if (value == null || value.isEmpty) return 0;
+  final normalized = value.trim().toLowerCase();
+  if (normalized.endsWith('pt') || normalized.endsWith('px')) {
+    return _parseUnit(normalized);
+  }
+  return double.tryParse(normalized) ?? 0;
+}
+
+void _parseVmlWrap(xml.XmlElement container) {
+  final wrap = container.childElements.firstWhere(
+    (e) => e.name.local == 'wrap',
+    orElse: () => xml.XmlElement(xml.XmlName('null')),
+  );
+
+  if (wrap.name.local == 'null') {
+    _imageData.relativeFromH = 'margin';
+    _imageData.relativeFromV = 'margin';
+    _imageData.wrapMode = 'None';
+    return;
+  }
+
+  final anchorX = wrap.getAttribute('anchorx')?.toLowerCase();
+  final anchorY = wrap.getAttribute('anchory')?.toLowerCase();
+  final wrapType = wrap.getAttribute('type')?.toLowerCase();
+
+  _imageData.relativeFromH = _mapVmlAnchor(anchorX);
+  _imageData.relativeFromV = _mapVmlAnchor(anchorY);
+
+  if (wrapType == 'square') {
+    _imageData.wrapMode = 'Square';
+  } else if (wrapType == 'tight') {
+    _imageData.wrapMode = 'Tight';
+  } else if (wrapType == 'through') {
+    _imageData.wrapMode = 'Through';
+  } else if (wrapType == 'topandbottom') {
+    _imageData.wrapMode = 'TopAndBottom';
+  } else {
+    _imageData.wrapMode = 'None';
+  }
+}
+
+String _mapVmlAnchor(String? anchor) {
+  switch (anchor) {
+    case 'page':
+      return 'page';
+    case 'margin':
+      return 'margin';
+    case 'text':
+      return 'column';
+    default:
+      return 'margin';
+  }
+}
+
+void _parseVmlZIndex(String? zIndexValue) {
+  final zIndex = double.tryParse(zIndexValue ?? '0') ?? 0;
+  _imageData.behindDoc = zIndex < 0;
+  _imageData.relativeHeight = zIndex;
 }
 
 double _parseUnit(String value) {
@@ -719,20 +966,62 @@ Color? _parseDrawingColor(xml.XmlElement solidFill) {
   final schemeClr = solidFill.findAllElements('a:schemeClr').firstOrNull;
   if (schemeClr != null) {
     final val = schemeClr.getAttribute('val');
-    // تحويل بسيط لبعض الألوان الشائعة
-    switch (val) {
-      case 'tx1':
-      case 'dk1':
-        return const Color(0xFF000000); // أسود
-      case 'bg1':
-      case 'lt1':
-        return const Color(0xFFFFFFFF); // أبيض
-      case 'accent1':
-        return const Color(0xFF4472C4); // أزرق
-      case 'accent2':
-        return const Color(0xFFED7D31); // برتقالي
-      default:
-        return const Color(0xFF000000); // افتراضي أسود
+    if (val != null) {
+      // تحويل أسماء scheme إلى أسماء theme المتوافقة مع resolveThemeColor
+      const schemeToTheme = {
+        'tx1': 'dark1',
+        'tx2': 'dark2',
+        'bg1': 'light1',
+        'bg2': 'light2',
+        'dk1': 'dark1',
+        'dk2': 'dark2',
+        'lt1': 'light1',
+        'lt2': 'light2',
+        'accent1': 'accent1',
+        'accent2': 'accent2',
+        'accent3': 'accent3',
+        'accent4': 'accent4',
+        'accent5': 'accent5',
+        'accent6': 'accent6',
+        'hlink': 'hyperlink',
+        'folHlink': 'followedHyperlink',
+      };
+
+      String themeName = schemeToTheme[val] ?? val;
+
+      // الحصول على themeColors من المستند الأب
+      try {
+        var wordDocument = _imageData.parent?.parent.parent.parent;
+        if (wordDocument != null) {
+          String? resolved = resolveThemeColor(
+            wordDocument.themeColors,
+            themeName,
+            null, // tint (يمكن دعمه لاحقاً)
+            null, // shade
+          );
+          if (resolved != null && resolved.length == 6) {
+            return Color(int.parse('FF$resolved', radix: 16));
+          }
+        }
+      } catch (_) {
+        // fallback to hardcoded colors below
+      }
+
+      // fallback: ألوان ثابتة فقط في حال فشل الوصول للثيم
+      switch (val) {
+        case 'tx1':
+        case 'dk1':
+          return const Color(0xFF000000); // أسود
+        case 'bg1':
+        case 'lt1':
+          return const Color(0xFFFFFFFF); // أبيض
+        case 'accent1':
+          return const Color(0xFF4472C4); // أزرق
+        case 'accent2':
+          return const Color(0xFFED7D31); // برتقالي
+        default:
+          return const Color(0xFF000000); // افتراضي أسود
+      }
     }
   }
 
@@ -841,6 +1130,8 @@ class ImageData {
   // Group Support
   @JsonKey(defaultValue: false)
   bool isGroup = false;
+  @JsonKey(defaultValue: false)
+  bool isVml = false;
   @JsonKey(ignore: true)
   List<ImageData> groupImages = [];
 

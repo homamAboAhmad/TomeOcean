@@ -66,6 +66,10 @@ class WordUtils {
 
       onProgress?.call(j, maxPage);
     }
+
+    // تقسيم الحواشي الطويلة: إضافة تكملة الحواشي للصفحات اللاحقة
+    addContinuationFootnotes(pages);
+
     return pages;
   }
 
@@ -84,35 +88,24 @@ class WordUtils {
 
   void addFnToPage(WordPage wordPage) {
     int i = 1;
-    for (Paragraph p in wordPage.ps) {
+    // debugPrint("🔢 addFnToPage: pageIndex=${wordPage.pageIndex}, psCount=${wordPage.ps.length}");
+    // for (int pIdx = 0; pIdx < wordPage.ps.length; pIdx++) {
+    //   Paragraph p = wordPage.ps[pIdx];
+    //   debugPrint("  📄 para[$pIdx]: runsCount=${p.runs.length}");
+    // }
+    for (int pIdx = 0; pIdx < wordPage.ps.length; pIdx++) {
+      Paragraph p = wordPage.ps[pIdx];
       for (int runIndex = 0; runIndex < p.runs.length; runIndex++) {
         runT run = p.runs[runIndex];
         if (run.footNoteId != null) {
+          debugPrint("  🔖 para[$pIdx] run[$runIndex]: footNoteId=${run.footNoteId}, i=$i, textBefore='${run.text}', vanish=${run.rpr?.vanish}");
           FootNote? footNote = wordDocument.docFootNotes[run.footNoteId];
 
-          // Determine context for formatting
-          // 1. Surrounding text in the main body (Paragraph p)
-          bool isBodyArabic = isArabicText(p.text);
+          // تنسيق الأرقام حسب إعداد useArabicNumerals في المستند
+          bool useArabic = wordDocument.useArabicNumerals;
 
-          // 2. Footnote text itself
-          bool isFootnoteArabic = false;
-          if (footNote != null && footNote.p.text.isNotEmpty) {
-            isFootnoteArabic = isArabicText(footNote.p.text);
-          }
-
-          // Format the number for the BODY (Inline reference)
-          String bodyNum = i.toString();
-          if (isBodyArabic) {
-            bodyNum = toArabicNumbers(bodyNum);
-          }
-
-          // Format the number for the FOOTNOTE (Bottom reference)
-          String footerNum = i.toString();
-          // Note: typically footnotes match the document language.
-          // If the footnote text is Arabic, OR if the reference is from Arabic text (and footnote is ambiguous/short), use Arabic.
-          if (isFootnoteArabic || isBodyArabic) {
-            footerNum = toArabicNumbers(footerNum);
-          }
+          String bodyNum = useArabic ? toArabicNumbers(i.toString()) : i.toString();
+          String footerNum = useArabic ? toArabicNumbers(i.toString()) : i.toString();
 
           // Update Footnote at the bottom
           footNote?.updateDisplayNumber(footerNum);
@@ -120,7 +113,19 @@ class WordUtils {
           // Update Inline Reference
           run.fnDisplayNum = bodyNum;
           run.updateFnDisplayNumber();
-          if (footNote != null) wordPage.fns.add(footNote);
+
+          if (footNote != null) {
+            // تقسيم الحاشية الطويلة: إضافة فقرات الصفحة الحالية فقط
+            if (footNote.pageBreaks.length > 1) {
+              FootNote partial = _getFootnoteForPage(
+                footNote,
+                wordPage.pageIndex,
+              );
+              wordPage.fns.add(partial);
+            } else {
+              wordPage.fns.add(footNote);
+            }
+          }
 
           String openParen = "";
           String closeParen = "";
@@ -152,12 +157,110 @@ class WordUtils {
     }
   }
 
+  /// استخراج جزء الحاشية الخاص بصفحة معينة
+  FootNote _getFootnoteForPage(FootNote original, int pageIndex) {
+    // ترتيب أرقام الصفحات
+    List<int> sortedPages = original.pageBreaks.keys.toList()..sort();
+
+    // البحث عن الصفحة الحالية في الخريطة
+    int? startParaIdx;
+    int? endParaIdx;
+
+    for (int i = 0; i < sortedPages.length; i++) {
+      if (sortedPages[i] == pageIndex) {
+        startParaIdx = original.pageBreaks[sortedPages[i]]!;
+        // نهاية = بداية الصفحة التالية أو نهاية الفقرات
+        if (i + 1 < sortedPages.length) {
+          endParaIdx = original.pageBreaks[sortedPages[i + 1]]!;
+        } else {
+          endParaIdx = original.paragraphs.length;
+        }
+        break;
+      }
+    }
+
+    // إذا لم نجد الصفحة، نرجع الحاشية كاملة (fallback آمن)
+    if (startParaIdx == null || endParaIdx == null) {
+      // ربما الصفحة الحالية هي الأولى (أي التي فيها المرجع)
+      // نرجع فقرات أول صفحة كـ fallback
+      if (sortedPages.isNotEmpty) {
+        startParaIdx = original.pageBreaks[sortedPages.first]!;
+        endParaIdx = sortedPages.length > 1
+            ? original.pageBreaks[sortedPages[1]]!
+            : original.paragraphs.length;
+      } else {
+        return original;
+      }
+    }
+
+    List<Paragraph> partialParagraphs = original.paragraphs.sublist(
+      startParaIdx,
+      endParaIdx,
+    );
+
+    FootNote partial = FootNote(partialParagraphs, original.id);
+    partial.displayNumber = original.displayNumber;
+    return partial;
+  }
+
+  /// إضافة تكملة الحواشي الطويلة للصفحات اللاحقة
+  /// تُستدعى بعد بناء جميع الصفحات
+  void addContinuationFootnotes(List<WordPage> pages) {
+    // جمع كل الحواشي التي تمتد عبر صفحات متعددة
+    for (var entry in wordDocument.docFootNotes.entries) {
+      FootNote fn = entry.value;
+      if (fn.pageBreaks.length <= 1) continue;
+
+      List<int> sortedPages = fn.pageBreaks.keys.toList()..sort();
+
+      // تخطي الصفحة الأولى (تمت معالجتها في addFnToPage)
+      for (int i = 1; i < sortedPages.length; i++) {
+        int targetPage = sortedPages[i];
+
+        // البحث عن الصفحة المستهدفة في القائمة
+        WordPage? targetWordPage;
+        for (var page in pages) {
+          if (page.pageIndex == targetPage) {
+            targetWordPage = page;
+            break;
+          }
+        }
+
+        if (targetWordPage == null) continue;
+
+        // استخراج الفقرات لهذه الصفحة
+        int startIdx = fn.pageBreaks[sortedPages[i]]!;
+        int endIdx = (i + 1 < sortedPages.length)
+            ? fn.pageBreaks[sortedPages[i + 1]]!
+            : fn.paragraphs.length;
+
+        List<Paragraph> continuationParagraphs = fn.paragraphs.sublist(
+          startIdx,
+          endIdx,
+        );
+
+        if (continuationParagraphs.isEmpty) continue;
+
+        // إنشاء حاشية تكملة (بدون رقم — لأنها استكمال)
+        FootNote continuation = FootNote(continuationParagraphs, fn.id);
+        continuation.displayNumber = null; // بدون رقم — تكملة
+
+        targetWordPage.fns.add(continuation);
+      }
+    }
+  }
+
   addPsToPage(
     WordPage wordPage,
     List<XmlElement> pagePs, {
     required int pageNum,
   }) {
-    wordPage.pageIndex = pageNum;
+    // pageNum is 1-based (coming from {{PG:X}} markers).
+    // WordPage.pageIndex must be 0-based because bookmarks/navigation
+    // treat page indices as 0-based internally.
+    int zeroBasedPageIndex = pageNum - 1;
+    if (zeroBasedPageIndex < 0) zeroBasedPageIndex = 0;
+    wordPage.pageIndex = zeroBasedPageIndex;
     for (XmlElement element in pagePs) {
       if (isSectPr(element)) {
         wordDocument.addSectPr(element, currentPageNum: pageNum);
@@ -221,6 +324,7 @@ class WordUtils {
 
     // Get all children of the original paragraph
     var allChildren = para.children.whereType<XmlElement>().toList();
+    final bool isTocRow = para.getAttribute("isSdtRow") == "True";
 
     // Find indices of markers
     List<int> markerChildIndices = [];
@@ -252,7 +356,7 @@ class WordUtils {
       }
     }
 
-    if (hasPreContent) {
+    if (hasPreContent && !isTocRow) {
       // Create Inherited Part: From Start (0) to First Marker (exclusive)
       // The user wants to inject the "Previous Page" marker at the start of this part.
       // We assume the previous page is (markers[0] - 1).
@@ -269,6 +373,10 @@ class WordUtils {
       _injectPageMarkerToPara(inheritedPara, prevPage);
 
       result.add(MapEntry(-1, inheritedPara));
+    } else if (hasPreContent && isTocRow) {
+      debugPrint(
+        "DEBUG TOC SPLIT: Skipping INHERITED pre-content for TOC row; binding content to explicit marker only.",
+      );
     }
 
     // 2. Create Marker Parts (Content associated with each marker)
@@ -355,11 +463,104 @@ class WordUtils {
     }
   }
 
-  // === Refactoring: Pagination Phase 1 (Pre-Processing) ===
-  // تقوم هذه الدالة بتجهيز الفقرات:
-  // 1. كشف الكسور (Splits) ومعالجتها.
-  // 2. التحقق من الكسور الوهمية (Ghost Breaks).
-  // 3. حقن ماركر الصفحة للجزء الثاني من الانقسام لضمان التجميع السلس.
+  /// تقسيم جدول يمتد على عدة صفحات إلى جداول فرعية لكل صفحة.
+  /// يعتمد على {{PG:X}} markers في صفوف الجدول.
+  /// يُرجع null إذا كان الجدول في صفحة واحدة فقط.
+  Map<int, XmlElement>? _splitTableByPageMarkers(
+    XmlElement table,
+    int fallbackPage,
+  ) {
+    var allRows = table.findElements("w:tr").toList();
+    if (allRows.isEmpty) return null;
+
+    // تحديد صفوف الـ header (تتكرر في كل صفحة)
+    List<int> headerRowIndices = [];
+    for (int i = 0; i < allRows.length; i++) {
+      var trPr = allRows[i].getElement("w:trPr");
+      if (trPr != null && trPr.getElement("w:tblHeader") != null) {
+        headerRowIndices.add(i);
+      } else {
+        break; // Headers must be contiguous at the start
+      }
+    }
+
+    // مسح كل الصفوف للبحث عن markers صفحات
+    int currentPage = fallbackPage;
+    Map<int, List<int>> pageRowIndices = {}; // pageNum -> [rowIndices]
+
+    for (int i = 0; i < allRows.length; i++) {
+      // تخطي صفوف الـ header من حيث تعيين الصفحة
+      if (headerRowIndices.contains(i)) continue;
+
+      int? rowPage = _getRowPageNum(allRows[i]);
+      if (rowPage != null) {
+        currentPage = rowPage;
+      }
+
+      pageRowIndices.putIfAbsent(currentPage, () => []);
+      pageRowIndices[currentPage]!.add(i);
+    }
+
+    // إذا كل الصفوف في صفحة واحدة — لا نقسم
+    if (pageRowIndices.length <= 1) return null;
+
+    debugPrint(
+      "TABLE SPLIT: Splitting table with ${allRows.length} rows across ${pageRowIndices.length} pages: ${pageRowIndices.keys.toList()}",
+    );
+
+    // بناء جداول فرعية لكل صفحة
+    var tblPr = table.getElement("w:tblPr");
+    var tblGrid = table.getElement("w:tblGrid");
+    String tblPrXml = tblPr?.toXmlString() ?? "";
+    String tblGridXml = tblGrid?.toXmlString() ?? "";
+    String headerRowsXml = headerRowIndices
+        .map((i) => allRows[i].toXmlString())
+        .join();
+
+    Map<int, XmlElement> result = {};
+    var sortedPages = pageRowIndices.keys.toList()..sort();
+
+    for (int page in sortedPages) {
+      List<int> indices = pageRowIndices[page]!;
+      String dataRowsXml = indices.map((i) => allRows[i].toXmlString()).join();
+
+      // إضافة صفوف الـ header في بداية كل صفحة (إلا الأولى إذا كانت الـ headers أصلاً فيها)
+      String finalHeaderXml = (page == sortedPages.first) ? "" : headerRowsXml;
+
+      try {
+        String tblXml =
+            '<w:tbl xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+            '$tblPrXml$tblGridXml$finalHeaderXml$dataRowsXml</w:tbl>';
+        var doc = XmlDocument.parse(tblXml);
+        result[page] = doc.rootElement;
+      } catch (e) {
+        debugPrint("TABLE SPLIT ERROR: Failed to build sub-table for page $page: $e");
+      }
+    }
+
+    // إضافة صفوف الـ header للصفحة الأولى (هم أصلاً في الجدول الأصلي)
+    // لكن بما أننا نبني الجدول من الصفر، نحتاج إضافتهم
+    if (headerRowIndices.isNotEmpty && sortedPages.isNotEmpty) {
+      int firstPage = sortedPages.first;
+      if (result.containsKey(firstPage)) {
+        // أعد بناء الصفحة الأولى مع الـ headers
+        List<int> indices = pageRowIndices[firstPage]!;
+        String dataRowsXml = indices.map((i) => allRows[i].toXmlString()).join();
+        try {
+          String tblXml =
+              '<w:tbl xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+              '$tblPrXml$tblGridXml$headerRowsXml$dataRowsXml</w:tbl>';
+          var doc = XmlDocument.parse(tblXml);
+          result[firstPage] = doc.rootElement;
+        } catch (e) {
+          debugPrint("TABLE SPLIT ERROR: Failed to rebuild first page table: $e");
+        }
+      }
+    }
+
+    return result.isEmpty ? null : result;
+  }
+
   // === Refactoring: Pagination Phase 5 (Map-Based Approach) ===
   // === تحديث: الآن نعتمد على Python للتعامل مع فواصل الصفحات ===
   // === تحديث 2: Dart يقسم الفقرات التي تحتوي على markers متعددة ===
@@ -389,11 +590,16 @@ class WordUtils {
         }
 
         if (markers.isNotEmpty) {
+          if (markers.length > 1) {
+            debugPrint(
+              "MULTI-MARKER: Found ${markers.length} markers in one paragraph: $markers",
+            );
+          }
           // الفقرة تحتوي على markers (واحد أو أكثر) - نقسمها لضمان فصل المحتوى السابق
           var splitParts = _splitParagraphByMarkers(element);
-          debugPrint(
-            "DEBUG: Split Paragraph into ${splitParts.length} parts. Markers: $markers",
-          );
+          // debugPrint(
+          //   "DEBUG: Split Paragraph into ${splitParts.length} parts. Markers: $markers",
+          // );
 
           for (var part in splitParts) {
             int targetPage = part.key;
@@ -419,8 +625,24 @@ class WordUtils {
           // فقرة عادية بدون markers
           addToPage(currentPage, element);
         }
+      } else if (element.name.local == "tbl") {
+        // جدول: قد يمتد على عدة صفحات — نقسمه حسب markers الصفحات في الصفوف
+        var splitResult = _splitTableByPageMarkers(element, currentPage);
+        if (splitResult != null && splitResult.length > 1) {
+          for (var entry in splitResult.entries) {
+            currentPage = entry.key;
+            addToPage(currentPage, entry.value);
+          }
+        } else {
+          // جدول في صفحة واحدة
+          int? markerPage = _extractPgMarkerFromTable(element);
+          if (markerPage != null) {
+            currentPage = markerPage;
+          }
+          addToPage(currentPage, element);
+        }
       } else {
-        // جدول أو عنصر آخر
+        // عنصر آخر (sectPr, etc.)
         int? markerPage = _extractPgMarker(element);
         if (markerPage != null) {
           currentPage = markerPage;
@@ -710,10 +932,13 @@ class WordUtils {
 }
 
 int? _getRowPageNum(XmlElement row) {
-  var allCells = row.findElements("w:tc").toList();
-  if (allCells.isNotEmpty) {
-    var firstCellText = allCells.first.text;
-    var match = RegExp(r"\{\{PG:(\d+)\}\}").firstMatch(firstCellText);
+  // Search all cells for PG marker (not just first cell)
+  for (var cell in row.findElements("w:tc")) {
+    String cellText = cell
+        .findAllElements("w:t")
+        .map((e) => e.text)
+        .join("");
+    var match = RegExp(r"\{\{PG:(\d+)\}\}").firstMatch(cellText);
     if (match != null) {
       return int.parse(match.group(1)!);
     }

@@ -7,6 +7,8 @@ import 'package:golden_shamela/Styles/TextSyles.dart';
 import '../Controllers/PathController.dart';
 import 'dialogs/file_processing_dialog.dart';
 import 'dialogs/batch_file_processing_dialog.dart';
+import 'dialogs/folder_import_preview_dialog.dart';
+import 'home_page/home_page_book_management.dart';
 
 class BooksDrawer extends StatefulWidget {
   final void Function(File) onBookSelected;
@@ -32,7 +34,9 @@ class _BooksDrawerState extends State<BooksDrawer> {
     if (await dir.exists()) {
       final files = dir.listSync().whereType<File>().where((f) {
         final name = f.path.split(Platform.pathSeparator).last;
-        return name.toLowerCase().endsWith('.docx') && !name.startsWith('~\$');
+        return name.toLowerCase().endsWith('.docx') &&
+            !name.startsWith('~\$') &&
+            !name.startsWith('_temp_');
       }).toList();
       setState(() => bookFiles = files);
     }
@@ -181,30 +185,129 @@ class _BooksDrawerState extends State<BooksDrawer> {
           ),
         ],
       ),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          elevation: 2,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        onPressed: _pickDocxFile,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.add_circle_outline_rounded, color: secondaryColor),
-            const SizedBox(width: 8),
-            Text(
-              'إضافة كتاب جديد',
-              style: normalStyle(color: secondaryColor, fontSize: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primaryColor,
+              foregroundColor: Colors.white,
+              elevation: 2,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-          ],
-        ),
+            onPressed: _pickDocxFile,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.add_circle_outline_rounded,
+                  color: secondaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'إضافة كتب مختارة',
+                  style: normalStyle(color: secondaryColor, fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: primaryColor, width: 1.5),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: _pickFolder,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.folder_open_rounded,
+                  color: primaryColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'استيراد مجلد كامل',
+                  style: normalStyle(color: primaryColor, fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _pickFolder() async {
+    try {
+      String? folderPath = await FilePicker.platform.getDirectoryPath();
+
+      if (folderPath != null) {
+        if (!mounted) return;
+
+        // إظهار مؤشر تحميل أثناء مسح المجلد
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => const Center(
+            child: CircularProgressIndicator(color: primaryColor),
+          ),
+        );
+
+        final List<File> books =
+            await HomePageBookManagement.collectBooksFromFolder(folderPath);
+
+        if (mounted) Navigator.pop(context); // إغلاق مؤشر التحميل
+
+        if (books.isEmpty) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'لم يتم العثور على كتب docx في هذا المجلد',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontFamily: 'jreg'),
+                ),
+                backgroundColor: Colors.redAccent,
+              ),
+            );
+          }
+          return;
+        }
+
+        if (mounted) {
+          final List<String>? selectedPaths = await showDialog<List<String>>(
+            context: context,
+            barrierDismissible: true,
+            builder: (ctx) =>
+                FolderImportPreviewDialog(files: books, folderPath: folderPath),
+          );
+
+          if (selectedPaths != null && selectedPaths.isNotEmpty) {
+            if (mounted) {
+              await showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) =>
+                    BatchFileProcessingDialog(filePaths: selectedPaths),
+              );
+
+              loadBooks();
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking folder: $e');
+    }
   }
 
   Future<void> _pickDocxFile() async {

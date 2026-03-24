@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:golden_shamela/Utils/XmlElementClone.dart';
 import 'package:golden_shamela/wordToHTML/DocumentStyles.dart';
 import 'package:golden_shamela/wordToHTML/MyInt.dart';
@@ -30,6 +31,7 @@ class PPr {
   // Controls whether to force the strut height (ignoring font metrics) or respect natural metrics
   bool forceStrutHeight = true;
   double? paddingRight;
+  double? firstLineIndent;
   String? pStyle;
   int? numId;
   int? paragraphNumber;
@@ -72,6 +74,8 @@ class PPr {
 
   double? spacingBefore;
   double? spacingAfter;
+  @JsonKey(ignore: true)
+  bool spacingAfterExplicit = false;
   double? lineHeight;
 
   PPr fromXml(XmlElement? xmlpPr0, {bool skipNumberingCounter = false}) {
@@ -139,6 +143,7 @@ class PPr {
       // We apply the same correction factor to this default.
       // 10pt * 20 twips/pt * twipsToPx * kArabicLineSpacingFactor
       spacingAfter = 10.0 * 20.0 * twipsToPx * kArabicLineSpacingFactor;
+      spacingAfterExplicit = false;
 
       return;
     }
@@ -169,11 +174,13 @@ class PPr {
     if (afterAuto) {
       // Word uses approximately 10pt (7.5px) for auto-spacing
       spacingAfter = 10.0 * twipsToPx * 20 * verticalScaleCorrection; // ~17.3px
+      spacingAfterExplicit = true;
     } else if (after != null) {
       spacingAfter = double.tryParse(after);
       if (spacingAfter != null) {
         spacingAfter = spacingAfter! * twipsToPx * verticalScaleCorrection;
       }
+      spacingAfterExplicit = true;
     }
 
     // Line spacing - interpretation depends on w:lineRule
@@ -282,15 +289,17 @@ class PPr {
     }
   }
 
+  bool get isRtl => rtl == true || bidi == true;
+
   String getAlignH() {
     // print("style:2"+(textAlign??""));
 
     if (textAlign == null)
       return "";
-    else if (textAlign == "both" && rtl != false)
+    else if (textAlign == "both" && isRtl)
       return '''text-align: justify;
     text-justify: inter-word; direction: rtl;''';
-    else if (textAlign!.contains("Kashida") && rtl != false) {
+    else if (textAlign!.contains("Kashida") && isRtl) {
       return '''text-align: justify;
     text-justify: inter-word; direction: rtl;''';
     }
@@ -299,27 +308,36 @@ class PPr {
   }
 
   String getRtlH() {
-    return rtl == true ? "direction: rtl;" : "";
+    return isRtl ? "direction: rtl;" : "";
   }
 
   TextDirection? getTextDirectionW() {
-    return rtl == true ? TextDirection.rtl : null;
+    return isRtl ? TextDirection.rtl : null;
   }
 
   void fixTextAlign() {
-    if (rtl == true && textAlign == null)
+    if (isRtl && textAlign == null)
       textAlign = "right";
-    else if (rtl == true && textAlign == "right")
+    else if (isRtl && textAlign == "right")
       textAlign = "left";
   }
 
   String? getPadding() {
-    String? rightTwips = xmlpPr
-        ?.getElement("w:ind")
-        ?.getAttribute(rtl != false ? "w:left" : "w:right");
-    String? leftTwips = xmlpPr
-        ?.getElement("w:ind")
-        ?.getAttribute(rtl != false ? "w:right" : "w:left");
+    XmlElement? indElement = xmlpPr?.getElement("w:ind");
+    // Per OOXML spec: w:start/w:end (logical, direction-aware) take precedence
+    // over w:left/w:right. Both represent leading/trailing edge of text flow.
+    // For RTL: leading edge = physical right; trailing edge = physical left.
+    // For LTR: leading edge = physical left; trailing edge = physical right.
+    String? rightTwips = rtl != false
+        ? (indElement?.getAttribute("w:start") ??
+            indElement?.getAttribute("w:left"))
+        : (indElement?.getAttribute("w:end") ??
+            indElement?.getAttribute("w:right"));
+    String? leftTwips = rtl != false
+        ? (indElement?.getAttribute("w:end") ??
+            indElement?.getAttribute("w:right"))
+        : (indElement?.getAttribute("w:start") ??
+            indElement?.getAttribute("w:left"));
     if (paddingLeft == null)
       paddingLeft = leftTwips != null
           ? double.parse(leftTwips) * twipsToPx
@@ -329,18 +347,13 @@ class PPr {
           ? double.parse(rightTwips) * twipsToPx
           : null;
 
-    // تطبيق firstLine بشكل صحيح - حتى لو لم يكن هناك padding موجود مسبقاً
+    // تطبيق firstLine كمسافة بادئة للسطر الأول فقط (وليس كل الفقرة)
+    // يتم تطبيقها كـ WidgetSpan في Paragraph.getPSpans()
     String? firstLine = xmlpPr
         ?.getElement("w:ind")
         ?.getAttribute("w:firstLine");
     if (firstLine != null) {
-      double firstLinePx = double.parse(firstLine) * twipsToPx;
-      // في RTL، المسافة البادئة للسطر الأول تكون من اليمين
-      if (rtl != false) {
-        paddingRight = (paddingRight ?? 0) + firstLinePx;
-      } else {
-        paddingLeft = (paddingLeft ?? 0) + firstLinePx;
-      }
+      firstLineIndent = double.parse(firstLine) * twipsToPx;
     }
 
     Level? level = getNumberingLevel();
@@ -365,15 +378,15 @@ class PPr {
 
   getPStyle() {
     pStyle = xmlpPr?.getElement("w:pStyle")?.getAttribute("w:val");
-    if (pStyle == null) return;
     WordDocument? wordDocument = parent.parent.parent;
+
+    // In Word, paragraphs without an explicit w:pStyle inherit from the
+    // default paragraph style (w:type="paragraph" w:default="1", typically "Normal").
+    // This is critical for correct font size inheritance.
+    pStyle ??= wordDocument.defaultParagraphStyleId;
+
+    if (pStyle == null) return;
     XmlElement? style = getDocumentStyle(pStyle!, wordDocument);
-    // if (style != null) {
-    // print("--- Found Style XML for style '$pStyle' ---");
-    // print(style.toXmlString(pretty: true));
-    // print("--- End Style XML ---");
-    // }
-    // print("pStyle ${style?.toXmlString()}");
     if (style == null) return;
     XmlElement? pStyleXml = style.getElement("w:pPr");
     XmlElement? rStyleXml = style.getElement("w:rPr");
@@ -487,6 +500,23 @@ class PPr {
       textStyle = TextStyle(fontFamily: level.fontFamily);
     }
 
+    Color? numberColor = _parseWordColor(level.color);
+    Paint? backgroundPaint = _parseHighlight(level.highlightColor);
+
+    // إذا لم يكن لـ Level لون صريح، نرث من خصائص الفقرة (pPr > rPr)
+    if (numberColor == null && xmlprPr != null) {
+      RPr paraRPr = RPr(getEmptyRun()).fromXml(xmlprPr);
+      numberColor = _parseWordColor(paraRPr.color);
+      backgroundPaint ??= _parseHighlight(paraRPr.highlightColor);
+    }
+
+    if (textStyle != null || numberColor != null || backgroundPaint != null) {
+      textStyle = (textStyle ?? const TextStyle()).copyWith(
+        color: numberColor,
+        background: backgroundPaint,
+      );
+    }
+
     return WidgetSpan(
       child: Padding(
         padding: EdgeInsets.only(left: level.indentHanging.twpsToPx()),
@@ -584,4 +614,53 @@ XmlElement? mergePPr(
     xmlpPr?.attributes.toList().clone(),
     currentElementsMap.values,
   );
+}
+
+// ---------------- Numbering color helpers (top-level) ----------------
+
+const Map<String, String> _numberingWordColorMap = {
+  "black": "000000",
+  "blue": "0000FF",
+  "cyan": "00FFFF",
+  "green": "008000",
+  "magenta": "FF00FF",
+  "red": "FF0000",
+  "yellow": "FFFF00",
+  "white": "FFFFFF",
+  "darkBlue": "00008B",
+  "darkCyan": "008B8B",
+  "darkGreen": "006400",
+  "darkMagenta": "8B008B",
+  "darkRed": "8B0000",
+  "darkYellow": "808000",
+  "darkGray": "A9A9A9",
+  "lightGray": "D3D3D3",
+};
+
+String? _normalizeNumberingColor(String? color) {
+  if (color == null) return null;
+  if (_numberingWordColorMap.containsKey(color)) {
+    return _numberingWordColorMap[color];
+  }
+  return color.replaceAll("#", "");
+}
+
+Color? _parseWordColor(String? wordColor) {
+  final normalized = _normalizeNumberingColor(wordColor);
+  if (normalized == null || normalized.isEmpty) return null;
+  try {
+    return Color(int.parse('0xFF$normalized'));
+  } catch (_) {
+    return null;
+  }
+}
+
+Paint? _parseHighlight(String? highlight) {
+  final normalized = _normalizeNumberingColor(highlight);
+  if (normalized == null || normalized.isEmpty) return null;
+  try {
+    return Paint()..color = Color(int.parse('0xFF$normalized'));
+  } catch (_) {
+    return null;
+  }
 }

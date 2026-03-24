@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'dart:ui'; // For FontWeight
 import 'package:archive/archive.dart';
 
@@ -27,6 +28,14 @@ class WordDocument {
   String title = "BOOK";
   @JsonKey(ignore: true)
   List<WordPage> _loadedPages = []; // Cache for loaded pages
+
+  @JsonKey(ignore: true)
+  ValueNotifier<bool> isLoading = ValueNotifier(false);
+  @JsonKey(ignore: true)
+  ValueNotifier<double?> loadingProgress = ValueNotifier(null);
+  @JsonKey(ignore: true)
+  ValueNotifier<String?> loadingMessage = ValueNotifier(null);
+
   @JsonKey(ignore: true)
   Archive? archive; // The source archive for this document
 
@@ -41,6 +50,7 @@ class WordDocument {
   String? majorFontCS, minorFontCS;
   String autoDarkColor = "000000";
   String autoLightColor = "FFFFFF";
+  Map<String, String> themeColors = {};
   Map<int, AbstractNum> abstractNumMap = {};
   @JsonKey(fromJson: _intKeyMapFromJsonNum, toJson: _intKeyMapToJsonNum)
   Map<int, Num> numsMap = {};
@@ -62,8 +72,34 @@ class WordDocument {
   Map<String, XmlElement> documentStyles = {};
   bool? evenAndOddHeaders; // Different headers for even and odd pages
   bool withDiacritics = true;
+  bool useArabicNumerals = true;
   List<IndexItem> index = [];
   String? selectedIndexItem;
+
+  Map<String, String> extractedFontPaths = {};
+
+  /// Cached default paragraph style ID (w:type="paragraph" w:default="1")
+  /// Lazily computed from documentStyles
+  @JsonKey(ignore: true)
+  String? _defaultParagraphStyleId;
+  @JsonKey(ignore: true)
+  bool _defaultParagraphStyleIdSearched = false;
+
+  /// Returns the styleId of the default paragraph style (typically "Normal").
+  /// In Word, paragraphs without an explicit w:pStyle inherit from this style.
+  String? get defaultParagraphStyleId {
+    if (!_defaultParagraphStyleIdSearched) {
+      _defaultParagraphStyleIdSearched = true;
+      for (var entry in documentStyles.entries) {
+        if (entry.value.getAttribute('w:type') == 'paragraph' &&
+            entry.value.getAttribute('w:default') == '1') {
+          _defaultParagraphStyleId = entry.key;
+          break;
+        }
+      }
+    }
+    return _defaultParagraphStyleId;
+  }
 
   WordDocument() : _loadedPages = [], pageFilePaths = [];
 
@@ -71,6 +107,13 @@ class WordDocument {
     _loadedPages = pages;
     // Also update pageFilePaths to reflect the loaded pages
     pageFilePaths = List.generate(pages.length, (index) => '$index.json');
+  }
+
+  WordPage? getLoadedPageIfAvailable(int index) {
+    if (index < 0 || index >= _loadedPages.length) return null;
+    final page = _loadedPages[index];
+    if (page.ps.isEmpty) return null;
+    return page;
   }
 
   void initLoadedPages() {
@@ -132,6 +175,13 @@ class WordDocument {
     wordDocument.numsMap = (json['numsMap'] as Map<String, dynamic>).map(
       (k, e) => MapEntry(int.parse(k), Num.fromMap(e as Map<String, dynamic>)),
     );
+
+    if (json['extractedFontPaths'] != null) {
+      wordDocument.extractedFontPaths = Map<String, String>.from(
+        json['extractedFontPaths'] as Map,
+      );
+    }
+
     return wordDocument;
   }
 
@@ -240,6 +290,49 @@ class WordDocument {
     _loadedPages[index] = loadedPage;
 
     return loadedPage;
+  }
+
+  static const int MAX_CACHED_PAGES = 50;
+
+  void prefetchPages(int currentPage) {
+    if (_loadedPages.isEmpty) return;
+
+    // Evict old pages to free memory
+    _evictOldPages(currentPage);
+
+    // Prefetch next and previous 3 pages
+    for (int i = currentPage - 2; i <= currentPage + 3; i++) {
+      if (i >= 0 && i < pageFilePaths.length) {
+        if (_loadedPages[i].ps.isEmpty) {
+          getPage(i);
+        }
+      }
+    }
+  }
+
+  void _evictOldPages(int currentPage) {
+    if (_loadedPages.isEmpty) return;
+
+    int loadedCount = 0;
+    List<int> loadedIndexes = [];
+    for (int i = 0; i < _loadedPages.length; i++) {
+      if (_loadedPages[i].ps.isNotEmpty) {
+        loadedCount++;
+        loadedIndexes.add(i);
+      }
+    }
+
+    if (loadedCount <= MAX_CACHED_PAGES) return;
+
+    loadedIndexes.sort(
+      (a, b) => (b - currentPage).abs().compareTo((a - currentPage).abs()),
+    );
+
+    while (loadedCount > MAX_CACHED_PAGES && loadedIndexes.isNotEmpty) {
+      int indexToRemove = loadedIndexes.removeAt(0);
+      _loadedPages[indexToRemove] = WordPage.empty();
+      loadedCount--;
+    }
   }
 
   // This method needs to be re-evaluated based on how UI consumes pages
@@ -370,7 +463,12 @@ String getFixedFontName(String font) {
   return fixed;
 }
 
-List<String> problemFontsList = [/*"Tholoth Rounded", "AL-Qairwan"*/];
+List<String> problemFontsList = [
+  "Tholoth Rounded",
+  "AL-Qairwan",
+  "Hesham Gornata", // حروف مقطعة
+  "Shurooq 03",
+];
 
 bool isProblemFont(String font) {
   return problemFontsList.contains(font);

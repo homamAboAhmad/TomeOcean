@@ -8,21 +8,47 @@ part 'FootNote.g.dart';
 
 @JsonSerializable(explicitToJson: true, constructor: 'empty')
 class FootNote {
-  Paragraph p;
+  List<Paragraph> paragraphs;
   String id;
   String? displayNumber;
 
-  FootNote(this.p, this.id);
+  /// خريطة تقسيم الحواشي عبر الصفحات: {رقم الصفحة: فهرس أول فقرة في تلك الصفحة}
+  /// تُملأ من bookmarks المحقونة بواسطة pageRender.py (ShamelaFN_{index}_P{page})
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  Map<int, int> pageBreaks = {};
 
-  FootNote.empty() : p = Paragraph.empty(), id = '';
+  FootNote(this.paragraphs, this.id);
+
+  FootNote.empty() : paragraphs = [], id = '';
+
+  /// للتوافق العكسي — يُرجع أول فقرة
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  Paragraph get p =>
+      paragraphs.isNotEmpty ? paragraphs.first : Paragraph.empty();
+
+  /// نص جميع فقرات الحاشية
+  String get text => paragraphs.map((p) => p.text).join('\n');
 
   factory FootNote.fromJson(Map<String, dynamic> json) =>
       _$FootNoteFromJson(json);
   Map<String, dynamic> toJson() => _$FootNoteToJson(this);
 
   static FootNote fromMap(Map<String, dynamic> json, WordPage parent) {
-    final footNote = _$FootNoteFromJson(json);
-    footNote.p = Paragraph.fromMap(json['p'] as Map<String, dynamic>, parent);
+    final footNote = FootNote.empty();
+    footNote.id = json['id'] as String;
+    footNote.displayNumber = json['displayNumber'] as String?;
+
+    // التوافق العكسي: الكاش القديم يحتوي على 'p' (فقرة واحدة)
+    if (json.containsKey('paragraphs')) {
+      footNote.paragraphs = (json['paragraphs'] as List<dynamic>)
+          .map((e) => Paragraph.fromMap(e as Map<String, dynamic>, parent))
+          .toList();
+    } else if (json.containsKey('p')) {
+      footNote.paragraphs = [
+        Paragraph.fromMap(json['p'] as Map<String, dynamic>, parent),
+      ];
+    }
+
     return footNote;
   }
 

@@ -2,6 +2,9 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
+import '../Models/WordDocument.dart';
+import 'RPr.dart';
+
 part 'abstractNum.g.dart';
 
 @JsonSerializable(explicitToJson: true)
@@ -26,14 +29,14 @@ class AbstractNum {
   }
 
   // ميثود لتحويل عنصر XML إلى كائن Dart من نوع AbstractNum
-  factory AbstractNum.fromXml(XmlElement xml) {
+  factory AbstractNum.fromXml(XmlElement xml, {WordDocument? wordDocument}) {
     // استخراج معرف الترقيم من السمة w:abstractNumId
     final abstractNumId = int.parse(xml.getAttribute('w:abstractNumId') ?? '0');
     // استخراج مستويات القائمة من عناصر w:lvl
 
     Map<int, Level> levelsMap = {};
     xml.findElements('w:lvl').forEach((lvlXml) {
-      Level level = Level.fromXml(lvlXml);
+      Level level = Level.fromXml(lvlXml, wordDocument: wordDocument);
       levelsMap[level.ilvl] = level;
     });
     // إنشاء كائن AbstractNum باستخدام المعرف وقائمة المستويات
@@ -56,6 +59,8 @@ class Level {
   final int indentLeft; // المسافة البادئة اليسرى للمستوى
   final int indentHanging; // المسافة المعلقة للمستوى
   final String? fontFamily; // خط الرمز المخصص للترقيم
+  final String? color; // لون رقم الترقيم
+  final String? highlightColor; // خلفية رقم الترقيم
 
   // مُنشئ الكلاس الذي يأخذ جميع الخصائص كمدخلات
   Level({
@@ -67,51 +72,71 @@ class Level {
     required this.indentLeft,
     required this.indentHanging,
     this.fontFamily,
+    this.color,
+    this.highlightColor,
   });
 
-  Level.empty() : ilvl = 0, startVal = 0, numFmt = '', lvlText = '', lvlJc = '', indentLeft = 0, indentHanging = 0, fontFamily = null;
+  Level.empty()
+      : ilvl = 0,
+        startVal = 0,
+        numFmt = '',
+        lvlText = '',
+        lvlJc = '',
+        indentLeft = 0,
+        indentHanging = 0,
+        fontFamily = null,
+        color = null,
+        highlightColor = null;
 
   // Override fromJson/toJson لمعالجة fontFamily يدوياً
   factory Level.fromJson(Map<String, dynamic> json) {
-    final level = _$LevelFromJson(json);
-    // إضافة fontFamily يدوياً
     return Level(
-      ilvl: level.ilvl,
-      startVal: level.startVal,
-      numFmt: level.numFmt,
-      lvlText: level.lvlText,
-      lvlJc: level.lvlJc,
-      indentLeft: level.indentLeft,
-      indentHanging: level.indentHanging,
+      ilvl: (json['ilvl'] as num).toInt(),
+      startVal: (json['startVal'] as num).toInt(),
+      numFmt: json['numFmt'] as String,
+      lvlText: json['lvlText'] as String,
+      lvlJc: json['lvlJc'] as String,
+      indentLeft: (json['indentLeft'] as num).toInt(),
+      indentHanging: (json['indentHanging'] as num).toInt(),
       fontFamily: json['fontFamily'] as String?,
+      color: json['color'] as String?,
+      highlightColor: json['highlightColor'] as String?,
     );
   }
   
   Map<String, dynamic> toJson() {
-    final json = _$LevelToJson(this);
-    if (fontFamily != null) {
-      json['fontFamily'] = fontFamily;
-    }
+    final json = <String, dynamic>{
+      'ilvl': ilvl,
+      'startVal': startVal,
+      'numFmt': numFmt,
+      'lvlText': lvlText,
+      'lvlJc': lvlJc,
+      'indentLeft': indentLeft,
+      'indentHanging': indentHanging,
+    };
+    if (fontFamily != null) json['fontFamily'] = fontFamily;
+    if (color != null) json['color'] = color;
+    if (highlightColor != null) json['highlightColor'] = highlightColor;
     return json;
   }
 
   static Level fromMap(Map<String, dynamic> json) {
-    final level = _$LevelFromJson(json);
-    // إضافة fontFamily يدوياً
     return Level(
-      ilvl: level.ilvl,
-      startVal: level.startVal,
-      numFmt: level.numFmt,
-      lvlText: level.lvlText,
-      lvlJc: level.lvlJc,
-      indentLeft: level.indentLeft,
-      indentHanging: level.indentHanging,
+      ilvl: (json['ilvl'] as num).toInt(),
+      startVal: (json['startVal'] as num).toInt(),
+      numFmt: json['numFmt'] as String,
+      lvlText: json['lvlText'] as String,
+      lvlJc: json['lvlJc'] as String,
+      indentLeft: (json['indentLeft'] as num).toInt(),
+      indentHanging: (json['indentHanging'] as num).toInt(),
       fontFamily: json['fontFamily'] as String?,
+      color: json['color'] as String?,
+      highlightColor: json['highlightColor'] as String?,
     );
   }
 
   // ميثود لتحويل عنصر XML إلى كائن Dart من نوع Level
-  factory Level.fromXml(XmlElement xml) {
+  factory Level.fromXml(XmlElement xml, {WordDocument? wordDocument}) {
     // استخراج قيمة مستوى القائمة من السمة w:ilvl
     final ilvl = int.parse(xml.getAttribute('w:ilvl') ?? '0');
 
@@ -141,8 +166,10 @@ class Level {
             ?.getAttribute('w:hanging') ??
         '0');
     
-    // استخراج خط الرمز من w:rPr/w:rFonts
+    // استخراج خصائص النص (الخط/الألوان) من w:rPr
     String? fontFamily;
+    String? color;
+    String? highlightColor;
     final rPr = xml.getElement("w:rPr");
     if (rPr != null) {
       final rFonts = rPr.getElement("w:rFonts");
@@ -151,6 +178,43 @@ class Level {
         fontFamily = rFonts.getAttribute("w:hAnsi") ?? 
                      rFonts.getAttribute("w:ascii") ?? 
                      rFonts.getAttribute("w:cs");
+      }
+
+      // حل لون التيمة أولاً، ثم الـ fallback على w:val
+      final colorElem = rPr.getElement("w:color");
+      color = colorElem?.getAttribute("w:val");
+      if (wordDocument != null && colorElem != null) {
+        String? themeColorName = colorElem.getAttribute("w:themeColor");
+        if (themeColorName != null) {
+          String? resolved = resolveThemeColor(
+            wordDocument.themeColors,
+            themeColorName,
+            colorElem.getAttribute("w:themeTint"),
+            colorElem.getAttribute("w:themeShade"),
+          );
+          if (resolved != null) color = resolved;
+        }
+      }
+
+      highlightColor = rPr.getElement("w:highlight")?.getAttribute("w:val");
+      // حل لون التيمة للخلفية
+      if (highlightColor == null) {
+        final shdElem = rPr.getElement("w:shd");
+        if (shdElem != null) {
+          if (wordDocument != null) {
+            String? themeFill = shdElem.getAttribute("w:themeFill");
+            if (themeFill != null) {
+              String? resolved = resolveThemeColor(
+                wordDocument.themeColors,
+                themeFill,
+                shdElem.getAttribute("w:themeFillTint"),
+                shdElem.getAttribute("w:themeFillShade"),
+              );
+              if (resolved != null) highlightColor = resolved;
+            }
+          }
+          highlightColor ??= shdElem.getAttribute("w:fill");
+        }
       }
     }
     
@@ -164,6 +228,8 @@ class Level {
       indentLeft: indentLeft,
       indentHanging: indentHanging,
       fontFamily: fontFamily,
+      color: color,
+      highlightColor: highlightColor,
     );
   }
 }

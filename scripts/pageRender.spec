@@ -5,7 +5,7 @@ a = Analysis(
     ['pageRender.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('shamela_helper.dotm', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

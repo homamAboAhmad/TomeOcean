@@ -50,7 +50,7 @@ class WindowManagerHelper {
 
     await windowManager.ensureInitialized();
     const windowOptions = WindowOptions(
-      size: Size(1000, 720),
+      size: Size(1400, 820),
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,

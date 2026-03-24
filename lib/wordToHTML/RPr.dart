@@ -115,6 +115,7 @@ class RPr {
   String? uColor;
   String? highlightColor;
   double? fontSize;
+  double? spacing;
   bool? b;
   bool? i;
   bool? u;
@@ -186,6 +187,7 @@ class RPr {
     highlightColor = getHLColor();
     if (highlightColor == null) highlightColor = getShdColor();
     fontSize = getFontSize();
+    spacing = getSpacing();
     getFonts();
     strike = hasStrike();
     vertAlign = getVerticalAlign();
@@ -239,10 +241,20 @@ class RPr {
       background: hlColor, // لون خلفية النص
       fontSize: effectiveFontSize,
       fontFamily: font != null ? normalizeFontFamily(font!) : null,
-      letterSpacing:
-          0, // مهم جداً: منع Material 3 من إضافة تباعد يؤثر على عرض السطر
+      fontFamilyFallback: const ['Traditional Arabic'],
+      letterSpacing: spacing ?? 0,
       // height is set by paragraph's w:spacing, not here
     );
+  }
+
+  double? getSpacing() {
+    final spacingVal = rPr?.getElement("w:spacing")?.getAttribute("w:val");
+    if (spacingVal == null) return null;
+
+    final twips = double.tryParse(spacingVal);
+    if (twips == null) return null;
+
+    return twips * (96.0 / 1440.0);
   }
 
   String toHTML() {
@@ -392,13 +404,13 @@ class RPr {
     XmlElement? rFonts = rPr?.getElement("w:rFonts");
     String? cs = rFonts?.getAttribute("w:cs");
 
-    // إذا كان w:cs موجوداً، نستخدمه
-    if (cs != null && cs.isNotEmpty) {
+    // إذا كان w:cs موجوداً وليس خطاً مشكلاً، نستخدمه
+    if (cs != null && cs.isNotEmpty && !isProblemFont(cs)) {
       // debugPrint("DEBUG_FONT: getArFont found w:cs='$cs'");
       return cs;
     }
 
-    // إذا لم يكن w:cs موجوداً، نبحث عن w:hAnsi أو w:ascii
+    // إذا كان w:cs مشكلاً أو غير موجود، نبحث عن w:hAnsi أو w:ascii
     String? hAnsi = rFonts?.getAttribute("w:hAnsi");
     if (hAnsi != null && hAnsi.isNotEmpty) return hAnsi;
 

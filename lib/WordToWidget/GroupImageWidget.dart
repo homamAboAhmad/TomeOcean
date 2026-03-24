@@ -16,7 +16,7 @@ class GroupImageWidget extends StatelessWidget {
     List<Widget> children = [];
     for (var childImg in imageData.groupImages) {
       // Position each child within the group using its posX/posY
-      Widget childWidget = getImageWidget(childImg);
+      Widget childWidget = getImageWidget(childImg, innerOnly: true);
 
       if (childImg.posX != 0 || childImg.posY != 0) {
         childWidget = Positioned(

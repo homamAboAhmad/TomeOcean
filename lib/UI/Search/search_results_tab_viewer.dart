@@ -5,7 +5,7 @@ import 'package:golden_shamela/UI/Search/helpers/search_highlighting_helper.dart
 import 'package:golden_shamela/UI/Search/widgets/no_results_widget.dart';
 
 /// Widget to display search results in a tab
-class SearchResultsTabViewer extends StatelessWidget {
+class SearchResultsTabViewer extends StatefulWidget {
   final List<Map<String, dynamic>> results;
   final int totalCount;
   final Function(String, int) onResultTapped;
@@ -24,18 +24,69 @@ class SearchResultsTabViewer extends StatelessWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final highlightingHelper = SearchHighlightingHelper(
-      morphologicalSearch: morphologicalSearch,
+  State<SearchResultsTabViewer> createState() => _SearchResultsTabViewerState();
+}
+
+class _SearchResultsTabViewerState extends State<SearchResultsTabViewer> {
+  late SearchHighlightingHelper _highlightingHelper;
+  final Map<int, Widget> _snippetCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _highlightingHelper = SearchHighlightingHelper(
+      morphologicalSearch: widget.morphologicalSearch,
+    );
+  }
+
+  @override
+  void didUpdateWidget(SearchResultsTabViewer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchQueries != widget.searchQueries ||
+        oldWidget.morphologicalSearch != widget.morphologicalSearch) {
+      _snippetCache.clear();
+      _highlightingHelper = SearchHighlightingHelper(
+        morphologicalSearch: widget.morphologicalSearch,
+      );
+    }
+  }
+
+  static final RegExp _pgMarkerRegex = RegExp(r'\{\{PG:\d+\}\}');
+
+  Widget _buildSnippet(int index, String content) {
+    if (_snippetCache.containsKey(index)) return _snippetCache[index]!;
+
+    final cleaned = content.replaceAll(_pgMarkerRegex, '');
+    final fallback = Text(
+      cleaned.length > 120 ? '${cleaned.substring(0, 120)}...' : cleaned,
+      style: smallStyle(),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
     );
 
+    return FutureBuilder<Widget>(
+      future: _highlightingHelper.extractSnippetWithHighlight(
+        cleaned,
+        widget.searchQueries,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          _snippetCache[index] = snapshot.data!;
+          return snapshot.data!;
+        }
+        return fallback;
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: bgColor,
         body: Column(
           children: [
-            // Header with total count
             Container(
               padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -46,31 +97,29 @@ class SearchResultsTabViewer extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'النتائج: $totalCount',
+                    'النتائج: ${widget.results.length}',
                     style: mediumStyle(fontSize: 18),
                   ),
-                  if (searchQueries.isNotEmpty)
+                  if (widget.searchQueries.isNotEmpty)
                     Text(
-                      'البحث عن: ${searchQueries.join(" | ")}',
+                      'البحث عن: ${widget.searchQueries.join(" | ")}',
                       style: smallStyle(color: Colors.grey.shade700),
                     ),
                 ],
               ),
             ),
-            // Results list or No Results widget
             Expanded(
-              child: results.isEmpty
+              child: widget.results.isEmpty
                   ? NoResultsWidget(
-                      searchQueries: searchQueries,
-                      onNewSearch: onNewSearch,
+                      searchQueries: widget.searchQueries,
+                      onNewSearch: widget.onNewSearch,
                     )
                   : ListView.builder(
                       padding: EdgeInsets.all(8),
-                      itemCount: results.length,
+                      itemCount: widget.results.length,
                       itemBuilder: (context, index) {
-                        // Safely convert result to Map<String, dynamic>
                         final resultMap = Map<String, dynamic>.from(
-                          results[index],
+                          widget.results[index],
                         );
                         final content = resultMap['content'] as String? ?? '';
                         final bookName =
@@ -93,43 +142,14 @@ class SearchResultsTabViewer extends StatelessWidget {
                             ),
                             subtitle: Padding(
                               padding: EdgeInsets.only(top: 4),
-                              child: FutureBuilder<Widget>(
-                                future: highlightingHelper
-                                    .extractSnippetWithHighlight(
-                                      content,
-                                      searchQueries,
-                                    ),
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasData) {
-                                    return snapshot.data!;
-                                  } else if (snapshot.hasError) {
-                                    return Text(
-                                      content.length > 100
-                                          ? '${content.substring(0, 100)}...'
-                                          : content,
-                                      style: smallStyle(),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    );
-                                  } else {
-                                    return Text(
-                                      content.length > 100
-                                          ? '${content.substring(0, 100)}...'
-                                          : content,
-                                      style: smallStyle(),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    );
-                                  }
-                                },
-                              ),
+                              child: _buildSnippet(index, content),
                             ),
                             leading: Text(
                               'ص ${pageNumber + 1}',
                               style: normalStyle(color: primaryColor),
                             ),
                             onTap: () {
-                              onResultTapped(bookPath, pageNumber);
+                              widget.onResultTapped(bookPath, pageNumber);
                             },
                           ),
                         );

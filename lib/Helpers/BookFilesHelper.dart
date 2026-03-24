@@ -8,10 +8,30 @@ loadBooks() async {
   if (await dir.exists()) {
     final files = dir.listSync().whereType<File>().where((f) {
       final name = p.basename(f.path);
-      return !name.startsWith('~\$') && name.toLowerCase().endsWith('.docx');
+      return !name.startsWith('~\$') &&
+          !name.startsWith('_temp_') &&
+          name.toLowerCase().endsWith('.docx');
     }).toList();
 
     return files;
+  }
+}
+
+/// يحذف أي ملفات مؤقتة (_temp_*.docx) متبقية في مجلد المكتبة
+Future<void> cleanTempBooks() async {
+  final dir = Directory(BOOKS_FOLDER_PATH);
+  if (!await dir.exists()) return;
+
+  await for (final entity in dir.list()) {
+    if (entity is! File) continue;
+    final name = p.basename(entity.path);
+    if (name.startsWith('_temp_') && name.toLowerCase().endsWith('.docx')) {
+      try {
+        await entity.delete();
+      } catch (_) {
+        // تجاهل أي فشل في الحذف لكي لا يوقف التشغيل
+      }
+    }
   }
 }
 

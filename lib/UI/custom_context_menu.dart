@@ -11,41 +11,43 @@ class CustomContextMenu extends StatelessWidget {
     required this.bookTitle,
     required this.pageNumber,
     required this.contextMenuAnchors,
-    this.selectedText,
   });
 
   final SelectableRegionState state;
   final String bookTitle;
   final int pageNumber;
   final TextSelectionToolbarAnchors contextMenuAnchors;
-  final String? selectedText;
 
   void _handleCopy() {
     state.copySelection(SelectionChangedCause.toolbar);
   }
 
-  void _handleCopyReference() {
-    final String? text = selectedText;
+  void _handleCopyReference() async {
+    state.copySelection(SelectionChangedCause.toolbar);
+    await Future.delayed(const Duration(milliseconds: 50));
+    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = clipboardData?.text;
     if (text != null && text.isNotEmpty) {
-      final String textToCopy = '"$text"\n(${bookTitle}, ${pageNumber})';
-      Clipboard.setData(ClipboardData(text: textToCopy));
-      state.hideToolbar();
+      final formatted = '«$text» [$bookTitle (ص $pageNumber)]';
+      await Clipboard.setData(ClipboardData(text: formatted));
     }
+    state.hideToolbar();
   }
 
   void _handleGoogleSearch() async {
-    final String? text = selectedText;
+    state.copySelection(SelectionChangedCause.toolbar);
+    await Future.delayed(const Duration(milliseconds: 50));
+    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = clipboardData?.text;
     if (text != null && text.isNotEmpty) {
       final Uri googleUrl = Uri.parse(
         'https://www.google.com/search?q=${Uri.encodeComponent(text)}',
       );
       if (await canLaunchUrl(googleUrl)) {
         await launchUrl(googleUrl);
-      } else {
-        debugPrint('Could not launch $googleUrl');
       }
-      state.hideToolbar();
     }
+    state.hideToolbar();
   }
 
   void _handleSelectAll() {
@@ -69,8 +71,6 @@ class CustomContextMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool canCopy = selectedText != null && selectedText!.isNotEmpty;
-
     return Stack(
       children: [
         Positioned(
@@ -94,24 +94,14 @@ class CustomContextMenu extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMenuItem(
-                    label: 'نسخ',
-                    onPressed: canCopy ? _handleCopy : null,
-                  ),
+                  _buildMenuItem(label: 'نسخ', onPressed: _handleCopy),
                   _buildMenuItem(
                     label: 'نسخ مع المرجع',
-                    onPressed: canCopy ? _handleCopyReference : null,
-                  ),
-                  _buildMenuItem(
-                    label: 'بحث',
-                    onPressed: () {
-                      debugPrint("Search action triggered");
-                      state.hideToolbar();
-                    },
+                    onPressed: _handleCopyReference,
                   ),
                   _buildMenuItem(
                     label: 'بحث في جوجل',
-                    onPressed: canCopy ? _handleGoogleSearch : null,
+                    onPressed: _handleGoogleSearch,
                   ),
                   _buildMenuItem(
                     label: 'تحديد الكل',

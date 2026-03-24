@@ -106,7 +106,7 @@ class DatabaseQueries {
       }
 
       return false;
-    } catch (e, stackTrace) {
+    } catch (e) {
       return true;
     }
   }
@@ -386,33 +386,16 @@ class DatabaseQueries {
 
     whereArgs.add(fullQuery);
 
-    // Initial count
-    final countSql = useSectionFiltering
-        ? 'SELECT COUNT(*) as total FROM (SELECT DISTINCT book_path, page_number FROM $targetTable $whereClause)'
-        : 'SELECT COUNT(*) as total FROM $targetTable $whereClause';
-
-    int totalCount = 0;
-    try {
-      final countResult = await database.rawQuery(countSql, whereArgs);
-      totalCount = Sqflite.firstIntValue(countResult) ?? 0;
-    } catch (e) {
-      print('Error counting results: $e');
-      yield [];
-      return;
-    }
-
-    if (totalCount == 0) {
-      yield [];
-      return;
-    }
-
-    // Stream pages
+    // Stream pages using offset-based pagination without a blocking COUNT first.
+    // We stream until we get an empty batch or reach maxResults.
+    // totalCount is updated as we discover more results.
     int currentOffset = 0;
     int processedCount = 0;
-    final int effectiveMax = maxResults ?? totalCount;
+    int totalCount = 0;
+    final int effectiveMax = maxResults ?? 999999;
 
-    while (currentOffset < totalCount && processedCount < effectiveMax) {
-      final currentLimit = (batchSize < (effectiveMax - processedCount))
+    while (processedCount < effectiveMax) {
+      final currentLimit = batchSize < (effectiveMax - processedCount)
           ? batchSize
           : (effectiveMax - processedCount);
 
@@ -455,8 +438,13 @@ class DatabaseQueries {
         final results = await database.rawQuery(sql, whereArgs);
         if (results.isEmpty) break;
 
-        // Add totalCount to first batch item?
-        // The previous logic added 'estimatedTotalHits' to every row or first row
+        processedCount += results.length;
+        currentOffset += currentLimit;
+        // Estimate total: if we got a full batch, there may be more
+        totalCount = results.length < currentLimit
+            ? processedCount
+            : processedCount + currentLimit;
+
         final mappedResults = results.map((row) {
           return {
             ...Map<String, dynamic>.from(row),
@@ -466,8 +454,7 @@ class DatabaseQueries {
 
         yield mappedResults;
 
-        processedCount += results.length;
-        currentOffset += currentLimit;
+        if (results.length < currentLimit) break;
       } catch (e) {
         print('Error streaming results: $e');
         break;

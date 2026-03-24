@@ -316,19 +316,10 @@ class SearchExecutor {
       batchSize: batchSize,
       maxResults: maxResults,
     )) {
-      print(
-        "===== [SearchExecutor.performPageSearchStream] ===== Received page batch: ${pageBatch.length} pages",
-      );
-
-      // Get total count from first batch
       if (totalCount == null && pageBatch.isNotEmpty) {
         totalCount = pageBatch.first['estimatedTotalHits'] as int? ?? 0;
-        print(
-          "===== [SearchExecutor.performPageSearchStream] ===== Total count: $totalCount",
-        );
       }
 
-      // Process batch and convert to paragraph-like format
       final List<Map<String, dynamic>> batchResults = [];
 
       for (var pageResult in pageBatch) {
@@ -336,69 +327,28 @@ class SearchExecutor {
         final pageNumber = pageResult['page_number'] as int;
         final pageKey = '$bookPath|$pageNumber';
 
-        if (processedPages.contains(pageKey)) {
-          print(
-            "===== [SearchExecutor.performPageSearchStream] ===== Skipping duplicate page: $pageKey",
-          );
-          continue;
-        }
+        if (processedPages.contains(pageKey)) continue;
         processedPages.add(pageKey);
 
-        try {
-          // Get all paragraphs from this page
-          final paragraphs = await _engine.getParagraphsByPage(
-            bookPath,
-            pageNumber,
-          );
+        final rawContent = pageResult['content'] as String? ?? '';
+        if (rawContent.isEmpty) continue;
 
-          print(
-            "===== [SearchExecutor.performPageSearchStream] ===== Page $pageNumber in ${pageResult['book_name']}: ${paragraphs.length} paragraphs",
-          );
+        final snippet = rawContent.length > 500
+            ? '${rawContent.substring(0, 500)}...'
+            : rawContent;
 
-          // Filter by section types if specified
-          final filteredParagraphs =
-              sectionTypes != null && sectionTypes.isNotEmpty
-              ? paragraphs
-                    .where((p) => sectionTypes.contains(p['section_type']))
-                    .toList()
-              : paragraphs;
-
-          if (filteredParagraphs.isNotEmpty) {
-            // Use first paragraph as representative of the page
-            final firstPara = filteredParagraphs.first;
-
-            // Aggregate content from all paragraphs for better snippet
-            final aggregatedContent = filteredParagraphs
-                .map((p) => p['content'] as String? ?? '')
-                .where((c) => c.trim().isNotEmpty)
-                .join(' ');
-
-            // Add one result per page with aggregated content
-            batchResults.add({
-              'id': firstPara['id'],
-              'book_path': bookPath,
-              'book_name': pageResult['book_name'] ?? firstPara['book_name'],
-              'page_number': pageNumber,
-              'section_type': firstPara['section_type'],
-              'content': aggregatedContent.length > 500
-                  ? '${aggregatedContent.substring(0, 500)}...'
-                  : aggregatedContent,
-              'raw_content': aggregatedContent,
-              'estimatedTotalHits': totalCount ?? 0,
-            });
-          }
-        } catch (e) {
-          print(
-            "===== [SearchExecutor.performPageSearchStream] ===== ERROR processing page $pageKey: $e",
-          );
-          // Continue with next page
-        }
+        batchResults.add({
+          'book_path': bookPath,
+          'book_name': pageResult['book_name'] ?? '',
+          'page_number': pageNumber,
+          'section_type': pageResult['section_type'] ?? '',
+          'content': snippet,
+          'raw_content': rawContent,
+          'estimatedTotalHits': totalCount ?? 0,
+        });
       }
 
       totalProcessed += batchResults.length;
-      print(
-        "===== [SearchExecutor.performPageSearchStream] ===== Yielding batch: ${batchResults.length} results (total processed: $totalProcessed)",
-      );
 
       if (batchResults.isNotEmpty) {
         yield SearchResult(

@@ -435,29 +435,56 @@ double _twipsToPx(double twips) {
 
 /// Gets the table alignment from w:jc in w:tblPr.
 /// Returns Alignment for use in Container.
+/// For bidi tables (RTL), 'start' maps to right and 'end' maps to left.
 Alignment getTableAlignment(XmlElement tblXml) {
   String? jc =
       tblXml.getElement('w:tblPr')?.getElement('w:jc')?.getAttribute('w:val');
+  bool bidi = isTableBidiVisual(tblXml);
+
   switch (jc) {
-    case 'start':
-    case 'right': // In RTL context, 'start' is right
-      return Alignment.centerRight;
-    case 'end':
-    case 'left':
-      return Alignment.centerLeft;
     case 'center':
       return Alignment.center;
+    case 'start':
+      return bidi ? Alignment.centerRight : Alignment.centerLeft;
+    case 'end':
+      return bidi ? Alignment.centerLeft : Alignment.centerRight;
+    case 'left':
+      return Alignment.centerLeft;
+    case 'right':
+      return Alignment.centerRight;
     default:
-      return Alignment.center; // Default to center for Arabic tables
+      // No explicit jc: Word defaults to start alignment
+      return bidi ? Alignment.centerRight : Alignment.centerLeft;
   }
 }
 
 /// Gets whether the table uses bidiVisual (RTL row direction).
 /// If true, the first cell in the row is displayed on the right.
 bool isTableBidiVisual(XmlElement tblXml) {
-  var bidi = tblXml.getElement('w:tblPr')?.getElement('w:bidiVisual');
-  if (bidi == null) return true; // Default to RTL for Arabic documents
-  String? val = bidi.getAttribute('w:val');
-  // <w:bidiVisual/> = true, <w:bidiVisual w:val="0"/> = false
-  return val != '0' && val != 'false';
+  // Namespace-agnostic lookup: XML may use 'w:tblPr' or just 'tblPr'
+  // depending on how the XML was serialized/deserialized
+  XmlElement? tblPr = tblXml.getElement('w:tblPr');
+  tblPr ??= tblXml.childElements
+      .where((e) => e.name.local == 'tblPr')
+      .firstOrNull;
+
+  if (tblPr == null) {
+    debugPrint('>>> BIDI: tblPr NOT FOUND in ${tblXml.name.qualified}, children: ${tblXml.childElements.map((e) => e.name.qualified).take(5).toList()}');
+    return true; // Default to RTL for Arabic documents
+  }
+
+  XmlElement? bidi = tblPr.getElement('w:bidiVisual');
+  bidi ??= tblPr.childElements
+      .where((e) => e.name.local == 'bidiVisual')
+      .firstOrNull;
+
+  if (bidi == null) {
+    debugPrint('>>> BIDI: bidiVisual NOT found in tblPr → defaulting to FALSE (per Word spec, default is LTR)');
+    return false;
+  }
+
+  String? val = bidi.getAttribute('w:val') ?? bidi.getAttribute('val');
+  bool result = val != '0' && val != 'false';
+  debugPrint('>>> BIDI: bidiVisual found, val=$val → result=$result');
+  return result;
 }

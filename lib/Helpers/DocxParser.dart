@@ -1,15 +1,15 @@
-import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
+import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Utils/FileToArchive.dart';
+import 'package:golden_shamela/Utils/ArchiveToXml.dart';
 import 'package:golden_shamela/wordToHTML/AddDocData.dart';
 import 'package:path/path.dart' as p;
 import 'package:golden_shamela/core/app_state.dart';
+import 'package:xml/xml.dart';
 
 /// A helper class to encapsulate the logic for parsing a .docx file.
 class DocxParser {
   /// Parses a .docx file from the given [filePath] and returns a list of [WordPage] objects.
-  ///
-  /// This function isolates the core parsing logic from UI and caching concerns.
   static Future<List<WordPage>> parse(String filePath) async {
     try {
       // Create a temporary WordDocument object to pass to the parser.
@@ -35,8 +35,31 @@ class DocxParser {
       return parsedPages;
     } catch (e) {
       print("Error parsing .docx file at $filePath: $e");
-      // Re-throw the exception to be handled by the caller.
       rethrow;
+    }
+  }
+
+  /// Extracts metadata (title, creator) from a .docx file.
+  static Future<Map<String, String>> extractMetadata(String filePath) async {
+    try {
+      final archive = await FileToArchive(filePath);
+      final archiveMap = archive.toMap();
+      final coreXmlFile = archiveMap['docProps/core.xml'];
+
+      if (coreXmlFile == null) return {};
+
+      final document = ArchiveToXml(coreXmlFile);
+
+      // Look for dc:title and dc:creator (author)
+      final title =
+          document.findAllElements('dc:title').firstOrNull?.innerText ?? '';
+      final creator =
+          document.findAllElements('dc:creator').firstOrNull?.innerText ?? '';
+
+      return {'title': title, 'creator': creator};
+    } catch (e) {
+      print("DocxParser: Error extracting metadata from $filePath: $e");
+      return {};
     }
   }
 }

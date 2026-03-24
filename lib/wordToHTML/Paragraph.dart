@@ -13,15 +13,48 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 
-import 'package:golden_shamela/Utils/custom_text_selection_controls.dart';
 import 'package:golden_shamela/Utils/json_converters.dart';
 import 'package:golden_shamela/wordToHTML/ParagraphTable.dart';
 
 import '../WordToWidget/ImageToWidget.dart';
 import '../core/app_state.dart';
+import '../Utils/ArchiveToXml.dart';
+import 'DocFootNotes.dart';
 import 'PPr.dart';
 
 part 'Paragraph.g.dart';
+
+class ParagraphBorderSideSpec {
+  final String style;
+  final double width;
+  final double space;
+  final Color color;
+
+  const ParagraphBorderSideSpec({
+    required this.style,
+    required this.width,
+    required this.space,
+    required this.color,
+  });
+}
+
+class ParagraphBorderSpec {
+  final String signature;
+  final ParagraphBorderSideSpec? top;
+  final ParagraphBorderSideSpec? bottom;
+  final ParagraphBorderSideSpec? left;
+  final ParagraphBorderSideSpec? right;
+  final ParagraphBorderSideSpec? between;
+
+  const ParagraphBorderSpec({
+    required this.signature,
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+    this.between,
+  });
+}
 
 @JsonSerializable(explicitToJson: true, constructor: 'empty')
 class Paragraph {
@@ -57,6 +90,10 @@ class Paragraph {
   @JsonKey(ignore: true)
   bool isHeaderParagraph = false;
 
+  /// Flag to prevent text wrapping (used for single words in tables to avoid forced breaks)
+  @JsonKey(ignore: true)
+  bool preventWrap = false;
+
   Paragraph(this.parent);
 
   Paragraph.empty() : parent = WordPage.empty();
@@ -82,6 +119,11 @@ class Paragraph {
     paragraph.runs = (json['runs'] as List<dynamic>)
         .map((e) => runT.fromMap(e as Map<String, dynamic>, paragraph))
         .toList();
+
+    // إعادة بناء textRunTs و imageRunTs من runs المرتبطة بشكل صحيح
+    // _$ParagraphFromJson تحمّل textRunTs/imageRunTs من JSON لكن بدون روابط parent صحيحة
+    // نعيد بناءها من runs التي لديها روابط parent سليمة
+    paragraph.getPRunsByType();
 
     paragraph.sectionType = json['sectionType'] as String? ?? 'main';
     paragraph.text =
@@ -161,7 +203,10 @@ class Paragraph {
     _setSectionType();
 
     XmlElement? xmlprPr = pPr?.styleRunProperties;
-    text = paragraphXml.text; // Re-add text assignment
+    text = paragraphXml.text.replaceAll(
+      RegExp(r'\{\{PG:\d+\}\}'),
+      '',
+    ); // Re-add text assignment
 
     if (xmlprPr != null) {
       prPr = RPr(pPr!.getEmptyRun()).fromXml(xmlprPr);
@@ -637,12 +682,17 @@ class Paragraph {
     runs.forEach((runt) {
       // 1. Floating Images (wrapMode != null)
       if (runt.image != null && runt.image!.wrapMode != null) {
-        // If relative to paragraph/line OR IS GROUP, add to Paragraph Stack
-        // Groups in headers often have page-relative settings but are treated as floating elements
-        // that this paragraph is responsible for rendering.
-        if (runt.isRelativeFromVParagraph() ||
+        // Header/footer paragraphs: keep ALL floating images here since they are
+        // not handled by WordPage.dart (headers render independently).
+        // Decorative elements (lines, shapes) intentionally span the full page width.
+        if (isHeaderParagraph) {
+          imageRunTs.add(runt);
+        }
+        // Page content paragraphs: If relative to paragraph/line OR IS GROUP, add to Paragraph Stack.
+        // EXCEPTION: paragraph-relative images that EXCEED the content area
+        // (full-page covers) go to page level for correct rendering beyond margins.
+        else if ((runt.isRelativeFromVParagraph() && !_exceedsContentArea(runt)) ||
             (runt.image != null && runt.image!.isGroup)) {
-          // print("DEBUG_PARA: Adding floated image/group to imageRunTs. Group: ${runt.image!.isGroup}");
           imageRunTs.add(runt);
         }
         // If relative to page/margin, IGNORE here (handled by WordPage.dart)
@@ -654,6 +704,14 @@ class Paragraph {
       }
     });
     return {"iRuns": imageRunTs, "tRuns": textRunTs};
+  }
+
+  /// Check if a run's image exceeds the content area (used to detect full-page covers)
+  bool _exceedsContentArea(runT runt) {
+    var sp = parent.parent.getSectPrForPage(parent.pageIndex);
+    double contentW = (sp.width ?? 595) - sp.leftMargin - sp.rightMargin;
+    double contentH = (sp.height ?? 842) - sp.topMargin - sp.bottomMargin;
+    return runt.image!.width > contentW || runt.image!.height > contentH;
   }
 
   /// Check if this paragraph should use the special TOC rendering (Row + Expanded)
@@ -673,7 +731,7 @@ class Paragraph {
     return hasRightLeaderDef && hasTabUsage;
   }
 
-  Widget toWidget() {
+  Widget toWidget({bool suppressParagraphBorder = false}) {
     // Check if this is a TOC entry OR uses right-aligned leader tabs - use special rendering
     // This ensures proportional tabs and leaders (tastir) appear correctly without stretching left tabs
     if (shouldRenderAsTOC()) {
@@ -683,7 +741,9 @@ class Paragraph {
     // Check for centered paragraph with tabs (like headers: "أعمال [TAB] ❀ [TAB] الرافعي")
     // These need Row layout to distribute content evenly
     if (_isCenteredWithTabs()) {
-      return _buildCenteredTabsWidget();
+      return _buildCenteredTabsWidget(
+        suppressParagraphBorder: suppressParagraphBorder,
+      );
     }
 
     List<InlineSpan> spans = getPSpans();
@@ -692,39 +752,39 @@ class Paragraph {
     Color? backgroundColor = _getParagraphShadingColor();
 
     // الحدود (إن وجدت في w:pPr/w:pBdr)
-    BoxDecoration? decoration = _getParagraphDecoration(backgroundColor);
+    BoxDecoration? decoration = _getParagraphDecoration(
+      backgroundColor,
+      includeBorder: !suppressParagraphBorder,
+    );
 
     // تقسيم الصور إلى مجموعتين: خلف النص وأمام النص
     List<Widget> behindImages = _getPositionedImages(true);
     List<Widget> frontImages = _getPositionedImages(false);
 
-    return GestureDetector(
-      onLongPress: () {
-        printParagraphXml();
-      },
-      child: Padding(
-        padding: _getPPaddings(),
-        child: Container(
-          decoration: decoration,
-          // نستخدم Stack مع direction LTR لضمان أن left يعمل بشكل صحيح
-          child: Stack(
-            fit: StackFit.loose,
-            clipBehavior: Clip.none,
-            textDirection: TextDirection.ltr,
-            children: [
-              // 1. الصور الخلفية (behindDoc=true)
-              ...behindImages,
+    return Padding(
+      padding: _getPPaddings(),
+      child: Container(
+        decoration: decoration,
+        // نستخدم Stack مع direction LTR لضمان أن left يعمل بشكل صحيح
+        child: Stack(
+          fit: StackFit.loose,
+          clipBehavior: Clip.none,
+          textDirection: TextDirection.ltr,
+          children: [
+            // 1. الصور الخلفية (behindDoc=true)
+            // Positioned must be a DIRECT child of Stack for correct positioning.
+            // IgnorePointer is already inside each Positioned (in _getPositionedImages).
+            ...behindImages,
 
-              // 2. النص (يحدد ارتفاع الفقرة)
-              Directionality(
-                textDirection: textDirection, // RTL usually
-                child: _getTRunsW(spans),
-              ),
+            // 2. النص (يحدد ارتفاع الفقرة)
+            Directionality(
+              textDirection: textDirection, // RTL usually
+              child: _getTRunsW(spans),
+            ),
 
-              // 3. الصور الأمامية (behindDoc=false)
-              ...frontImages,
-            ],
-          ),
+            // 3. الصور الأمامية (behindDoc=false)
+            ...frontImages,
+          ],
         ),
       ),
     );
@@ -738,7 +798,7 @@ class Paragraph {
 
   /// Build widget for centered paragraphs with tabs (e.g., headers)
   /// Layout: [Spacer] [Text1] [Spacer] [Symbol] [Spacer] [Text2] [Spacer]
-  Widget _buildCenteredTabsWidget() {
+  Widget _buildCenteredTabsWidget({bool suppressParagraphBorder = false}) {
     // Split runs by tab characters
     List<List<runT>> segments = [];
     List<runT> currentSegment = [];
@@ -779,6 +839,7 @@ class Paragraph {
     // الحدود
     BoxDecoration? decoration = _getParagraphDecoration(
       _getParagraphShadingColor(),
+      includeBorder: !suppressParagraphBorder,
     );
 
     return GestureDetector(
@@ -799,9 +860,52 @@ class Paragraph {
     );
   }
 
+  void _ensureParagraphXmlForDecoration() {
+    if (pPr?.xmlpPr != null) return;
+    if (xmlString.isEmpty) return;
+
+    try {
+      pXml ??= XmlDocument.parse(xmlString).rootElement;
+      pPr?.xmlpPr ??= pXml?.getElement("w:pPr");
+      pPr?.xmlprPr ??= pPr?.xmlpPr?.getElement("w:rPr");
+    } catch (_) {}
+  }
+
+  ParagraphBorderSpec? getParagraphBorderSpec() {
+    try {
+      _ensureParagraphXmlForDecoration();
+      final pBdr = pPr?.xmlpPr?.getElement("w:pBdr");
+      if (pBdr == null) return null;
+
+      final top = _parseBorderSideSpec(pBdr.getElement("w:top"));
+      final bottom = _parseBorderSideSpec(pBdr.getElement("w:bottom"));
+      final left = _parseBorderSideSpec(pBdr.getElement("w:left"));
+      final right = _parseBorderSideSpec(pBdr.getElement("w:right"));
+      final between = _parseBorderSideSpec(pBdr.getElement("w:between"));
+
+      if (top == null && bottom == null && left == null && right == null) {
+        return null;
+      }
+
+      return ParagraphBorderSpec(
+        signature: pBdr.toXmlString(),
+        top: top,
+        bottom: bottom,
+        left: left,
+        right: right,
+        between: between,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Get paragraph decoration (borders from w:pBdr)
-  BoxDecoration? _getParagraphDecoration(Color? backgroundColor) {
-    Border? border = _getParagraphBorder();
+  BoxDecoration? _getParagraphDecoration(
+    Color? backgroundColor, {
+    bool includeBorder = true,
+  }) {
+    Border? border = includeBorder ? _getParagraphBorder() : null;
     if (backgroundColor == null && border == null) return null;
 
     return BoxDecoration(color: backgroundColor, border: border);
@@ -810,6 +914,7 @@ class Paragraph {
   /// Parse paragraph borders from w:pBdr element
   Border? _getParagraphBorder() {
     try {
+      _ensureParagraphXmlForDecoration();
       final pBdr = pPr?.xmlpPr?.getElement("w:pBdr");
       if (pBdr == null) return null;
 
@@ -843,22 +948,44 @@ class Paragraph {
 
   /// Parse a single border side from XML element
   BorderSide? _parseBorderSide(XmlElement element) {
+    final spec = _parseBorderSideSpec(element);
+    if (spec == null) return null;
+    return BorderSide(color: spec.color, width: spec.width);
+  }
+
+  ParagraphBorderSideSpec? _parseBorderSideSpec(XmlElement? element) {
+    if (element == null) return null;
+
     String? val = element.getAttribute("w:val");
     if (val == null || val == "nil" || val == "none") return null;
 
-    // w:sz is in eighths of a point
     String? szStr = element.getAttribute("w:sz");
     double width = 1.0;
     if (szStr != null) {
       double sz = double.tryParse(szStr) ?? 8.0;
-      width = sz / 8.0; // Convert to points
+      width = sz / 8.0;
       if (width < 0.5) width = 0.5;
-      if (width > 6) width = 6; // Cap for sanity
+      if (width > 6) width = 6;
     }
 
-    // Parse color
+    String? spaceStr = element.getAttribute("w:space");
+    double space = 0;
+    if (spaceStr != null) {
+      space = double.tryParse(spaceStr) ?? 0;
+    }
+
     Color color = Colors.black;
     String? colorStr = element.getAttribute("w:color");
+    String? themeColor = element.getAttribute("w:themeColor");
+    if (themeColor != null) {
+      String? resolved = resolveThemeColor(
+        pPr?.wordDocument.themeColors ?? {},
+        themeColor,
+        element.getAttribute("w:themeTint"),
+        element.getAttribute("w:themeShade"),
+      );
+      colorStr = resolved ?? colorStr;
+    }
     if (colorStr != null && colorStr != "auto") {
       try {
         String hex = colorStr;
@@ -867,32 +994,45 @@ class Paragraph {
       } catch (_) {}
     }
 
-    return BorderSide(color: color, width: width);
+    return ParagraphBorderSideSpec(
+      style: val,
+      width: width,
+      space: space,
+      color: color,
+    );
   }
 
   /// Build a special widget for TOC (Table of Contents) entries
   /// Uses Row layout: [Entry Text] [Dot Leaders] [Page Number]
   Widget _buildTOCWidget() {
-    // Extract the runs into three parts:
-    // 1. Entry text runs (before the tab)
-    // 2. Tab run (contains the leader)
-    // 3. Page number runs (after the tab)
+    // Split runs at the LAST tab (the leader tab before page number).
+    // Earlier tabs are internal (e.g. between "1-" and text).
     List<runT> entryRuns = [];
     List<runT> pageNumRuns = [];
-    bool foundTab = false;
-
-    for (runT run in textRunTs) {
-      if (run.hasTab) {
-        foundTab = true;
-      } else if (!foundTab) {
-        entryRuns.add(run);
-      } else {
-        pageNumRuns.add(run);
+    int lastTabIndex = -1;
+    for (int i = textRunTs.length - 1; i >= 0; i--) {
+      if (textRunTs[i].hasTab) {
+        lastTabIndex = i;
+        break;
       }
     }
 
-    // Calculate indentation based on TOC level
-    double indent = ((pPr?.tocLevel ?? 1) - 1) * 24.0;
+    for (int i = 0; i < textRunTs.length; i++) {
+      if (i == lastTabIndex) continue; // Skip the leader tab itself
+      if (lastTabIndex != -1 && i > lastTabIndex) {
+        pageNumRuns.add(textRunTs[i]);
+      } else {
+        entryRuns.add(textRunTs[i]);
+      }
+    }
+
+    // For TOC entries rendered as a single-line Row, the effective leading-edge
+    // indent is the sum of paragraph indent (w:left) and firstLine indent
+    // (w:firstLine), because the entire entry text represents the "first line."
+    // Common TOC pattern: negative w:left + large w:firstLine = positive indent.
+    // Clamp to non-negative: Flutter Padding does not allow negative values.
+    double indent = (pPr?.paddingRight ?? 0) + (pPr?.firstLineIndent ?? 0);
+    if (indent < 0) indent = 0;
 
     // Get leader type from tab stops
     String leaderType = "dot";
@@ -909,30 +1049,30 @@ class Paragraph {
         splashColor: Colors.blue.withOpacity(0.2),
         child: Padding(
           padding: EdgeInsets.only(
-            right: indent, // RTL: indent from right
-            left: pPr?.paddingLeft ?? 0,
+            right: 8 + indent,
+            left: 8,
             top: 2,
             bottom: 2,
           ),
           child: Directionality(
-            textDirection: TextDirection.rtl, // TOC entries are RTL
+            textDirection: TextDirection.rtl,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                // 1. Entry text (flexible, wraps if needed)
+                // 1. Entry text (takes natural width, no flex competition)
                 Flexible(
                   flex: 0,
                   child: RichText(
                     textDirection: TextDirection.rtl,
                     text: TextSpan(
+                      style: prPr?.getTextStyle(),
                       children: entryRuns.map((r) => r.toWidget()).toList(),
                     ),
                   ),
                 ),
 
                 // 2. Dot leaders (expands to fill available space)
-                // Get font from entry run that has a font defined
                 Expanded(
                   child: _buildLeaderWidget(
                     leaderType,
@@ -946,9 +1086,8 @@ class Paragraph {
                   RichText(
                     textDirection: TextDirection.ltr, // Numbers are LTR
                     text: TextSpan(
-                      children: pageNumRuns.map((r) {
-                        return r.toWidget();
-                      }).toList(),
+                      style: prPr?.getTextStyle(),
+                      children: pageNumRuns.map((r) => r.toWidget()).toList(),
                     ),
                   ),
               ],
@@ -1072,8 +1211,26 @@ class Paragraph {
   // قراءة تظليل الفقرة من w:pPr/w:shd
   Color? _getParagraphShadingColor() {
     try {
+      _ensureParagraphXmlForDecoration();
       final shd = pPr?.xmlpPr?.getElement("w:shd");
-      final fill = shd?.getAttribute("w:fill");
+      if (shd == null) return null;
+
+      // حل لون التيمة أولاً (themeFill + tint/shade)
+      String? themeFill = shd.getAttribute("w:themeFill");
+      if (themeFill != null) {
+        String? resolved = resolveThemeColor(
+          pPr?.wordDocument.themeColors ?? {},
+          themeFill,
+          shd.getAttribute("w:themeFillTint"),
+          shd.getAttribute("w:themeFillShade"),
+        );
+        if (resolved != null && resolved.length == 6) {
+          return Color(int.parse("0xFF$resolved"));
+        }
+      }
+
+      // fallback: w:fill
+      final fill = shd.getAttribute("w:fill");
       if (fill == null || fill.isEmpty) return null;
       String hex = fill;
       if (hex.length == 6) {
@@ -1088,9 +1245,10 @@ class Paragraph {
   // دالة معدلة لتقبل فلتر behindDoc
   List<Widget> _getPositionedImages(bool behindDoc) {
     // الحصول على الهوامش لحساب الموقع النسبي الصحيح
-    double leftMargin = parent.parent.getPageSectPr().leftMargin ?? 0;
-    double pageWidth = parent.parent.getPageSectPr().width ?? 595;
-    double rightMargin = parent.parent.getPageSectPr().rightMargin ?? 0;
+    final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
+    double leftMargin = sectPr.leftMargin ?? 0;
+    double pageWidth = sectPr.width ?? 595;
+    double rightMargin = sectPr.rightMargin ?? 0;
     double marginAreaWidth = pageWidth - leftMargin - rightMargin;
 
     List<Widget> widgets = [];
@@ -1174,8 +1332,9 @@ class Paragraph {
           top: top.isFinite ? top : 0,
           // إذا كانت هذه فقرة هيدر، نجعل الصورة تتجاهل الضغط
           // حتى يعمل الضغط المطول على الهيدر
+          // IgnorePointer prevents images from capturing pointer events
+          // (which would block text selection/scrolling underneath)
           child: IgnorePointer(
-            ignoring: isHeaderParagraph,
             child: GestureDetector(
               onTap: () {
                 /* print(
@@ -1198,12 +1357,12 @@ class Paragraph {
                 builder: (context) {
                   // NEW: Handle Group Images via ImageToWidget logic
                   if (img.isGroup) {
-                    return getImageWidget(img);
+                    return getImageWidget(img, innerOnly: true);
                   }
 
                   // NEW: Handle Vector Shapes (Freeform etc.)
                   if (img.isVectorShape && img.vectorPath != null) {
-                    return getImageWidget(img);
+                    return getImageWidget(img, innerOnly: true);
                   }
 
                   // عرض Text Box (تمت إعادته ليعمل داخل Stack)
@@ -1458,6 +1617,31 @@ class Paragraph {
       "═══════════════════════════════════════════════════════════════════",
     );
 
+    // إذا كانت الفقرة حاشية، نضيف XML الحاشية الخام من الأرشيف
+    if (sectionType == 'footnote') {
+      buffer.writeln("");
+      buffer.writeln("=== FOOTNOTE RAW XML FROM ARCHIVE ===");
+      try {
+        var archive = parent.parent.archive;
+        if (archive != null) {
+          var archiveMap = archive.toMap();
+          var footnotesFile = archiveMap['word/footnotes.xml'];
+          if (footnotesFile != null) {
+            debugDumpFootnotesXml(footnotesFile);
+            buffer.writeln(
+              "✅ Full footnotes.xml dumped to footnotes_debug.xml",
+            );
+          } else {
+            buffer.writeln("⚠️ footnotes.xml not found in archive");
+          }
+        } else {
+          buffer.writeln("⚠️ Archive not available (book loaded from cache?)");
+        }
+      } catch (e) {
+        buffer.writeln("❌ Error dumping footnote XML: $e");
+      }
+    }
+
     // حفظ في ملف
     try {
       final file = File(
@@ -1548,6 +1732,9 @@ class Paragraph {
     }
 
     List<InlineSpan> spans = [
+      // w:firstLine — indent ONLY the first line (not all lines like container padding would)
+      if (pPr?.firstLineIndent != null && pPr!.firstLineIndent! > 0)
+        WidgetSpan(child: SizedBox(width: pPr!.firstLineIndent!)),
       pPr?.getNumberingW() ?? TextSpan(text: ""),
       ...textRunTs.map((e) => e.toWidgetWithImg()).toList(),
     ];
@@ -1561,7 +1748,13 @@ class Paragraph {
     double left = pPr?.paddingLeft ?? 0;
     double right = pPr?.paddingRight ?? 0;
     double top = pPr?.spacingBefore ?? 0;
-    double bottom = pPr?.spacingAfter ?? 0;
+    // Footnote paragraphs inherit from "Footnote Text" style which has w:after="0".
+    // PPr defaults to ~18.7px when no w:spacing element exists (body-text default).
+    // For footnotes, only apply spacingAfter when it was explicitly set in the XML.
+    double bottom =
+        (sectionType == 'footnote' && pPr?.spacingAfterExplicit != true)
+        ? 0
+        : (pPr?.spacingAfter ?? 0);
 
     return EdgeInsets.only(
       left: left < 0 ? 0 : left,
@@ -1599,23 +1792,18 @@ class Paragraph {
 
     return SizedBox(
       width: double.infinity,
-      child: SelectableText.rich(
+      child: Text.rich(
         TextSpan(style: prPr?.getTextStyle(), children: spans),
         textAlign: textAlign,
         textDirection: textDirection,
+        softWrap: !preventWrap,
+        overflow: preventWrap ? TextOverflow.visible : TextOverflow.clip,
         strutStyle: StrutStyle(
-          forceStrutHeight: !textRunTs.any(
-            (r) => r.image != null,
-          ), // Strict height only if no images (true inline images)
+          forceStrutHeight: !textRunTs.any((r) => r.image != null),
           height: effectiveLineHeight,
-          fontSize: maxFontSize, // Explicitly set font size from max run size
+          fontSize: maxFontSize,
           fontFamily: prPr?.enFont,
           fontFamilyFallback: prPr?.font != null ? [prPr!.font!] : null,
-        ),
-        selectionControls: CustomTextSelectionControls(
-          bookTitle: parent.parent.title,
-          pageNumber: parent.parent.currentPage + 1,
-          wordPage: parent,
         ),
       ),
     );

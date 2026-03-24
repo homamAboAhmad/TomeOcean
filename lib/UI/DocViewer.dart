@@ -31,12 +31,20 @@ import 'BooksDrawer.dart';
 import 'DocViewer/doc_viewer_bottom_toolbar.dart';
 import 'DocViewer/doc_viewer_top_toolbar.dart';
 import 'WordPageScreen.dart';
+import 'custom_context_menu.dart';
+import '../Utils/Widgets/SelectionAutoScroller.dart';
 
 class DocViewer extends StatefulWidget {
   final WordDocument wordDocument;
   final Function(File book) onBookSelected;
+  final VoidCallback? onCloseBook;
 
-  const DocViewer(this.wordDocument, {required this.onBookSelected, super.key});
+  const DocViewer(
+    this.wordDocument, {
+    required this.onBookSelected,
+    this.onCloseBook,
+    super.key,
+  });
 
   @override
   State<DocViewer> createState() => _DocViewerState();
@@ -54,6 +62,7 @@ class _DocViewerState extends State<DocViewer>
   late final ScrollController _scrollController;
   late final ValueNotifier<int> _currentPageNotifier;
   late final DocZoomController _zoomController;
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   bool get wantKeepAlive => true;
@@ -86,6 +95,7 @@ class _DocViewerState extends State<DocViewer>
     _scrollController.dispose(); // Dispose ScrollController
     _currentPageNotifier.dispose();
     _zoomController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -109,7 +119,11 @@ class _DocViewerState extends State<DocViewer>
         BookCard(title: widget.wordDocument.title);
     _bookSideBarList = [
       BookIndexUI(widget.wordDocument, goTo: _goTo),
-      const BookSearchUI(),
+      BookSearchUI(
+        wordDocument: widget.wordDocument,
+        onNavigateToPage: _jumpToPage,
+        searchFocusNode: _searchFocusNode,
+      ),
       SectionBookSideBar(
         sectionId: bookCard.sectionId,
         onBookSelected: widget.onBookSelected,
@@ -131,6 +145,7 @@ class _DocViewerState extends State<DocViewer>
     }
 
     widget.wordDocument.currentPage = pageIndex;
+    widget.wordDocument.prefetchPages(pageIndex);
     _pageNumberController.text = (pageIndex + 1).toString();
     _visitedPagesSet.add(pageIndex);
     _currentPageNotifier.value = pageIndex; // Ensure UI updates immediately
@@ -139,12 +154,27 @@ class _DocViewerState extends State<DocViewer>
     // if (mounted) setState(() {}); // interactuall scroll handles this properly via notification
     if (_scrollController.hasClients) {
       // Calculation must match the ListView setup:
-      // height = pageHeight + separator(20).
-      // We assume uniform page height for now based on the first page.
+      // ListView has padding: EdgeInsets.symmetric(vertical: 20) → 20px top
+      // Each page is followed by a 20px separator.
+      // offset = topPadding + pageIndex * (pageHeight + separator)
       double pageHeight =
           (widget.wordDocument.getSectPrForPage(0).height ?? 1000);
-      // Ensure uniform behavior with _zoomScale
-      double offset = pageIndex * ((pageHeight * _zoomController.value) + 20.0);
+      double pageTotalHeight = (pageHeight * _zoomController.value) + 20.0;
+
+      // Land slightly below the header/top area so the first visible content
+      // isn't hidden behind the header.
+      final sectPr = widget.wordDocument.getSectPrForPage(pageIndex);
+      double headerAwareOffset =
+          ((sectPr.headerMargin ?? 0) + sectPr.topMargin) *
+          _zoomController.value;
+
+      // Subtract a tiny epsilon to guarantee we land *inside* the target page,
+      // not exactly at the boundary (which can be interpreted as the next page).
+      double offset =
+          20.0 + (pageIndex * pageTotalHeight) + headerAwareOffset - 0.01;
+      if (offset < 0) offset = 0;
+      final maxOffset = _scrollController.position.maxScrollExtent;
+      if (offset > maxOffset) offset = maxOffset;
       _scrollController.jumpTo(offset);
     }
   }
@@ -209,8 +239,11 @@ class _DocViewerState extends State<DocViewer>
     final WordPage page = await widget.wordDocument.getPage(
       widget.wordDocument.currentPage,
     );
-    final text = page.text();
-    await copyText(text);
+    final text = page.text().trim();
+    final int pageNum = widget.wordDocument.currentPage + 1;
+    final String formatted =
+        '«$text» [${widget.wordDocument.title} (ص $pageNum)]';
+    await copyText(formatted);
     if (mounted) {
       ShowSnackBar(context, "تم النسخ");
     }
@@ -219,6 +252,13 @@ class _DocViewerState extends State<DocViewer>
   void _onToggleDiacritics() {
     setState(() {
       widget.wordDocument.withDiacritics = !widget.wordDocument.withDiacritics;
+    });
+  }
+
+  void _onToggleNumerals() {
+    setState(() {
+      widget.wordDocument.useArabicNumerals =
+          !widget.wordDocument.useArabicNumerals;
     });
   }
 
@@ -246,183 +286,322 @@ class _DocViewerState extends State<DocViewer>
     }
   }
 
+  void _openInBookSearch() {
+    setState(() {
+      showBookSideBar = true;
+      _bookSideBarController.selecteSideBarP = 1;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchFocusNode.requestFocus();
+    });
+  }
+
+  void _closeCurrentBook() {
+    widget.onCloseBook?.call();
+  }
+
+  void _closeSearchPanel() {
+    if (showBookSideBar && _bookSideBarController.selecteSideBarP == 1) {
+      setState(() => showBookSideBar = false);
+      AppState().clearSearchHighlight();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return CallbackShortcuts(
-      bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.equal, control: true):
-            _zoomController.zoomIn,
-        const SingleActivator(LogicalKeyboardKey.add, control: true):
-            _zoomController.zoomIn,
-        const SingleActivator(LogicalKeyboardKey.minus, control: true):
-            _zoomController.zoomOut,
-        const SingleActivator(LogicalKeyboardKey.numpadSubtract, control: true):
-            _zoomController.zoomOut,
-        const SingleActivator(LogicalKeyboardKey.digit0, control: true):
-            _zoomController.resetZoom,
-      },
-      child: Focus(
-        autofocus: true,
-        child: Stack(
-          children: [
-            DocViewerTopToolbar(
-              wordDocument: widget.wordDocument,
-              sideBarIcons: _bookSideBarController.booksSideBarIconsW(),
-              onZoomIn: _zoomController.zoomIn,
-              onZoomOut: _zoomController.zoomOut,
-              onDuplicateBook: _duplicateBook,
-              onGoStart: _goStart,
-              onGoPrevious: _goPrevious,
-              onGoNext: _goNext,
-              onGoEnd: _goEnd,
-              onCopyPage: _copyPage,
-              onToggleDiacritics: _onToggleDiacritics,
-              onShowBookCard: _onShowBookCard,
+    return ValueListenableBuilder<bool>(
+      valueListenable: widget.wordDocument.isLoading,
+      builder: (context, isLoading, child) {
+        if (isLoading) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ValueListenableBuilder<String?>(
+                  valueListenable: widget.wordDocument.loadingMessage,
+                  builder: (context, msg, _) {
+                    return Text(
+                      msg ?? 'جاري التحميل...',
+                      style: normalStyle(color: secondaryColor, fontSize: 18),
+                      textAlign: TextAlign.center,
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                ValueListenableBuilder<double?>(
+                  valueListenable: widget.wordDocument.loadingProgress,
+                  builder: (context, progress, _) {
+                    return Column(
+                      children: [
+                        SizedBox(
+                          width: 250,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: LinearProgressIndicator(
+                              value: progress,
+                              backgroundColor: Colors.grey.shade300,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                secondaryColor,
+                              ),
+                              minHeight: 8,
+                            ),
+                          ),
+                        ),
+                        if (progress != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            '${(progress * 100).toInt()}%',
+                            style: normalStyle(
+                              color: Colors.grey.shade700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+              ],
             ),
-            ValueListenableBuilder<double>(
-              valueListenable: _zoomController,
-              builder: (context, currentZoom, child) {
-                return Padding(
-                  padding: const EdgeInsets.only(top: 48.0, bottom: 52.0),
-                  child: Row(
-                    textDirection: TextDirection.rtl,
-                    children: [
-                      if (showBookSideBar &&
-                          _bookSideBarList.isNotEmpty &&
-                          _bookSideBarController.selecteSideBarP <
-                              _bookSideBarList.length)
-                        _bookSideBarList[_bookSideBarController
-                            .selecteSideBarP],
-                      Expanded(
-                        child: Listener(
-                          onPointerPanZoomStart:
-                              _zoomController.handlePanZoomStart,
-                          onPointerPanZoomUpdate:
-                              _zoomController.handlePanZoomUpdate,
-                          onPointerSignal: _zoomController.handlePointerSignal,
-                          child: NotificationListener<ScrollNotification>(
-                            onNotification: (notification) {
-                              if (notification is ScrollUpdateNotification) {
-                                // Calculate current page based on scroll offset
-                                double pageBaseHeight =
-                                    (widget.wordDocument
-                                        .getSectPrForPage(0)
-                                        .height ??
-                                    1000);
-                                double pageTotalHeight =
-                                    (pageBaseHeight * currentZoom) +
-                                    20.0; // Scaled height + spacing
+          );
+        }
 
-                                int newPageIndex =
-                                    (_scrollController.offset / pageTotalHeight)
-                                        .round();
-
-                                if (newPageIndex !=
-                                        widget.wordDocument.currentPage &&
-                                    newPageIndex >= 0 &&
-                                    newPageIndex <
-                                        widget
-                                            .wordDocument
-                                            .pageFilePaths
-                                            .length) {
-                                  widget.wordDocument.currentPage =
-                                      newPageIndex;
-                                  _pageNumberController.text =
-                                      (newPageIndex + 1).toString();
-                                  _visitedPagesSet.add(newPageIndex);
-                                  _currentPageNotifier.value =
-                                      newPageIndex; // Notify toolbar to update
-                                }
-                              }
-                              return false;
-                            },
-                            child: Container(
-                              color: Colors.grey.shade200,
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  // Calculate base page width (using first page or default)
-                                  double pageBaseWidth =
+        return child!;
+      },
+      child: CallbackShortcuts(
+        bindings: <ShortcutActivator, VoidCallback>{
+          const SingleActivator(LogicalKeyboardKey.equal, control: true):
+              _zoomController.zoomIn,
+          const SingleActivator(LogicalKeyboardKey.add, control: true):
+              _zoomController.zoomIn,
+          const SingleActivator(LogicalKeyboardKey.minus, control: true):
+              _zoomController.zoomOut,
+          const SingleActivator(
+            LogicalKeyboardKey.numpadSubtract,
+            control: true,
+          ): _zoomController.zoomOut,
+          const SingleActivator(LogicalKeyboardKey.digit0, control: true):
+              _zoomController.resetZoom,
+          const SingleActivator(LogicalKeyboardKey.keyF, control: true):
+              _openInBookSearch,
+          const SingleActivator(LogicalKeyboardKey.keyW, control: true):
+              _closeCurrentBook,
+          const SingleActivator(LogicalKeyboardKey.escape): _closeSearchPanel,
+        },
+        child: Focus(
+          autofocus: true,
+          child: Stack(
+            children: [
+              DocViewerTopToolbar(
+                wordDocument: widget.wordDocument,
+                sideBarIcons: _bookSideBarController.booksSideBarIconsW(),
+                onZoomIn: _zoomController.zoomIn,
+                onZoomOut: _zoomController.zoomOut,
+                onDuplicateBook: _duplicateBook,
+                onGoStart: _goStart,
+                onGoPrevious: _goPrevious,
+                onGoNext: _goNext,
+                onGoEnd: _goEnd,
+                onCopyPage: _copyPage,
+                onToggleDiacritics: _onToggleDiacritics,
+                onToggleNumerals: _onToggleNumerals,
+                onShowBookCard: _onShowBookCard,
+              ),
+              ValueListenableBuilder<double>(
+                valueListenable: _zoomController,
+                builder: (context, currentZoom, child) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 48.0, bottom: 52.0),
+                    child: Row(
+                      textDirection: TextDirection.rtl,
+                      children: [
+                        if (showBookSideBar &&
+                            _bookSideBarList.isNotEmpty &&
+                            _bookSideBarController.selecteSideBarP <
+                                _bookSideBarList.length)
+                          _bookSideBarList[_bookSideBarController
+                              .selecteSideBarP],
+                        Expanded(
+                          child: Listener(
+                            onPointerPanZoomStart:
+                                _zoomController.handlePanZoomStart,
+                            onPointerPanZoomUpdate:
+                                _zoomController.handlePanZoomUpdate,
+                            onPointerSignal:
+                                _zoomController.handlePointerSignal,
+                            child: NotificationListener<ScrollNotification>(
+                              onNotification: (notification) {
+                                if (notification is ScrollUpdateNotification) {
+                                  // Calculate current page based on scroll offset
+                                  double pageBaseHeight =
                                       (widget.wordDocument
                                           .getSectPrForPage(0)
-                                          .width ??
-                                      800);
-                                  double scaledContentWidth =
-                                      (pageBaseWidth * currentZoom) +
-                                      40.0; // + padding
+                                          .height ??
+                                      1000);
+                                  double pageTotalHeight =
+                                      (pageBaseHeight * currentZoom) +
+                                      20.0; // Scaled height + spacing
 
-                                  // Determine the width of the ListView: max of screen width or content width
-                                  double listViewWidth =
-                                      constraints.maxWidth > scaledContentWidth
-                                      ? constraints.maxWidth
-                                      : scaledContentWidth;
+                                  // ListView has 20px top padding.
+                                  // Use floor() to avoid flipping to the next page
+                                  // when the offset is near a boundary.
+                                  int newPageIndex =
+                                      ((_scrollController.offset - 20.0) /
+                                              pageTotalHeight)
+                                          .floor();
+                                  if (newPageIndex < 0) newPageIndex = 0;
 
-                                  return SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    physics: const ClampingScrollPhysics(),
-                                    child: ConstrainedBox(
-                                      constraints: BoxConstraints(
-                                        minWidth: constraints.maxWidth,
-                                      ),
-                                      child: SizedBox(
-                                        width: listViewWidth,
-                                        child: Scrollbar(
-                                          controller: _scrollController,
-                                          thumbVisibility: true,
-                                          trackVisibility: true,
-                                          child: ListView.separated(
-                                            controller: _scrollController,
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 20,
-                                              horizontal: 10,
+                                  if (newPageIndex !=
+                                          widget.wordDocument.currentPage &&
+                                      newPageIndex >= 0 &&
+                                      newPageIndex <
+                                          widget
+                                              .wordDocument
+                                              .pageFilePaths
+                                              .length) {
+                                    widget.wordDocument.currentPage =
+                                        newPageIndex;
+                                    widget.wordDocument.prefetchPages(
+                                      newPageIndex,
+                                    );
+                                    _pageNumberController.text =
+                                        (newPageIndex + 1).toString();
+                                    _visitedPagesSet.add(newPageIndex);
+                                    _currentPageNotifier.value =
+                                        newPageIndex; // Notify toolbar to update
+                                  }
+                                }
+                                return false;
+                              },
+                              child: Container(
+                                color: Colors.grey.shade200,
+                                child: LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    // Calculate base page width (using first page or default)
+                                    double pageBaseWidth =
+                                        (widget.wordDocument
+                                            .getSectPrForPage(0)
+                                            .width ??
+                                        800);
+                                    double scaledContentWidth =
+                                        (pageBaseWidth * currentZoom) +
+                                        40.0; // + padding
+
+                                    // Determine the width of the ListView: max of screen width or content width
+                                    double listViewWidth =
+                                        constraints.maxWidth >
+                                            scaledContentWidth
+                                        ? constraints.maxWidth
+                                        : scaledContentWidth;
+
+                                    return SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      physics: const ClampingScrollPhysics(),
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          minWidth: constraints.maxWidth,
+                                        ),
+                                        child: SizedBox(
+                                          width: listViewWidth,
+                                          child: SelectionAutoScroller(
+                                            scrollController: _scrollController,
+                                            child: SelectionArea(
+                                              contextMenuBuilder:
+                                                  (
+                                                    context,
+                                                    selectableRegionState,
+                                                  ) {
+                                                    return CustomContextMenu(
+                                                      state:
+                                                          selectableRegionState,
+                                                      bookTitle: widget
+                                                          .wordDocument
+                                                          .title,
+                                                      pageNumber:
+                                                          widget
+                                                              .wordDocument
+                                                              .currentPage +
+                                                          1,
+                                                      contextMenuAnchors:
+                                                          selectableRegionState
+                                                              .contextMenuAnchors,
+                                                    );
+                                                  },
+                                              child: Scrollbar(
+                                                controller: _scrollController,
+                                                thumbVisibility: true,
+                                                trackVisibility: true,
+                                                child: ListView.separated(
+                                                  controller: _scrollController,
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 20,
+                                                        horizontal: 10,
+                                                      ),
+                                                  itemCount: widget
+                                                      .wordDocument
+                                                      .pageFilePaths
+                                                      .length,
+                                                  separatorBuilder:
+                                                      (context, index) =>
+                                                          const SizedBox(
+                                                            height: 20,
+                                                          ),
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                        return PageItemLoader(
+                                                          wordDocument: widget
+                                                              .wordDocument,
+                                                          pageIndex: index,
+                                                          zoomScale:
+                                                              currentZoom,
+                                                        );
+                                                      },
+                                                ),
+                                              ),
                                             ),
-                                            itemCount: widget
-                                                .wordDocument
-                                                .pageFilePaths
-                                                .length,
-                                            separatorBuilder:
-                                                (context, index) =>
-                                                    const SizedBox(height: 20),
-                                            itemBuilder: (context, index) {
-                                              return PageItemLoader(
-                                                wordDocument:
-                                                    widget.wordDocument,
-                                                pageIndex: index,
-                                                zoomScale: currentZoom,
-                                              );
-                                            },
                                           ),
                                         ),
                                       ),
-                                    ),
-                                  );
-                                },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            ValueListenableBuilder<int>(
-              valueListenable: _currentPageNotifier,
-              builder: (context, value, child) {
-                return DocViewerBottomToolbar(
-                  wordDocument: widget.wordDocument,
-                  pageNumberController: _pageNumberController,
-                  findPreviousVisited: _findPreviousVisited,
-                  findNextVisited: _findNextVisited,
-                  goToPreviousVisitedPage: _goToPreviousVisitedPage,
-                  goToNextVisitedPage: _goToNextVisitedPage,
-                  jumpToPage: _jumpToPage,
-                  // Force UI update on slider change as we now rely on scroll offset
-                  onSliderChanged: (value) => _jumpToPage(value.round() - 1),
-                );
-              },
-            ),
-          ],
+                      ],
+                    ),
+                  );
+                },
+              ),
+              ValueListenableBuilder<int>(
+                valueListenable: _currentPageNotifier,
+                builder: (context, value, child) {
+                  return DocViewerBottomToolbar(
+                    wordDocument: widget.wordDocument,
+                    pageNumberController: _pageNumberController,
+                    findPreviousVisited: _findPreviousVisited,
+                    findNextVisited: _findNextVisited,
+                    goToPreviousVisitedPage: _goToPreviousVisitedPage,
+                    goToNextVisitedPage: _goToNextVisitedPage,
+                    jumpToPage: _jumpToPage,
+                    // Force UI update on slider change as we now rely on scroll offset
+                    onSliderChanged: (value) => _jumpToPage(value.round() - 1),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );

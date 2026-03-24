@@ -10,7 +10,8 @@ import 'StorageHelper.dart';
 /// High-performance SQLite database for books metadata
 /// Optimized for large-scale projects with thousands of books, authors, and sections
 class BooksMetadataDatabase {
-  static final BooksMetadataDatabase _instance = BooksMetadataDatabase._internal();
+  static final BooksMetadataDatabase _instance =
+      BooksMetadataDatabase._internal();
   factory BooksMetadataDatabase() => _instance;
   BooksMetadataDatabase._internal();
 
@@ -41,7 +42,7 @@ class BooksMetadataDatabase {
 
       // Ensure tables exist even if database was created before
       await _ensureTablesExist(_database!);
-      
+
       // Run migrations for existing databases
       await _migrateDatabase(_database!, 1, _version);
 
@@ -141,7 +142,7 @@ class BooksMetadataDatabase {
       // Check each table individually to avoid IN clause issues with sqflite_common_ffi
       final requiredTables = ['authors', 'sections', 'books'];
       final existingTables = <String>{};
-      
+
       for (final tableName in requiredTables) {
         try {
           final result = await db.rawQuery(
@@ -156,11 +157,15 @@ class BooksMetadataDatabase {
           print("BooksMetadataDatabase: Error checking table $tableName: $e");
         }
       }
-      
-      final missingTables = requiredTables.where((t) => !existingTables.contains(t)).toList();
-      
+
+      final missingTables = requiredTables
+          .where((t) => !existingTables.contains(t))
+          .toList();
+
       if (missingTables.isNotEmpty) {
-        print("BooksMetadataDatabase: Missing tables: $missingTables, creating them...");
+        print(
+          "BooksMetadataDatabase: Missing tables: $missingTables, creating them...",
+        );
         await _createTables(db);
         print("BooksMetadataDatabase: Tables created successfully");
       } else {
@@ -175,32 +180,44 @@ class BooksMetadataDatabase {
         print("BooksMetadataDatabase: Tables created after error");
       } catch (e2) {
         // If tables already exist, this is fine
-        if (!e2.toString().contains('already exists') && 
+        if (!e2.toString().contains('already exists') &&
             !e2.toString().contains('duplicate') &&
             !e2.toString().contains('bad parameter')) {
           print("BooksMetadataDatabase: Failed to create tables: $e2");
         } else {
-          print("BooksMetadataDatabase: Tables may already exist, ignoring error");
+          print(
+            "BooksMetadataDatabase: Tables may already exist, ignoring error",
+          );
         }
       }
     }
   }
 
   /// Migrate database schema
-  Future<void> _migrateDatabase(Database db, int oldVersion, int newVersion) async {
+  Future<void> _migrateDatabase(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     if (oldVersion < 2) {
       // Migration to version 2: Add death_year column to authors table
       try {
         // Check if column already exists
         final tableInfo = await db.rawQuery("PRAGMA table_info(authors)");
-        final hasDeathYear = tableInfo.any((column) => column['name'] == 'death_year');
-        
+        final hasDeathYear = tableInfo.any(
+          (column) => column['name'] == 'death_year',
+        );
+
         if (!hasDeathYear) {
-          print("BooksMetadataDatabase: Migrating to version 2 - adding death_year column");
+          print(
+            "BooksMetadataDatabase: Migrating to version 2 - adding death_year column",
+          );
           await db.execute('ALTER TABLE authors ADD COLUMN death_year TEXT');
           print("BooksMetadataDatabase: Migration to version 2 completed");
         } else {
-          print("BooksMetadataDatabase: death_year column already exists, skipping migration");
+          print(
+            "BooksMetadataDatabase: death_year column already exists, skipping migration",
+          );
         }
       } catch (e) {
         print("BooksMetadataDatabase: Error during migration to version 2: $e");
@@ -212,7 +229,11 @@ class BooksMetadataDatabase {
   // ==================== Authors ====================
 
   /// Get all authors with pagination
-  Future<List<Author>> getAuthors({int? limit, int? offset, String? searchQuery}) async {
+  Future<List<Author>> getAuthors({
+    int? limit,
+    int? offset,
+    String? searchQuery,
+  }) async {
     final db = await database;
     String query = 'SELECT * FROM authors';
     List<dynamic> args = [];
@@ -234,12 +255,16 @@ class BooksMetadataDatabase {
     }
 
     final results = await db.rawQuery(query, args);
-    return results.map((row) => Author(
-      id: row['id'] as String,
-      name: row['name'] as String,
-      description: row['description'] as String? ?? '',
-      deathYear: row['death_year'] as String?,
-    )).toList();
+    return results
+        .map(
+          (row) => Author(
+            id: row['id'] as String,
+            name: row['name'] as String,
+            description: row['description'] as String? ?? '',
+            deathYear: row['death_year'] as String?,
+          ),
+        )
+        .toList();
   }
 
   /// Get author by ID
@@ -261,20 +286,35 @@ class BooksMetadataDatabase {
     );
   }
 
+  /// Get author by Name
+  Future<Author?> getAuthorByName(String name) async {
+    final db = await database;
+    final results = await db.query(
+      'authors',
+      where: 'name = ?',
+      whereArgs: [name],
+      limit: 1,
+    );
+    if (results.isEmpty) return null;
+    final row = results.first;
+    return Author(
+      id: row['id'] as String,
+      name: row['name'] as String,
+      description: row['description'] as String? ?? '',
+      deathYear: row['death_year'] as String?,
+    );
+  }
+
   /// Add or update author
   Future<void> saveAuthor(Author author) async {
     final db = await database;
-    await db.insert(
-      'authors',
-      {
-        'id': author.id,
-        'name': author.name,
-        'description': author.description,
-        'death_year': author.deathYear,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('authors', {
+      'id': author.id,
+      'name': author.name,
+      'description': author.description,
+      'death_year': author.deathYear,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Batch insert authors
@@ -284,17 +324,13 @@ class BooksMetadataDatabase {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     for (final author in authors) {
-      batch.insert(
-        'authors',
-        {
-          'id': author.id,
-          'name': author.name,
-          'description': author.description,
-          'death_year': author.deathYear,
-          'created_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      batch.insert('authors', {
+        'id': author.id,
+        'name': author.name,
+        'description': author.description,
+        'death_year': author.deathYear,
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
     await batch.commit(noResult: true);
@@ -324,7 +360,11 @@ class BooksMetadataDatabase {
   // ==================== Sections ====================
 
   /// Get all sections with pagination
-  Future<List<Section>> getSections({int? limit, int? offset, String? searchQuery}) async {
+  Future<List<Section>> getSections({
+    int? limit,
+    int? offset,
+    String? searchQuery,
+  }) async {
     final db = await database;
     String query = 'SELECT * FROM sections';
     List<dynamic> args = [];
@@ -346,10 +386,12 @@ class BooksMetadataDatabase {
     }
 
     final results = await db.rawQuery(query, args);
-    return results.map((row) => Section(
-      id: row['id'] as String,
-      title: row['title'] as String,
-    )).toList();
+    return results
+        .map(
+          (row) =>
+              Section(id: row['id'] as String, title: row['title'] as String),
+        )
+        .toList();
   }
 
   /// Get section by ID
@@ -363,24 +405,17 @@ class BooksMetadataDatabase {
     );
     if (results.isEmpty) return null;
     final row = results.first;
-    return Section(
-      id: row['id'] as String,
-      title: row['title'] as String,
-    );
+    return Section(id: row['id'] as String, title: row['title'] as String);
   }
 
   /// Add or update section
   Future<void> saveSection(Section section) async {
     final db = await database;
-    await db.insert(
-      'sections',
-      {
-        'id': section.id,
-        'title': section.title,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('sections', {
+      'id': section.id,
+      'title': section.title,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Batch insert sections
@@ -390,15 +425,11 @@ class BooksMetadataDatabase {
     final now = DateTime.now().millisecondsSinceEpoch;
 
     for (final section in sections) {
-      batch.insert(
-        'sections',
-        {
-          'id': section.id,
-          'title': section.title,
-          'created_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      batch.insert('sections', {
+        'id': section.id,
+        'title': section.title,
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
     await batch.commit(noResult: true);
@@ -473,13 +504,13 @@ class BooksMetadataDatabase {
   Future<BookCard?> getBookByName(String bookName) async {
     try {
       final db = await database;
-      
+
       // Use rawQuery to avoid parameter binding issues
       final results = await db.rawQuery(
         'SELECT * FROM books WHERE book_name = ? LIMIT 1',
         [bookName],
       );
-      
+
       if (results.isEmpty) return null;
       final row = results.first;
       return BookCard(
@@ -506,13 +537,17 @@ class BooksMetadataDatabase {
       whereArgs: [bookName],
       orderBy: 'book_path ASC',
     );
-    return results.map((row) => BookCard(
-      id: row['id'] as String,
-      title: row['book_name'] as String,
-      authorId: row['author_id'] as String? ?? '',
-      sectionId: row['section_id'] as String? ?? '',
-      description: row['description'] as String? ?? '',
-    )).toList();
+    return results
+        .map(
+          (row) => BookCard(
+            id: row['id'] as String,
+            title: row['book_name'] as String,
+            authorId: row['author_id'] as String? ?? '',
+            sectionId: row['section_id'] as String? ?? '',
+            description: row['description'] as String? ?? '',
+          ),
+        )
+        .toList();
   }
 
   /// Get all books with pagination and filters
@@ -554,13 +589,17 @@ class BooksMetadataDatabase {
     }
 
     final results = await db.rawQuery(query, args);
-    return results.map((row) => BookCard(
-      id: row['id'] as String,
-      title: row['book_name'] as String,
-      authorId: row['author_id'] as String? ?? '',
-      sectionId: row['section_id'] as String? ?? '',
-      description: row['description'] as String? ?? '',
-    )).toList();
+    return results
+        .map(
+          (row) => BookCard(
+            id: row['id'] as String,
+            title: row['book_name'] as String,
+            authorId: row['author_id'] as String? ?? '',
+            sectionId: row['section_id'] as String? ?? '',
+            description: row['description'] as String? ?? '',
+          ),
+        )
+        .toList();
   }
 
   /// Get book paths filtered by author and/or section
@@ -571,7 +610,7 @@ class BooksMetadataDatabase {
     print("===== [BooksMetadataDatabase.getBookPaths] ===== Called");
     print("  authorId: $authorId (type: ${authorId.runtimeType})");
     print("  sectionId: $sectionId (type: ${sectionId.runtimeType})");
-    
+
     final db = await database;
     String query = 'SELECT book_path FROM books WHERE 1=1';
     List<dynamic> args = [];
@@ -580,22 +619,28 @@ class BooksMetadataDatabase {
       final authorIdStr = authorId.toString().trim();
       query += ' AND author_id = ?';
       args.add(authorIdStr);
-      print("===== [BooksMetadataDatabase.getBookPaths] ===== Added author_id filter: $authorIdStr");
+      print(
+        "===== [BooksMetadataDatabase.getBookPaths] ===== Added author_id filter: $authorIdStr",
+      );
     }
 
     if (sectionId != null && sectionId.toString().trim().isNotEmpty) {
       final sectionIdStr = sectionId.toString().trim();
       query += ' AND section_id = ?';
       args.add(sectionIdStr);
-      print("===== [BooksMetadataDatabase.getBookPaths] ===== Added section_id filter: $sectionIdStr");
+      print(
+        "===== [BooksMetadataDatabase.getBookPaths] ===== Added section_id filter: $sectionIdStr",
+      );
     }
 
     print("===== [BooksMetadataDatabase.getBookPaths] ===== Query: $query");
     print("===== [BooksMetadataDatabase.getBookPaths] ===== Args: $args");
-    
+
     try {
       final results = await db.rawQuery(query, args);
-      print("===== [BooksMetadataDatabase.getBookPaths] ===== Found ${results.length} results");
+      print(
+        "===== [BooksMetadataDatabase.getBookPaths] ===== Found ${results.length} results",
+      );
       return results.map((row) => row['book_path'] as String).toList();
     } catch (e, stackTrace) {
       print("===== [BooksMetadataDatabase.getBookPaths] ===== ERROR: $e");
@@ -607,19 +652,15 @@ class BooksMetadataDatabase {
   /// Add or update book
   Future<void> saveBook(BookCard book, String bookPath) async {
     final db = await database;
-    await db.insert(
-      'books',
-      {
-        'id': book.id,
-        'book_path': bookPath,
-        'book_name': book.title,
-        'author_id': book.authorId.isNotEmpty ? book.authorId : null,
-        'section_id': book.sectionId.isNotEmpty ? book.sectionId : null,
-        'description': book.description,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('books', {
+      'id': book.id,
+      'book_path': bookPath,
+      'book_name': book.title,
+      'author_id': book.authorId.isNotEmpty ? book.authorId : null,
+      'section_id': book.sectionId.isNotEmpty ? book.sectionId : null,
+      'description': book.description,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Batch insert books
@@ -631,20 +672,16 @@ class BooksMetadataDatabase {
     for (final bookData in books) {
       final book = bookData['book'] as BookCard;
       final bookPath = bookData['book_path'] as String;
-      
-      batch.insert(
-        'books',
-        {
-          'id': book.id,
-          'book_path': bookPath,
-          'book_name': book.title,
-          'author_id': book.authorId.isNotEmpty ? book.authorId : null,
-          'section_id': book.sectionId.isNotEmpty ? book.sectionId : null,
-          'description': book.description,
-          'created_at': now,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+
+      batch.insert('books', {
+        'id': book.id,
+        'book_path': bookPath,
+        'book_name': book.title,
+        'author_id': book.authorId.isNotEmpty ? book.authorId : null,
+        'section_id': book.sectionId.isNotEmpty ? book.sectionId : null,
+        'description': book.description,
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
     await batch.commit(noResult: true);
@@ -719,7 +756,7 @@ class BooksMetadataDatabase {
       columns: ['book_path', 'author_id'],
       where: 'author_id IS NOT NULL',
     );
-    
+
     final Map<String, String> mapping = {};
     for (final row in results) {
       final path = row['book_path'] as String?;
@@ -737,16 +774,20 @@ class BooksMetadataDatabase {
     try {
       await initialize();
       final db = await database;
-      
+
       // Check if migration already done
       final migrationCheck = await db.rawQuery(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='migration_status'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='migration_status'",
       );
-      
+
       bool migrationCompleted = false;
-      
+
       if (migrationCheck.isNotEmpty) {
-        final status = await db.query('migration_status', where: 'migration_key = ?', whereArgs: ['shared_prefs_to_sqlite']);
+        final status = await db.query(
+          'migration_status',
+          where: 'migration_key = ?',
+          whereArgs: ['shared_prefs_to_sqlite'],
+        );
         if (status.isNotEmpty && (status.first['completed'] as int) == 1) {
           print("BooksMetadataDatabase: Migration already completed");
           migrationCompleted = true;
@@ -763,13 +804,17 @@ class BooksMetadataDatabase {
       }
 
       if (!migrationCompleted) {
-        print("BooksMetadataDatabase: Starting migration from SharedPreferences...");
-        
+        print(
+          "BooksMetadataDatabase: Starting migration from SharedPreferences...",
+        );
+
         // Migrate Authors
         const AUTHORS_KEY = "authors_key";
         final authorsData = StorageHelper.getListOfMaps(AUTHORS_KEY);
         if (authorsData != null && authorsData.isNotEmpty) {
-          final authors = authorsData.map((json) => Author.fromJson(json)).toList();
+          final authors = authorsData
+              .map((json) => Author.fromJson(json))
+              .toList();
           await batchInsertAuthors(authors);
           print("BooksMetadataDatabase: Migrated ${authors.length} authors");
         }
@@ -778,7 +823,9 @@ class BooksMetadataDatabase {
         const SECTIONS_KEY = "sections_key";
         final sectionsData = StorageHelper.getListOfMaps(SECTIONS_KEY);
         if (sectionsData != null && sectionsData.isNotEmpty) {
-          final sections = sectionsData.map((json) => Section.fromJson(json)).toList();
+          final sections = sectionsData
+              .map((json) => Section.fromJson(json))
+              .toList();
           await batchInsertSections(sections);
           print("BooksMetadataDatabase: Migrated ${sections.length} sections");
         }
@@ -787,11 +834,13 @@ class BooksMetadataDatabase {
         const BOOK_CARD_KEY = "book_card_key";
         final booksData = StorageHelper.getListOfMaps(BOOK_CARD_KEY);
         if (booksData != null && booksData.isNotEmpty) {
-          final books = booksData.map((json) => BookCard.fromJson(json)).toList();
-          
+          final books = booksData
+              .map((json) => BookCard.fromJson(json))
+              .toList();
+
           // Try to get book_path from ArabicSearchEngine metadata
           final bookPaths = await _getBookPathsFromSearchEngine(books);
-          
+
           final booksWithPaths = <Map<String, dynamic>>[];
           for (int i = 0; i < books.length; i++) {
             final book = books[i];
@@ -801,50 +850,49 @@ class BooksMetadataDatabase {
               // If not found, create a placeholder path (will be updated when book is indexed)
               bookPath = '${book.title}.docx';
             }
-            booksWithPaths.add({
-              'book': book,
-              'book_path': bookPath,
-            });
+            booksWithPaths.add({'book': book, 'book_path': bookPath});
           }
-          
+
           await batchInsertBooks(booksWithPaths);
           print("BooksMetadataDatabase: Migrated ${books.length} books");
         }
 
         // Mark migration as completed
-        await db.insert(
-          'migration_status',
-          {
-            'migration_key': 'shared_prefs_to_sqlite',
-            'completed': 1,
-            'migrated_at': DateTime.now().millisecondsSinceEpoch,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        await db.insert('migration_status', {
+          'migration_key': 'shared_prefs_to_sqlite',
+          'completed': 1,
+          'migrated_at': DateTime.now().millisecondsSinceEpoch,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
         print("BooksMetadataDatabase: Migration completed and marked");
       }
-      
+
       // Always check and create default data if needed (even if migration was already done)
       print("BooksMetadataDatabase: Ensuring default data exists...");
-      
+
       // Check if we have any authors, if not, create defaults
       final authorCount = await countAuthors();
       print("BooksMetadataDatabase: Author count: $authorCount");
       if (authorCount == 0) {
-        print("BooksMetadataDatabase: No authors found, creating default authors...");
+        print(
+          "BooksMetadataDatabase: No authors found, creating default authors...",
+        );
         final defaultAuthors = [
           Author(name: "مؤلف غير معروف", description: "مؤلف غير معروف"),
         ];
         await batchInsertAuthors(defaultAuthors);
         final newCount = await countAuthors();
-        print("BooksMetadataDatabase: Created ${defaultAuthors.length} default authors, new count: $newCount");
+        print(
+          "BooksMetadataDatabase: Created ${defaultAuthors.length} default authors, new count: $newCount",
+        );
       }
-      
+
       // Check if we have any sections, if not, create defaults
       final sectionCount = await countSections();
       print("BooksMetadataDatabase: Section count: $sectionCount");
       if (sectionCount == 0) {
-        print("BooksMetadataDatabase: No sections found, creating default sections...");
+        print(
+          "BooksMetadataDatabase: No sections found, creating default sections...",
+        );
         final defaultSections = [
           Section(title: "تفسير القرآن الكريم"),
           Section(title: "كتب السنة"),
@@ -855,19 +903,17 @@ class BooksMetadataDatabase {
         ];
         await batchInsertSections(defaultSections);
         final newCount = await countSections();
-        print("BooksMetadataDatabase: Created ${defaultSections.length} default sections, new count: $newCount");
+        print(
+          "BooksMetadataDatabase: Created ${defaultSections.length} default sections, new count: $newCount",
+        );
       }
 
       // Mark migration as completed
-      await db.insert(
-        'migration_status',
-        {
-          'migration_key': 'shared_prefs_to_sqlite',
-          'completed': 1,
-          'migrated_at': DateTime.now().millisecondsSinceEpoch,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await db.insert('migration_status', {
+        'migration_key': 'shared_prefs_to_sqlite',
+        'completed': 1,
+        'migrated_at': DateTime.now().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       print("BooksMetadataDatabase: Migration completed successfully");
       return true;
@@ -878,18 +924,27 @@ class BooksMetadataDatabase {
   }
 
   /// Get book paths from search engine metadata
-  Future<Map<String, String>> _getBookPathsFromSearchEngine(List<BookCard> books) async {
+  Future<Map<String, String>> _getBookPathsFromSearchEngine(
+    List<BookCard> books,
+  ) async {
     try {
       // Try to access ArabicSearchEngine's books_metadata table
       final appDocDir = await getApplicationDocumentsDirectory();
-      final searchDbPath = p.join(appDocDir.path, 'tome_ocean', 'arabic_search.db');
-      
+      final searchDbPath = p.join(
+        appDocDir.path,
+        'tome_ocean',
+        'arabic_search.db',
+      );
+
       if (!await File(searchDbPath).exists()) {
         return {};
       }
 
       final searchDb = await openDatabase(searchDbPath, readOnly: true);
-      final results = await searchDb.query('books_metadata', columns: ['book_path', 'book_name']);
+      final results = await searchDb.query(
+        'books_metadata',
+        columns: ['book_path', 'book_name'],
+      );
       await searchDb.close();
 
       final Map<String, String> bookPaths = {};
@@ -901,7 +956,9 @@ class BooksMetadataDatabase {
 
       return bookPaths;
     } catch (e) {
-      print("BooksMetadataDatabase: Error getting book paths from search engine: $e");
+      print(
+        "BooksMetadataDatabase: Error getting book paths from search engine: $e",
+      );
       return {};
     }
   }
@@ -915,4 +972,3 @@ class BooksMetadataDatabase {
     }
   }
 }
-

@@ -38,18 +38,36 @@ class WordPage {
     wordPage.ps = (json['ps'] as List<dynamic>)
         .map((e) => Paragraph.fromMap(e as Map<String, dynamic>, wordPage))
         .toList();
-    for (var fn in wordPage.fns) {
-      fn.p.parent = wordPage; // Re-establish parent for footnote paragraphs
+
+    // إعادة بناء الحواشي بشكل صحيح مع ربط الـ parent
+    if (json['fns'] != null) {
+      wordPage.fns = (json['fns'] as List<dynamic>)
+          .map((e) => FootNote.fromMap(e as Map<String, dynamic>, wordPage))
+          .toList();
     }
     return wordPage;
   }
 
+  /// نص الصفحة (المتن + الحواشي) مع فواصل واضحة بينهما
+  /// نضيف سطرين فارغين بين المتن والحواشي، وسطرين في النهاية حتى يكون هناك
+  /// فراغ عند دمج صفحات متعددة.
   String text() {
-    String text = "";
-    ps.forEach((paragraph) {
-      text = text + "\n" + paragraph.text;
-    });
-    return text;
+    final String body = ps.map((p) => p.text).join("\n");
+
+    final String footnotesText = fns
+        .expand((fn) => fn.paragraphs)
+        .map((p) => p.text)
+        .where((t) => t.isNotEmpty)
+        .join("\n");
+
+    if (footnotesText.isEmpty) {
+      // أعد المتن مع سطرين فارغين في النهاية لترك فاصل بين الصفحات عند النسخ
+      return "$body\n\n";
+    }
+
+    // متن
+    // سطرين فراغ + الحواشي + سطرين فراغ كفاصل بين الصفحات
+    return "$body\n\n$footnotesText\n\n";
   }
 
   addParagraph(XmlElement element) {
@@ -58,10 +76,128 @@ class WordPage {
     // wordDocument.fontsList.addAll(p.fontsMap);
   }
 
-  Widget toWidget() {
+  /// ECMA-376 §20.4.2.3: Floating images with wrapping modes reserve space
+  /// in the text flow. Paragraphs anchoring these images are often empty and
+  /// skipped by _isParagraphVisuallyRelevant, so the Column has no knowledge
+  /// of the space they occupy. This method computes the vertical clearance
+  /// needed at the top of the content Column so that visible content starts
+  /// below the bottom of these images.
+  ///
+  /// [effectiveTopMargin] is the actual top padding applied to the content
+  /// area (includes header height, frame padding, etc.).
+  double computeFlowClearance(double effectiveTopMargin) {
+    final sectPr = parent.getSectPrForPage(pageIndex);
+    final topMargin = sectPr.topMargin;
+    final contentHeight =
+        (sectPr.height ?? 842) - topMargin - sectPr.bottomMargin;
+
+    // Use getPageImageData() which is the same source that successfully
+    // renders images in the foreground/background layers. This avoids
+    // issues with image data not being available in ps[].runs after
+    // JSON cache deserialization.
+    final pageImages = getPageImageData();
+
+    double maxImageBottom = 0;
+
+    for (final img in pageImages) {
+      if (img.behindDoc) continue;
+      if (img.wrapMode == null || img.wrapMode == 'None') continue;
+
+      // Image bottom relative to page top
+      double imgBottomFromPageTop;
+      if (img.relativeFromV == 'page' || img.relativeFromV == 'topMargin') {
+        imgBottomFromPageTop = img.posY + img.height;
+      } else {
+        // margin-relative (most common for these images)
+        imgBottomFromPageTop = topMargin + img.posY + img.height;
+      }
+
+      // Image bottom relative to where the content Column actually starts
+      double imgBottomInColumn = imgBottomFromPageTop - effectiveTopMargin;
+
+      // Only top-zone images: avoid bottom-of-page images inflating clearance
+      if (imgBottomInColumn > contentHeight * 0.5) continue;
+      if (imgBottomInColumn <= 0) continue;
+
+      if (imgBottomInColumn > maxImageBottom) {
+        maxImageBottom = imgBottomInColumn;
+      }
+    }
+
+    return maxImageBottom;
+  }
+
+  Widget toWidget({double topFlowClearance = 0}) {
+    final children = <Widget>[];
+
+    if (topFlowClearance > 0) {
+      children.add(SizedBox(height: topFlowClearance));
+    }
+
+    final previousPage = parent.getLoadedPageIfAvailable(pageIndex - 1);
+    final nextPage = parent.getLoadedPageIfAvailable(pageIndex + 1);
+
+    int index = 0;
+    while (index < ps.length) {
+      final paragraph = ps[index];
+      final borderSpec = paragraph.getParagraphBorderSpec();
+      final isVisibleParagraph = _isParagraphVisuallyRelevant(paragraph);
+
+      if (!isVisibleParagraph) {
+        index++;
+        continue;
+      }
+
+      if (borderSpec == null) {
+        children.add(paragraph.toWidget());
+        index++;
+        continue;
+      }
+
+      int logicalEnd = index;
+      while (logicalEnd + 1 < ps.length) {
+        final nextParagraph = ps[logicalEnd + 1];
+        final nextSpec = nextParagraph.getParagraphBorderSpec();
+        if (nextSpec == null || nextSpec.signature != borderSpec.signature) {
+          break;
+        }
+        logicalEnd++;
+      }
+
+      final groupedParagraphs = ps
+          .sublist(index, logicalEnd + 1)
+          .where(_isParagraphVisuallyRelevant)
+          .toList();
+
+      if (groupedParagraphs.isEmpty) {
+        index = logicalEnd + 1;
+        continue;
+      }
+
+      final previousBorderedSpec = _lastVisibleBorderSpec(previousPage);
+      final nextBorderedSpec = _firstVisibleBorderSpec(nextPage);
+      final continuesFromPrevious =
+          index == 0 &&
+          previousBorderedSpec?.signature == borderSpec.signature;
+      final continuesToNext =
+          logicalEnd == ps.length - 1 &&
+          nextBorderedSpec?.signature == borderSpec.signature;
+
+      children.add(
+        _ParagraphBorderGroupWidget(
+          paragraphs: groupedParagraphs,
+          spec: borderSpec,
+          paintTop: !continuesFromPrevious,
+          paintBottom: !continuesToNext,
+        ),
+      );
+      index = logicalEnd + 1;
+    }
+
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: [...ps.map((e) => e.toWidget()).toList()],
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
     );
     // List<InlineSpan> spans =[];
     // ps.forEach((p){
@@ -76,7 +212,8 @@ class WordPage {
   }
 
   List<ImageData> getPageImageData() {
-    return getParagraphImages(ps);
+    SectPr sectPr = parent.getSectPrForPage(pageIndex);
+    return getParagraphImages(ps, sectPr);
   }
 
   Widget getPageIamgesWiLi() {
@@ -126,22 +263,14 @@ class WordPage {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ...fns.map(
-          (fn) => GestureDetector(
-            onLongPress: () {
-              print(
-                "🔍 FOOTNOTE DEBUG: Long Press Detected on Footnote ID: ${fn.id}",
-              );
-              fn.p.printParagraphXml();
-            },
-            child: SelectionArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 2.0,
-                ),
-                child: fn.p.toWidget(),
+        ...fns.expand(
+          (fn) => fn.paragraphs.map(
+            (paragraph) => Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 2.0,
               ),
+              child: paragraph.toWidget(),
             ),
           ),
         ),
@@ -151,10 +280,10 @@ class WordPage {
 
   /// رقم الصفحة (Footer) - يظهر في الهامش السفلي
   Widget footerW() {
-    SectPr sectPr = parent.getSectPrForPage(this.pageIndex - 1);
+    SectPr sectPr = parent.getSectPrForPage(this.pageIndex);
 
     // Calculate page number using the document's current page index
-    String pageNumStr = sectPr.calculatePageNumber(this.pageIndex - 1);
+    String pageNumStr = sectPr.calculatePageNumber(this.pageIndex);
 
     Widget footerContent = sectPr.getSectFooterWidget(this, pageNumStr);
 
@@ -193,14 +322,14 @@ class WordPage {
       "╚══════════════════════════════════════════════════════════════════╝",
     );
 
-    StringBuffer buffer = StringBuffer();
-    buffer.writeln(
+    StringBuffer pageBuffer = StringBuffer();
+    pageBuffer.writeln(
       "╔══════════════════════════════════════════════════════════════════╗",
     );
-    buffer.writeln(
+    pageBuffer.writeln(
       "║                     PAGE XML START                               ║",
     );
-    buffer.writeln(
+    pageBuffer.writeln(
       "╚══════════════════════════════════════════════════════════════════╝",
     );
 
@@ -219,8 +348,8 @@ class WordPage {
         print(logMsg);
         print(xmlStr);
 
-        buffer.writeln(logMsg);
-        buffer.writeln(xmlStr);
+        pageBuffer.writeln(logMsg);
+        pageBuffer.writeln(xmlStr);
       }
     }
 
@@ -234,36 +363,373 @@ class WordPage {
       "╚══════════════════════════════════════════════════════════════════╝",
     );
 
-    buffer.writeln(
+    pageBuffer.writeln(
       "\n╔══════════════════════════════════════════════════════════════════╗",
     );
-    buffer.writeln(
+    pageBuffer.writeln(
       "║                      PAGE XML END                                ║",
     );
-    buffer.writeln(
+    pageBuffer.writeln(
       "╚══════════════════════════════════════════════════════════════════╝",
     );
 
     try {
       final file = File('test_page_xml.xml');
-      file.writeAsStringSync(buffer.toString());
+      file.writeAsStringSync(pageBuffer.toString());
       print("✅ XML saved to file: ${file.absolute.path}");
     } catch (e) {
       print("❌ Error saving XML to file: $e");
     }
+
+    // Save header XML
+    _saveHeaderXml();
+
+    // Save footer XML
+    _saveFooterXml();
+  }
+
+  /// حفظ XML الهيدر في ملف منفصل
+  void _saveHeaderXml() {
+    try {
+      SectPr sectPr = parent.getSectPrForPage(this.pageIndex);
+      XmlElement? header = sectPr.getRequestedHeader(this.pageIndex);
+      
+      if (header != null) {
+        StringBuffer headerBuffer = StringBuffer();
+        headerBuffer.writeln(
+          "╔══════════════════════════════════════════════════════════════════╗",
+        );
+        headerBuffer.writeln(
+          "║                     HEADER XML START                              ║",
+        );
+        headerBuffer.writeln(
+          "╚══════════════════════════════════════════════════════════════════╝",
+        );
+        
+        headerBuffer.writeln(header.toXmlString(pretty: true));
+        
+        headerBuffer.writeln(
+          "╔══════════════════════════════════════════════════════════════════╗",
+        );
+        headerBuffer.writeln(
+          "║                      HEADER XML END                              ║",
+        );
+        headerBuffer.writeln(
+          "╚══════════════════════════════════════════════════════════════════╝",
+        );
+
+        final file = File('test_header_xml.xml');
+        file.writeAsStringSync(headerBuffer.toString());
+        print("✅ Header XML saved to file: ${file.absolute.path}");
+      } else {
+        print("ℹ️ No header found for page ${this.pageIndex}");
+      }
+    } catch (e) {
+      print("❌ Error saving header XML to file: $e");
+    }
+  }
+
+  /// حفظ XML الفوتر في ملف منفصل
+  void _saveFooterXml() {
+    try {
+      SectPr sectPr = parent.getSectPrForPage(this.pageIndex);
+      XmlElement? footer = sectPr.getRequestedFooter(this.pageIndex);
+      
+      if (footer != null) {
+        StringBuffer footerBuffer = StringBuffer();
+        footerBuffer.writeln(
+          "╔══════════════════════════════════════════════════════════════════╗",
+        );
+        footerBuffer.writeln(
+          "║                     FOOTER XML START                              ║",
+        );
+        footerBuffer.writeln(
+          "╚══════════════════════════════════════════════════════════════════╝",
+        );
+        
+        footerBuffer.writeln(footer.toXmlString(pretty: true));
+        
+        footerBuffer.writeln(
+          "╔══════════════════════════════════════════════════════════════════╗",
+        );
+        footerBuffer.writeln(
+          "║                      FOOTER XML END                              ║",
+        );
+        footerBuffer.writeln(
+          "╚══════════════════════════════════════════════════════════════════╝",
+        );
+
+        final file = File('test_footer_xml.xml');
+        file.writeAsStringSync(footerBuffer.toString());
+        print("✅ Footer XML saved to file: ${file.absolute.path}");
+      } else {
+        print("ℹ️ No footer found for page ${this.pageIndex}");
+      }
+    } catch (e) {
+      print("❌ Error saving footer XML to file: $e");
+    }
+  }
+
+ }
+
+class _ParagraphBorderGroupWidget extends StatelessWidget {
+  final List<Paragraph> paragraphs;
+  final ParagraphBorderSpec spec;
+  final bool paintTop;
+  final bool paintBottom;
+
+  const _ParagraphBorderGroupWidget({
+    required this.paragraphs,
+    required this.spec,
+    this.paintTop = true,
+    this.paintBottom = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final topSpace = _spaceToPx(spec.top?.space ?? 0);
+    final bottomSpace = _spaceToPx(spec.bottom?.space ?? 0);
+    final leftSpace = _spaceToPx(spec.left?.space ?? 0);
+    final rightSpace = _spaceToPx(spec.right?.space ?? 0);
+
+    return CustomPaint(
+      foregroundPainter: _ParagraphBorderGroupPainter(
+        spec: spec,
+        paintTop: paintTop,
+        paintBottom: paintBottom,
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(
+          top: paintTop ? topSpace : 0,
+          bottom: paintBottom ? bottomSpace : 0,
+          left: leftSpace,
+          right: rightSpace,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ...paragraphs.map(
+              (paragraph) => paragraph.toWidget(suppressParagraphBorder: true),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
-List<ImageData> getParagraphImages(List<Paragraph> paragraphs) {
+class _ParagraphBorderGroupPainter extends CustomPainter {
+  final ParagraphBorderSpec spec;
+  final bool paintTop;
+  final bool paintBottom;
+
+  const _ParagraphBorderGroupPainter({
+    required this.spec,
+    this.paintTop = true,
+    this.paintBottom = true,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+
+    if (paintTop) {
+      _paintHorizontal(canvas, rect, spec.top, rect.top);
+    }
+    if (paintBottom) {
+      _paintHorizontal(canvas, rect, spec.bottom, rect.bottom, isBottom: true);
+    }
+    _paintVertical(canvas, rect, spec.left, rect.left);
+    _paintVertical(canvas, rect, spec.right, rect.right, isRight: true);
+  }
+
+  void _paintHorizontal(
+    Canvas canvas,
+    Rect rect,
+    ParagraphBorderSideSpec? side,
+    double y, {
+    bool isBottom = false,
+  }) {
+    if (side == null) return;
+
+    final strokeWidth = side.width;
+    final adjustedY = isBottom ? y - strokeWidth / 2 : y + strokeWidth / 2;
+
+    if (side.style == 'double') {
+      _drawDoubleHorizontal(canvas, rect, side, adjustedY);
+      return;
+    }
+
+    _drawLine(canvas, Offset(rect.left, adjustedY), Offset(rect.right, adjustedY), side);
+  }
+
+  void _paintVertical(
+    Canvas canvas,
+    Rect rect,
+    ParagraphBorderSideSpec? side,
+    double x, {
+    bool isRight = false,
+  }) {
+    if (side == null) return;
+
+    final strokeWidth = side.width;
+    final adjustedX = isRight ? x - strokeWidth / 2 : x + strokeWidth / 2;
+
+    if (side.style == 'double') {
+      _drawDoubleVertical(canvas, rect, side, adjustedX);
+      return;
+    }
+
+    _drawLine(canvas, Offset(adjustedX, rect.top), Offset(adjustedX, rect.bottom), side);
+  }
+
+  void _drawDoubleHorizontal(
+    Canvas canvas,
+    Rect rect,
+    ParagraphBorderSideSpec side,
+    double centerY,
+  ) {
+    final lineWidth = (side.width / 3).clamp(0.5, side.width);
+    final gap = lineWidth;
+    final offset = (gap / 2) + (lineWidth / 2);
+
+    _drawLineWithWidth(
+      canvas,
+      Offset(rect.left, centerY - offset),
+      Offset(rect.right, centerY - offset),
+      side,
+      lineWidth,
+    );
+    _drawLineWithWidth(
+      canvas,
+      Offset(rect.left, centerY + offset),
+      Offset(rect.right, centerY + offset),
+      side,
+      lineWidth,
+    );
+  }
+
+  void _drawDoubleVertical(
+    Canvas canvas,
+    Rect rect,
+    ParagraphBorderSideSpec side,
+    double centerX,
+  ) {
+    final lineWidth = (side.width / 3).clamp(0.5, side.width);
+    final gap = lineWidth;
+    final offset = (gap / 2) + (lineWidth / 2);
+
+    _drawLineWithWidth(
+      canvas,
+      Offset(centerX - offset, rect.top),
+      Offset(centerX - offset, rect.bottom),
+      side,
+      lineWidth,
+    );
+    _drawLineWithWidth(
+      canvas,
+      Offset(centerX + offset, rect.top),
+      Offset(centerX + offset, rect.bottom),
+      side,
+      lineWidth,
+    );
+  }
+
+  void _drawLine(
+    Canvas canvas,
+    Offset start,
+    Offset end,
+    ParagraphBorderSideSpec side,
+  ) {
+    _drawLineWithWidth(canvas, start, end, side, side.width);
+  }
+
+  void _drawLineWithWidth(
+    Canvas canvas,
+    Offset start,
+    Offset end,
+    ParagraphBorderSideSpec side,
+    double width,
+  ) {
+    final paint = Paint()
+      ..color = side.color
+      ..strokeWidth = width
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(start, end, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ParagraphBorderGroupPainter oldDelegate) {
+    return oldDelegate.spec.signature != spec.signature ||
+        oldDelegate.paintTop != paintTop ||
+        oldDelegate.paintBottom != paintBottom;
+  }
+}
+
+double _spaceToPx(double points) {
+  return points * 1.333;
+}
+
+ParagraphBorderSpec? _firstVisibleBorderSpec(WordPage? page) {
+  if (page == null) return null;
+  for (final paragraph in page.ps) {
+    if (!_isParagraphVisuallyRelevant(paragraph)) continue;
+    final spec = paragraph.getParagraphBorderSpec();
+    if (spec != null) return spec;
+  }
+  return null;
+}
+
+ParagraphBorderSpec? _lastVisibleBorderSpec(WordPage? page) {
+  if (page == null) return null;
+  for (final paragraph in page.ps.reversed) {
+    if (!_isParagraphVisuallyRelevant(paragraph)) continue;
+    final spec = paragraph.getParagraphBorderSpec();
+    if (spec != null) return spec;
+  }
+  return null;
+}
+
+bool _isParagraphVisuallyRelevant(Paragraph paragraph) {
+  if (paragraph.imageRunTs.isNotEmpty) return true;
+
+  final normalizedText = paragraph.text
+      .replaceAll(RegExp(r'\{\{PG:\d+\}\}'), '')
+      .trim();
+  if (normalizedText.isNotEmpty) return true;
+
+  for (final run in paragraph.runs) {
+    if (run.rpr?.vanish == true) continue;
+    final runText = (run.text ?? '').replaceAll(RegExp(r'\{\{PG:\d+\}\}'), '').trim();
+    if (runText.isNotEmpty) return true;
+  }
+
+  return false;
+}
+
+List<ImageData> getParagraphImages(List<Paragraph> paragraphs, SectPr sectPr) {
+  // Content area = page area minus margins. Images exceeding this MUST be at page level.
+  double contentW = (sectPr.width ?? 595) - sectPr.leftMargin - sectPr.rightMargin;
+  double contentH = (sectPr.height ?? 842) - sectPr.topMargin - sectPr.bottomMargin;
+
   List<ImageData> list = [];
   paragraphs.forEach((p) {
     p.runs.forEach((r) {
       // FIX: Exclude inline images (wrapMode == null) from the page-level image stack.
       // Inline images are already rendered within the text flow (Paragraph.toWidget).
       // Including them here causes duplication (appearing at 0,0 or top-left).
+      //
+      // OOXML Spec: paragraph-relative images that EXCEED the content area
+      // (e.g., full-page covers) must be at page level to extend beyond margins.
+      // Small paragraph-relative images stay at paragraph level for correct positioning.
+      bool isParaRelative = r.isRelativeFromVParagraph();
+      bool exceedsContentArea = r.image != null &&
+          (r.image!.width > contentW || r.image!.height > contentH);
+
       if (r.image != null &&
           r.image!.wrapMode != null &&
-          !r.isRelativeFromVParagraph()) {
+          (!isParaRelative || exceedsContentArea)) {
         // تخطي مربعات النص هنا لأننا نعرضها داخل الفقرة نفسها
         if (r.image!.textBoxText != null && r.image!.textBoxText!.isNotEmpty) {
           return;
