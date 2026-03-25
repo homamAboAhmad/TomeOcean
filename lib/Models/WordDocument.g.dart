@@ -49,15 +49,12 @@ WordDocument _$WordDocumentFromJson(Map<String, dynamic> json) => WordDocument()
     json['documentStyles'] as Map<String, dynamic>,
   )
   ..evenAndOddHeaders = json['evenAndOddHeaders'] as bool?
-  ..withDiacritics = json['withDiacritics'] as bool
-  ..useArabicNumerals = json['useArabicNumerals'] as bool
+  ..withDiacritics = json['withDiacritics'] as bool? ?? true
+  ..useArabicNumerals = json['useArabicNumerals'] as bool? ?? true
   ..index = (json['index'] as List<dynamic>)
       .map((e) => IndexItem.fromJson(e as Map<String, dynamic>))
       .toList()
-  ..selectedIndexItem = json['selectedIndexItem'] as String?
-  ..extractedFontPaths = Map<String, String>.from(
-    json['extractedFontPaths'] as Map,
-  );
+  ..selectedIndexItem = json['selectedIndexItem'] as String?;
 
 Map<String, dynamic> _$WordDocumentToJson(
   WordDocument instance,
@@ -89,5 +86,4 @@ Map<String, dynamic> _$WordDocumentToJson(
   'useArabicNumerals': instance.useArabicNumerals,
   'index': instance.index.map((e) => e.toJson()).toList(),
   'selectedIndexItem': instance.selectedIndexItem,
-  'extractedFontPaths': instance.extractedFontPaths,
 };

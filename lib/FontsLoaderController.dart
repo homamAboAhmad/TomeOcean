@@ -15,7 +15,6 @@ final List<String> _fontFiles = [
   "AL-Qairwan.otf",
   "AGA-Arabesque.otf",
   "(A) Arslan Wessam B.ttf",
-  "rwmwws.ttf",
 ];
 
 Future<void> loadFonts(List<String> fonts) async {
@@ -58,15 +57,15 @@ Future<void> loadExtractedFonts(Map<String, String> fontPaths) async {
   for (var entry in fontPaths.entries) {
     String fontFamily = entry.key;
     String fontPath = entry.value;
-
+    
     try {
       File fontFile = File(fontPath);
       if (!await fontFile.exists()) continue;
-
+      
       final fontData = await fontFile.readAsBytes();
       final fontLoader = FontLoader(fontFamily);
       fontLoader.addFont(
-        Future.value(ByteData.view(Uint8List.fromList(fontData).buffer)),
+        Future.value(ByteData.view(Uint8List.fromList(fontData).buffer))
       );
       await fontLoader.load();
     } catch (e) {

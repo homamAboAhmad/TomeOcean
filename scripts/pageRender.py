@@ -39,7 +39,18 @@ def register_namespaces():
     ET.register_namespace('w14', 'http://schemas.microsoft.com/office/word/2010/wordml')
     ET.register_namespace('mc', 'http://schemas.openxmlformats.org/markup-compatibility/2006')
 
+def is_word_running():
+    try:
+        for process in psutil.process_iter(['name']):
+            if process.info.get('name', '').lower() == "winword.exe":
+                return True
+    except Exception:
+        pass
+    return False
+
+
 def kill_word_processes():
+    """قتل كل عمليات Word (يستخدم فقط عندما لا يكون Word مفتوحاً للمستخدم)."""
     for process in psutil.process_iter():
         try:
             if process.name().lower() == "winword.exe":
@@ -53,58 +64,197 @@ def kill_word_processes():
     except:
         pass
 
+def _inject_footnote_bookmarks_via_vba(word_app, doc):
+    """
+    تنفيذ الماكرو الموحد (Unified Macro) عبر القالب المرفق.
+    يقوم الماكرو بـ:
+    1. حقن TheLibraryPage_X لكل صفحة.
+    2. حقن TheLibraryFN_X_PX لتقسيم الحواشي الطويلة.
+    
+    نستخدم AttachedTemplate بدلاً من AddIns.Add لأنه أكثر استقراراً.
+    """
+    import os
+    
+    # البحث عن the_library_helper.dotm في عدة مواقع
+    dotm_path = None
+    search_paths = [
+        # 1. مجلد exe (عند التشغيل من PyInstaller)
+        os.path.join(os.path.dirname(sys.executable), "the_library_helper.dotm"),
+        # 2. المجلد الحالي
+        os.path.join(os.getcwd(), "the_library_helper.dotm"),
+        # 3. مجلد السكريبت (عند التطوير)
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), "the_library_helper.dotm"),
+    ]
+    
+    for path in search_paths:
+        if os.path.exists(path):
+            dotm_path = path
+            print(f"DEBUG: Found the_library_helper.dotm at {dotm_path}", flush=True)
+            break
+    
+    if not dotm_path:
+        print(f"WARNING: the_library_helper.dotm not found in any of these locations:", flush=True)
+        for path in search_paths:
+            print(f"  - {path}", flush=True)
+        print("STATUS:Macro execution skipped (template missing).", flush=True)
+        return
+    
+    try:
+        print("DEBUG: Attaching dotm template...", flush=True)
+        # ربط القالب بالمستند
+        doc.AttachedTemplate = dotm_path
+        doc.UpdateStylesOnOpen = False
+        
+        print("DEBUG: Template attached. Running TheLibraryPrepareDoc...", flush=True)
+        
+        # محاولة تشغيل الماكرو الموحد
+        try:
+            # الخيار 1: تشغيل مباشر
+            word_app.Run("TheLibraryPrepareDoc")
+        except:
+            # الخيار 2: تشغيل عبر المسار الكامل
+            word_app.Run("the_library_helper.dotm!TheLibraryHelper.TheLibraryPrepareDoc")
+            
+        print("DEBUG: Macro finished.", flush=True)
+        
+        # قراءة النتائج من Custom Document Property
+        try:
+            result = doc.CustomDocumentProperties("TheLibraryResult").Value
+            print(f"STATUS:Macro complete: {result}", flush=True)
+            # تنظيف الـ property
+            doc.CustomDocumentProperties("TheLibraryResult").Delete()
+            return result
+        except:
+            print("STATUS:Macro complete (no result property).", flush=True)
+            return None
+            
+    except Exception as e:
+        print(f"WARNING: Unified macro execution failed: {e}", flush=True)
+        print("STATUS:Macro execution skipped.", flush=True)
+        return None
+    finally:
+        # فك ارتباط القالب
+        try:
+            doc.AttachedTemplate = ""
+        except:
+            pass
+
 def repaginate_and_save(docx_path):
     """
     فتح Word وعمل Repaginate ثم حفظ لتحديث lastRenderedPageBreak
     """
     import win32com.client as win32
     
-    word_app = win32.Dispatch('Word.Application')
+    # DispatchEx ينشئ مثيلاً معزولاً لا يتداخل مع جلسة المستخدم
+    word_app = win32.DispatchEx('Word.Application')
     try:
-        word_app.Visible = False
+        word_app.Visible = False  # الإنتاج: مخفي
         word_app.DisplayAlerts = 0
+        word_app.AutomationSecurity = 1 # msoAutomationSecurityLow - السماح بكل الماكرو
     except:
         pass
     
+    # ---------------------------------------------------------
+    # إزالة حماية الويندوز للملفات المحملة (Unblock & Remove Read-Only)
+    # ---------------------------------------------------------
+    try:
+        import stat
+        # إزالة سمة "فقط قراءة"
+        os.chmod(docx_path, stat.S_IWRITE)
+        
+        # إزالة Zone.Identifier (التي تسبب فتح الملف في وضع Protected View)
+        zone_identifier_path = docx_path + ":Zone.Identifier"
+        if os.path.exists(zone_identifier_path):
+            os.remove(zone_identifier_path)
+    except:
+        pass
+
     doc = None
     total_pages = 0
     
     try:
         print("STATUS:Opening Word for Repaginate...", flush=True)
-        doc = word_app.Documents.Open(docx_path, ReadOnly=False, AddToRecentFiles=False)
+        # استخدام Open مع تجاهل القراءة فقط والماكرو
+        doc = word_app.Documents.Open(
+            docx_path, 
+            ReadOnly=False, 
+            AddToRecentFiles=False, 
+            ConfirmConversions=False
+        )
         
-        # تحديث التخطيط
-        try:
-            word_app.ActiveWindow.View.Type = 3  # wdPrintView
-            doc.Repaginate()
-        except Exception as e:
-            print(f"WARNING: Repaginate failed: {e}", flush=True)
-        
-        # الحصول على عدد الصفحات
-        total_pages = doc.ComputeStatistics(2)
-        print(f"STATUS:Total Pages: {total_pages}", flush=True)
-
         # ---------------------------------------------------------
-        # Active Tagging: حقن إشارات مرجعية في بداية كل صفحة
+        # Unified Macro: إعداد العرض + تحديث التخطيط + حساب الصفحات + حقن الإشارات
+        # نستخدم VBA macro عبر AttachedTemplate (أسرع وأدق من COM)
         # ---------------------------------------------------------
         try:
-            print(f"STATUS:Injecting bookmarks for {total_pages} pages...", flush=True)
-            # wdGoToPage = 1, wdGoToAbsolute = 1
-            for p in range(1, total_pages + 1):
-                word_app.Selection.GoTo(1, 1, p)
-                # استخدام Selection.Range يضمن وضع الإشارة في مكان المؤشر الحالي
-                doc.Bookmarks.Add(Name=f"ShamelaPage_{p}", Range=word_app.Selection.Range)
-            print("STATUS:Bookmarks injection complete.", flush=True)
+            print("STATUS:Running unified VBA macro...", flush=True)
+            macro_result = _inject_footnote_bookmarks_via_vba(word_app, doc)
+            
+            # استخراج عدد الصفحات من النتيجة
+            if macro_result:
+                import re
+                # Expected: "Pages: X, Multi-page FN: Y"
+                m = re.search(r"Pages:\s*(\d+)", macro_result)
+                if m:
+                    total_pages = int(m.group(1))
+                    print(f"STATUS:Total Pages: {total_pages}", flush=True)
         except Exception as e:
-             print(f"ERROR: Bookmark injection failed: {e}", flush=True)
+            print(f"WARNING: Unified macro failed: {e}", flush=True)
+        
+        # Fallback: إذا فشل الماكرو في إرجاع عدد الصفحات، نحاول بالطريقة التقليدية
+        if total_pages == 0:
+            try:
+                print("WARNING: Macro didn't return pages, using ComputeStatistics fallback...", flush=True)
+                total_pages = doc.ComputeStatistics(2) # wdStatisticPages
+                print(f"STATUS:Total Pages (Fallback): {total_pages}", flush=True)
+            except:
+                pass
         # ---------------------------------------------------------
         
-        # حفظ لتحديث الملف بالـ Bookmarks
-        doc.Save()
-        print("STATUS:Document saved with updated page breaks.", flush=True)
-        
+        # ---------------------------------------------------------
+        # بدلاً من doc.Save() الذي يفشل بسبب حماية القراءة فقط للخطوط،
+        # نسحب ملف الـ XML مباشرة من الذاكرة (WordOpenXML) ونحقنه في ملف DOCX.
+        print("STATUS:Extracting modified XML from Word memory...", flush=True)
+        flat_opc_xml = doc.WordOpenXML
         doc.Close(False)
+        doc = None
         
+        # WordOpenXML is Flat OPC format.
+        # ElementTree strips original namespace prefixes (w:, etc.) and replaces them with ns0:,
+        # which breaks strict parsers like the Dart app. 
+        # We must extract the exact raw string of the document.xml part.
+        import re
+        document_xml_str = None
+        
+        # Regex to find the <pkg:part> block for /word/document.xml
+        # and capture everything inside its <pkg:xmlData> tag.
+        # Dotall is needed because the XML might contain newlines.
+        match = re.search(r'<pkg:part[^>]*pkg:name="/word/document\.xml"[^>]*>.*?<pkg:xmlData>(.*?)</pkg:xmlData>.*?</pkg:part>', flat_opc_xml, flags=re.DOTALL)
+        
+        if match:
+            # We add the XML declaration back since the raw extracted data won't have it
+            document_xml_str = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + match.group(1)
+                
+        if document_xml_str:
+            # استبدال word/document.xml داخل الأرشيف
+            import zipfile
+            import os
+            
+            temp_zip_path = docx_path + ".tempzip"
+            with zipfile.ZipFile(docx_path, 'r') as zin:
+                with zipfile.ZipFile(temp_zip_path, 'w', zipfile.ZIP_DEFLATED) as zout:
+                    for item in zin.infolist():
+                        if item.filename == 'word/document.xml':
+                            zout.writestr(item, document_xml_str.encode('utf-8'))
+                        else:
+                            zout.writestr(item, zin.read(item.filename))
+            
+            import shutil
+            shutil.move(temp_zip_path, docx_path)
+            print("STATUS:Successfully updated document.xml from memory without saving.", flush=True)
+        else:
+            print("ERROR: Could not find /word/document.xml in WordOpenXML output.", flush=True)
+            
     except Exception as e:
         print(f"ERROR: Word operation failed: {e}", flush=True)
         if doc:
@@ -302,12 +452,12 @@ def process_xml_with_page_breaks(docx_path, output_path):
                         if parent is not None:
                             parent.remove(run)
             
-            # 2. البحث عن bookmarks المحقونة (ShamelaPage_X)
+            # 2. البحث عن bookmarks المحقونة (TheLibraryPage_X)
             bookmarks_in_para = []
             all_bookmarks = para.findall(f".//{{{NS['w']}}}bookmarkStart")
             for bm in all_bookmarks:
                 name = bm.attrib.get(f"{{{NS['w']}}}name", "")
-                if name.startswith("ShamelaPage_"):
+                if name.startswith("TheLibraryPage_"):
                     bookmarks_in_para.append(bm)
             
             # 3. البحث عن w:br type="page" (فاصل صفحة صريح) - احتياط
@@ -321,85 +471,91 @@ def process_xml_with_page_breaks(docx_path, output_path):
             
             # 4. معالجة الفقرة
             if len(bookmarks_in_para) > 0:
-                # الفقرة تحتوي على bookmark لصفحة جديدة
-                # نأخذ أول bookmark (عادة لا يوجد أكثر من واحد في الفقرة إلا نادراً)
-                target_bookmark = bookmarks_in_para[0]
-                bm_name = target_bookmark.attrib.get(f"{{{NS['w']}}}name", "")
-                
-                # استخراج رقم الصفحة
+                # ترتيب الـ bookmarks حسب رقم الصفحة (الأصغر أولاً) لضمان الحقن المتسلسل
                 try:
-                    new_page_num = int(bm_name.split("_")[1])
-                    current_page = new_page_num
+                    bookmarks_in_para.sort(
+                        key=lambda bm: int(bm.attrib.get(f"{{{NS['w']}}}name", "TheLibraryPage_0").split("_")[1])
+                    )
                 except:
                     pass
-
-                # تقسيم الـ run عند Bookmark وحقن marker في المنتصف
-                bm_run = target_bookmark.getparent()
                 
-                # حالة: Bookmark inside a Run (common) -> Split Run
-                if bm_run is not None and bm_run.tag == f"{{{NS['w']}}}r":
-                     # تقسيم الـ run: run_before + marker + run_after
-                    from copy import deepcopy
+                # معالجة كل bookmark في الفقرة
+                for target_bookmark in bookmarks_in_para:
+                    bm_name = target_bookmark.attrib.get(f"{{{NS['w']}}}name", "")
                     
-                    run_before = ET.Element(f"{{{NS['w']}}}r")
-                    run_after = ET.Element(f"{{{NS['w']}}}r")
+                    # استخراج رقم الصفحة
+                    try:
+                        new_page_num = int(bm_name.split("_")[1])
+                        current_page = new_page_num
+                    except:
+                        continue
+
+                    # تقسيم الـ run عند Bookmark وحقن marker
+                    bm_parent = target_bookmark.getparent()
                     
-                    found_bm = False
-                    rPr = bm_run.find(f"{{{NS['w']}}}rPr")
-                    
-                    # نسخ rPr
-                    if rPr is not None:
-                        run_before.append(deepcopy(rPr))
-                        run_after.append(deepcopy(rPr))
-                    
-                    for child in list(bm_run):
-                        if child.tag == f"{{{NS['w']}}}rPr":
-                            continue
-                        elif child == target_bookmark:
-                            found_bm = True
-                            # Bookmark itself goes to run_before or explicitly removed? 
-                            # We can leave it in run_before to persist valid doc structure
-                            run_before.append(deepcopy(child)) 
-                        elif not found_bm:
-                            run_before.append(deepcopy(child))
-                        else:
-                            run_after.append(deepcopy(child))
-                    
-                    # إيجاد موقع bm_run في الفقرة
-                    direct_children = list(para)
-                    for i, child in enumerate(direct_children):
-                        if child == bm_run:
-                            para.remove(bm_run)
-                            
-                            # إدراج run_before
-                            has_before_content = len([c for c in run_before if c.tag != f"{{{NS['w']}}}rPr"]) > 0
-                            if has_before_content:
-                                para.insert(i, run_before)
+                    # حالة: Bookmark inside a Run (common) -> Split Run
+                    if bm_parent is not None and bm_parent.tag == f"{{{NS['w']}}}r":
+                        from copy import deepcopy
+                        
+                        bm_run = bm_parent
+                        run_before = ET.Element(f"{{{NS['w']}}}r")
+                        run_after = ET.Element(f"{{{NS['w']}}}r")
+                        
+                        found_bm = False
+                        rPr = bm_run.find(f"{{{NS['w']}}}rPr")
+                        
+                        # نسخ rPr
+                        if rPr is not None:
+                            run_before.append(deepcopy(rPr))
+                            run_after.append(deepcopy(rPr))
+                        
+                        for child in list(bm_run):
+                            if child.tag == f"{{{NS['w']}}}rPr":
+                                continue
+                            elif child == target_bookmark:
+                                found_bm = True
+                                run_before.append(deepcopy(child))
+                            elif not found_bm:
+                                run_before.append(deepcopy(child))
+                            else:
+                                run_after.append(deepcopy(child))
+                        
+                        # إيجاد موقع bm_run في الفقرة (تحديث القائمة كل مرة لأن الفقرة تتغير)
+                        direct_children = list(para)
+                        for i, child in enumerate(direct_children):
+                            if child == bm_run:
+                                para.remove(bm_run)
+                                
+                                # إدراج run_before
+                                has_before_content = len([c for c in run_before if c.tag != f"{{{NS['w']}}}rPr"]) > 0
+                                if has_before_content:
+                                    para.insert(i, run_before)
+                                    i += 1
+                                
+                                # إدراج marker للصفحة الجديدة
+                                marker_run = create_hidden_run_element(f"{{{{PG:{current_page}}}}}")
+                                para.insert(i, marker_run)
                                 i += 1
-                            
-                            # إدراج marker للصفحة الجديدة
-                            marker_after = create_hidden_run_element(f"{{{{PG:{current_page}}}}}")
-                            para.insert(i, marker_after)
-                            i += 1
-                            injected_count += 1
-                            
-                            # إدراج run_after
-                            has_after_content = len([c for c in run_after if c.tag != f"{{{NS['w']}}}rPr"]) > 0
-                            if has_after_content:
-                                para.insert(i, run_after)
-                            
-                            break
-                # حالة: Bookmark direct child of Paragraph (less common but possible)
-                else: 
-                     # Bookmark is directly in P
-                     # Just insert marker after it
-                     direct_children = list(para)
-                     for i, child in enumerate(direct_children):
-                         if child == target_bookmark:
-                             marker = create_hidden_run_element(f"{{{{PG:{current_page}}}}}")
-                             para.insert(i + 1, marker)
-                             injected_count += 1
-                             break
+                                injected_count += 1
+                                
+                                # إدراج run_after
+                                has_after_content = len([c for c in run_after if c.tag != f"{{{NS['w']}}}rPr"]) > 0
+                                if has_after_content:
+                                    para.insert(i, run_after)
+                                
+                                break
+                    
+                    # حالة: Bookmark direct child of Paragraph (less common but possible)
+                    else: 
+                        # Bookmark is directly in P
+                        # Just insert marker after it
+                        direct_children = list(para)
+                        for i, child in enumerate(direct_children):
+                            if child == target_bookmark:
+                                marker = create_hidden_run_element(f"{{{{PG:{current_page}}}}}")
+                                para.insert(i + 1, marker)
+                                injected_count += 1
+                                break
 
             else:
                 # لا يوجد bookmark - نحقن marker للصفحة الحالية (عادة للصفحة 1)
@@ -454,8 +610,10 @@ def process_file(docx_path, output_path):
         print(f"ERROR: File not found: {docx_path}")
         return
 
-    # إغلاق Word إذا كان مفتوحاً (لتحرير الملفات العالقة)
-    kill_word_processes()
+    # DispatchEx ينشئ instance معزول — لا حاجة لقتل Word
+    # initial_word_running = is_word_running()
+    # if not initial_word_running:
+    #     kill_word_processes()
     
     # نسخ الملف للعمل عليه
     # استخدام مجلد مؤقت محلي لتجنب مشاكل صلاحيات النظام أو المسارات الطويلة
@@ -471,16 +629,13 @@ def process_file(docx_path, output_path):
     work_docx = os.path.abspath(work_docx)
     print(f"DEBUG: Working file path: {work_docx}", flush=True)
 
-    
     shutil.copy2(docx_path, work_docx)
     
     if not os.path.exists(work_docx):
          print(f"ERROR: Failed to create working file at {work_docx}")
          return
+
     total_pages = repaginate_and_save(work_docx)
-    
-    # إغلاق Word مرة أخرى
-    kill_word_processes()
     
     # الخطوة 2: معالجة XML
     process_xml_with_page_breaks(work_docx, output_path)
@@ -505,7 +660,8 @@ def process_word_only(docx_path, output_path):
         print(f"ERROR: File not found: {docx_path}", flush=True)
         return
     
-    kill_word_processes()
+    # DispatchEx ينشئ instance معزول — لا حاجة لقتل Word
+    # kill_word_processes()
     
     # نسخ للعمل
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -543,12 +699,25 @@ def process_word_only(docx_path, output_path):
                 pass
         return
     
-    kill_word_processes()
-    
     # التحقق من أن الملف المعالج موجود قبل نسخه
     if not os.path.exists(work_docx):
         print(f"ERROR: Working file disappeared after Word processing: {work_docx}", flush=True)
         return
+    
+    # DEBUG: التحقق من وجود TheLibraryFN bookmarks في الملف بعد Word
+    try:
+        import zipfile as zf_debug
+        with zf_debug.ZipFile(work_docx, 'r') as z_dbg:
+            fn_xml = z_dbg.read('word/footnotes.xml').decode('utf-8')
+            shamela_count = fn_xml.count('TheLibraryFN')
+            print(f"DEBUG: TheLibraryFN bookmarks in work_docx footnotes.xml: {shamela_count}", flush=True)
+            if shamela_count == 0:
+                # فحص document.xml أيضاً
+                doc_xml_content = z_dbg.read('word/document.xml').decode('utf-8')
+                doc_shamela = doc_xml_content.count('TheLibraryFN')
+                print(f"DEBUG: TheLibraryFN bookmarks in work_docx document.xml: {doc_shamela}", flush=True)
+    except Exception as dbg_e:
+        print(f"DEBUG: Could not verify bookmarks: {dbg_e}", flush=True)
     
     # نسخ الملف المعالج للـ output
     try:

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 
@@ -9,20 +10,57 @@ class ExeRunner {
 
   // ⚠️ للتطوير: true = تشغيل Python مباشرة، false = تشغيل exe
   // عند الانتهاء من التطوير، غيّرها إلى false وأعد بناء الـ exe
-  static const bool USE_PYTHON = false;
+  static const bool USE_PYTHON = kDebugMode;
   static const String PYTHON_SCRIPT =
       r'd:\ImportantProjects\golden_shamela\scripts\pageRender.py';
 
-  /// نسخ ملف exe من assets إلى مجلد مؤقت مرة واحدة فقط
-  Future<String> copyExeIfNeeded() async {
-    final tempDir = await getTemporaryDirectory();
-    final exeFile = File('${tempDir.path}\\$exeFileName');
+  /// الحصول على مسار الملف التنفيذي بأمان
+  Future<String> getExePath() async {
+    final String resolvedExecutable = Platform.resolvedExecutable;
+    final String appDir = File(resolvedExecutable).parent.path;
+    
+    // 1. Check inside assets (Release mode)
+    final String assetExePath = '$appDir\\data\\flutter_assets\\$assetPath';
+    if (await File(assetExePath).exists()) {
+      return assetExePath;
+    }
 
-    // Always overwrite to ensure we have the latest version (especially after updates)
-    // if (!await exeFile.exists()) {
-    final byteData = await rootBundle.load(assetPath);
-    await exeFile.writeAsBytes(byteData.buffer.asUint8List());
-    // }
+    // 2. Fallback: Copy to ApplicationSupportDirectory (safer than Temp, less AV interference)
+    final supportDir = await getApplicationSupportDirectory();
+    final exeFile = File('${supportDir.path}\\$exeFileName');
+
+    try {
+      final byteData = await rootBundle.load(assetPath);
+      final newFileSize = byteData.lengthInBytes;
+      
+      // Check if existing file needs update (compare size as version check)
+      bool needsUpdate = true;
+      if (await exeFile.exists()) {
+        try {
+          final existingSize = await exeFile.length();
+          if (existingSize == newFileSize) {
+            needsUpdate = false;
+          } else {
+            // Delete old version to replace it
+            await exeFile.delete();
+          }
+        } catch (e) {
+          print('Could not check existing exe size: $e');
+        }
+      }
+      
+      if (needsUpdate) {
+        await exeFile.writeAsBytes(byteData.buffer.asUint8List());
+        print('✓ pageRender.exe extracted/updated to: ${exeFile.path}');
+      }
+    } catch (e) {
+      // If it fails (e.g. file is locked because it's running), just use the existing one if it exists
+      if (!await exeFile.exists()) {
+        print('Error extracting exe: $e');
+      } else {
+        print('Warning: Could not update exe (may be in use), using existing version: $e');
+      }
+    }
 
     return exeFile.path;
   }
@@ -48,7 +86,7 @@ class ExeRunner {
       process = await Process.start('python', args, runInShell: true);
     } else {
       // وضع الإنتاج: تشغيل exe
-      final exePath = await copyExeIfNeeded();
+      final exePath = await getExePath();
       process = await Process.start(exePath, [
         outputFolder,
         inputFile,

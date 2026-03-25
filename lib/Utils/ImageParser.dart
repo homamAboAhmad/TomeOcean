@@ -574,10 +574,25 @@ void _parseVmlData() {
     String? rId = imageData.getAttribute('r:id');
     if (rId != null) {
       _imageData.rId = rId;
+
+      final bool isSpecialDebugRid = RegExp(r'^rId(1[3-9])$').hasMatch(rId);
+      if (isSpecialDebugRid) {
+        print('VML_DEBUG_PARSE: rId=$rId path=${getImageFrmRel(rId)} width=${_imageData.width} height=${_imageData.height} wrapMode=${_imageData.wrapMode} relH=${_imageData.relativeFromH} relV=${_imageData.relativeFromV} posX=${_imageData.posX} posY=${_imageData.posY}');
+      }
+
       _imageData.setImageMemory(
         _imageData.parent!,
         customRelIdList: _imageData.customRelIdList,
       );
+
+      if (isSpecialDebugRid) {
+        final memLen = _imageData.imageMemory?.length ?? 0;
+        final bytes = _imageData.imageMemory;
+        final head = bytes != null && bytes.length >= 4
+            ? bytes.take(4).toList()
+            : <int>[];
+        print('VML_DEBUG_MEM: rId=$rId memLen=$memLen head=$head');
+      }
     }
   }
 }
@@ -590,6 +605,7 @@ void _parseVmlStyle(String style) {
   if (styleMap.containsKey('height')) {
     _imageData.height = _parseUnit(styleMap['height']!);
   }
+
 }
 
 Map<String, String> _parseVmlStyleMap(String style) {
@@ -709,6 +725,9 @@ double _parseUnit(String value) {
     val = val * 1.333;
   } else if (value.endsWith('px')) {
     val = double.tryParse(value.replaceAll('px', '')) ?? 0;
+  } else if (value.endsWith('in')) {
+    val = double.tryParse(value.replaceAll('in', '')) ?? 0;
+    val = val * 96.0;
   } else {
     // Try parse raw number
     val = double.tryParse(value) ?? 0;
@@ -1149,6 +1168,22 @@ class ImageData {
 
   ImageData();
 
+  static bool _isLikelyImageTarget(String? target) {
+    if (target == null || target.isEmpty) return false;
+    final normalized = target.toLowerCase();
+    if (normalized.startsWith('media/')) return true;
+    return normalized.endsWith('.png') ||
+        normalized.endsWith('.jpg') ||
+        normalized.endsWith('.jpeg') ||
+        normalized.endsWith('.gif') ||
+        normalized.endsWith('.bmp') ||
+        normalized.endsWith('.webp') ||
+        normalized.endsWith('.tif') ||
+        normalized.endsWith('.tiff') ||
+        normalized.endsWith('.wmf') ||
+        normalized.endsWith('.emf');
+  }
+
   factory ImageData.fromJson(Map<String, dynamic> json) =>
       _$ImageDataFromJson(json);
   Map<String, dynamic> toJson() => _$ImageDataToJson(this);
@@ -1177,20 +1212,20 @@ class ImageData {
     Map<String, Uint8List>? docImages = wordDocument.docImages;
     if (docImages == null || docImages.isEmpty) return;
 
-    // Extract the number from rId (e.g., "rId8" -> "8")
-    String rIdNum = rId.replaceAll(RegExp(r'[^0-9]'), '');
-
     // Strategy 1: Try direct lookup from relIdList first
     String? imgName;
 
     // Check custom list first (for headers/footers)
     if (customRelIdList != null) {
-      if (customRelIdList!.containsKey(rId)) {
-        imgName = customRelIdList![rId]?.Target;
+      if (customRelIdList.containsKey(rId)) {
+        imgName = customRelIdList[rId]?.Target;
+        if (!_isLikelyImageTarget(imgName)) {
+          imgName = null;
+        }
         // print("DEBUG_IMAGE: Found rId=$rId in customRelIdList -> $imgName");
       } else {
         print(
-          "DEBUG_IMAGE: ⚠️ rId=$rId NOT FOUND in customRelIdList. Keys: ${customRelIdList!.keys.join(',')}",
+          "DEBUG_IMAGE: ⚠️ rId=$rId NOT FOUND in customRelIdList. Keys: ${customRelIdList.keys.join(',')}",
         );
       }
     }
@@ -1198,8 +1233,9 @@ class ImageData {
     // Fallback to document list
     if (imgName == null) {
       // print("DEBUG_IMAGE: Checking global relIdList for rId=$rId");
-      imgName = wordDocument.relIdList[rId]?.Target;
-      if (imgName != null) {
+      final globalTarget = wordDocument.relIdList[rId]?.Target;
+      if (_isLikelyImageTarget(globalTarget)) {
+        imgName = globalTarget;
         print(
           "DEBUG_IMAGE: Found rId=$rId in GLOBAL relIdList -> $imgName (Fallback triggered!)",
         );
@@ -1221,10 +1257,13 @@ class ImageData {
 
     // Strategy 3: Fallback - try global function (for backward compatibility)
     if (imgName == null || imgName.isEmpty) {
-      imgName = getImageFrmRel(rId);
+      final fallbackTarget = getImageFrmRel(rId);
+      if (_isLikelyImageTarget(fallbackTarget)) {
+        imgName = fallbackTarget;
+      }
     }
 
-    if (imgName.isNotEmpty && docImages.containsKey(imgName)) {
+    if (imgName != null && imgName.isNotEmpty && docImages.containsKey(imgName)) {
       imageMemory = docImages[imgName];
       return;
     }

@@ -13,7 +13,7 @@ class FootNote {
   String? displayNumber;
 
   /// خريطة تقسيم الحواشي عبر الصفحات: {رقم الصفحة: فهرس أول فقرة في تلك الصفحة}
-  /// تُملأ من bookmarks المحقونة بواسطة pageRender.py (ShamelaFN_{index}_P{page})
+  /// تُملأ من bookmarks المحقونة بواسطة pageRender.py (TheLibraryFN_{index}_P{page})
   @JsonKey(includeFromJson: false, includeToJson: false)
   Map<int, int> pageBreaks = {};
 

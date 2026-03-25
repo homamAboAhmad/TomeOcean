@@ -4,6 +4,7 @@ import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/UI/DocViewer.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/Widgets/IndexingDialog.dart';
 import 'package:golden_shamela/UI/SettingsScreen.dart';
 import 'package:golden_shamela/UI/AuthorsManagement/authors_management_screen.dart';
 import 'package:golden_shamela/UI/Search/shamela_search_view.dart';
@@ -41,21 +42,10 @@ class _HomePageState extends State<HomePage> {
     _initializeHelpers();
   }
 
-  int? _pendingPageNumber;
 
   void _initializeHelpers() {
     _bookManagement = HomePageBookManagement(
       context: context,
-      onBookAdded: (book) {
-        setState(() {
-          openedBooks.add(book);
-          selectedBookP = openedBooks.length - 1;
-          if (_pendingPageNumber != null) {
-            openedBooks[selectedBookP].currentPage = _pendingPageNumber!;
-            _pendingPageNumber = null;
-          }
-        });
-      },
     );
 
     _searchHandlers = HomePageSearchHandlers(
@@ -163,6 +153,11 @@ class _HomePageState extends State<HomePage> {
               icon: Icons.search_rounded,
               tooltip: 'بحث',
               onPressed: () => _searchHandlers!.openSearchWindow(),
+            ),
+            _buildAppBarAction(
+              icon: Icons.storage_rounded,
+              tooltip: 'فهرسة الكتب',
+              onPressed: () => _showIndexingDialog(context),
             ),
             _buildAppBarAction(
               icon: Icons.people_outline_rounded,
@@ -313,6 +308,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _showIndexingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const IndexingDialog(),
+    );
+  }
+
   Future<void> _onBookSelected(
     File book, {
     int? pageNumber,
@@ -336,7 +339,6 @@ class _HomePageState extends State<HomePage> {
       selectedBookP = openedBooks.length - 1;
     });
 
-    _pendingPageNumber = pageNumber;
     WordDocument? loadedDoc = await _bookManagement!.readDocxFile(
       filePath,
       tempDoc,

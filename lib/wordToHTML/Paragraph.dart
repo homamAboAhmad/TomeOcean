@@ -680,20 +680,34 @@ class Paragraph {
     imageRunTs = [];
     textRunTs = [];
     runs.forEach((runt) {
+      final image = runt.image;
+      final isSpecialDebugRid =
+          image != null && RegExp(r'^rId(1[3-9])$').hasMatch(image.rId);
       // 1. Floating Images (wrapMode != null)
-      if (runt.image != null && runt.image!.wrapMode != null) {
+      if (image != null && image.wrapMode != null) {
         // Header/footer paragraphs: keep ALL floating images here since they are
         // not handled by WordPage.dart (headers render independently).
         // Decorative elements (lines, shapes) intentionally span the full page width.
         if (isHeaderParagraph) {
           imageRunTs.add(runt);
+          if (isSpecialDebugRid) {
+            print(
+              'VML_DEBUG_CLASSIFY: rId=${image.rId} -> imageRunTs(header) wrapMode=${image.wrapMode} relV=${image.relativeFromV} width=${image.width} height=${image.height}',
+            );
+          }
         }
         // Page content paragraphs: If relative to paragraph/line OR IS GROUP, add to Paragraph Stack.
         // EXCEPTION: paragraph-relative images that EXCEED the content area
         // (full-page covers) go to page level for correct rendering beyond margins.
-        else if ((runt.isRelativeFromVParagraph() && !_exceedsContentArea(runt)) ||
-            (runt.image != null && runt.image!.isGroup)) {
+        else if ((runt.isRelativeFromVParagraph() &&
+                !_exceedsContentArea(runt)) ||
+            image.isGroup) {
           imageRunTs.add(runt);
+          if (isSpecialDebugRid) {
+            print(
+              'VML_DEBUG_CLASSIFY: rId=${image.rId} -> imageRunTs(paragraph) wrapMode=${image.wrapMode} relV=${image.relativeFromV} width=${image.width} height=${image.height}',
+            );
+          }
         }
         // If relative to page/margin, IGNORE here (handled by WordPage.dart)
         // This prevents them from polluting textRunTs and triggering inline logic.
@@ -701,6 +715,11 @@ class Paragraph {
       // 2. Text and Inline Images (wrapMode == null)
       else {
         textRunTs.add(runt);
+        if (isSpecialDebugRid) {
+          print(
+            'VML_DEBUG_CLASSIFY: rId=${image!.rId} -> textRunTs(inline) wrapMode=${image.wrapMode} relV=${image.relativeFromV} width=${image.width} height=${image.height}',
+          );
+        }
       }
     });
     return {"iRuns": imageRunTs, "tRuns": textRunTs};
@@ -711,7 +730,8 @@ class Paragraph {
     var sp = parent.parent.getSectPrForPage(parent.pageIndex);
     double contentW = (sp.width ?? 595) - sp.leftMargin - sp.rightMargin;
     double contentH = (sp.height ?? 842) - sp.topMargin - sp.bottomMargin;
-    return runt.image!.width > contentW || runt.image!.height > contentH;
+    return runt.image!.width > contentW + 20 ||
+        runt.image!.height > contentH + 20;
   }
 
   /// Check if this paragraph should use the special TOC rendering (Row + Expanded)
@@ -743,6 +763,47 @@ class Paragraph {
     if (_isCenteredWithTabs()) {
       return _buildCenteredTabsWidget(
         suppressParagraphBorder: suppressParagraphBorder,
+      );
+    }
+
+    final singleInlineImageRun = _getSingleVisibleInlineImageRun();
+    if (singleInlineImageRun != null) {
+      Color? backgroundColor = _getParagraphShadingColor();
+      BoxDecoration? decoration = _getParagraphDecoration(
+        backgroundColor,
+        includeBorder: !suppressParagraphBorder,
+      );
+      final image = singleInlineImageRun.image!;
+      final double indent = pPr?.firstLineIndent ?? 0;
+      final bool isRtlParagraph = textDirection == TextDirection.rtl;
+      final bool isSpecialDebugRid = RegExp(
+        r'^rId(1[3-9])$',
+      ).hasMatch(image.rId);
+
+      if (isSpecialDebugRid) {
+        print(
+          'VML_DEBUG_PARAGRAPH: special-inline-only path rId=${image.rId} indent=$indent textDirection=$textDirection paddings=${_getPPaddings()} imageW=${image.width} imageH=${image.height}',
+        );
+      }
+
+      return Padding(
+        padding: _getPPaddings(),
+        child: Container(
+          decoration: decoration,
+          child: Padding(
+            padding: EdgeInsetsDirectional.only(start: indent > 0 ? indent : 0),
+            child: Align(
+              alignment: textAlign == TextAlign.center
+                  ? Alignment.center
+                  : textAlign == TextAlign.left
+                      ? Alignment.centerLeft
+                      : textAlign == TextAlign.right
+                          ? Alignment.centerRight
+                          : (isRtlParagraph ? Alignment.centerRight : Alignment.centerLeft),
+              child: getImageWidget(image),
+            ),
+          ),
+        ),
       );
     }
 
@@ -794,6 +855,52 @@ class Paragraph {
   bool _isCenteredWithTabs() {
     if (textAlign != TextAlign.center) return false;
     return textRunTs.any((r) => r.hasTab);
+  }
+
+  runT? _getSingleVisibleInlineImageRun() {
+    final inlineImageRuns = textRunTs
+        .where((r) => r.image != null && r.image!.wrapMode == null)
+        .toList();
+    final specialInlineRuns = inlineImageRuns
+        .where((r) => RegExp(r'^rId(1[3-9])$').hasMatch(r.image!.rId))
+        .toList();
+    if (inlineImageRuns.length != 1) {
+      if (specialInlineRuns.isNotEmpty) {
+        print(
+          'VML_DEBUG_PARAGRAPH: inlineImageRuns=${inlineImageRuns.length} visibleTextCheck=skipped rIds=${specialInlineRuns.map((e) => e.image!.rId).join(',')}',
+        );
+      }
+      return null;
+    }
+
+    final visibleTextRuns = textRunTs.where((r) {
+      if (r.image != null) {
+        return false;
+      }
+      if (r.rpr?.vanish == true) {
+        return false;
+      }
+      final text = r.text ?? '';
+      return text.trim().isNotEmpty;
+    }).toList();
+
+    final image = inlineImageRuns.first.image!;
+    final bool isSpecialDebugRid = RegExp(r'^rId(1[3-9])$').hasMatch(image.rId);
+    if (isSpecialDebugRid) {
+      final visibleTexts = visibleTextRuns
+          .map((r) => (r.text ?? '').replaceAll('\n', ' '))
+          .where((t) => t.trim().isNotEmpty)
+          .toList();
+      print(
+        'VML_DEBUG_PARAGRAPH: candidate rId=${image.rId} inlineImageRuns=${inlineImageRuns.length} visibleTexts=${visibleTexts.join(' | ')} textRunTs=${textRunTs.length} runs=${runs.length}',
+      );
+    }
+
+    if (visibleTextRuns.isNotEmpty) {
+      return null;
+    }
+
+    return inlineImageRuns.first;
   }
 
   /// Build widget for centered paragraphs with tabs (e.g., headers)

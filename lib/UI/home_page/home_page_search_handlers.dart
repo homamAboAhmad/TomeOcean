@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:golden_shamela/UI/Search/shamela_search_dialog.dart';
 import 'package:golden_shamela/Helpers/ShamelaSearchIndexer.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_executor.dart';
@@ -9,6 +11,7 @@ import 'package:golden_shamela/Utils/SnackBar.dart';
 import 'package:golden_shamela/core/app_state.dart';
 import 'package:golden_shamela/core/indexed_books_loader.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:golden_shamela/core/preferences_helper.dart';
 
 /// Search handlers for HomePage
 class HomePageSearchHandlers {
@@ -44,7 +47,7 @@ class HomePageSearchHandlers {
     this.onSearchCompleted,
   });
 
-  /// Open search window (Always in-app as requested)
+  /// Open search window
   Future<void> openSearchWindow() async {
     try {
       final appState = AppState();
@@ -65,8 +68,31 @@ class HomePageSearchHandlers {
         appState.cachedIndexedBooks = indexedBooks;
       }
 
-      // Always show search dialog in-app
-      showSearchDialog(indexedBooks);
+      final searchMode =
+          PreferencesHelper.prefs.getString('search_window_mode') ?? 'separate';
+      final useMultiWindow =
+          searchMode == 'separate' &&
+          (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
+      if (useMultiWindow) {
+        try {
+          final windowConfig = WindowConfiguration(
+            arguments: jsonEncode({
+              'windowType': 'search',
+              'windowId': DateTime.now().millisecondsSinceEpoch.toString(),
+            }),
+            hiddenAtLaunch: true,
+          );
+
+          final window = await WindowController.create(windowConfig);
+          await window.show();
+        } catch (e, stackTrace) {
+          ShowSnackBar(context, "خطأ في فتح نافذة البحث: $e");
+          showSearchDialog(indexedBooks);
+        }
+      } else {
+        showSearchDialog(indexedBooks);
+      }
     } catch (e) {
       ShowSnackBar(context, "خطأ في فتح البحث: $e");
     }
@@ -80,38 +106,37 @@ class HomePageSearchHandlers {
         onResultTapped: onResultTapped,
         indexedBooks: indexedBooks,
         onSearchCompleted: onSearchCompleted,
-        onDelegateSearch:
-            (
-              groupControllersMap,
-              searchGrouping,
-              selectedBooksForSearch,
-              searchSections,
-              morphologicalSearch,
-              affixSearch,
-              considerHamzas,
-              considerDiacritics,
-              considerNumbers,
-              allPhrasesRequired,
-              ordered,
-              proximity,
-              indexedBooks,
-            ) {
-              onPerformSearch(
-                groupControllersMap,
-                searchGrouping,
-                selectedBooksForSearch,
-                searchSections,
-                morphologicalSearch,
-                affixSearch,
-                considerHamzas,
-                considerDiacritics,
-                considerNumbers,
-                allPhrasesRequired,
-                ordered,
-                proximity,
-                indexedBooks,
-              );
-            },
+        onDelegateSearch: (
+          groupControllersMap,
+          searchGrouping,
+          selectedBooksForSearch,
+          searchSections,
+          morphologicalSearch,
+          affixSearch,
+          considerHamzas,
+          considerDiacritics,
+          considerNumbers,
+          allPhrasesRequired,
+          ordered,
+          proximity,
+          indexedBooks,
+        ) {
+          onPerformSearch(
+            groupControllersMap,
+            searchGrouping,
+            selectedBooksForSearch,
+            searchSections,
+            morphologicalSearch,
+            affixSearch,
+            considerHamzas,
+            considerDiacritics,
+            considerNumbers,
+            allPhrasesRequired,
+            ordered,
+            proximity,
+            indexedBooks,
+          );
+        },
       ),
     );
   }

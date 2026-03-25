@@ -13,7 +13,6 @@ PPr _$PPrFromJson(Map<String, dynamic> json) => PPr.empty()
   ..paddingLeft = (json['paddingLeft'] as num?)?.toDouble()
   ..forceStrutHeight = json['forceStrutHeight'] as bool
   ..paddingRight = (json['paddingRight'] as num?)?.toDouble()
-  ..firstLineIndent = (json['firstLineIndent'] as num?)?.toDouble()
   ..pStyle = json['pStyle'] as String?
   ..numId = (json['numId'] as num?)?.toInt()
   ..paragraphNumber = (json['paragraphNumber'] as num?)?.toInt()
@@ -34,7 +33,6 @@ Map<String, dynamic> _$PPrToJson(PPr instance) => <String, dynamic>{
   'paddingLeft': instance.paddingLeft,
   'forceStrutHeight': instance.forceStrutHeight,
   'paddingRight': instance.paddingRight,
-  'firstLineIndent': instance.firstLineIndent,
   'pStyle': instance.pStyle,
   'numId': instance.numId,
   'paragraphNumber': instance.paragraphNumber,

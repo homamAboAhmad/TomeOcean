@@ -694,8 +694,25 @@ ParagraphBorderSpec? _lastVisibleBorderSpec(WordPage? page) {
 bool _isParagraphVisuallyRelevant(Paragraph paragraph) {
   if (paragraph.imageRunTs.isNotEmpty) return true;
 
+  final inlineImageRuns = paragraph.textRunTs
+      .where((run) => run.image != null && run.image!.wrapMode == null)
+      .toList();
+  if (inlineImageRuns.isNotEmpty) {
+    final specialInlineRids = inlineImageRuns
+        .map((run) => run.image!.rId)
+        .where((rId) => RegExp(r'^rId(1[3-9])$').hasMatch(rId))
+        .toList();
+    if (specialInlineRids.isNotEmpty) {
+      print(
+        'VML_DEBUG_VISIBILITY: inline-image paragraph kept rIds=${specialInlineRids.join(',')} text="${paragraph.text.replaceAll('\n', ' ')}" textRuns=${paragraph.textRunTs.length} imageRuns=${paragraph.imageRunTs.length}',
+      );
+    }
+    return true;
+  }
+
   final normalizedText = paragraph.text
       .replaceAll(RegExp(r'\{\{PG:\d+\}\}'), '')
+      .replaceAll('\u00A0', '')
       .trim();
   if (normalizedText.isNotEmpty) return true;
 
@@ -725,7 +742,7 @@ List<ImageData> getParagraphImages(List<Paragraph> paragraphs, SectPr sectPr) {
       // Small paragraph-relative images stay at paragraph level for correct positioning.
       bool isParaRelative = r.isRelativeFromVParagraph();
       bool exceedsContentArea = r.image != null &&
-          (r.image!.width > contentW || r.image!.height > contentH);
+          (r.image!.width > contentW + 20 || r.image!.height > contentH + 20);
 
       if (r.image != null &&
           r.image!.wrapMode != null &&

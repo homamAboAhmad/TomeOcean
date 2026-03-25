@@ -141,8 +141,12 @@ class PPr {
 
       // Default "Normal" style in Word 2007+ usually has 10pt spacing after.
       // We apply the same correction factor to this default.
-      // 10pt * 20 twips/pt * twipsToPx * kArabicLineSpacingFactor
-      spacingAfter = 10.0 * 20.0 * twipsToPx * kArabicLineSpacingFactor;
+      // However, Header and Footer paragraphs in Word usually default to 0pt spacing.
+      if (parent.isHeaderParagraph) {
+        spacingAfter = 0;
+      } else {
+        spacingAfter = 10.0 * 20.0 * twipsToPx * kArabicLineSpacingFactor;
+      }
       spacingAfterExplicit = false;
 
       return;

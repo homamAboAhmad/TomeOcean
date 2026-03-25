@@ -15,18 +15,14 @@ import 'package:golden_shamela/FontsLoaderController.dart';
 /// Book management operations for HomePage
 class HomePageBookManagement {
   final BuildContext context;
-  final Function(WordDocument) onBookAdded;
 
-  HomePageBookManagement({required this.context, required this.onBookAdded});
+  HomePageBookManagement({required this.context});
 
   /// Read and process docx file
-  Future<WordDocument?> readDocxFile(
-    String? filePath, [
-    WordDocument? tempDoc,
-  ]) async {
+  Future<WordDocument?> readDocxFile(String? filePath, [WordDocument? tempDoc]) async {
     if (filePath == null) return null;
 
-    WordDocument wordDocument = WordDocument();
+    WordDocument wordDocument = tempDoc ?? WordDocument();
     wordDocument.title = getFileName(filePath);
 
     final appDocsDir = await getApplicationDocumentsDirectory();
@@ -51,9 +47,7 @@ class HomePageBookManagement {
 
           final cachedVersion = jsonMap['_cacheVersion'] as int? ?? 0;
           if (cachedVersion < CACHE_VERSION) {
-            debugPrint(
-              'Cache outdated (v$cachedVersion < v$CACHE_VERSION), re-parsing...',
-            );
+            debugPrint('Cache outdated (v$cachedVersion < v$CACHE_VERSION), re-parsing...');
             await bookCacheDir.delete(recursive: true);
             loadedFromCache = false;
           } else {
@@ -78,7 +72,7 @@ class HomePageBookManagement {
                 .map((file) => p.basename(file.path))
                 .toList();
             wordDocument.initLoadedPages();
-
+            
             // تحميل الخطوط المستخرجة إن وجدت
             if (wordDocument.extractedFontPaths.isNotEmpty) {
               await loadExtractedFonts(wordDocument.extractedFontPaths);
@@ -89,7 +83,7 @@ class HomePageBookManagement {
         }
       }
     } catch (e) {
-      debugPrint("Error loading from cache, re-parsing: $e");
+      ShowSnackBar(context, "Error loading from cache, re-parsing: $e");
       if (await bookCacheDir.exists()) {
         await bookCacheDir.delete(recursive: true);
       }
@@ -99,28 +93,22 @@ class HomePageBookManagement {
     if (!loadedFromCache) {
       // إذا لم يكن في الكاش، نستخدم الخدمة المركزية للمعالجة
       try {
-        debugPrint("Cache missing or outdated, parsing...");
+        ShowSnackBar(context, "Cache missing or outdated, parsing...");
 
-        await BookProcessingService().parseAndCacheForOpening(
-          filePath,
-          emit: (state, progress, msg) {
-            tempDoc?.loadingProgress.value = progress;
-            tempDoc?.loadingMessage.value = msg;
-          },
-        );
+        await BookProcessingService().parseAndCacheForOpening(filePath);
 
         // بعد الانتهاء، نحاول التحميل مرة أخرى من الكاش
         // نعيد استدعاء الدالة لتنفيذ منطق التحميل (Recursion)
-        return await readDocxFile(filePath);
+        return await readDocxFile(filePath, tempDoc);
       } catch (e) {
-        debugPrint("Error processing book: $e");
-        ShowSnackBar(context, "حدث خطأ أثناء فتح الكتاب");
+        ShowSnackBar(context, "Error processing book: $e");
         return null;
       }
     }
 
-    // onBookAdded(wordDocument); // Deprecated, returning it instead
-    await Future.delayed(Duration(milliseconds: 100), () {});
+    // No longer calling onBookAdded here as it causes double addition in HomePage
+    // onBookAdded(wordDocument);
+    await Future.delayed(Duration(milliseconds: 1500), () {});
     return wordDocument;
   }
 

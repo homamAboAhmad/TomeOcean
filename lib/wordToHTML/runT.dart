@@ -38,10 +38,6 @@ class runT {
   /// This is serialized to cache since xmlRun is ignored
   bool hasTab = false;
 
-  /// Whether this run is a symbol run (w:sym). Serialized to cache.
-  /// Prevents changeFontByTxt() from overriding the symbol's font when loading from cache.
-  bool isSymbolRun = false;
-
   @JsonKey(ignore: true)
   Paragraph parent;
 
@@ -74,9 +70,9 @@ class runT {
       );
     }
 
-    // لا نستدعي checkSymbol() هنا لأن xmlRun=null من الكاش
-    // وستذهب الدالة لفرع else الذي قد يُفسد rpr.font للرموز.
-    // isSymbolRun محفوظ في الكاش ويحمي الخط.
+    // التحقق من الرموز عند التحميل من الكاش أيضاً
+    // (xmlRun سيكون null، لكن rpr?.font يجب أن يكون محفوظاً)
+    runT.checkSymbol();
 
     return runT;
   }
@@ -164,9 +160,7 @@ class runT {
 
     Widget? tab = getTabWidget();
     // fixFnr() removed - parentheses are now fixed in addFnToPage
-    // NOTE: checkSymbol() is intentionally NOT called here again.
-    // It is already called in fromXml() and the font/text are persisted in rpr.
-    // Calling it again here would override rpr.font via changeFontByTxt() for symbol runs.
+    checkSymbol();
 
     double vAlign = rpr?.getVertAlignNum() ?? 0;
     String fixedText = checkDiacritics();
@@ -383,8 +377,6 @@ class runT {
         rpr = RPr(this);
       }
 
-      isSymbolRun = true; // علامة تُحفظ في الكاش لحماية الخط
-
       var symElement = xmlRun!.findElements("w:sym").firstOrNull;
       String? fontName = symElement?.getAttribute("w:font");
       String? charHex = symElement?.getAttribute("w:char");
@@ -409,9 +401,8 @@ class runT {
           text = "?";
         }
       }
-    } else if (!isSymbolRun) {
+    } else {
       // تحديد الخط المناسب حسب نوع النص
-      // للرموز المُحملة من الكاش (isSymbolRun=true)، لا نُعدّل الخط أبداً
       if (rpr != null) {
         String? appropriateFont = changeFontByTxt(text);
         if (appropriateFont != null && appropriateFont.isNotEmpty) {
@@ -640,16 +631,13 @@ class runT {
   // Arabic Presentation Forms-B (U+FE70-U+FEFF)
   bool isArabic(String text) {
     final arabicRegex = RegExp(
-      r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]',
-    );
+        r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]');
     return arabicRegex.hasMatch(text);
   }
 
   String checkDiacritics() {
     final doc = parent.parent.parent;
-    String result = doc.withDiacritics
-        ? (text ?? "")
-        : removeDiacritics(text ?? "");
+    String result = doc.withDiacritics ? (text ?? "") : removeDiacritics(text ?? "");
     if (doc.useArabicNumerals && rpr?.rtl == true) {
       result = toArabicNumbers(result);
     }

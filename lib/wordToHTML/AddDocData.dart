@@ -32,10 +32,7 @@ Future<List<WordPage>> AddDocData(
   // print("AddDocData: Added defaults.");
   addTheme1(archiveMap[WORD_THEME1], wordDocument);
   // print("AddDocData: Added theme.");
-  List<Map?> numberingMap = addNumbering(
-    archiveMap[WORD_NUMBERING],
-    wordDocument: wordDocument,
-  );
+  List<Map?> numberingMap = addNumbering(archiveMap[WORD_NUMBERING], wordDocument: wordDocument);
   // print("AddDocData: Added numbering.");
   wordDocument.abstractNumMap = numberingMap[0]!.cast();
   wordDocument.numsMap = numberingMap[1]!.cast();

@@ -32,12 +32,12 @@ Map<String, FootNote> addFootNotes(
 
     int paraIndex = 0;
     for (var xmlPar in fn.findElements("w:p")) {
-      // البحث عن ShamelaFN_* bookmarks في هذه الفقرة
+      // البحث عن TheLibraryFN_* bookmarks في هذه الفقرة
       for (var child in xmlPar.childElements) {
         if (child.name.local == "bookmarkStart") {
           String? bmName = child.getAttribute("w:name");
-          if (bmName != null && bmName.startsWith("ShamelaFN_")) {
-            // ShamelaFN_{index}_P{page} → استخراج رقم الصفحة
+          if (bmName != null && bmName.startsWith("TheLibraryFN_")) {
+            // TheLibraryFN_{index}_P{page} → استخراج رقم الصفحة
             int pageNum = _parsePageFromBookmark(bmName);
             if (pageNum > 0) {
               pageBreaks[pageNum] = paraIndex;
@@ -75,9 +75,9 @@ Map<String, FootNote> addFootNotes(
   return docFootNotes;
 }
 
-/// استخراج رقم الصفحة من اسم bookmark بصيغة ShamelaFN_{index}_P{page}
+/// استخراج رقم الصفحة من اسم bookmark بصيغة TheLibraryFN_{index}_P{page}
 int _parsePageFromBookmark(String bmName) {
-  // ShamelaFN_9_P7 → 7
+  // TheLibraryFN_9_P7 → 7
   int pIdx = bmName.lastIndexOf('_P');
   if (pIdx == -1) return 0;
   return int.tryParse(bmName.substring(pIdx + 2)) ?? 0;

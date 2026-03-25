@@ -67,9 +67,7 @@ class _WordPageScreenState extends State<WordPageScreen> {
                                 alignment: Alignment.topCenter,
                                 child: Padding(
                                   padding: EdgeInsets.only(
-                                    top: sectPr.hasVmlFrameInHeader(widget.wordPage.pageIndex) 
-                                        ? (sectPr.headerMargin ?? 0) 
-                                        : 0,
+                                    top: sectPr.headerMargin ?? 0,
                                   ),
                                   child: OverflowBox(
                                     maxHeight: double.infinity,

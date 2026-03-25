@@ -547,6 +547,7 @@ class SectPr {
         // Direct paragraph
         Paragraph p = Paragraph(wordPage);
         p.customPageNumber = pageNumStr;
+        p.isHeaderParagraph = true; // Set to true to apply same zero-default spacing in PPr.dart
         p.fromXml(element);
         psWidgets.add(p.toWidget());
       } else if (element.name.local == "sdt") {
@@ -562,6 +563,7 @@ class SectPr {
               if (!pageNumReplacedInSdt) {
                 p.customPageNumber = pageNumStr;
               }
+              p.isHeaderParagraph = true; // Set to true to apply same zero-default spacing in PPr.dart
               p.fromXml(child);
               // Check if this paragraph actually used the page number
               if (p.runs.any((r) => r.text == pageNumStr)) {
