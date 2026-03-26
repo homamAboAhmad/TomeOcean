@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
+import 'package:xml/xml.dart';
+import 'PageBorderWidget.dart';
 
 import '../main.dart';
 
@@ -54,6 +56,29 @@ class _WordPageScreenState extends State<WordPageScreen> {
                       child: ClipRect(
                         child: Stack(
                           children: [
+                            // 0. الإطار (Page Borders)
+                            if (sectPr.sectPrElement != null)
+                              Builder(
+                                builder: (context) {
+                                  final borders = PageBorderSpec.fromXml(sectPr.sectPrElement!);
+                                  if (borders == null) return const SizedBox.shrink();
+                                  return Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    width: pageWidth,
+                                    height: pageHeight,
+                                    child: IgnorePointer(
+                                      child: CustomPaint(
+                                        painter: PageBorderPainter(
+                                          borders: borders,
+                                          pageWidth: pageWidth,
+                                          pageHeight: pageHeight,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             // 1. الهيدر (ثابت في الأعلى)
                             Positioned(
                               top: 0,

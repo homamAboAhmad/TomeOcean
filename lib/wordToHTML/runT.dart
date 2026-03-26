@@ -326,9 +326,33 @@ class runT {
 
   updateFnDisplayNumber() {
     if (footNoteId != null) {
-      text = (text ?? "") + (fnDisplayNum ?? footNoteId!);
-      text = text!.trim();
-      text?.replaceAll(" ", "");
+      String calculated = (fnDisplayNum ?? footNoteId!);
+      if (text != null && text!.trim().isNotEmpty) {
+        String trimmed = text!.trim();
+
+        // Regex for all digit types (ASCII 0-9 and Arabic-Indic ٠-٩)
+        const allDigits = r'0-9\u0660-\u0669';
+
+        // Check if the run only contains numbers or common markers like brackets
+        bool isJustNumber = RegExp('^[()[\\]$allDigits\\s]+\$').hasMatch(trimmed);
+
+        if (isJustNumber) {
+          // Replace plain number with our calculated/formatted number
+          text = calculated;
+        } else {
+          // Keep the custom symbol (like ❶), but remove any redundant digits
+          // that might have been part of the run (to avoid "1 ❶" or "١ ❶")
+          String symbolOnly =
+              trimmed.replaceAll(RegExp('[$allDigits]'), '').trim();
+          if (symbolOnly.isNotEmpty) {
+            text = symbolOnly;
+          } else {
+            text = calculated;
+          }
+        }
+      } else {
+        text = calculated;
+      }
     }
   }
 
