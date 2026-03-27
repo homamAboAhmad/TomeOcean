@@ -5,6 +5,7 @@ import 'package:golden_shamela/wordToHTML/SectPr.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'VectorShapeWidget.dart';
 import 'GroupImageWidget.dart';
+import 'package:golden_shamela/WordToWidget/VmlRendererWidget.dart';
 
 SectPr? _resolveImageSectPr(ImageData imageData) {
   final run = imageData.parent;
@@ -41,7 +42,15 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
     );
   }
 
-  // NEW: Handle Text Box Content FIRST
+  // NEW: Handle VML shapes first, because textBoxText in VML should be rendered inside the shape
+  if (image.vmlShapeData != null) {
+    return VmlRendererWidget(
+      imageData: image,
+      wordPage: image.parent!.parent!.parent,
+    );
+  }
+
+  // Handle Text Box Content (non-VML fall-back)
   if (image.textBoxText != null && image.textBoxText!.isNotEmpty) {
     Color textColor = Colors.black;
     if (image.textColor != null) {
@@ -231,17 +240,28 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
   Widget content;
   Widget innerContent;
 
-  if (image.isGroup) {
+  print("VML_DEBUG: Widget building for rId=${image.rId}, shapeType=${image.vmlShapeData?.shapeType}, isGroup=${image.isGroup}, isVml=${image.isVml}");
+  if (image.vmlShapeData != null && !image.isGroup) {
+    print("VML_DEBUG: Rendering with VmlRendererWidget");
+    innerContent = VmlRendererWidget(
+      imageData: image,
+      wordPage: image.parent!.parent!.parent,
+    );
+  } else if (image.isGroup) {
     innerContent = GroupImageWidget(imageData: image);
   } else {
     if (image.imageMemory == null || image.imageMemory!.isEmpty) {
+      // If it's a VML shape without image data and without text box, just hide it
+      if (image.isVml && image.rId.isEmpty && (image.textBoxText == null || image.textBoxText!.isEmpty) && image.vectorPath == null) {
+        return const SizedBox.shrink();
+      }
       print(
         "🚫 IMAGE NO DATA - rId: ${image.rId}, docImages: ${image.parent?.parent?.parent?.parent?.docImages.keys.length ?? 0} images",
       );
       return SizedBox(
-        width: image.width,
-        height: image.height,
-        child: Center(child: Text("No Data")),
+        width: image.width > 0 ? image.width : 50,
+        height: image.height > 0 ? image.height : 50,
+        child: Center(child: Text("No Data", style: TextStyle(fontSize: 10, color: Colors.grey))),
       );
     }
 
@@ -437,13 +457,8 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
             );
           }
           return Container(
-            // decoration: BoxDecoration(border: Border.all(color: Colors.red, width: 2)), // DEBUG BORDER - REMOVED
-            // padding removed as we use translate for positioning if needed
-            width: image.width,
-            // For inline images, we let the height be determined by the aspect ratio to avoid stretching/squashing
-            // if the XML dimensions are not proportional (or if user wants natural scaling).
-            // For floating images, we might still want to respect the explicit height if it acts as a frame.
-            height: image.wrapMode == null ? null : image.height,
+            width: image.width > 0 ? image.width : null,
+            height: image.wrapMode == null ? null : (image.height > 0 ? image.height : null),
             child: innerContent,
           );
         },

@@ -529,7 +529,12 @@ class SectPr {
       // Skip other elements like bookmarkStart, bookmarkEnd
     }
 
-    return Column(mainAxisSize: MainAxisSize.min, children: psWidgets);
+    // وسّع العرض ليتوافق مع عرض الصفحة فتمركز VML يعمل صالحاً داخل الهيدر
+    double width = parent.getSectPrForPage(wordPage.pageIndex).width ?? 595;
+    return SizedBox(
+      width: width,
+      child: Column(mainAxisSize: MainAxisSize.min, children: psWidgets),
+    );
   }
 
   Widget getSectFooterWidget(WordPage wordPage, String pageNumStr) {

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import 'package:golden_shamela/TestApp2.dart';
+import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
@@ -683,6 +684,7 @@ class Paragraph {
       final image = runt.image;
       final isSpecialDebugRid =
           image != null && RegExp(r'^rId(1[3-9])$').hasMatch(image.rId);
+      final isVmlShape = image != null && image.vmlShapeData != null;
       // 1. Floating Images (wrapMode != null)
       if (image != null && image.wrapMode != null) {
         // Header/footer paragraphs: keep ALL floating images here since they are
@@ -690,9 +692,9 @@ class Paragraph {
         // Decorative elements (lines, shapes) intentionally span the full page width.
         if (isHeaderParagraph) {
           imageRunTs.add(runt);
-          if (isSpecialDebugRid) {
+          if (isSpecialDebugRid || isVmlShape) {
             print(
-              'VML_DEBUG_CLASSIFY: rId=${image.rId} -> imageRunTs(header) wrapMode=${image.wrapMode} relV=${image.relativeFromV} width=${image.width} height=${image.height}',
+              'VML_DEBUG_CLASSIFY: rId=${image.rId} shape=${image.vmlShapeData?.shapeType} -> imageRunTs(header) wrapMode=${image.wrapMode} isHeader=$isHeaderParagraph',
             );
           }
         }
@@ -708,6 +710,12 @@ class Paragraph {
               'VML_DEBUG_CLASSIFY: rId=${image.rId} -> imageRunTs(paragraph) wrapMode=${image.wrapMode} relV=${image.relativeFromV} width=${image.width} height=${image.height}',
             );
           }
+        } else if (isVmlShape) {
+          // VML shape with absolute positioning NOT in header and NOT paragraph-relative
+          // This is dropped! Log it.
+          print(
+            'VML_DEBUG_CLASSIFY: DROPPED! rId=${image.rId} shape=${image.vmlShapeData?.shapeType} wrapMode=${image.wrapMode} isHeader=$isHeaderParagraph relV=${image.relativeFromV} relH=${image.relativeFromH}',
+          );
         }
         // If relative to page/margin, IGNORE here (handled by WordPage.dart)
         // This prevents them from polluting textRunTs and triggering inline logic.
@@ -715,13 +723,18 @@ class Paragraph {
       // 2. Text and Inline Images (wrapMode == null)
       else {
         textRunTs.add(runt);
-        if (isSpecialDebugRid) {
+        if (isVmlShape) {
           print(
-            'VML_DEBUG_CLASSIFY: rId=${image!.rId} -> textRunTs(inline) wrapMode=${image.wrapMode} relV=${image.relativeFromV} width=${image.width} height=${image.height}',
+            'VML_DEBUG_CLASSIFY: rId=${image!.rId} shape=${image.vmlShapeData?.shapeType} -> textRunTs(inline/null-wrap) wrapMode=${image.wrapMode} isHeader=$isHeaderParagraph',
           );
         }
       }
     });
+    if (isHeaderParagraph && imageRunTs.isNotEmpty) {
+      print(
+        'VML_DEBUG_CLASSIFY: Header paragraph total: ${imageRunTs.length} imageRunTs, ${textRunTs.length} textRunTs',
+      );
+    }
     return {"iRuns": imageRunTs, "tRuns": textRunTs};
   }
 
@@ -796,10 +809,12 @@ class Paragraph {
               alignment: textAlign == TextAlign.center
                   ? Alignment.center
                   : textAlign == TextAlign.left
-                      ? Alignment.centerLeft
-                      : textAlign == TextAlign.right
-                          ? Alignment.centerRight
-                          : (isRtlParagraph ? Alignment.centerRight : Alignment.centerLeft),
+                  ? Alignment.centerLeft
+                  : textAlign == TextAlign.right
+                  ? Alignment.centerRight
+                  : (isRtlParagraph
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft),
               child: getImageWidget(image),
             ),
           ),
@@ -1382,18 +1397,47 @@ class Paragraph {
       }
     }
 
-    // ترتيب الصور حسب relativeHeight تصاعدياً
+    // ترتيب الصور حسب z-index/relativeHeight تصاعدياً
     // في Stack، العناصر الأخيرة تظهر فوق العناصر الأولى
-    // لذا relativeHeight الأقل يأتي أولاً (يظهر تحت)
+    // لذا القيمة الأقل تأتي أولاً (تظهر تحت)
     var sortedImageRuns = imageRunTs
         .where((r) => r.image != null && r.image!.behindDoc == behindDoc)
         .toList();
-    sortedImageRuns.sort(
-      (a, b) => a.image!.relativeHeight.compareTo(b.image!.relativeHeight),
-    );
 
+    double _effectiveHeight(ImageData img) {
+      if (img.vmlZIndex != 0) {
+        return img.vmlZIndex;
+      }
+      return img.relativeHeight;
+    }
+
+    sortedImageRuns.sort((a, b) {
+      final aImg = a.image!;
+      final bImg = b.image!;
+      final aHeight = _effectiveHeight(aImg);
+      final bHeight = _effectiveHeight(bImg);
+
+      if (aHeight != bHeight) {
+        return aHeight.compareTo(bHeight);
+      }
+
+      final aType = aImg.vmlShapeData?.shapeType.toLowerCase();
+      final bType = bImg.vmlShapeData?.shapeType.toLowerCase();
+      if (aType == 'line' && bType != 'line') return -1;
+      if (bType == 'line' && aType != 'line') return 1;
+
+      return aImg.posY.compareTo(bImg.posY);
+    });
+
+    // debug ordering for imaging layer decisions
     for (var run in sortedImageRuns) {
       var img = run.image!;
+      final zIndexDebug = img.vmlZIndex != 0
+          ? img.vmlZIndex
+          : img.relativeHeight;
+      print(
+        'VML_DEBUG_ORDER: image rId=${img.rId} shape=${img.vmlShapeData?.shapeType ?? 'none'} behind=${img.behindDoc} relHeight=${img.relativeHeight} vmlZIndex=${img.vmlZIndex} effectiveHeight=${zIndexDebug} posY=${img.posY}',
+      );
 
       double left = 0;
       double top = img.posY; // relativeFromV="paragraph" يعني posY نسبي للفقرة
@@ -1424,10 +1468,16 @@ class Paragraph {
         left = marginAreaWidth - img.width;
       } else {
         // استخدام posX
-        // إذا كان relativeFromH="column" (margin)، فهو نسبي لبداية الفقرة -> left = posX
-        // إذا كان relativeFromH="page"، فهو نسبي للصفحة -> left = posX - leftMargin
+        // إذا كان relativeFromH="page"، فهو نسبي للصفحة الكاملة
+        // لكن الفقرات داخل المحتوى تُعرض بعد leftMargin
         if (img.relativeFromH == "page") {
-          left = img.posX - leftMargin;
+          if (isHeaderParagraph) {
+            // في الهيدر نضع الصورة مباشرة بناءً على إحداثيات الصفح
+            left = img.posX;
+          } else {
+            // في المحتوى العام نخصم leftMargin لأن الحاوية تبدأ عند منطقة النص
+            left = img.posX - leftMargin;
+          }
         } else {
           left = img.posX;
         }
@@ -1462,6 +1512,11 @@ class Paragraph {
               },
               child: Builder(
                 builder: (context) {
+                  // NEW: Handle VML shapes via VmlRendererWidget
+                  if (img.vmlShapeData != null) {
+                    return getImageWidget(img, innerOnly: true);
+                  }
+
                   // NEW: Handle Group Images via ImageToWidget logic
                   if (img.isGroup) {
                     return getImageWidget(img, innerOnly: true);

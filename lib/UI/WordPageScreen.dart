@@ -32,203 +32,200 @@ class _WordPageScreenState extends State<WordPageScreen> {
               widget.wordPage.pageIndex,
             );
             var margins = getSectionMargins();
-            double flowClearance = widget.wordPage.computeFlowClearance(margins.top);
+            double flowClearance = widget.wordPage.computeFlowClearance(
+              margins.top,
+            );
             double pageHeight = sectPr.height ?? 1000;
             double pageWidth = sectPr.width ?? 800;
 
             return Center(
-                    child: Container(
-                      width: pageWidth,
-                      constraints: BoxConstraints(
-                        minHeight: pageHeight, // الحد الأدنى هو حجم الصفحة
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 2,
-                            blurRadius: 5,
-                            offset: const Offset(0, 3),
+              child: Container(
+                width: pageWidth,
+                constraints: BoxConstraints(
+                  minHeight: pageHeight, // الحد الأدنى هو حجم الصفحة
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.5),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: ClipRect(
+                  child: Stack(
+                    children: [
+                      // 0. الإطار (Page Borders)
+                      if (sectPr.sectPrElement != null)
+                        Builder(
+                          builder: (context) {
+                            final borders = PageBorderSpec.fromXml(
+                              sectPr.sectPrElement!,
+                            );
+                            if (borders == null) return const SizedBox.shrink();
+                            return Positioned(
+                              top: 0,
+                              left: 0,
+                              width: pageWidth,
+                              height: pageHeight,
+                              child: IgnorePointer(
+                                child: CustomPaint(
+                                  painter: PageBorderPainter(
+                                    borders: borders,
+                                    pageWidth: pageWidth,
+                                    pageHeight: pageHeight,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      // 1. الهيدر (ثابت في الأعلى)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: margins.top,
+                          // لا نضيف padding أفقي هنا لأننا نرسم الصور بالاعتماد على الإحداثيات الكاملة للصفحة
+                          padding: EdgeInsets.zero,
+                          alignment: Alignment.topLeft,
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              top: sectPr.headerMargin ?? 0,
+                            ),
+                            child: OverflowBox(
+                              maxHeight: double.infinity,
+                              alignment: Alignment.topLeft,
+                              child: Opacity(
+                                opacity: 0.5,
+                                child: pageHeaderW(),
+                              ),
+                            ),
                           ),
-                        ],
-                      ),
-                      child: ClipRect(
-                        child: Stack(
-                          children: [
-                            // 0. الإطار (Page Borders)
-                            if (sectPr.sectPrElement != null)
-                              Builder(
-                                builder: (context) {
-                                  final borders = PageBorderSpec.fromXml(sectPr.sectPrElement!);
-                                  if (borders == null) return const SizedBox.shrink();
-                                  return Positioned(
-                                    top: 0,
-                                    left: 0,
-                                    width: pageWidth,
-                                    height: pageHeight,
-                                    child: IgnorePointer(
-                                      child: CustomPaint(
-                                        painter: PageBorderPainter(
-                                          borders: borders,
-                                          pageWidth: pageWidth,
-                                          pageHeight: pageHeight,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            // 1. الهيدر (ثابت في الأعلى)
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                height: margins.top,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: margins.left,
-                                ),
-                                alignment: Alignment.topCenter,
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    top: sectPr.headerMargin ?? 0,
-                                  ),
-                                  child: OverflowBox(
-                                    maxHeight: double.infinity,
-                                    alignment: Alignment.topCenter,
-                                    child: Opacity(
-                                      opacity: 0.5,
-                                      child: pageHeaderW(),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            // 2. الصور الخلفية (behindDoc=true) - يجب أن تلتزم بحجم الصفحة الأصلي ولا تتأثر بالتمطيط
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              width: pageWidth,
-                              height: pageHeight,
-                              child: IgnorePointer(
-                                child: widget.wordPage.getBackgroundImages(),
-                              ),
-                            ),
-
-                            // 3. المحتوى + الحواشي (يتحكم في ارتفاع الصفحة)
-                            Padding(
-                              padding: margins,
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  // Calculate minimum content height (Page Height - Margins)
-                                  double minContentHeight =
-                                      pageHeight - margins.top - margins.bottom;
-                                  // Handle potential negative values
-                                  if (minContentHeight < 0)
-                                    minContentHeight = 0;
-
-                                  // CASE 1: No footnotes - Return simple layout to avoid IntrinsicHeight overhead/errors
-                                  if (widget.wordPage.fns.isEmpty) {
-                                    return ConstrainedBox(
-                                      constraints: BoxConstraints(
-                                        minHeight: minContentHeight,
-                                      ),
-                                      child: Column(
-                                        textDirection: TextDirection.rtl,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [pageContentW(flowClearance)],
-                                      ),
-                                    );
-                                  }
-
-                                  // CASE 2: Has footnotes - Use IntrinsicHeight + Expanded for sticky footer
-                                  return ConstrainedBox(
-                                    constraints: BoxConstraints(
-                                      minHeight: minContentHeight,
-                                    ),
-                                    child: IntrinsicHeight(
-                                      child: Column(
-                                        textDirection: TextDirection.rtl,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(child: pageContentW(flowClearance)),
-                                          getSeperator(
-                                            true,
-                                          ), // ✅ فوق الحواشي مباشرة
-                                          const SizedBox(height: 5),
-                                          ConstrainedBox(
-                                            constraints: const BoxConstraints(
-                                              minHeight:
-                                                  100, // الحد الأدنى المعتدل للحفاظ على التناسق
-                                            ),
-                                            child: widget.wordPage.footnotesW(),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-
-                            // 4. الفوتر (ثابت في الأسفل)
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                height: margins.bottom,
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: margins.left,
-                                ),
-                                alignment: Alignment.topCenter,
-                                child: OverflowBox(
-                                  maxHeight: double.infinity,
-                                  alignment: Alignment.topCenter,
-                                  child: Opacity(
-                                    opacity: 0.5,
-                                    child: footerW(),
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            // 5. الصور الأمامية (behindDoc=false) - يجب أن تلتزم بحجم الصفحة الأصلي
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              width: pageWidth,
-                              height: pageHeight,
-                              child: IgnorePointer(
-                                child: widget.wordPage.getForegroundImages(),
-                              ),
-                            ),
-                          ],
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-              // زر طباعة XML الصفحة
-              Positioned(
-                bottom: 16,
-                left: 16,
-                child: FloatingActionButton.small(
-                  onPressed: () {
-                    widget.wordPage.printPageXml();
-                  },
-                  backgroundColor: Colors.blue.shade700,
-                  child: Icon(Icons.code, color: Colors.white, size: 20),
-                  tooltip: 'طباعة فقرات الصفحة',
+
+                      // 2. الصور الخلفية (behindDoc=true) - يجب أن تلتزم بحجم الصفحة الأصلي ولا تتأثر بالتمطيط
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        width: pageWidth,
+                        height: pageHeight,
+                        child: IgnorePointer(
+                          child: widget.wordPage.getBackgroundImages(),
+                        ),
+                      ),
+
+                      // 3. المحتوى + الحواشي (يتحكم في ارتفاع الصفحة)
+                      Padding(
+                        padding: margins,
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Calculate minimum content height (Page Height - Margins)
+                            double minContentHeight =
+                                pageHeight - margins.top - margins.bottom;
+                            // Handle potential negative values
+                            if (minContentHeight < 0) minContentHeight = 0;
+
+                            // CASE 1: No footnotes - Return simple layout to avoid IntrinsicHeight overhead/errors
+                            if (widget.wordPage.fns.isEmpty) {
+                              return ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: minContentHeight,
+                                ),
+                                child: Column(
+                                  textDirection: TextDirection.rtl,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [pageContentW(flowClearance)],
+                                ),
+                              );
+                            }
+
+                            // CASE 2: Has footnotes - Use IntrinsicHeight + Expanded for sticky footer
+                            return ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: minContentHeight,
+                              ),
+                              child: IntrinsicHeight(
+                                child: Column(
+                                  textDirection: TextDirection.rtl,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: pageContentW(flowClearance),
+                                    ),
+                                    getSeperator(true), // ✅ فوق الحواشي مباشرة
+                                    const SizedBox(height: 5),
+                                    ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        minHeight:
+                                            100, // الحد الأدنى المعتدل للحفاظ على التناسق
+                                      ),
+                                      child: widget.wordPage.footnotesW(),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      // 4. الفوتر (ثابت في الأسفل)
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: margins.bottom,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: margins.left,
+                          ),
+                          alignment: Alignment.topCenter,
+                          child: OverflowBox(
+                            maxHeight: double.infinity,
+                            alignment: Alignment.topCenter,
+                            child: Opacity(opacity: 0.5, child: footerW()),
+                          ),
+                        ),
+                      ),
+
+                      // 5. الصور الأمامية (behindDoc=false) - يجب أن تلتزم بحجم الصفحة الأصلي
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        width: pageWidth,
+                        height: pageHeight,
+                        child: IgnorePointer(
+                          child: widget.wordPage.getForegroundImages(),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
-          );
+            );
+          },
+        ),
+        // زر طباعة XML الصفحة
+        Positioned(
+          bottom: 16,
+          left: 16,
+          child: FloatingActionButton.small(
+            onPressed: () {
+              widget.wordPage.printPageXml();
+            },
+            backgroundColor: Colors.blue.shade700,
+            child: Icon(Icons.code, color: Colors.white, size: 20),
+            tooltip: 'طباعة فقرات الصفحة',
+          ),
+        ),
+      ],
+    );
   }
 
   Widget getSeperator(bool isVisible) {
@@ -247,9 +244,7 @@ class _WordPageScreenState extends State<WordPageScreen> {
         .getSectPrForPage(widget.wordPage.pageIndex)
         .getHeaderHeight(widget.wordPage);
     double baseTopMargin =
-        wordDocument
-            .getSectPrForPage(widget.wordPage.pageIndex)
-            .topMargin ??
+        wordDocument.getSectPrForPage(widget.wordPage.pageIndex).topMargin ??
         8.0;
 
     // فحص وجود صور "إطارات" داخل محتوى الصفحة نفسها
@@ -280,9 +275,7 @@ class _WordPageScreenState extends State<WordPageScreen> {
 
     return EdgeInsets.only(
       left:
-          wordDocument
-              .getSectPrForPage(widget.wordPage.pageIndex)
-              .leftMargin ??
+          wordDocument.getSectPrForPage(widget.wordPage.pageIndex).leftMargin ??
           8.0,
       right:
           wordDocument
@@ -304,9 +297,7 @@ class _WordPageScreenState extends State<WordPageScreen> {
 
   Widget pageHeaderW() {
     var sectPr = wordDocument.getSectPrForPage(widget.wordPage.pageIndex);
-    String pageNumStr = sectPr.calculatePageNumber(
-      widget.wordPage.pageIndex,
-    );
+    String pageNumStr = sectPr.calculatePageNumber(widget.wordPage.pageIndex);
     return sectPr.getSectHeaderWidget(widget.wordPage, pageNumStr);
   }
 

@@ -114,6 +114,7 @@ class runT {
         // }
       } catch (e) {
         // Error parsing image data - silently ignore
+        print("DEBUG_IMG_ERROR: Exception parsing image/VML in runT.fromXml: $e");
       }
     }
     return this;
