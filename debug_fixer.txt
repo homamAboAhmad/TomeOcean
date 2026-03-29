@@ -3673,3 +3673,163 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-03-29 22:46:45.875069 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 22:52:23.331029 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 22:54:55.280648 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 22:56:59.862706 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 22:59:29.184125 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 23:05:32.077107 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 23:06:12.983431 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 23:06:19.903333 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 23:35:23.223279 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 23:46:25.561659 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-29 23:55:56.287732 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 00:05:54.153413 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 00:13:59.173725 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 00:14:07.241366 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 00:24:37.286146 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 00:25:19.808692 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 00:30:22.033605 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!

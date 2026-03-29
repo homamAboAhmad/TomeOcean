@@ -839,13 +839,12 @@ void _parseVmlWrap(xml.XmlElement container) {
     return;
   }
 
-  final anchorX = wrap.getAttribute('anchorx')?.toLowerCase();
-  final anchorY = wrap.getAttribute('anchory')?.toLowerCase();
   final wrapType = wrap.getAttribute('type')?.toLowerCase();
 
-  _imageData.relativeFromH = _mapVmlAnchor(anchorX);
-  _imageData.relativeFromV = _mapVmlAnchor(anchorY);
-
+  // w10:wrap describes how surrounding text wraps around a VML object.
+  // It does not define the object's positioning base. The positioning base
+  // must come from VML positioning attributes/styles such as
+  // mso-position-horizontal-relative / mso-position-vertical-relative.
   if (wrapType == 'square') {
     _imageData.wrapMode = 'Square';
   } else if (wrapType == 'tight') {
@@ -856,19 +855,6 @@ void _parseVmlWrap(xml.XmlElement container) {
     _imageData.wrapMode = 'TopAndBottom';
   } else {
     _imageData.wrapMode = 'None';
-  }
-}
-
-String _mapVmlAnchor(String? anchor) {
-  switch (anchor) {
-    case 'page':
-      return 'page';
-    case 'margin':
-      return 'margin';
-    case 'text':
-      return 'column';
-    default:
-      return 'margin';
   }
 }
 

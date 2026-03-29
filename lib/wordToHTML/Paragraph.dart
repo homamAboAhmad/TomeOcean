@@ -502,7 +502,75 @@ class Paragraph {
     // Calling it here would cause duplicate hyperlink runs.
     _extractBookmarks(); // Extract bookmarks from paragraph level
     getPRunsByType();
+    _logProblemHeaderDiagnostics("after-parse");
     return this;
+  }
+
+  bool _isProblemHeaderParagraph() {
+    if (!isHeaderParagraph) return false;
+    final hasPageField =
+        pXml?.findAllElements("w:instrText").any(
+          (e) => e.text.toUpperCase().contains("PAGE"),
+        ) ??
+        false;
+    final hasGroupedPict = runs.any((r) => r.image?.isGroup == true);
+    return hasPageField && hasGroupedPict;
+  }
+
+  void _logProblemHeaderDiagnostics(String phase, {List<InlineSpan>? spans}) {
+    if (!_isProblemHeaderParagraph()) return;
+
+    final jc = pPr?.xmlpPr?.getElement("w:jc")?.getAttribute("w:val");
+    final hasParagraphRtl = pPr?.xmlpPr?.getElement("w:rPr")?.getElement("w:rtl") != null;
+    final hasParagraphBidi = pPr?.xmlpPr?.getElement("w:bidi") != null;
+
+    print(
+      "HDR_PAGE_DIAG[$phase]: jc=$jc pRtl=$hasParagraphRtl pBidi=$hasParagraphBidi textAlign=$textAlign textDirection=$textDirection customPageNumber=$customPageNumber runs=${runs.length} textRuns=${textRunTs.length} imageRuns=${imageRunTs.length}",
+    );
+
+    for (int i = 0; i < runs.length; i++) {
+      final run = runs[i];
+      final hasBegin = run.xmlRun?.findElements("w:fldChar").any(
+            (e) => e.getAttribute("w:fldCharType") == "begin",
+          ) ??
+          false;
+      final hasSeparate = run.xmlRun?.findElements("w:fldChar").any(
+            (e) => e.getAttribute("w:fldCharType") == "separate",
+          ) ??
+          false;
+      final hasEnd = run.xmlRun?.findElements("w:fldChar").any(
+            (e) => e.getAttribute("w:fldCharType") == "end",
+          ) ??
+          false;
+      final inTextRuns = textRunTs.contains(run);
+      final inImageRuns = imageRunTs.contains(run);
+      final textPreview = (run.text ?? "")
+          .replaceAll("\n", "\\n")
+          .replaceAll("\r", "")
+          .trim();
+
+      print(
+        "HDR_PAGE_DIAG_RUN[$phase]: idx=$i text=\"$textPreview\" inText=$inTextRuns inImage=$inImageRuns hasBegin=$hasBegin hasSeparate=$hasSeparate hasEnd=$hasEnd runRtl=${run.rpr?.rtl} isGroup=${run.image?.isGroup} wrap=${run.image?.wrapMode} relH=${run.image?.relativeFromH} relV=${run.image?.relativeFromV}",
+      );
+    }
+
+    if (spans != null) {
+      for (int i = 0; i < spans.length; i++) {
+        final span = spans[i];
+        if (span is TextSpan) {
+          final textPreview = (span.text ?? "")
+              .replaceAll("\n", "\\n")
+              .replaceAll("\r", "");
+          print(
+            "HDR_PAGE_DIAG_SPAN[$phase]: idx=$i type=TextSpan text=\"$textPreview\" children=${span.children?.length ?? 0}",
+          );
+        } else {
+          print(
+            "HDR_PAGE_DIAG_SPAN[$phase]: idx=$i type=${span.runtimeType}",
+          );
+        }
+      }
+    }
   }
 
   /// Process content inside a w:sdt (Structured Document Tag)
@@ -833,6 +901,14 @@ class Paragraph {
     List<Widget> behindImages = _getPositionedImages(true);
     List<Widget> frontImages = _getPositionedImages(false);
 
+    final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
+    final EdgeInsets headerTextInsets = isHeaderParagraph
+        ? EdgeInsets.only(
+            left: sectPr.leftMargin ?? 0,
+            right: sectPr.rightMargin ?? 0,
+          )
+        : EdgeInsets.zero;
+
     return Padding(
       padding: _getPPaddings(),
       child: Container(
@@ -849,9 +925,12 @@ class Paragraph {
             ...behindImages,
 
             // 2. النص (يحدد ارتفاع الفقرة)
-            Directionality(
-              textDirection: textDirection, // RTL usually
-              child: _getTRunsW(spans),
+            Padding(
+              padding: headerTextInsets,
+              child: Directionality(
+                textDirection: textDirection, // RTL usually
+                child: _getTRunsW(spans),
+              ),
             ),
 
             // 3. الصور الأمامية (behindDoc=false)
@@ -1455,9 +1534,21 @@ class Paragraph {
       if (usesHAlign && img.alignH == "center") {
         // التمركز بالنسبة لمنطقة الهامش (عرض الصفحة - الهوامش)
         // داخل الفقرة، (0,0) هو بداية منطقة الهامش
-        left = (marginAreaWidth - img.width) / 2;
+        if (img.relativeFromH == "page") {
+          left = (pageWidth - img.width) / 2;
+        } else if (isHeaderParagraph) {
+          left = leftMargin + (marginAreaWidth - img.width) / 2;
+        } else {
+          left = (marginAreaWidth - img.width) / 2;
+        }
       } else if (usesHAlign && img.alignH == "right") {
-        left = marginAreaWidth - img.width;
+        if (img.relativeFromH == "page") {
+          left = pageWidth - img.width;
+        } else if (isHeaderParagraph) {
+          left = pageWidth - rightMargin - img.width;
+        } else {
+          left = marginAreaWidth - img.width;
+        }
       } else {
         // استخدام posX
         // إذا كان relativeFromH="page"، فهو نسبي للصفحة الكاملة
@@ -1471,7 +1562,7 @@ class Paragraph {
             left = img.posX - leftMargin;
           }
         } else {
-          left = img.posX;
+          left = isHeaderParagraph ? img.posX + leftMargin : img.posX;
         }
       }
 
@@ -1893,6 +1984,7 @@ class Paragraph {
       ...textRunTs.map((e) => e.toWidgetWithImg()).toList(),
     ];
     spans = fixRtlWidgetSpan(spans);
+    _logProblemHeaderDiagnostics("after-spans", spans: spans);
     return spans;
   }
 
@@ -1929,6 +2021,8 @@ class Paragraph {
   }
 
   _getTRunsW(List<InlineSpan> spans) {
+    _logProblemHeaderDiagnostics("before-richtext", spans: spans);
+
     // Use Word 2007+ default (1.15) if lineHeight is not specified
     double effectiveLineHeight = pPr?.lineHeight ?? 1.15;
 

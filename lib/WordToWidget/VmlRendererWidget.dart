@@ -32,6 +32,18 @@ class VmlRendererWidget extends StatelessWidget {
     final vml = imageData.vmlShapeData!;
     Widget contentWidget = const SizedBox.shrink();
 
+    if (imageData.imageMemory != null &&
+        imageData.imageMemory!.isNotEmpty &&
+        vml.textBoxElement == null) {
+      contentWidget = Image.memory(
+        imageData.imageMemory!,
+        width: imageData.width > 0 ? imageData.width : null,
+        height: imageData.height > 0 ? imageData.height : null,
+        fit: imageData.isStretched ? BoxFit.fill : BoxFit.contain,
+        gaplessPlayback: true,
+      );
+    }
+
     debugPrint(
       "VmlRendererWidget: textBoxElement=${vml.textBoxElement != null ? 'exists' : 'null'}",
     );
@@ -104,7 +116,11 @@ class VmlRendererWidget extends StatelessWidget {
 
       default:
         // أشكال أخرى (مسارات معقدة) يمكن إدراجها لاحقاً
-        shapeWidget = SizedBox(width: imageData.width, child: contentWidget);
+        shapeWidget = SizedBox(
+          width: imageData.width > 0 ? imageData.width : null,
+          height: imageData.height > 0 ? imageData.height : null,
+          child: contentWidget,
+        );
     }
 
     debugPrint(
