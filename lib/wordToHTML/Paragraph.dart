@@ -731,9 +731,7 @@ class Paragraph {
       }
     });
     if (isHeaderParagraph && imageRunTs.isNotEmpty) {
-      print(
-        'VML_DEBUG_CLASSIFY: Header paragraph total: ${imageRunTs.length} imageRunTs, ${textRunTs.length} textRunTs',
-      );
+      print('VML_DEBUG_CLASSIFY: Header paragraph total: ${imageRunTs.length} imageRunTs, ${textRunTs.length} textRunTs');
     }
     return {"iRuns": imageRunTs, "tRuns": textRunTs};
   }
@@ -809,12 +807,10 @@ class Paragraph {
               alignment: textAlign == TextAlign.center
                   ? Alignment.center
                   : textAlign == TextAlign.left
-                  ? Alignment.centerLeft
-                  : textAlign == TextAlign.right
-                  ? Alignment.centerRight
-                  : (isRtlParagraph
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft),
+                      ? Alignment.centerLeft
+                      : textAlign == TextAlign.right
+                          ? Alignment.centerRight
+                          : (isRtlParagraph ? Alignment.centerRight : Alignment.centerLeft),
               child: getImageWidget(image),
             ),
           ),
@@ -1432,12 +1428,8 @@ class Paragraph {
     // debug ordering for imaging layer decisions
     for (var run in sortedImageRuns) {
       var img = run.image!;
-      final zIndexDebug = img.vmlZIndex != 0
-          ? img.vmlZIndex
-          : img.relativeHeight;
-      print(
-        'VML_DEBUG_ORDER: image rId=${img.rId} shape=${img.vmlShapeData?.shapeType ?? 'none'} behind=${img.behindDoc} relHeight=${img.relativeHeight} vmlZIndex=${img.vmlZIndex} effectiveHeight=${zIndexDebug} posY=${img.posY}',
-      );
+      final zIndexDebug = img.vmlZIndex != 0 ? img.vmlZIndex : img.relativeHeight;
+      print('VML_DEBUG_ORDER: image rId=${img.rId} shape=${img.vmlShapeData?.shapeType ?? 'none'} behind=${img.behindDoc} relHeight=${img.relativeHeight} vmlZIndex=${img.vmlZIndex} effectiveHeight=${zIndexDebug} posY=${img.posY}');
 
       double left = 0;
       double top = img.posY; // relativeFromV="paragraph" يعني posY نسبي للفقرة

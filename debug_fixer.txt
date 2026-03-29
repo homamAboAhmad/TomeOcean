@@ -3664,3 +3664,12 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-03-29 22:22:03.035629 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البيان والتبيين في حكم مموني المرتدين.. تأصيل شرعي لنازلة مموني ثكنات الجيش الجزائري.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.

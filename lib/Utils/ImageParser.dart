@@ -178,18 +178,24 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
 
   if (isVml) {
     _imageData.isVml = true;
-    print("VML_TRACE: Entering _parseVmlData for element: ${_drawingElement.toXmlString().substring(0, _drawingElement.toXmlString().length.clamp(0, 200))}");
+    print(
+      "VML_TRACE: Entering _parseVmlData for element: ${_drawingElement.toXmlString().substring(0, _drawingElement.toXmlString().length.clamp(0, 200))}",
+    );
     _parseVmlData();
-    print("VML_TRACE: After _parseVmlData - vmlShapeData=${_imageData.vmlShapeData?.shapeType ?? 'NULL'}, isGroup=${_imageData.isGroup}, w=${_imageData.width}, h=${_imageData.height}, posX=${_imageData.posX}, posY=${_imageData.posY}, wrapMode=${_imageData.wrapMode}");
+    print(
+      "VML_TRACE: After _parseVmlData - vmlShapeData=${_imageData.vmlShapeData?.shapeType ?? 'NULL'}, isGroup=${_imageData.isGroup}, w=${_imageData.width}, h=${_imageData.height}, posX=${_imageData.posX}, posY=${_imageData.posY}, wrapMode=${_imageData.wrapMode}",
+    );
     parseTextBox();
     // NOTE: Do NOT call checkFromPage(), checkRelativeFromV(), setOffsets(), checkWrapMode()
-    // for VML elements! These functions look for wp:anchor/wp:positionH/wp:positionV 
-    // which only exist in OOXML (w:drawing). VML positioning is already handled 
+    // for VML elements! These functions look for wp:anchor/wp:positionH/wp:positionV
+    // which only exist in OOXML (w:drawing). VML positioning is already handled
     // by _parseVmlData() from the style attributes (margin-left, margin-top, etc.)
     // and wrapMode is set inside _parseVmlData based on position:absolute and w10:wrap.
     setRelativeHeight();
     checkHyperlink();
-    print("VML_TRACE: Final result - rId=${_imageData.rId}, wrapMode=${_imageData.wrapMode}, posX=${_imageData.posX}, posY=${_imageData.posY}, vmlShape=${_imageData.vmlShapeData?.shapeType}, relFromH=${_imageData.relativeFromH}, relFromV=${_imageData.relativeFromV}");
+    print(
+      "VML_TRACE: Final result - rId=${_imageData.rId}, wrapMode=${_imageData.wrapMode}, posX=${_imageData.posX}, posY=${_imageData.posY}, vmlShape=${_imageData.vmlShapeData?.shapeType}, relFromH=${_imageData.relativeFromH}, relFromV=${_imageData.relativeFromV}",
+    );
     return _imageData;
   }
 
@@ -348,7 +354,7 @@ void parseTextBox() {
   // إذا لم يوجد mc:Choice، نستخدم العنصر الكامل
   searchRoot ??= _drawingElement;
 
-  // حفظ عنصر w:txbxContent 
+  // حفظ عنصر w:txbxContent
   var txbxContent = searchRoot.findAllElements('w:txbxContent').firstOrNull;
   if (txbxContent != null) {
     if (_imageData.vmlShapeData == null) {
@@ -452,16 +458,25 @@ void _parseVmlData() {
       _parseVmlStyle(groupStyle);
     }
 
-    final coordSizeParts = (group.getAttribute('coordsize') ?? '1,1').split(',');
+    final coordSizeParts = (group.getAttribute('coordsize') ?? '1,1').split(
+      ',',
+    );
 
     final double coordSizeX =
         double.tryParse(coordSizeParts.firstOrNull ?? '1') ?? 1;
     final double coordSizeY =
-        double.tryParse(coordSizeParts.length > 1 ? coordSizeParts[1] : '1') ?? 1;
-    final coordOriginParts =
-        (group.getAttribute('coordorigin') ?? '0,0').split(',');
+        double.tryParse(coordSizeParts.length > 1 ? coordSizeParts[1] : '1') ??
+        1;
+    final coordOriginParts = (group.getAttribute('coordorigin') ?? '0,0').split(
+      ',',
+    );
+    final double coordOriginX =
+        double.tryParse(coordOriginParts.firstOrNull ?? '0') ?? 0;
     final double coordOriginY =
-        double.tryParse(coordOriginParts.length > 1 ? coordOriginParts[1] : '0') ?? 0;
+        double.tryParse(
+          coordOriginParts.length > 1 ? coordOriginParts[1] : '0',
+        ) ??
+        0;
 
     _imageData.isGroup = true;
     _imageData.isVml = true;
@@ -471,7 +486,9 @@ void _parseVmlData() {
     _parseVmlWrap(group);
     _parseVmlZIndex(groupStyleMap['z-index']);
 
-    for (final shape in group.childElements.where((e) => e.name.local == 'shape')) {
+    for (final shape in group.childElements.where(
+      (e) => e.name.local == 'shape',
+    )) {
       final childImage = ImageData();
       childImage.parent = _imageData.parent;
       childImage.customRelIdList = _imageData.customRelIdList;
@@ -483,11 +500,13 @@ void _parseVmlData() {
       final double heightRaw = _extractVmlStyleNumber(styleMap['height']);
 
       childImage.posX =
-          (leftRaw * _imageData.width) / (coordSizeX == 0 ? 1 : coordSizeX);
+          ((leftRaw - coordOriginX) * _imageData.width) /
+          (coordSizeX == 0 ? 1 : coordSizeX);
       childImage.posY =
           ((topRaw - coordOriginY) * _imageData.height) /
           (coordSizeY == 0 ? 1 : coordSizeY);
-      childImage.width = (widthRaw * _imageData.width) / (coordSizeX == 0 ? 1 : coordSizeX);
+      childImage.width =
+          (widthRaw * _imageData.width) / (coordSizeX == 0 ? 1 : coordSizeX);
       childImage.height =
           (heightRaw * _imageData.height) / (coordSizeY == 0 ? 1 : coordSizeY);
       childImage.relativeFromH = _imageData.relativeFromH;
@@ -502,7 +521,9 @@ void _parseVmlData() {
         orElse: () => xml.XmlElement(xml.XmlName('null')),
       );
       if (lockElement.name.local != 'null') {
-        final aspectRatio = lockElement.getAttribute('aspectratio')?.toLowerCase();
+        final aspectRatio = lockElement
+            .getAttribute('aspectratio')
+            ?.toLowerCase();
         if (aspectRatio == 'f' || aspectRatio == 'false') {
           childImage.isStretched = true;
         }
@@ -532,7 +553,15 @@ void _parseVmlData() {
 
   // 1. Find v:shape or other VML shapes
   final vmlShapeNames = {
-    'shape', 'rect', 'roundrect', 'oval', 'line', 'polyline', 'curve', 'arc', 'image'
+    'shape',
+    'rect',
+    'roundrect',
+    'oval',
+    'line',
+    'polyline',
+    'curve',
+    'arc',
+    'image',
   };
 
   var shape = _drawingElement.descendants
@@ -559,46 +588,61 @@ void _parseVmlData() {
     final styleMap = _parseVmlStyleMap(style);
     _parseVmlStyle(style);
     _applyVmlHorizontalPositioningFromStyleMap(styleMap);
-    
+
     print("VML_DEBUG: Extracted style map: $styleMap");
-    print("VML_DEBUG: Width after _parseVmlStyle: ${_imageData.width}, Height: ${_imageData.height}");
+    print(
+      "VML_DEBUG: Width after _parseVmlStyle: ${_imageData.width}, Height: ${_imageData.height}",
+    );
 
     // Extract VmlShapeData
     _imageData.vmlShapeData = VmlShapeData(
       shapeType: shape.name.local,
-      arcSize: double.tryParse(shape.getAttribute('arcsize')?.replaceAll('f', '') ?? '0.2') ?? 0.2,
+      arcSize:
+          double.tryParse(
+            shape.getAttribute('arcsize')?.replaceAll('f', '') ?? '0.2',
+          ) ??
+          0.2,
     );
-    
+
     // Quick handle of arcSize: if "f" format (e.g. 10923f), it means 10923/65536
     String arcAttr = shape.getAttribute('arcsize') ?? '';
     if (arcAttr.endsWith('f')) {
-      double f = double.tryParse(arcAttr.substring(0, arcAttr.length - 1)) ?? 13107.0;
+      double f =
+          double.tryParse(arcAttr.substring(0, arcAttr.length - 1)) ?? 13107.0;
       _imageData.vmlShapeData!.arcSize = f / 65536.0;
-      print("VML_DEBUG: arcsize converted from '${arcAttr}' to ${_imageData.vmlShapeData!.arcSize}");
+      print(
+        "VML_DEBUG: arcsize converted from '${arcAttr}' to ${_imageData.vmlShapeData!.arcSize}",
+      );
     } else if (arcAttr.endsWith('%')) {
-      double p = double.tryParse(arcAttr.substring(0, arcAttr.length - 1)) ?? 20.0;
+      double p =
+          double.tryParse(arcAttr.substring(0, arcAttr.length - 1)) ?? 20.0;
       _imageData.vmlShapeData!.arcSize = p / 100.0;
     }
-    
+
     // Stroke Color and Weight
     String strokeColorStr = shape.getAttribute('strokecolor') ?? '';
     if (strokeColorStr.isNotEmpty && strokeColorStr.startsWith('#')) {
       try {
-        _imageData.vmlShapeData!.strokeColor = Color(int.parse(strokeColorStr.replaceFirst('#', 'FF'), radix: 16));
+        _imageData.vmlShapeData!.strokeColor = Color(
+          int.parse(strokeColorStr.replaceFirst('#', 'FF'), radix: 16),
+        );
       } catch (e) {}
     }
     String strokeWeightStr = shape.getAttribute('strokeweight') ?? '1.0';
     _imageData.vmlShapeData!.strokeWidth = _parseUnit(strokeWeightStr);
-    
+
     String fillcolorAttr = shape.getAttribute('fillcolor') ?? '';
     if (fillcolorAttr.isNotEmpty && fillcolorAttr.startsWith('#')) {
       try {
-        _imageData.vmlShapeData!.fillColor = Color(int.parse(fillcolorAttr.replaceFirst('#', 'FF'), radix: 16));
+        _imageData.vmlShapeData!.fillColor = Color(
+          int.parse(fillcolorAttr.replaceFirst('#', 'FF'), radix: 16),
+        );
       } catch (e) {}
     }
 
     if (styleMap.containsKey('left') && styleMap.containsKey('margin-left')) {
-      _imageData.posX = _parseUnit(styleMap['left']!) + _parseUnit(styleMap['margin-left']!);
+      _imageData.posX =
+          _parseUnit(styleMap['left']!) + _parseUnit(styleMap['margin-left']!);
     } else if (styleMap.containsKey('left')) {
       _imageData.posX = _parseUnit(styleMap['left']!);
     } else if (styleMap.containsKey('margin-left')) {
@@ -606,7 +650,8 @@ void _parseVmlData() {
     }
 
     if (styleMap.containsKey('top') && styleMap.containsKey('margin-top')) {
-      _imageData.posY = _parseUnit(styleMap['top']!) + _parseUnit(styleMap['margin-top']!);
+      _imageData.posY =
+          _parseUnit(styleMap['top']!) + _parseUnit(styleMap['margin-top']!);
     } else if (styleMap.containsKey('top')) {
       _imageData.posY = _parseUnit(styleMap['top']!);
     } else if (styleMap.containsKey('margin-top')) {
@@ -624,10 +669,14 @@ void _parseVmlData() {
         );
     if (txbxContentElement.name.local != 'null') {
       _imageData.vmlShapeData!.textBoxElement = txbxContentElement;
-      print("VML_TRACE: Found txbxContent with ${txbxContentElement.childElements.length} children");
+      print(
+        "VML_TRACE: Found txbxContent with ${txbxContentElement.childElements.length} children",
+      );
     }
-    
-    print("VML_DEBUG: Final VML data - shape=${_imageData.vmlShapeData?.shapeType}, w=${_imageData.width}, h=${_imageData.height}, arcSize=${_imageData.vmlShapeData?.arcSize}, strokeColor=${_imageData.vmlShapeData?.strokeColor}, fillColor=${_imageData.vmlShapeData?.fillColor}");
+
+    print(
+      "VML_DEBUG: Final VML data - shape=${_imageData.vmlShapeData?.shapeType}, w=${_imageData.width}, h=${_imageData.height}, arcSize=${_imageData.vmlShapeData?.arcSize}, strokeColor=${_imageData.vmlShapeData?.strokeColor}, fillColor=${_imageData.vmlShapeData?.fillColor}",
+    );
   }
 
   // Handle v:line dimensions and position from 'from'/'to' attributes
@@ -650,7 +699,7 @@ void _parseVmlData() {
       if (_imageData.posY <= 0) _imageData.posY = fromY;
     }
   }
-  
+
   final hasAbsolutePositioning =
       style?.toLowerCase().contains('position:absolute') == true;
   if (hasAbsolutePositioning) {
@@ -687,7 +736,9 @@ void _parseVmlData() {
 
       final bool isSpecialDebugRid = RegExp(r'^rId(1[3-9])$').hasMatch(rId);
       if (isSpecialDebugRid) {
-        print('VML_DEBUG_PARSE: rId=$rId path=${getImageFrmRel(rId)} width=${_imageData.width} height=${_imageData.height} wrapMode=${_imageData.wrapMode} relH=${_imageData.relativeFromH} relV=${_imageData.relativeFromV} posX=${_imageData.posX} posY=${_imageData.posY}');
+        print(
+          'VML_DEBUG_PARSE: rId=$rId path=${getImageFrmRel(rId)} width=${_imageData.width} height=${_imageData.height} wrapMode=${_imageData.wrapMode} relH=${_imageData.relativeFromH} relV=${_imageData.relativeFromV} posX=${_imageData.posX} posY=${_imageData.posY}',
+        );
       }
 
       _imageData.setImageMemory(
@@ -715,7 +766,6 @@ void _parseVmlStyle(String style) {
   if (styleMap.containsKey('height')) {
     _imageData.height = _parseUnit(styleMap['height']!);
   }
-
 }
 
 Map<String, String> _parseVmlStyleMap(String style) {
@@ -738,7 +788,9 @@ void _applyVmlHorizontalPositioningFromStyleMap(Map<String, String> styleMap) {
 
   _imageData.alignH = horizontalAlign;
 
-  final relative = styleMap['mso-position-horizontal-relative']?.trim().toLowerCase();
+  final relative = styleMap['mso-position-horizontal-relative']
+      ?.trim()
+      .toLowerCase();
   if (relative == 'page') {
     _imageData.relativeFromH = 'page';
   } else if (relative == 'margin') {
@@ -832,7 +884,9 @@ void _parseVmlZIndex(String? zIndexValue) {
   _imageData.relativeHeight = zIndex;
   _imageData.vmlZIndex = zIndex;
 
-  debugPrint('VML_DEBUG: _parseVmlZIndex zIndex=$zIndex (from "$zIndexValue") behindDoc=${_imageData.behindDoc}');
+  debugPrint(
+    'VML_DEBUG: _parseVmlZIndex zIndex=$zIndex (from "$zIndexValue") behindDoc=${_imageData.behindDoc}',
+  );
 }
 
 double _parseUnit(String value) {
@@ -1240,7 +1294,7 @@ class ImageData {
   @JsonKey(ignore: true)
   runT? parent;
   double posY = -1;
-  
+
   @JsonKey(ignore: true)
   VmlShapeData? vmlShapeData;
   //String image64 = "";
@@ -1323,10 +1377,12 @@ class ImageData {
   static ImageData fromMap(Map<String, dynamic> json, runT parent) {
     final imageData = _$ImageDataFromJson(json);
     imageData.parent = parent;
-    
+
     if (json['vmlShapeData'] != null) {
       try {
-        imageData.vmlShapeData = VmlShapeData.fromJson(json['vmlShapeData'] as Map<String, dynamic>);
+        imageData.vmlShapeData = VmlShapeData.fromJson(
+          json['vmlShapeData'] as Map<String, dynamic>,
+        );
       } catch (e) {
         debugPrint("Error deserializing vmlShapeData: $e");
       }
@@ -1403,7 +1459,9 @@ class ImageData {
       }
     }
 
-    if (imgName != null && imgName.isNotEmpty && docImages.containsKey(imgName)) {
+    if (imgName != null &&
+        imgName.isNotEmpty &&
+        docImages.containsKey(imgName)) {
       imageMemory = docImages[imgName];
       return;
     }
