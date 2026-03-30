@@ -230,19 +230,17 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
   double transX = posX;
   double transY = posY;
 
-  if (isSpecialDebugRid) {
-    print(
-      'VML_DEBUG_WIDGET_POS: rId=${image.rId} computedPosX=$posX computedPosY=$posY transX=$transX transY=$transY alignment=$alignment pageW=$pageWidth pageH=$pageHeight marginW=$marginAreaWidth marginH=$marginAreaHeight',
-    );
-  }
+  // if (isSpecialDebugRid) {
+  //   print(
+  //     'VML_DEBUG_WIDGET_POS: rId=${image.rId} computedPosX=$posX computedPosY=$posY transX=$transX transY=$transY alignment=$alignment pageW=$pageWidth pageH=$pageHeight marginW=$marginAreaWidth marginH=$marginAreaHeight',
+  //   );
+  // }
 
   // Create the interactive image widget (or use group content)
   Widget content;
   Widget innerContent;
 
-  print("VML_DEBUG: Widget building for rId=${image.rId}, shapeType=${image.vmlShapeData?.shapeType}, isGroup=${image.isGroup}, isVml=${image.isVml}");
   if (image.vmlShapeData != null && !image.isGroup) {
-    print("VML_DEBUG: Rendering with VmlRendererWidget");
     innerContent = VmlRendererWidget(
       imageData: image,
       wordPage: image.parent!.parent!.parent,

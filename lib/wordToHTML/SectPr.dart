@@ -6,6 +6,7 @@ import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 import 'package:golden_shamela/wordToHTML/MyInt.dart';
 import 'package:golden_shamela/wordToHTML/PPr.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
+import 'package:golden_shamela/wordToHTML/FooterFrameLayout.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 
@@ -459,32 +460,6 @@ class SectPr {
 
     if (currentHeader == null) return Container();
 
-    // DEBUG: Save full header XML and relations to file
-    try {
-      StringBuffer debugBuffer = StringBuffer();
-      debugBuffer.writeln("=== HEADER DEBUG ===");
-      debugBuffer.writeln("Path: $path");
-      debugBuffer.writeln(
-        "HeaderRelations count: ${headerRelations?.length ?? 0}",
-      );
-      debugBuffer.writeln("");
-      debugBuffer.writeln("--- headerRelations keys ---");
-      headerRelations?.forEach((key, value) {
-        debugBuffer.writeln("$key -> ${value.Target}");
-      });
-      debugBuffer.writeln("");
-      debugBuffer.writeln("--- FULL HEADER XML ---");
-      debugBuffer.writeln(currentHeader.toXmlString(pretty: true));
-
-      final file = File(
-        'd:/ImportantProjects/golden_shamela/header_full_debug.xml',
-      );
-      file.writeAsStringSync(debugBuffer.toString());
-      // print("DEBUG: Full header saved to ${file.path}");
-    } catch (e) {
-      print("DEBUG: Error saving header: $e");
-    }
-
     List<Widget> psWidgets = [];
 
     // Process all child elements, including w:sdt and w:p
@@ -544,45 +519,46 @@ class SectPr {
       return Container();
     }
 
-    List<Widget> psWidgets = [];
+    List<Paragraph> footerParagraphs = [];
 
     // Process all child elements, including w:sdt and w:p
     for (var element in currentFooter.childElements) {
       if (element.name.local == "p") {
-        // Direct paragraph
         Paragraph p = Paragraph(wordPage);
         p.customPageNumber = pageNumStr;
         p.isHeaderParagraph = true; // Set to true to apply same zero-default spacing in PPr.dart
         p.fromXml(element);
-        psWidgets.add(p.toWidget());
+        footerParagraphs.add(p);
       } else if (element.name.local == "sdt") {
-        // Structured Document Tag - extract paragraphs from sdtContent
-        // Only replace PAGE once in the entire SDT
         var sdtContent = element.getElement("w:sdtContent");
         if (sdtContent != null) {
           bool pageNumReplacedInSdt = false;
           for (var child in sdtContent.childElements) {
             if (child.name.local == "p") {
               Paragraph p = Paragraph(wordPage);
-              // Only pass customPageNumber if we haven't replaced yet
               if (!pageNumReplacedInSdt) {
                 p.customPageNumber = pageNumStr;
               }
               p.isHeaderParagraph = true; // Set to true to apply same zero-default spacing in PPr.dart
               p.fromXml(child);
-              // Check if this paragraph actually used the page number
               if (p.runs.any((r) => r.text == pageNumStr)) {
                 pageNumReplacedInSdt = true;
               }
-              psWidgets.add(p.toWidget());
+              footerParagraphs.add(p);
             }
           }
         }
       }
-      // Skip other elements like bookmarkStart, bookmarkEnd
     }
 
-    return Column(mainAxisSize: MainAxisSize.min, children: psWidgets);
+    double width = parent.getSectPrForPage(wordPage.pageIndex).width ?? 595;
+    return SizedBox(
+      width: width,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: FooterFrameLayout.build(footerParagraphs),
+      ),
+    );
   }
 
   /// حساب ارتفاع الهيدر بناءً على الصور الموجودة فيه

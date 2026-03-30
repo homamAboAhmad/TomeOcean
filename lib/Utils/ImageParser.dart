@@ -178,13 +178,7 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
 
   if (isVml) {
     _imageData.isVml = true;
-    print(
-      "VML_TRACE: Entering _parseVmlData for element: ${_drawingElement.toXmlString().substring(0, _drawingElement.toXmlString().length.clamp(0, 200))}",
-    );
     _parseVmlData();
-    print(
-      "VML_TRACE: After _parseVmlData - vmlShapeData=${_imageData.vmlShapeData?.shapeType ?? 'NULL'}, isGroup=${_imageData.isGroup}, w=${_imageData.width}, h=${_imageData.height}, posX=${_imageData.posX}, posY=${_imageData.posY}, wrapMode=${_imageData.wrapMode}",
-    );
     parseTextBox();
     // NOTE: Do NOT call checkFromPage(), checkRelativeFromV(), setOffsets(), checkWrapMode()
     // for VML elements! These functions look for wp:anchor/wp:positionH/wp:positionV
@@ -193,9 +187,6 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
     // and wrapMode is set inside _parseVmlData based on position:absolute and w10:wrap.
     setRelativeHeight();
     checkHyperlink();
-    print(
-      "VML_TRACE: Final result - rId=${_imageData.rId}, wrapMode=${_imageData.wrapMode}, posX=${_imageData.posX}, posY=${_imageData.posY}, vmlShape=${_imageData.vmlShapeData?.shapeType}, relFromH=${_imageData.relativeFromH}, relFromV=${_imageData.relativeFromV}",
-    );
     return _imageData;
   }
 
@@ -669,9 +660,6 @@ void _parseVmlData() {
         );
     if (txbxContentElement.name.local != 'null') {
       _imageData.vmlShapeData!.textBoxElement = txbxContentElement;
-      print(
-        "VML_TRACE: Found txbxContent with ${txbxContentElement.childElements.length} children",
-      );
     }
 
     print(

@@ -182,13 +182,11 @@ class _WordPageScreenState extends State<WordPageScreen> {
                         right: 0,
                         child: Container(
                           height: margins.bottom,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: margins.left,
-                          ),
-                          alignment: Alignment.topCenter,
+                          padding: EdgeInsets.zero,
+                          alignment: Alignment.topLeft,
                           child: OverflowBox(
                             maxHeight: double.infinity,
-                            alignment: Alignment.topCenter,
+                            alignment: Alignment.topLeft,
                             child: Opacity(opacity: 0.5, child: footerW()),
                           ),
                         ),

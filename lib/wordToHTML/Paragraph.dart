@@ -95,6 +95,10 @@ class Paragraph {
   @JsonKey(ignore: true)
   bool preventWrap = false;
 
+  /// Text frames in header/footer should size to content, not consume full line width.
+  @JsonKey(ignore: true)
+  bool shrinkTextLayerWidth = false;
+
   Paragraph(this.parent);
 
   Paragraph.empty() : parent = WordPage.empty();
@@ -502,75 +506,7 @@ class Paragraph {
     // Calling it here would cause duplicate hyperlink runs.
     _extractBookmarks(); // Extract bookmarks from paragraph level
     getPRunsByType();
-    _logProblemHeaderDiagnostics("after-parse");
     return this;
-  }
-
-  bool _isProblemHeaderParagraph() {
-    if (!isHeaderParagraph) return false;
-    final hasPageField =
-        pXml?.findAllElements("w:instrText").any(
-          (e) => e.text.toUpperCase().contains("PAGE"),
-        ) ??
-        false;
-    final hasGroupedPict = runs.any((r) => r.image?.isGroup == true);
-    return hasPageField && hasGroupedPict;
-  }
-
-  void _logProblemHeaderDiagnostics(String phase, {List<InlineSpan>? spans}) {
-    if (!_isProblemHeaderParagraph()) return;
-
-    final jc = pPr?.xmlpPr?.getElement("w:jc")?.getAttribute("w:val");
-    final hasParagraphRtl = pPr?.xmlpPr?.getElement("w:rPr")?.getElement("w:rtl") != null;
-    final hasParagraphBidi = pPr?.xmlpPr?.getElement("w:bidi") != null;
-
-    print(
-      "HDR_PAGE_DIAG[$phase]: jc=$jc pRtl=$hasParagraphRtl pBidi=$hasParagraphBidi textAlign=$textAlign textDirection=$textDirection customPageNumber=$customPageNumber runs=${runs.length} textRuns=${textRunTs.length} imageRuns=${imageRunTs.length}",
-    );
-
-    for (int i = 0; i < runs.length; i++) {
-      final run = runs[i];
-      final hasBegin = run.xmlRun?.findElements("w:fldChar").any(
-            (e) => e.getAttribute("w:fldCharType") == "begin",
-          ) ??
-          false;
-      final hasSeparate = run.xmlRun?.findElements("w:fldChar").any(
-            (e) => e.getAttribute("w:fldCharType") == "separate",
-          ) ??
-          false;
-      final hasEnd = run.xmlRun?.findElements("w:fldChar").any(
-            (e) => e.getAttribute("w:fldCharType") == "end",
-          ) ??
-          false;
-      final inTextRuns = textRunTs.contains(run);
-      final inImageRuns = imageRunTs.contains(run);
-      final textPreview = (run.text ?? "")
-          .replaceAll("\n", "\\n")
-          .replaceAll("\r", "")
-          .trim();
-
-      print(
-        "HDR_PAGE_DIAG_RUN[$phase]: idx=$i text=\"$textPreview\" inText=$inTextRuns inImage=$inImageRuns hasBegin=$hasBegin hasSeparate=$hasSeparate hasEnd=$hasEnd runRtl=${run.rpr?.rtl} isGroup=${run.image?.isGroup} wrap=${run.image?.wrapMode} relH=${run.image?.relativeFromH} relV=${run.image?.relativeFromV}",
-      );
-    }
-
-    if (spans != null) {
-      for (int i = 0; i < spans.length; i++) {
-        final span = spans[i];
-        if (span is TextSpan) {
-          final textPreview = (span.text ?? "")
-              .replaceAll("\n", "\\n")
-              .replaceAll("\r", "");
-          print(
-            "HDR_PAGE_DIAG_SPAN[$phase]: idx=$i type=TextSpan text=\"$textPreview\" children=${span.children?.length ?? 0}",
-          );
-        } else {
-          print(
-            "HDR_PAGE_DIAG_SPAN[$phase]: idx=$i type=${span.runtimeType}",
-          );
-        }
-      }
-    }
   }
 
   /// Process content inside a w:sdt (Structured Document Tag)
@@ -760,11 +696,6 @@ class Paragraph {
         // Decorative elements (lines, shapes) intentionally span the full page width.
         if (isHeaderParagraph) {
           imageRunTs.add(runt);
-          if (isSpecialDebugRid || isVmlShape) {
-            print(
-              'VML_DEBUG_CLASSIFY: rId=${image.rId} shape=${image.vmlShapeData?.shapeType} -> imageRunTs(header) wrapMode=${image.wrapMode} isHeader=$isHeaderParagraph',
-            );
-          }
         }
         // Page content paragraphs: If relative to paragraph/line OR IS GROUP, add to Paragraph Stack.
         // EXCEPTION: paragraph-relative images that EXCEED the content area
@@ -773,17 +704,9 @@ class Paragraph {
                 !_exceedsContentArea(runt)) ||
             image.isGroup) {
           imageRunTs.add(runt);
-          if (isSpecialDebugRid) {
-            print(
-              'VML_DEBUG_CLASSIFY: rId=${image.rId} -> imageRunTs(paragraph) wrapMode=${image.wrapMode} relV=${image.relativeFromV} width=${image.width} height=${image.height}',
-            );
-          }
         } else if (isVmlShape) {
           // VML shape with absolute positioning NOT in header and NOT paragraph-relative
-          // This is dropped! Log it.
-          print(
-            'VML_DEBUG_CLASSIFY: DROPPED! rId=${image.rId} shape=${image.vmlShapeData?.shapeType} wrapMode=${image.wrapMode} isHeader=$isHeaderParagraph relV=${image.relativeFromV} relH=${image.relativeFromH}',
-          );
+          // is handled on the page level, not inside the paragraph text flow.
         }
         // If relative to page/margin, IGNORE here (handled by WordPage.dart)
         // This prevents them from polluting textRunTs and triggering inline logic.
@@ -791,16 +714,8 @@ class Paragraph {
       // 2. Text and Inline Images (wrapMode == null)
       else {
         textRunTs.add(runt);
-        if (isVmlShape) {
-          print(
-            'VML_DEBUG_CLASSIFY: rId=${image!.rId} shape=${image.vmlShapeData?.shapeType} -> textRunTs(inline/null-wrap) wrapMode=${image.wrapMode} isHeader=$isHeaderParagraph',
-          );
-        }
       }
     });
-    if (isHeaderParagraph && imageRunTs.isNotEmpty) {
-      print('VML_DEBUG_CLASSIFY: Header paragraph total: ${imageRunTs.length} imageRunTs, ${textRunTs.length} textRunTs');
-    }
     return {"iRuns": imageRunTs, "tRuns": textRunTs};
   }
 
@@ -1507,9 +1422,6 @@ class Paragraph {
     // debug ordering for imaging layer decisions
     for (var run in sortedImageRuns) {
       var img = run.image!;
-      final zIndexDebug = img.vmlZIndex != 0 ? img.vmlZIndex : img.relativeHeight;
-      print('VML_DEBUG_ORDER: image rId=${img.rId} shape=${img.vmlShapeData?.shapeType ?? 'none'} behind=${img.behindDoc} relHeight=${img.relativeHeight} vmlZIndex=${img.vmlZIndex} effectiveHeight=${zIndexDebug} posY=${img.posY}');
-
       double left = 0;
       double top = img.posY; // relativeFromV="paragraph" يعني posY نسبي للفقرة
 
@@ -1984,7 +1896,6 @@ class Paragraph {
       ...textRunTs.map((e) => e.toWidgetWithImg()).toList(),
     ];
     spans = fixRtlWidgetSpan(spans);
-    _logProblemHeaderDiagnostics("after-spans", spans: spans);
     return spans;
   }
 
@@ -2021,8 +1932,6 @@ class Paragraph {
   }
 
   _getTRunsW(List<InlineSpan> spans) {
-    _logProblemHeaderDiagnostics("before-richtext", spans: spans);
-
     // Use Word 2007+ default (1.15) if lineHeight is not specified
     double effectiveLineHeight = pPr?.lineHeight ?? 1.15;
 
@@ -2038,23 +1947,26 @@ class Paragraph {
       }
     }
 
-    return SizedBox(
-      width: double.infinity,
-      child: Text.rich(
-        TextSpan(style: prPr?.getTextStyle(), children: spans),
-        textAlign: textAlign,
-        textDirection: textDirection,
-        softWrap: !preventWrap,
-        overflow: preventWrap ? TextOverflow.visible : TextOverflow.clip,
-        strutStyle: StrutStyle(
-          forceStrutHeight: !textRunTs.any((r) => r.image != null),
-          height: effectiveLineHeight,
-          fontSize: maxFontSize,
-          fontFamily: prPr?.enFont,
-          fontFamilyFallback: prPr?.font != null ? [prPr!.font!] : null,
-        ),
+    final richText = Text.rich(
+      TextSpan(style: prPr?.getTextStyle(), children: spans),
+      textAlign: textAlign,
+      textDirection: textDirection,
+      softWrap: shrinkTextLayerWidth ? false : !preventWrap,
+      overflow: preventWrap ? TextOverflow.visible : TextOverflow.clip,
+      strutStyle: StrutStyle(
+        forceStrutHeight: !textRunTs.any((r) => r.image != null),
+        height: effectiveLineHeight,
+        fontSize: maxFontSize,
+        fontFamily: prPr?.enFont,
+        fontFamilyFallback: prPr?.font != null ? [prPr!.font!] : null,
       ),
     );
+
+    if (shrinkTextLayerWidth) {
+      return richText;
+    }
+
+    return SizedBox(width: double.infinity, child: richText);
   }
 
   /// محاولة بسيطة لاستخراج صورة (PNG/JPG) مضمنة داخل ملف EMF
