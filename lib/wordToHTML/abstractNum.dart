@@ -56,6 +56,7 @@ class Level {
   final String numFmt; // تنسيق الترقيم (مثل: decimal، roman، إلخ)
   final String lvlText; // النص المرتبط بالتنقيط (مثل: %1، %2، إلخ)
   final String lvlJc; // المحاذاة الأفقية للنص في المستوى
+  final String? suff; // ما بين رمز الترقيم ونص الفقرة: tab/space/nothing
   final int indentLeft; // المسافة البادئة اليسرى للمستوى
   final int indentHanging; // المسافة المعلقة للمستوى
   final String? fontFamily; // خط الرمز المخصص للترقيم
@@ -69,6 +70,7 @@ class Level {
     required this.numFmt,
     required this.lvlText,
     required this.lvlJc,
+    required this.suff,
     required this.indentLeft,
     required this.indentHanging,
     this.fontFamily,
@@ -82,6 +84,7 @@ class Level {
         numFmt = '',
         lvlText = '',
         lvlJc = '',
+        suff = 'tab',
         indentLeft = 0,
         indentHanging = 0,
         fontFamily = null,
@@ -96,6 +99,7 @@ class Level {
       numFmt: json['numFmt'] as String,
       lvlText: json['lvlText'] as String,
       lvlJc: json['lvlJc'] as String,
+      suff: json['suff'] as String? ?? 'tab',
       indentLeft: (json['indentLeft'] as num).toInt(),
       indentHanging: (json['indentHanging'] as num).toInt(),
       fontFamily: json['fontFamily'] as String?,
@@ -111,6 +115,7 @@ class Level {
       'numFmt': numFmt,
       'lvlText': lvlText,
       'lvlJc': lvlJc,
+      'suff': suff,
       'indentLeft': indentLeft,
       'indentHanging': indentHanging,
     };
@@ -127,6 +132,7 @@ class Level {
       numFmt: json['numFmt'] as String,
       lvlText: json['lvlText'] as String,
       lvlJc: json['lvlJc'] as String,
+      suff: json['suff'] as String? ?? 'tab',
       indentLeft: (json['indentLeft'] as num).toInt(),
       indentHanging: (json['indentHanging'] as num).toInt(),
       fontFamily: json['fontFamily'] as String?,
@@ -154,6 +160,10 @@ class Level {
 
     // استخراج المحاذاة الأفقية من عنصر w:lvlJc
     final lvlJc = xml.findElements('w:lvlJc').first.getAttribute('w:val') ?? '';
+
+    // إذا غاب suff فالقيمة الافتراضية في OOXML هي tab
+    final suff =
+        xml.findElements('w:suff').firstOrNull?.getAttribute('w:val') ?? 'tab';
 
     // استخراج المسافة البادئة اليسرى من عنصر w:ind
     final indentLeft = int.parse(
@@ -225,6 +235,7 @@ class Level {
       numFmt: numFmt,
       lvlText: lvlText,
       lvlJc: lvlJc,
+      suff: suff,
       indentLeft: indentLeft,
       indentHanging: indentHanging,
       fontFamily: fontFamily,

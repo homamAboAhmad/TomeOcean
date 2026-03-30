@@ -326,6 +326,16 @@ class PPr {
       textAlign = "left";
   }
 
+  double? _parseTwipsAttr(XmlElement? element, List<String> names) {
+    for (final name in names) {
+      final value = element?.getAttribute(name);
+      if (value != null && value.isNotEmpty) {
+        return double.tryParse(value);
+      }
+    }
+    return null;
+  }
+
   String? getPadding() {
     XmlElement? indElement = xmlpPr?.getElement("w:ind");
     // Per OOXML spec: w:start/w:end (logical, direction-aware) take precedence
@@ -362,11 +372,26 @@ class PPr {
 
     Level? level = getNumberingLevel();
     if (level != null) {
-      //print("num padding:  "+level.indentLeft.twpsToPx().toString());
-      if (rtl != false)
-        paddingRight = (paddingRight ?? 0) + level.indentLeft.twpsToPx();
-      else
-        paddingLeft = (paddingLeft ?? 0) + level.indentLeft.twpsToPx();
+      final explicitLeadingIndentTwips = rtl != false
+          ? _parseTwipsAttr(indElement, ["w:start", "w:left"])
+          : _parseTwipsAttr(indElement, ["w:start", "w:left"]);
+      final explicitHangingTwips = _parseTwipsAttr(indElement, ["w:hanging"]);
+
+      // For numbered paragraphs, Word hangs the marker inside the hanging area,
+      // while the paragraph text starts at (indent - hanging).
+      // Paragraph pPr overrides numbering lvl/pPr per OOXML §17.9.22.
+      final effectiveLeadingIndentTwips =
+          explicitLeadingIndentTwips ?? level.indentLeft.toDouble();
+      final effectiveHangingTwips =
+          explicitHangingTwips ?? level.indentHanging.toDouble();
+      final textLeadingPaddingPx =
+          (effectiveLeadingIndentTwips - effectiveHangingTwips) * twipsToPx;
+
+      if (rtl != false) {
+        paddingRight = textLeadingPaddingPx > 0 ? textLeadingPaddingPx : 0;
+      } else {
+        paddingLeft = textLeadingPaddingPx > 0 ? textLeadingPaddingPx : 0;
+      }
     }
   }
 
@@ -521,12 +546,116 @@ class PPr {
       );
     }
 
+    final indElement = xmlpPr?.getElement("w:ind");
+    final effectiveHangingTwips =
+        double.tryParse(indElement?.getAttribute("w:hanging") ?? "") ??
+        level.indentHanging.toDouble();
+    final markerWidth = effectiveHangingTwips * twipsToPx;
+
+    Alignment markerAlignment;
+    switch (level.lvlJc) {
+      case "center":
+        markerAlignment = Alignment.center;
+        break;
+      case "right":
+      case "end":
+        markerAlignment =
+            isRtl ? Alignment.centerLeft : Alignment.centerRight;
+        break;
+      case "left":
+      case "start":
+      default:
+        markerAlignment =
+            isRtl ? Alignment.centerRight : Alignment.centerLeft;
+        break;
+    }
+
     return WidgetSpan(
-      child: Padding(
-        padding: EdgeInsets.only(left: level.indentHanging.twpsToPx()),
-        child: Text(displayNumber, style: textStyle),
+      child: SizedBox(
+        width: markerWidth > 0 ? markerWidth : null,
+        child: Align(
+          alignment: markerAlignment,
+          child: Text(
+            displayNumber,
+            style: textStyle,
+            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+          ),
+        ),
       ),
     );
+  }
+
+  List<InlineSpan> getNumberingSpans() {
+    Level? level = getNumberingLevel();
+    if (level == null || paragraphNumber == null) {
+      return const [TextSpan(text: "")];
+    }
+
+    String displayNumber = getDisblayNumber(
+      level,
+      numId: numId,
+      paragraphNumber: paragraphNumber!,
+    );
+
+    TextStyle? numberingStyle;
+    if (level.fontFamily != null && level.fontFamily!.isNotEmpty) {
+      numberingStyle = TextStyle(fontFamily: level.fontFamily);
+    }
+
+    Color? numberColor = _parseWordColor(level.color);
+    Paint? backgroundPaint = _parseHighlight(level.highlightColor);
+
+    if (numberColor == null && xmlprPr != null) {
+      RPr paraRPr = RPr(getEmptyRun()).fromXml(xmlprPr);
+      numberColor = _parseWordColor(paraRPr.color);
+      backgroundPaint ??= _parseHighlight(paraRPr.highlightColor);
+    }
+
+    if (numberingStyle != null || numberColor != null || backgroundPaint != null) {
+      numberingStyle = (numberingStyle ?? const TextStyle()).copyWith(
+        color: numberColor,
+        background: backgroundPaint,
+      );
+    }
+
+    final baseStyle = parent.prPr?.getTextStyle();
+    final effectiveMarkerStyle = (baseStyle ?? const TextStyle()).merge(numberingStyle);
+
+    final indElement = xmlpPr?.getElement("w:ind");
+    final effectiveHangingTwips =
+        double.tryParse(indElement?.getAttribute("w:hanging") ?? "") ??
+        level.indentHanging.toDouble();
+    final hangingPx = effectiveHangingTwips * twipsToPx;
+
+    final markerPainter = TextPainter(
+      text: TextSpan(text: displayNumber, style: effectiveMarkerStyle),
+      textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+      maxLines: 1,
+    )..layout();
+    final markerWidth = markerPainter.width;
+
+    final spans = <InlineSpan>[
+      TextSpan(text: displayNumber, style: effectiveMarkerStyle),
+    ];
+
+    final effectiveSuff = level.suff ?? 'tab';
+
+    switch (effectiveSuff) {
+      case 'space':
+        spans.add(const TextSpan(text: ' '));
+        break;
+      case 'nothing':
+        break;
+      case 'tab':
+      default:
+        final spacerWidth = hangingPx - markerWidth;
+        if (spacerWidth > 0) {
+          spans.add(WidgetSpan(child: SizedBox(width: spacerWidth)));
+        }
+        break;
+    }
+
+    return spans;
   }
 
   runT getEmptyRun() {

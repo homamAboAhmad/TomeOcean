@@ -1873,7 +1873,7 @@ class Paragraph {
 
   List<InlineSpan> getAllPSpans() {
     List<InlineSpan> spans = [
-      pPr?.getNumberingW() ?? TextSpan(text: ""),
+      ...(pPr?.getNumberingSpans() ?? const [TextSpan(text: "")]),
 
       ...runs.map((e) => e.toWidgetWithImg()).toList(),
     ];
@@ -1892,7 +1892,7 @@ class Paragraph {
       // w:firstLine — indent ONLY the first line (not all lines like container padding would)
       if (pPr?.firstLineIndent != null && pPr!.firstLineIndent! > 0)
         WidgetSpan(child: SizedBox(width: pPr!.firstLineIndent!)),
-      pPr?.getNumberingW() ?? TextSpan(text: ""),
+      ...(pPr?.getNumberingSpans() ?? const [TextSpan(text: "")]),
       ...textRunTs.map((e) => e.toWidgetWithImg()).toList(),
     ];
     spans = fixRtlWidgetSpan(spans);
