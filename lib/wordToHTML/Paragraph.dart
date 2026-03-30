@@ -745,11 +745,21 @@ class Paragraph {
     return hasRightLeaderDef && hasTabUsage;
   }
 
-  Widget toWidget({bool suppressParagraphBorder = false}) {
+  Widget toWidget({
+    bool suppressParagraphBorder = false,
+    double? spacingBeforeOverride,
+    double? spacingAfterOverride,
+  }) {
     // Check if this is a TOC entry OR uses right-aligned leader tabs - use special rendering
     // This ensures proportional tabs and leaders (tastir) appear correctly without stretching left tabs
     if (shouldRenderAsTOC()) {
-      return _buildTOCWidget();
+      return Padding(
+        padding: _getPPaddings(
+          spacingBeforeOverride: spacingBeforeOverride,
+          spacingAfterOverride: spacingAfterOverride,
+        ),
+        child: _buildTOCWidget(),
+      );
     }
 
     // Check for centered paragraph with tabs (like headers: "أعمال [TAB] ❀ [TAB] الرافعي")
@@ -757,6 +767,8 @@ class Paragraph {
     if (_isCenteredWithTabs()) {
       return _buildCenteredTabsWidget(
         suppressParagraphBorder: suppressParagraphBorder,
+        spacingBeforeOverride: spacingBeforeOverride,
+        spacingAfterOverride: spacingAfterOverride,
       );
     }
 
@@ -781,7 +793,10 @@ class Paragraph {
       }
 
       return Padding(
-        padding: _getPPaddings(),
+        padding: _getPPaddings(
+          spacingBeforeOverride: spacingBeforeOverride,
+          spacingAfterOverride: spacingAfterOverride,
+        ),
         child: Container(
           decoration: decoration,
           child: Padding(
@@ -825,7 +840,10 @@ class Paragraph {
         : EdgeInsets.zero;
 
     return Padding(
-      padding: _getPPaddings(),
+      padding: _getPPaddings(
+        spacingBeforeOverride: spacingBeforeOverride,
+        spacingAfterOverride: spacingAfterOverride,
+      ),
       child: Container(
         decoration: decoration,
         // نستخدم Stack مع direction LTR لضمان أن left يعمل بشكل صحيح
@@ -910,7 +928,11 @@ class Paragraph {
 
   /// Build widget for centered paragraphs with tabs (e.g., headers)
   /// Layout: [Spacer] [Text1] [Spacer] [Symbol] [Spacer] [Text2] [Spacer]
-  Widget _buildCenteredTabsWidget({bool suppressParagraphBorder = false}) {
+  Widget _buildCenteredTabsWidget({
+    bool suppressParagraphBorder = false,
+    double? spacingBeforeOverride,
+    double? spacingAfterOverride,
+  }) {
     // Split runs by tab characters
     List<List<runT>> segments = [];
     List<runT> currentSegment = [];
@@ -957,7 +979,10 @@ class Paragraph {
     return GestureDetector(
       onLongPress: () => printParagraphXml(),
       child: Padding(
-        padding: _getPPaddings(),
+        padding: _getPPaddings(
+          spacingBeforeOverride: spacingBeforeOverride,
+          spacingAfterOverride: spacingAfterOverride,
+        ),
         child: Container(
           decoration: decoration,
           child: Directionality(
@@ -1899,25 +1924,38 @@ class Paragraph {
     return spans;
   }
 
-  EdgeInsets _getPPaddings() {
+  EdgeInsets _getPPaddings({
+    double? spacingBeforeOverride,
+    double? spacingAfterOverride,
+  }) {
     // Sanitize padding to prevent negative values which crash Flutter's Padding widget
     // Word allows negative indentation (hanging), but Flutter Padding does not.
     double left = pPr?.paddingLeft ?? 0;
     double right = pPr?.paddingRight ?? 0;
-    double top = pPr?.spacingBefore ?? 0;
+    double top = spacingBeforeOverride ?? (pPr?.spacingBefore ?? 0);
     // Footnote paragraphs inherit from "Footnote Text" style which has w:after="0".
     // PPr defaults to ~18.7px when no w:spacing element exists (body-text default).
     // For footnotes, only apply spacingAfter when it was explicitly set in the XML.
-    double bottom =
-        (sectionType == 'footnote' && pPr?.spacingAfterExplicit != true)
-        ? 0
-        : (pPr?.spacingAfter ?? 0);
+    double bottom = spacingAfterOverride ??
+        ((sectionType == 'footnote' && pPr?.spacingAfterExplicit != true)
+            ? 0
+            : (pPr?.spacingAfter ?? 0));
 
     return EdgeInsets.only(
       left: left < 0 ? 0 : left,
       right: right < 0 ? 0 : right,
       top: top < 0 ? 0 : top,
       bottom: bottom < 0 ? 0 : bottom,
+    );
+  }
+
+  EdgeInsets getPPaddingsForLayout({
+    double? spacingBeforeOverride,
+    double? spacingAfterOverride,
+  }) {
+    return _getPPaddings(
+      spacingBeforeOverride: spacingBeforeOverride,
+      spacingAfterOverride: spacingAfterOverride,
     );
   }
 
@@ -1935,14 +1973,36 @@ class Paragraph {
     // Use Word 2007+ default (1.15) if lineHeight is not specified
     double effectiveLineHeight = pPr?.lineHeight ?? 1.15;
 
-    // Calculate max font size from runs to ensure StrutStyle fits the largest text
-    // This fixes the issue where paragraph default (e.g. 13.5pt) is used for Strut,
-    // causing 20pt text runs to overlap because the line box is too small.
-    double maxFontSize = prPr?.fontSize ?? 14.0;
+    // Build StrutStyle from the same effective text style that paints the tallest
+    // run in the paragraph. Word's line box is affected by the actual glyph
+    // metrics of the largest run, not just a generic paragraph fallback font.
+    TextStyle strutBaseStyle = prPr?.getTextStyle() ??
+        const TextStyle(fontSize: 14, fontFamily: 'Traditional Arabic');
+    double maxFontSize = strutBaseStyle.fontSize ?? 14.0;
     for (var run in textRunTs) {
-      if (run.rpr?.fontSize != null) {
-        if (run.rpr!.fontSize! > maxFontSize) {
-          maxFontSize = run.rpr!.fontSize!;
+      final runStyle = run.getEffectiveTextStyle();
+      final runFontSize = runStyle.fontSize ?? 14.0;
+      if (runFontSize > maxFontSize) {
+        maxFontSize = runFontSize;
+        strutBaseStyle = runStyle;
+      }
+    }
+
+    final snapToGridVal =
+        pPr?.xmlpPr?.getElement('w:snapToGrid')?.getAttribute('w:val');
+    final paragraphDisablesLineGrid =
+        snapToGridVal == '0' || snapToGridVal == 'false' || snapToGridVal == 'off';
+
+    if (!paragraphDisablesLineGrid && this is! ParagraphTable) {
+      final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
+      final docGridLinePitchPx = sectPr.docGridLinePitchPx;
+      if (docGridLinePitchPx != null && docGridLinePitchPx > 0 && maxFontSize > 0) {
+        // OOXML docGrid linePitch is a section-level minimum line pitch.
+        // Word uses the larger of the paragraph line spacing and the section grid pitch,
+        // unless the paragraph disables snapToGrid.
+        final docGridHeight = docGridLinePitchPx / maxFontSize;
+        if (docGridHeight > effectiveLineHeight) {
+          effectiveLineHeight = docGridHeight;
         }
       }
     }
@@ -1954,11 +2014,12 @@ class Paragraph {
       softWrap: shrinkTextLayerWidth ? false : !preventWrap,
       overflow: preventWrap ? TextOverflow.visible : TextOverflow.clip,
       strutStyle: StrutStyle(
-        forceStrutHeight: !textRunTs.any((r) => r.image != null),
+        forceStrutHeight:
+            (pPr?.forceStrutHeight ?? true) && !textRunTs.any((r) => r.image != null),
         height: effectiveLineHeight,
         fontSize: maxFontSize,
-        fontFamily: prPr?.enFont,
-        fontFamilyFallback: prPr?.font != null ? [prPr!.font!] : null,
+        fontFamily: strutBaseStyle.fontFamily,
+        fontFamilyFallback: strutBaseStyle.fontFamilyFallback,
       ),
     );
 

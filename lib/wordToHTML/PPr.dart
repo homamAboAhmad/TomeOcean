@@ -206,7 +206,9 @@ class PPr {
         const double arabicSafetyMargin = kArabicLineSpacingFactor;
 
         lineHeight = (lineVal / 240.0) * arabicSafetyMargin;
-        forceStrutHeight = true;
+        // OOXML "auto" is content-driven line spacing, not an exact locked box.
+        // Let taller glyph metrics expand the line box as needed, like Word.
+        forceStrutHeight = false;
       } else if (lineRule == "exact" || lineRule == "atLeast") {
         // "exact"/"atLeast": w:line is in twips (twentieths of a point)
         double points = lineVal / 20.0; // twips to points
@@ -228,7 +230,7 @@ class PPr {
         if (lineRule == "atLeast" && points < fontSize) {
           // Fallback for atLeast small values - use Safety Margin
           lineHeight = kArabicLineSpacingFactor;
-          forceStrutHeight = true;
+          forceStrutHeight = false;
         } else {
           // Calculate the multiplier based on actual font size
           double calculatedHeight = points / fontSize;
@@ -241,13 +243,13 @@ class PPr {
           } else {
             lineHeight = calculatedHeight;
           }
-          forceStrutHeight = true;
+          forceStrutHeight = lineRule == "exact";
         }
       }
     } else {
       // Default fallback - use Safety Margin
       lineHeight = kArabicLineSpacingFactor;
-      forceStrutHeight = true;
+      forceStrutHeight = false;
     }
   }
 

@@ -34,7 +34,11 @@ class ParagraphTable extends Paragraph {
 
   @override
 
-  Widget toWidget({bool suppressParagraphBorder = false}) {
+  Widget toWidget({
+    bool suppressParagraphBorder = false,
+    double? spacingBeforeOverride,
+    double? spacingAfterOverride,
+  }) {
 
     // Ensure pXml is available. If loaded from cache, it might need parsing from xmlString
 
@@ -54,15 +58,17 @@ class ParagraphTable extends Paragraph {
 
 
 
-    if (pXml != null)
+    final widget = pXml != null
+        ? WordTableWidget(pXml!, super.parent)
+        : SizedBox.shrink();
 
-      return WordTableWidget(pXml!, super.parent);
-
-    else {
-
-      return SizedBox.shrink();
-
-    }
+    return Padding(
+      padding: getPPaddingsForLayout(
+        spacingBeforeOverride: spacingBeforeOverride,
+        spacingAfterOverride: spacingAfterOverride,
+      ),
+      child: widget,
+    );
 
   }
 

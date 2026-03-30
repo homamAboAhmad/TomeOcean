@@ -119,6 +119,15 @@ class SectPr {
         'Left: $leftMargin, Right: $rightMargin';
   }
 
+  double? get docGridLinePitchPx {
+    final linePitchTwips = double.tryParse(
+      sectPrElement?.getElement('w:docGrid')?.getAttribute('w:linePitch') ?? '',
+    );
+    return linePitchTwips?.twipsToDp();
+  }
+
+  bool get hasLineGrid => (docGridLinePitchPx ?? 0) > 0;
+
   static SectPr fromDocument(XmlDocument documentXml, WordDocument parent) {
     final sectPrElement = documentXml.findAllElements('w:sectPr').firstOrNull;
     return sectPrElement != null

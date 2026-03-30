@@ -1,5 +1,6 @@
 // import 'package:flutter_html/flutter_html.dart';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/wordToHTML/FootNote.dart';
@@ -136,6 +137,7 @@ class WordPage {
 
     final previousPage = parent.getLoadedPageIfAvailable(pageIndex - 1);
     final nextPage = parent.getLoadedPageIfAvailable(pageIndex + 1);
+    Paragraph? previousVisibleParagraph;
 
     int index = 0;
     while (index < ps.length) {
@@ -149,7 +151,19 @@ class WordPage {
       }
 
       if (borderSpec == null) {
-        children.add(paragraph.toWidget());
+        final nextVisibleParagraph = _nextVisibleParagraph(index + 1);
+        children.add(
+          paragraph.toWidget(
+            spacingBeforeOverride: _collapsedSpacingBefore(
+              previousVisibleParagraph,
+              paragraph,
+            ),
+            spacingAfterOverride: nextVisibleParagraph == null
+                ? (paragraph.pPr?.spacingAfter ?? 0)
+                : 0,
+          ),
+        );
+        previousVisibleParagraph = paragraph;
         index++;
         continue;
       }
@@ -187,10 +201,12 @@ class WordPage {
         _ParagraphBorderGroupWidget(
           paragraphs: groupedParagraphs,
           spec: borderSpec,
+          previousParagraph: previousVisibleParagraph,
           paintTop: !continuesFromPrevious,
           paintBottom: !continuesToNext,
         ),
       );
+      previousVisibleParagraph = groupedParagraphs.last;
       index = logicalEnd + 1;
     }
 
@@ -209,6 +225,16 @@ class WordPage {
     //   textDirection: TextDirection.rtl,
     //
     // );
+  }
+
+  Paragraph? _nextVisibleParagraph(int startIndex) {
+    for (int i = startIndex; i < ps.length; i++) {
+      final paragraph = ps[i];
+      if (_isParagraphVisuallyRelevant(paragraph)) {
+        return paragraph;
+      }
+    }
+    return null;
   }
 
   List<ImageData> getPageImageData() {
@@ -475,12 +501,14 @@ class WordPage {
 class _ParagraphBorderGroupWidget extends StatelessWidget {
   final List<Paragraph> paragraphs;
   final ParagraphBorderSpec spec;
+  final Paragraph? previousParagraph;
   final bool paintTop;
   final bool paintBottom;
 
   const _ParagraphBorderGroupWidget({
     required this.paragraphs,
     required this.spec,
+    this.previousParagraph,
     this.paintTop = true,
     this.paintBottom = true,
   });
@@ -508,15 +536,33 @@ class _ParagraphBorderGroupWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ...paragraphs.map(
-              (paragraph) => paragraph.toWidget(suppressParagraphBorder: true),
-            ),
-          ],
+          children: List.generate(paragraphs.length, (index) {
+            final paragraph = paragraphs[index];
+            final previous = index == 0 ? previousParagraph : paragraphs[index - 1];
+            final isLast = index == paragraphs.length - 1;
+            return paragraph.toWidget(
+              suppressParagraphBorder: true,
+              spacingBeforeOverride: _collapsedSpacingBefore(previous, paragraph),
+              spacingAfterOverride: isLast ? (paragraph.pPr?.spacingAfter ?? 0) : 0,
+            );
+          }),
         ),
       ),
     );
   }
+}
+
+double _collapsedSpacingBefore(Paragraph? previous, Paragraph current) {
+  final currentBefore = current.pPr?.spacingBefore ?? 0;
+  if (previous == null) {
+    return currentBefore;
+  }
+
+  final previousAfter = previous.pPr?.spacingAfter ?? 0;
+
+  // Word collapses the gap between adjacent paragraphs by using the larger
+  // of the two competing spacing values, rather than summing both.
+  return math.max(previousAfter, currentBefore);
 }
 
 class _ParagraphBorderGroupPainter extends CustomPainter {
