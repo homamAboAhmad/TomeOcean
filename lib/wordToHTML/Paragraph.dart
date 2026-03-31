@@ -99,6 +99,12 @@ class Paragraph {
   @JsonKey(ignore: true)
   bool shrinkTextLayerWidth = false;
 
+  /// Header/footer paragraphs normally inset text inside page margins.
+  /// Some layout containers already constrain the paragraph to the text area,
+  /// in which case reapplying those insets would double the margins.
+  @JsonKey(ignore: true)
+  bool applyHeaderTextInsets = true;
+
   Paragraph(this.parent);
 
   Paragraph.empty() : parent = WordPage.empty();
@@ -832,7 +838,7 @@ class Paragraph {
     List<Widget> frontImages = _getPositionedImages(false);
 
     final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
-    final EdgeInsets headerTextInsets = isHeaderParagraph
+    final EdgeInsets headerTextInsets = isHeaderParagraph && applyHeaderTextInsets
         ? EdgeInsets.only(
             left: sectPr.leftMargin ?? 0,
             right: sectPr.rightMargin ?? 0,
@@ -1998,8 +2004,8 @@ class Paragraph {
       final docGridLinePitchPx = sectPr.docGridLinePitchPx;
       if (docGridLinePitchPx != null && docGridLinePitchPx > 0 && maxFontSize > 0) {
         // OOXML docGrid linePitch is a section-level minimum line pitch.
-        // Word uses the larger of the paragraph line spacing and the section grid pitch,
-        // unless the paragraph disables snapToGrid.
+        // Word uses the larger of the paragraph line spacing and the section
+        // grid pitch, unless the paragraph disables snapToGrid.
         final docGridHeight = docGridLinePitchPx / maxFontSize;
         if (docGridHeight > effectiveLineHeight) {
           effectiveLineHeight = docGridHeight;

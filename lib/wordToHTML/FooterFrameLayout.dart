@@ -11,16 +11,44 @@ class FooterFrameLayout {
 
       if (_hasFramePr(paragraph)) {
         final framedParagraphs = <Paragraph>[paragraph];
-        paragraph.shrinkTextLayerWidth = true;
 
         int j = i + 1;
         while (j < paragraphs.length && _sameFramePr(paragraphs[j - 1], paragraphs[j])) {
-          paragraphs[j].shrinkTextLayerWidth = true;
           framedParagraphs.add(paragraphs[j]);
           j++;
         }
 
-        if (j < paragraphs.length && !_hasFramePr(paragraphs[j])) {
+        final hasAnchorParagraph = j < paragraphs.length && !_hasFramePr(paragraphs[j]);
+        final isSharedFrame = framedParagraphs.length > 1;
+
+        if (isSharedFrame) {
+          // OOXML framePr: adjacent paragraphs with identical framePr belong to
+          // one text frame, so they must be laid out as a single overlay.
+          final frameWidget = _buildSharedFrameGroup(framedParagraphs);
+          if (hasAnchorParagraph) {
+            final anchorParagraph = paragraphs[j];
+            widgets.add(
+              Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topLeft,
+                children: [
+                  anchorParagraph.toWidget(),
+                  frameWidget,
+                ],
+              ),
+            );
+            i = j + 1;
+            continue;
+          }
+
+          widgets.add(frameWidget);
+          i = j;
+          continue;
+        }
+
+        paragraph.shrinkTextLayerWidth = true;
+
+        if (hasAnchorParagraph) {
           widgets.add(
             Stack(
               clipBehavior: Clip.none,
@@ -47,6 +75,52 @@ class FooterFrameLayout {
     return widgets;
   }
 
+  static Widget _buildSharedFrameGroup(List<Paragraph> framedParagraphs) {
+    final firstParagraph = framedParagraphs.first;
+    final sectPr = firstParagraph.parent.parent.getSectPrForPage(
+      firstParagraph.parent.pageIndex,
+    );
+
+    for (final paragraph in framedParagraphs) {
+      paragraph.shrinkTextLayerWidth = false;
+      paragraph.applyHeaderTextInsets = false;
+    }
+
+    return Padding(
+      // The frame is anchored to the text area (hAnchor="text"), so paragraph
+      // decorations such as shading must be constrained to page margins here.
+      padding: EdgeInsets.only(
+        left: sectPr.leftMargin ?? 0,
+        right: sectPr.rightMargin ?? 0,
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: framedParagraphs.map(_buildSharedFrameParagraph).toList(),
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildSharedFrameParagraph(Paragraph paragraph) {
+    final widget = paragraph.toWidget();
+    if (_hasRenderableContent(paragraph)) {
+      return widget;
+    }
+
+    // Empty paragraphs inside a shared text frame still contribute vertical
+    // layout in Word, but in this footer pattern they act as spacing rows, not
+    // visible shaded lines.
+    return Opacity(
+      opacity: 0,
+      child: IgnorePointer(
+        child: widget,
+      ),
+    );
+  }
+
   static bool _hasFramePr(Paragraph paragraph) {
     return paragraph.pPr?.xmlpPr?.getElement("w:framePr") != null;
   }
@@ -56,5 +130,13 @@ class FooterFrameLayout {
     final bFrame = b.pPr?.xmlpPr?.getElement("w:framePr");
     if (aFrame == null || bFrame == null) return false;
     return aFrame.toXmlString(pretty: false) == bFrame.toXmlString(pretty: false);
+  }
+
+  static bool _hasRenderableContent(Paragraph paragraph) {
+    final hasVisibleText = paragraph.textRunTs.any((run) {
+      if (run.rpr?.vanish == true) return false;
+      return (run.text ?? '').trim().isNotEmpty;
+    });
+    return hasVisibleText || paragraph.imageRunTs.isNotEmpty;
   }
 }

@@ -3912,3 +3912,75 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_57pحوار هادئ مع الصوفية.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-03-30 22:28:06.865119 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_57pحوار هادئ مع الصوفية.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_57pحوار هادئ مع الصوفية.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_57pحوار هادئ مع الصوفية.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 22:28:45.170225 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex3_tes2t.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex3_tes2t.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex3_tes2t.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 22:29:05.881356 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex9_45p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex9_45p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex9_45p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 22:29:39.799592 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 22:35:57.484316 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 22:43:11.705120 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_57pحوار هادئ مع الصوفية.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_57pحوار هادئ مع الصوفية.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_57pحوار هادئ مع الصوفية.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 22:50:38.974648 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_57pحوار هادئ مع الصوفية.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_57pحوار هادئ مع الصوفية.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_57pحوار هادئ مع الصوفية.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-03-30 22:50:48.986106 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
