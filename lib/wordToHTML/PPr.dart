@@ -77,6 +77,8 @@ class PPr {
   @JsonKey(ignore: true)
   bool spacingAfterExplicit = false;
   double? lineHeight;
+  String? lineHeightSource;
+  double? lineMultiple;
 
   PPr fromXml(XmlElement? xmlpPr0, {bool skipNumberingCounter = false}) {
     this.skipNumberingCounter = skipNumberingCounter;
@@ -132,12 +134,17 @@ class PPr {
 
   void getSpacing() {
     XmlElement? spacing = xmlpPr?.getElement("w:spacing");
+    lineHeightSource = null;
+    lineMultiple = null;
 
     // Word 2007+ default line spacing is 1.15 (not 1.0!)
     // When no spacing element exists, Word uses this default
     if (spacing == null) {
+      lineHeightSource = 'default';
+      lineMultiple = 1.0;
       lineHeight =
           kArabicLineSpacingFactor; // Word 2007+ default for Arabic text (includes safety margin)
+      forceStrutHeight = false;
 
       // Default "Normal" style in Word 2007+ usually has 10pt spacing after.
       // We apply the same correction factor to this default.
@@ -197,6 +204,8 @@ class PPr {
       if (lineRule == "auto" || lineRule == null) {
         // "auto": w:line is in 240ths of a line
         // 240 = Single (1.0), 360 = 1.5, 480 = Double (2.0)
+        lineHeightSource = 'auto';
+        lineMultiple = lineVal / 240.0;
 
         // RESEARCH IMPLEMENTATION:
         // Recent investigation confirms Word applies proprietary "Safety Margins" (extra leading)
@@ -210,6 +219,8 @@ class PPr {
         // Let taller glyph metrics expand the line box as needed, like Word.
         forceStrutHeight = false;
       } else if (lineRule == "exact" || lineRule == "atLeast") {
+        lineHeightSource = lineRule;
+        lineMultiple = null;
         // "exact"/"atLeast": w:line is in twips (twentieths of a point)
         double points = lineVal / 20.0; // twips to points
 
@@ -248,6 +259,8 @@ class PPr {
       }
     } else {
       // Default fallback - use Safety Margin
+      lineHeightSource = 'default';
+      lineMultiple = 1.0;
       lineHeight = kArabicLineSpacingFactor;
       forceStrutHeight = false;
     }

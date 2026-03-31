@@ -24,7 +24,9 @@ PPr _$PPrFromJson(Map<String, dynamic> json) => PPr.empty()
   ..tocLevel = (json['tocLevel'] as num?)?.toInt()
   ..spacingBefore = (json['spacingBefore'] as num?)?.toDouble()
   ..spacingAfter = (json['spacingAfter'] as num?)?.toDouble()
-  ..lineHeight = (json['lineHeight'] as num?)?.toDouble();
+  ..lineHeight = (json['lineHeight'] as num?)?.toDouble()
+  ..lineHeightSource = json['lineHeightSource'] as String?
+  ..lineMultiple = (json['lineMultiple'] as num?)?.toDouble();
 
 Map<String, dynamic> _$PPrToJson(PPr instance) => <String, dynamic>{
   'textAlign': instance.textAlign,
@@ -43,4 +45,6 @@ Map<String, dynamic> _$PPrToJson(PPr instance) => <String, dynamic>{
   'spacingBefore': instance.spacingBefore,
   'spacingAfter': instance.spacingAfter,
   'lineHeight': instance.lineHeight,
+  'lineHeightSource': instance.lineHeightSource,
+  'lineMultiple': instance.lineMultiple,
 };

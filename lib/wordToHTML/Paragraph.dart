@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/TestApp2.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
+import 'package:golden_shamela/wordToHTML/ParagraphStrutResolver.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
@@ -1976,56 +1977,26 @@ class Paragraph {
   }
 
   _getTRunsW(List<InlineSpan> spans) {
-    // Use Word 2007+ default (1.15) if lineHeight is not specified
-    double effectiveLineHeight = pPr?.lineHeight ?? 1.15;
-
-    // Build StrutStyle from the same effective text style that paints the tallest
-    // run in the paragraph. Word's line box is affected by the actual glyph
-    // metrics of the largest run, not just a generic paragraph fallback font.
-    TextStyle strutBaseStyle = prPr?.getTextStyle() ??
-        const TextStyle(fontSize: 14, fontFamily: 'Traditional Arabic');
-    double maxFontSize = strutBaseStyle.fontSize ?? 14.0;
-    for (var run in textRunTs) {
-      final runStyle = run.getEffectiveTextStyle();
-      final runFontSize = runStyle.fontSize ?? 14.0;
-      if (runFontSize > maxFontSize) {
-        maxFontSize = runFontSize;
-        strutBaseStyle = runStyle;
-      }
-    }
-
-    final snapToGridVal =
-        pPr?.xmlpPr?.getElement('w:snapToGrid')?.getAttribute('w:val');
-    final paragraphDisablesLineGrid =
-        snapToGridVal == '0' || snapToGridVal == 'false' || snapToGridVal == 'off';
-
-    if (!paragraphDisablesLineGrid && this is! ParagraphTable) {
-      final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
-      final docGridLinePitchPx = sectPr.docGridLinePitchPx;
-      if (docGridLinePitchPx != null && docGridLinePitchPx > 0 && maxFontSize > 0) {
-        // OOXML docGrid linePitch is a section-level minimum line pitch.
-        // Word uses the larger of the paragraph line spacing and the section
-        // grid pitch, unless the paragraph disables snapToGrid.
-        final docGridHeight = docGridLinePitchPx / maxFontSize;
-        if (docGridHeight > effectiveLineHeight) {
-          effectiveLineHeight = docGridHeight;
-        }
-      }
-    }
+    final strutConfig = ParagraphStrutResolver.resolve(
+      pPr: pPr,
+      prPr: prPr,
+      textRuns: textRunTs,
+      isTableParagraph: this is ParagraphTable,
+      sectPr: parent.parent.getSectPrForPage(parent.pageIndex),
+    );
 
     final richText = Text.rich(
-      TextSpan(style: prPr?.getTextStyle(), children: spans),
+      TextSpan(style: strutConfig.paragraphTextStyle, children: spans),
       textAlign: textAlign,
       textDirection: textDirection,
       softWrap: shrinkTextLayerWidth ? false : !preventWrap,
       overflow: preventWrap ? TextOverflow.visible : TextOverflow.clip,
       strutStyle: StrutStyle(
-        forceStrutHeight:
-            (pPr?.forceStrutHeight ?? true) && !textRunTs.any((r) => r.image != null),
-        height: effectiveLineHeight,
-        fontSize: maxFontSize,
-        fontFamily: strutBaseStyle.fontFamily,
-        fontFamilyFallback: strutBaseStyle.fontFamilyFallback,
+        forceStrutHeight: strutConfig.forceStrutHeight,
+        height: strutConfig.lineHeight,
+        fontSize: strutConfig.strutFontSize,
+        fontFamily: strutConfig.strutBaseStyle.fontFamily,
+        fontFamilyFallback: strutConfig.strutBaseStyle.fontFamilyFallback,
       ),
     );
 
