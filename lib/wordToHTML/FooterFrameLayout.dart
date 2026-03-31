@@ -32,7 +32,12 @@ class FooterFrameLayout {
                 clipBehavior: Clip.none,
                 alignment: Alignment.topLeft,
                 children: [
-                  anchorParagraph.toWidget(),
+                  Opacity(
+                    opacity: 0,
+                    child: IgnorePointer(
+                      child: anchorParagraph.toWidget(),
+                    ),
+                  ),
                   frameWidget,
                 ],
               ),
@@ -105,20 +110,7 @@ class FooterFrameLayout {
   }
 
   static Widget _buildSharedFrameParagraph(Paragraph paragraph) {
-    final widget = paragraph.toWidget();
-    if (_hasRenderableContent(paragraph)) {
-      return widget;
-    }
-
-    // Empty paragraphs inside a shared text frame still contribute vertical
-    // layout in Word, but in this footer pattern they act as spacing rows, not
-    // visible shaded lines.
-    return Opacity(
-      opacity: 0,
-      child: IgnorePointer(
-        child: widget,
-      ),
-    );
+    return paragraph.toWidget();
   }
 
   static bool _hasFramePr(Paragraph paragraph) {
@@ -130,13 +122,5 @@ class FooterFrameLayout {
     final bFrame = b.pPr?.xmlpPr?.getElement("w:framePr");
     if (aFrame == null || bFrame == null) return false;
     return aFrame.toXmlString(pretty: false) == bFrame.toXmlString(pretty: false);
-  }
-
-  static bool _hasRenderableContent(Paragraph paragraph) {
-    final hasVisibleText = paragraph.textRunTs.any((run) {
-      if (run.rpr?.vanish == true) return false;
-      return (run.text ?? '').trim().isNotEmpty;
-    });
-    return hasVisibleText || paragraph.imageRunTs.isNotEmpty;
   }
 }
