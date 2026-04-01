@@ -49,6 +49,8 @@ WordDocument _$WordDocumentFromJson(Map<String, dynamic> json) => WordDocument()
     json['documentStyles'] as Map<String, dynamic>,
   )
   ..evenAndOddHeaders = json['evenAndOddHeaders'] as bool?
+  ..adjustLineHeightInTable =
+      json['adjustLineHeightInTable'] as bool? ?? false
   ..withDiacritics = json['withDiacritics'] as bool? ?? true
   ..useArabicNumerals = json['useArabicNumerals'] as bool? ?? true
   ..index = (json['index'] as List<dynamic>)
@@ -82,6 +84,7 @@ Map<String, dynamic> _$WordDocumentToJson(
   'docImages': WordDocument._docImagesToJson(instance.docImages),
   'documentStyles': WordDocument._documentStylesToJson(instance.documentStyles),
   'evenAndOddHeaders': instance.evenAndOddHeaders,
+  'adjustLineHeightInTable': instance.adjustLineHeightInTable,
   'withDiacritics': instance.withDiacritics,
   'useArabicNumerals': instance.useArabicNumerals,
   'index': instance.index.map((e) => e.toJson()).toList(),

@@ -106,6 +106,15 @@ class Paragraph {
   @JsonKey(ignore: true)
   bool applyHeaderTextInsets = true;
 
+  /// Auto-linkifying plain URL text is not part of WordprocessingML rendering.
+  /// Keep it opt-in for contexts that explicitly want it.
+  @JsonKey(ignore: true)
+  bool disableUrlAutoDetection = false;
+
+  /// Table-cell paragraphs follow Word's table-specific grid rules.
+  @JsonKey(ignore: true)
+  bool isTableCellParagraph = false;
+
   Paragraph(this.parent);
 
   Paragraph.empty() : parent = WordPage.empty();
@@ -1479,7 +1488,9 @@ class Paragraph {
         // التمركز بالنسبة لمنطقة الهامش (عرض الصفحة - الهوامش)
         // داخل الفقرة، (0,0) هو بداية منطقة الهامش
         if (img.relativeFromH == "page") {
-          left = (pageWidth - img.width) / 2;
+          left = isHeaderParagraph
+              ? (pageWidth - img.width) / 2
+              : (pageWidth - img.width) / 2 - leftMargin;
         } else if (isHeaderParagraph) {
           left = leftMargin + (marginAreaWidth - img.width) / 2;
         } else {
@@ -1501,6 +1512,13 @@ class Paragraph {
           if (isHeaderParagraph) {
             // في الهيدر نضع الصورة مباشرة بناءً على إحداثيات الصفح
             left = img.posX;
+          } else if (img.vmlShapeData?.textBoxElement != null &&
+              img.posX == 0 &&
+              img.alignH == "left") {
+            // Body VML text boxes with anchorx="page" and zero margin-left
+            // are already resolved relative to the page edge. Subtracting the
+            // body text margin pushes them too far left.
+            left = img.posX;
           } else {
             // في المحتوى العام نخصم leftMargin لأن الحاوية تبدأ عند منطقة النص
             left = img.posX - leftMargin;
@@ -1508,6 +1526,7 @@ class Paragraph {
         } else {
           left = isHeaderParagraph ? img.posX + leftMargin : img.posX;
         }
+
       }
 
       widgets.add(
@@ -1977,14 +1996,15 @@ class Paragraph {
   }
 
   _getTRunsW(List<InlineSpan> spans) {
+    final wordDocument = parent.parent;
     final strutConfig = ParagraphStrutResolver.resolve(
       pPr: pPr,
       prPr: prPr,
       textRuns: textRunTs,
-      isTableParagraph: this is ParagraphTable,
-      sectPr: parent.parent.getSectPrForPage(parent.pageIndex),
+      isTableCellParagraph: isTableCellParagraph || this is ParagraphTable,
+      adjustLineHeightInTable: wordDocument.adjustLineHeightInTable,
+      sectPr: wordDocument.getSectPrForPage(parent.pageIndex),
     );
-
     final richText = Text.rich(
       TextSpan(style: strutConfig.paragraphTextStyle, children: spans),
       textAlign: textAlign,
@@ -1995,6 +2015,7 @@ class Paragraph {
         forceStrutHeight: strutConfig.forceStrutHeight,
         height: strutConfig.lineHeight,
         fontSize: strutConfig.strutFontSize,
+        leading: strutConfig.strutLeading,
         fontFamily: strutConfig.strutBaseStyle.fontFamily,
         fontFamilyFallback: strutConfig.strutBaseStyle.fontFamilyFallback,
       ),

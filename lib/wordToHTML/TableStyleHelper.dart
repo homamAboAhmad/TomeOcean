@@ -433,6 +433,44 @@ double _twipsToPx(double twips) {
   return twips * 0.0667;
 }
 
+double getTableIndentPx(XmlElement tblXml) {
+  final tblPr = tblXml.getElement('w:tblPr');
+  if (tblPr == null) return 0;
+
+  final tblInd = tblPr.getElement('w:tblInd');
+  if (tblInd == null) return 0;
+
+  final type = tblInd.getAttribute('w:type')?.toLowerCase() ?? 'dxa';
+  if (type == 'pct' || type == 'auto' || type == 'nil') {
+    return 0;
+  }
+
+  if (!_doesTableIndentApply(tblXml)) {
+    return 0;
+  }
+
+  final widthTwips = double.tryParse(tblInd.getAttribute('w:w') ?? '0') ?? 0;
+  if (widthTwips <= 0) return 0;
+
+  return _twipsToPx(widthTwips);
+}
+
+bool _doesTableIndentApply(XmlElement tblXml) {
+  final jc =
+      tblXml.getElement('w:tblPr')?.getElement('w:jc')?.getAttribute('w:val');
+  final bidi = isTableBidiVisual(tblXml);
+
+  if (jc == null || jc == 'start') {
+    return true;
+  }
+
+  if (!bidi) {
+    return jc == 'left';
+  }
+
+  return jc == 'right';
+}
+
 /// Gets the table alignment from w:jc in w:tblPr.
 /// Returns Alignment for use in Container.
 /// For bidi tables (RTL), 'start' maps to right and 'end' maps to left.

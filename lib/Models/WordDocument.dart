@@ -71,6 +71,7 @@ class WordDocument {
   @JsonKey(fromJson: _documentStylesFromJson, toJson: _documentStylesToJson)
   Map<String, XmlElement> documentStyles = {};
   bool? evenAndOddHeaders; // Different headers for even and odd pages
+  bool adjustLineHeightInTable = false;
   bool withDiacritics = true;
   bool useArabicNumerals = true;
   List<IndexItem> index = [];

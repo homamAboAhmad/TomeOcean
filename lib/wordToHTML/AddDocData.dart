@@ -5,6 +5,7 @@ import 'package:golden_shamela/Models/WordPage.dart'; // Import WordPage
 
 import '../Utils/TxtUtils.dart';
 import 'DocFonts.dart';
+import 'DocumentSettingsParser.dart';
 import 'DocFootNotes.dart';
 import 'DocNumbering.dart';
 import 'DocPages.dart';
@@ -45,28 +46,12 @@ Future<List<WordPage>> AddDocData(
   );
   // print("AddDocData: Added footnotes.");
 
-  // Extract evenAndOddHeaders setting
-  var settingsFile = archiveMap["word/settings.xml"];
-  if (settingsFile != null) {
-    try {
-      var settingsDoc = ArchiveToXml(settingsFile);
-      var settingsElement = settingsDoc.getElement("w:settings");
-      if (settingsElement != null) {
-        var evenAndOddElement = settingsElement.getElement(
-          "w:evenAndOddHeaders",
-        );
-        // If element exists, it defaults to true unless val="false" or val="0"
-        if (evenAndOddElement != null) {
-          var val = evenAndOddElement.getAttribute("w:val");
-          wordDocument.evenAndOddHeaders =
-              val == null || (val != "false" && val != "0");
-          // print("DEBUG: evenAndOddHeaders = ${wordDocument.evenAndOddHeaders}");
-        }
-      }
-    } catch (e) {
-      print("Error reading settings.xml: $e");
-    }
-  }
+  final settingsSnapshot = DocumentSettingsParser.parse(
+    archiveMap["word/settings.xml"],
+  );
+  wordDocument.evenAndOddHeaders = settingsSnapshot.evenAndOddHeaders;
+  wordDocument.adjustLineHeightInTable =
+      settingsSnapshot.adjustLineHeightInTable;
 
   List<WordPage> pages = await addWordPages(
     archiveMap[WORD_DOCUMENT]!,

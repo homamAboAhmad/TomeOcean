@@ -794,9 +794,6 @@ List<ImageData> getParagraphImages(List<Paragraph> paragraphs, SectPr sectPr) {
           r.image!.wrapMode != null &&
           (!isParaRelative || exceedsContentArea)) {
         // تخطي مربعات النص هنا لأننا نعرضها داخل الفقرة نفسها
-        if (r.image!.textBoxText != null && r.image!.textBoxText!.isNotEmpty) {
-          return;
-        }
         list.add(r.image!);
       }
     });

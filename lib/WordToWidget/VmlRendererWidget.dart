@@ -17,15 +17,7 @@ class VmlRendererWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("VmlRendererWidget: Starting build");
-    debugPrint(
-      "VmlRendererWidget: vmlShapeData=${imageData.vmlShapeData?.shapeType}, width=${imageData.width}, height=${imageData.height}",
-    );
-
     if (imageData.vmlShapeData == null) {
-      debugPrint(
-        "VmlRendererWidget: vmlShapeData is null, returning SizedBox.shrink()",
-      );
       return const SizedBox.shrink();
     }
 
@@ -44,17 +36,9 @@ class VmlRendererWidget extends StatelessWidget {
       );
     }
 
-    debugPrint(
-      "VmlRendererWidget: textBoxElement=${vml.textBoxElement != null ? 'exists' : 'null'}",
-    );
-
     if (vml.textBoxElement != null) {
-      // استخراج قيمة inset من v:textbox إن وجدت، أو استخدام قيمة افتراضية
-      // inset format: "top,left,bottom,right" أو "top,left,bottom,right" مثل "2.5mm,0,,0"
-      double paddingInset = 2.5; // القيمة الافتراضية من XML (2.5mm)
-
       contentWidget = Padding(
-        padding: EdgeInsets.all(paddingInset), // تطبيق الإزاحة من كل الجهات
+        padding: _resolveTextBoxPadding(vml),
         child: RichTextBoxWidget(
           textBoxElement: vml.textBoxElement!,
           wordPage: wordPage,
@@ -92,6 +76,7 @@ class VmlRendererWidget extends StatelessWidget {
           width: imageData.width > 0 ? imageData.width : null,
           height: imageData.height > 0 ? imageData.height : null,
           decoration: decor,
+          clipBehavior: Clip.hardEdge,
           child: contentWidget,
         );
         break;
@@ -123,11 +108,59 @@ class VmlRendererWidget extends StatelessWidget {
         );
     }
 
-    debugPrint(
-      "VmlRendererWidget: Final shapeWidget - type=${vml.shapeType}, returning widget",
-    );
     return shapeWidget;
   }
+}
+
+EdgeInsets _resolveTextBoxPadding(VmlShapeData vml) {
+  // Microsoft VML inset order is left, top, right, bottom.
+  // Missing values fall back to 0.1in, 0.05in, 0.1in, 0.05in.
+  const defaults = ['0.1in', '0.05in', '0.1in', '0.05in'];
+  final raw = vml.textBoxInset;
+  if (raw == null || raw.trim().isEmpty) {
+    return EdgeInsets.fromLTRB(
+      _parseInsetUnit(defaults[0]),
+      _parseInsetUnit(defaults[1]),
+      _parseInsetUnit(defaults[2]),
+      _parseInsetUnit(defaults[3]),
+    );
+  }
+
+  final parts = raw
+      .split(RegExp(r'[,\s]+'))
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toList();
+
+  String valueAt(int index) => index < parts.length ? parts[index] : defaults[index];
+
+  return EdgeInsets.fromLTRB(
+    _parseInsetUnit(valueAt(0)),
+    _parseInsetUnit(valueAt(1)),
+    _parseInsetUnit(valueAt(2)),
+    _parseInsetUnit(valueAt(3)),
+  );
+}
+
+double _parseInsetUnit(String value) {
+  final normalized = value.trim().toLowerCase();
+  if (normalized.isEmpty) return 0;
+  if (normalized.endsWith('pt')) {
+    return (double.tryParse(normalized.replaceAll('pt', '')) ?? 0) * 1.333;
+  }
+  if (normalized.endsWith('px')) {
+    return double.tryParse(normalized.replaceAll('px', '')) ?? 0;
+  }
+  if (normalized.endsWith('in')) {
+    return (double.tryParse(normalized.replaceAll('in', '')) ?? 0) * 96.0;
+  }
+  if (normalized.endsWith('cm')) {
+    return (double.tryParse(normalized.replaceAll('cm', '')) ?? 0) * (96.0 / 2.54);
+  }
+  if (normalized.endsWith('mm')) {
+    return (double.tryParse(normalized.replaceAll('mm', '')) ?? 0) * (96.0 / 25.4);
+  }
+  return double.tryParse(normalized) ?? 0;
 }
 
 class _VmlLinePainter extends CustomPainter {

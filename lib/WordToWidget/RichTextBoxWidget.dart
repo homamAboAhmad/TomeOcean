@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:xml/xml.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
+import 'package:golden_shamela/wordToHTML/ParagraphTable.dart';
 
-/// ودجت مسؤول عن استخراج الفقرات `w:p` من عنصر `w:txbxContent` الخاص بـ VML
-/// وتمريرها لكلاس `Paragraph` لضمان الحفاظ على تنسيقات الجذور والألوان ونوع الخط.
+/// ودجت مسؤول عن عرض محتوى `w:txbxContent` الخاص بـ VML.
+/// هذا المحتوى ليس مقتصراً على الفقرات فقط؛ حسب OOXML فهو يقبل
+/// أي عناصر block-level مثل `w:p` و `w:tbl`.
 class RichTextBoxWidget extends StatelessWidget {
   final XmlElement textBoxElement;
   final WordPage wordPage;
@@ -17,18 +19,21 @@ class RichTextBoxWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. الحصول على قائمة الفقرات وتحديد آخر فقرة تحتوي على نص (استبعاد الفقرات الشبحية)
-    final allParagraphs = textBoxElement.findAllElements('w:p').toList();
-    final lastVisibleIdx = _findLastVisibleParagraphIndex(allParagraphs);
+    final blocks = textBoxElement.childElements
+        .where((e) => e.name.local == 'p' || e.name.local == 'tbl')
+        .toList();
+    final lastVisibleIdx = _findLastVisibleBlockIndex(blocks);
 
     if (lastVisibleIdx == -1) return const SizedBox.shrink();
 
-    // 2. بناء قائمة العناصر الودجت
     final children = <Widget>[];
     for (int i = 0; i <= lastVisibleIdx; i++) {
-      final paragraphWidget = _buildParagraphWidget(allParagraphs[i], isLast: i == lastVisibleIdx);
-      if (paragraphWidget != null) {
-        children.add(paragraphWidget);
+      final blockWidget = _buildBlockWidget(
+        blocks[i],
+        isLast: i == lastVisibleIdx,
+      );
+      if (blockWidget != null) {
+        children.add(blockWidget);
       }
     }
 
@@ -39,20 +44,45 @@ class RichTextBoxWidget extends StatelessWidget {
     );
   }
 
-  /// إيجاد مؤشر آخر فقرة غير فارغة لتمثيل نهاية المحتوى الفعلي
-  int _findLastVisibleParagraphIndex(List<XmlElement> paragraphs) {
-    for (int i = paragraphs.length - 1; i >= 0; i--) {
-      if (paragraphs[i].innerText.trim().isNotEmpty) return i;
+  int _findLastVisibleBlockIndex(List<XmlElement> blocks) {
+    for (int i = blocks.length - 1; i >= 0; i--) {
+      if (_isVisibleBlock(blocks[i])) return i;
     }
     return -1;
   }
 
-  /// بناء الودجت الخاص بالفقرة مع تطبيق قواعد الانهيار للفقرة الأخيرة
-  Widget? _buildParagraphWidget(XmlElement element, {required bool isLast}) {
-    try {
-      final paragraph = Paragraph(wordPage).fromXml(element);
+  bool _isVisibleBlock(XmlElement element) {
+    if (element.name.local == 'tbl') {
+      return element.findAllElements('w:tr').isNotEmpty ||
+          element.findAllElements('w:pict').isNotEmpty ||
+          element.findAllElements('w:drawing').isNotEmpty ||
+          element.innerText.trim().isNotEmpty;
+    }
 
-      // في المربعات النصية ذات الحجم الثابت، نلغي تباعد الفقرة الأخيرة لمحاكاة سلوك الوورد
+    if (element.name.local == 'p') {
+      return element.findAllElements('w:pict').isNotEmpty ||
+          element.findAllElements('w:drawing').isNotEmpty ||
+          element.innerText.trim().isNotEmpty;
+    }
+
+    return false;
+  }
+
+  Widget? _buildBlockWidget(XmlElement element, {required bool isLast}) {
+    try {
+      if (element.name.local == 'tbl') {
+        final tableParagraph = ParagraphTable(wordPage);
+        tableParagraph.pXml = element;
+        tableParagraph.xmlString = element.toXmlString(pretty: false);
+        tableParagraph.disableUrlAutoDetection = true;
+        tableParagraph.trimTrailingStructuralEmptyCellParagraphs = true;
+        return tableParagraph.toWidget(spacingAfterOverride: isLast ? 0 : null);
+      }
+
+      final paragraph = Paragraph(wordPage).fromXml(element);
+      paragraph.disableUrlAutoDetection = true;
+
+      // داخل text boxes ثابتة الارتفاع، نجنب آخر فقرة توليد فراغ سفلي زائد.
       if (isLast) {
         paragraph.pPr?.spacingAfter = 0;
         paragraph.pPr?.spacingBefore = 0;

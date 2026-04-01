@@ -9,6 +9,7 @@ class ParagraphStrutConfig {
   final TextStyle paragraphTextStyle;
   final TextStyle strutBaseStyle;
   final double strutFontSize;
+  final double? strutLeading;
   final bool forceStrutHeight;
 
   const ParagraphStrutConfig({
@@ -16,6 +17,7 @@ class ParagraphStrutConfig {
     required this.paragraphTextStyle,
     required this.strutBaseStyle,
     required this.strutFontSize,
+    required this.strutLeading,
     required this.forceStrutHeight,
   });
 }
@@ -27,7 +29,8 @@ class ParagraphStrutResolver {
     required PPr? pPr,
     required RPr? prPr,
     required List<runT> textRuns,
-    required bool isTableParagraph,
+    required bool isTableCellParagraph,
+    required bool adjustLineHeightInTable,
     required SectPr sectPr,
   }) {
     final paragraphTextStyle =
@@ -39,9 +42,10 @@ class ParagraphStrutResolver {
       fallback: paragraphTextStyle,
     );
     final strutFontSize = strutBaseStyle.fontSize ?? 14.0;
+    final usesMeasuredSingleLineMetrics = _usesMeasuredSingleLineMetrics(pPr);
 
     double effectiveLineHeight = pPr?.lineHeight ?? 1.15;
-    if (_usesMeasuredSingleLineMetrics(pPr)) {
+    if (usesMeasuredSingleLineMetrics) {
       final measuredSingleLineMultiplier = _measureSingleLineMultiplier(
         style: strutBaseStyle,
         sampleText: _buildSampleText(textRuns),
@@ -54,9 +58,11 @@ class ParagraphStrutResolver {
     }
 
     final paragraphDisablesLineGrid = _paragraphDisablesLineGrid(pPr);
-    if (!paragraphDisablesLineGrid &&
-        !isTableParagraph &&
-        strutFontSize > 0) {
+    final applyDocumentGridLinePitch =
+        !paragraphDisablesLineGrid &&
+        strutFontSize > 0 &&
+        (!isTableCellParagraph || adjustLineHeightInTable);
+    if (applyDocumentGridLinePitch) {
       final docGridLinePitchPx = sectPr.docGridLinePitchPx;
       if (docGridLinePitchPx != null && docGridLinePitchPx > 0) {
         final docGridHeight = docGridLinePitchPx / strutFontSize;
@@ -68,7 +74,7 @@ class ParagraphStrutResolver {
 
     final hasInlineImages = textRuns.any((run) => run.image != null);
     final forceStrutHeight = !hasInlineImages &&
-        !_usesMeasuredSingleLineMetrics(pPr) &&
+        !usesMeasuredSingleLineMetrics &&
         (pPr?.forceStrutHeight ?? true);
 
     return ParagraphStrutConfig(
@@ -76,6 +82,9 @@ class ParagraphStrutResolver {
       paragraphTextStyle: paragraphTextStyle,
       strutBaseStyle: strutBaseStyle,
       strutFontSize: strutFontSize,
+      // Measured line metrics already include the font's own leading.
+      // Leaving StrutStyle.leading as the default would reapply that leading.
+      strutLeading: usesMeasuredSingleLineMetrics ? 0.0 : null,
       forceStrutHeight: forceStrutHeight,
     );
   }
@@ -84,12 +93,27 @@ class ParagraphStrutResolver {
     required List<runT> textRuns,
     required TextStyle fallback,
   }) {
-    TextStyle tallestStyle = fallback;
-    double maxFontSize = fallback.fontSize ?? 14.0;
+    final visibleTextRuns = textRuns.where((run) {
+      if (run.rpr?.vanish == true) {
+        return false;
+      }
+      if (run.image != null) {
+        return false;
+      }
+      final text = (run.text ?? '').trim();
+      return text.isNotEmpty;
+    }).toList();
 
-    for (final run in textRuns) {
+    if (visibleTextRuns.isEmpty) {
+      return fallback;
+    }
+
+    TextStyle tallestStyle = visibleTextRuns.first.getEffectiveTextStyle();
+    double maxFontSize = tallestStyle.fontSize ?? fallback.fontSize ?? 14.0;
+
+    for (final run in visibleTextRuns) {
       final runStyle = run.getEffectiveTextStyle();
-      final runFontSize = runStyle.fontSize ?? 14.0;
+      final runFontSize = runStyle.fontSize ?? fallback.fontSize ?? 14.0;
       if (runFontSize > maxFontSize) {
         maxFontSize = runFontSize;
         tallestStyle = runStyle;

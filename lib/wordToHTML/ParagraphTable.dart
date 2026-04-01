@@ -5,6 +5,7 @@ import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/DocumentStyles.dart';
 
 import 'package:golden_shamela/wordToHTML/TableStyleHelper.dart';
+import 'package:golden_shamela/wordToHTML/TableCellContentResolver.dart';
 
 
 
@@ -29,6 +30,8 @@ import 'RPr.dart';
 class ParagraphTable extends Paragraph {
 
   ParagraphTable(super.parent);
+
+  bool trimTrailingStructuralEmptyCellParagraphs = false;
 
 
 
@@ -59,7 +62,13 @@ class ParagraphTable extends Paragraph {
 
 
     final widget = pXml != null
-        ? WordTableWidget(pXml!, super.parent)
+        ? WordTableWidget(
+            pXml!,
+            super.parent,
+            disableUrlAutoDetection: disableUrlAutoDetection,
+            trimTrailingStructuralEmptyCellParagraphs:
+                trimTrailingStructuralEmptyCellParagraphs,
+          )
         : SizedBox.shrink();
 
     return Padding(
@@ -81,227 +90,121 @@ class WordTableWidget extends StatelessWidget {
   XmlElement tblXml;
 
   WordPage parent;
+  final bool disableUrlAutoDetection;
+  final bool trimTrailingStructuralEmptyCellParagraphs;
 
 
 
-  WordTableWidget(this.tblXml, this.parent);
+  WordTableWidget(
+    this.tblXml,
+    this.parent, {
+    this.disableUrlAutoDetection = false,
+    this.trimTrailingStructuralEmptyCellParagraphs = false,
+  });
 
 
 
   @override
 
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final mediaWidth = MediaQuery.of(context).size.width;
+        final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
+        final fallbackBodyWidth =
+            (sectPr.width ?? mediaWidth) - sectPr.leftMargin - sectPr.rightMargin;
+        final availableWidth =
+            constraints.maxWidth.isFinite && constraints.maxWidth > 0
+            ? constraints.maxWidth
+            : (fallbackBodyWidth > 0 ? fallbackBodyWidth : mediaWidth);
+        final bool bidi = isTableBidiVisual(tblXml);
+        final double tableIndentPx = getTableIndentPx(tblXml);
+        final double usableWidth = tableIndentPx >= availableWidth
+            ? availableWidth
+            : (availableWidth - tableIndentPx);
 
-    double screenWidth = MediaQuery.of(context).size.width;
+        // 1. Get Grid Column Widths
+        List<double> gridColWidths = _getGridColWidths();
 
-
-
-    // 1. Get Grid Column Widths
-
-    List<double> gridColWidths = _getGridColWidths();
-
-
-
-    // 2. Calculate Total Table Width in Twips
-
-    double totalGridTwips = 0;
-
-    if (gridColWidths.isNotEmpty) {
-
-      totalGridTwips = gridColWidths.fold(0, (sum, w) => sum + w);
-
-    } else {
-
-      // Fallback: Check first row if grid is missing
-
-      var firstRow = tblXml.findAllElements('w:tr').firstOrNull;
-
-      if (firstRow != null) {
-
-        for (var cell in firstRow.findAllElements('w:tc')) {
-
-          var w = cell
-
-              .getElement('w:tcPr')
-
-              ?.getElement('w:tcW')
-
-              ?.getAttribute('w:w');
-
-          totalGridTwips += double.tryParse(w ?? '0') ?? 0;
-
+        // 2. Calculate Total Table Width in Twips
+        double totalGridTwips = 0;
+        if (gridColWidths.isNotEmpty) {
+          totalGridTwips = gridColWidths.fold(0, (sum, w) => sum + w);
+        } else {
+          // Fallback: Check first row if grid is missing
+          var firstRow = tblXml.findAllElements('w:tr').firstOrNull;
+          if (firstRow != null) {
+            for (var cell in firstRow.findAllElements('w:tc')) {
+              var w = cell
+                  .getElement('w:tcPr')
+                  ?.getElement('w:tcW')
+                  ?.getAttribute('w:w');
+              totalGridTwips += double.tryParse(w ?? '0') ?? 0;
+            }
+          }
         }
 
-      }
+        if (totalGridTwips == 0) totalGridTwips = 1;
 
-    }
+        // 3. Convert Twips to Pixels
+        double naturalWidthPx = totalGridTwips * 0.0667;
 
+        // 4. Determine Scale Factor and Final Width
+        double scaleFactor;
+        double finalTableWidth;
+        double? targetWidthPx;
 
+        var tblPr = tblXml.getElement('w:tblPr');
+        var tblW = tblPr?.getElement('w:tblW');
+        if (tblW != null) {
+          String type = tblW.getAttribute('w:type') ?? 'auto';
+          double val = double.tryParse(tblW.getAttribute('w:w') ?? '0') ?? 0;
 
-    if (totalGridTwips == 0) totalGridTwips = 1;
-
-
-
-    // 3. Convert Twips to Pixels (Standard Word scaling)
-
-    // using custom factor: 0.0667
-
-    double naturalWidthPx = totalGridTwips * 0.0667;
-
-
-
-    // 4. Determine Scale Factor and Final Width
-
-    double scaleFactor;
-
-    double finalTableWidth;
-
-    double? targetWidthPx;
-
-
-
-    // --- NEW: Respect w:tblW (Total Table Width) ---
-
-    var tblPr = tblXml.getElement('w:tblPr');
-
-    var tblW = tblPr?.getElement('w:tblW');
-
-    if (tblW != null) {
-
-      String type = tblW.getAttribute('w:type') ?? 'auto';
-
-      double val = double.tryParse(tblW.getAttribute('w:w') ?? '0') ?? 0;
-
-
-
-      if (val > 0) {
-
-        if (type == 'pct') {
-
-          // Percentage: val is in 1/50th of a percent (5000 = 100%)
-
-          // Relies on Page Width from SectPr
-
-          SectPr sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
-
-          // SectPr properties are already in Display Pixels (dp) ~ 0.0667 scale
-
-          double pageBodyWidth =
-
-              (sectPr.width ?? screenWidth) -
-
-              (sectPr.leftMargin) -
-
-              (sectPr.rightMargin);
-
-          if (pageBodyWidth <= 0) pageBodyWidth = screenWidth;
-
-
-
-          targetWidthPx = pageBodyWidth * (val / 5000.0);
-
-        } else if (type == 'dxa') {
-
-          // Twips
-
-          targetWidthPx = val * 0.0667;
-
+          if (val > 0) {
+            if (type == 'pct') {
+              targetWidthPx = usableWidth * (val / 5000.0);
+            } else if (type == 'dxa') {
+              targetWidthPx = val * 0.0667;
+            }
+          }
         }
 
-      }
+        if (targetWidthPx != null && targetWidthPx > 0) {
+          finalTableWidth = targetWidthPx > usableWidth
+              ? usableWidth
+              : targetWidthPx;
+          scaleFactor = totalGridTwips > 1
+              ? finalTableWidth / totalGridTwips
+              : 0.0667;
+        } else {
+          if (naturalWidthPx <= usableWidth) {
+            scaleFactor = 0.0667;
+            finalTableWidth = naturalWidthPx;
+          } else {
+            finalTableWidth = usableWidth;
+            scaleFactor = usableWidth / totalGridTwips;
+          }
+        }
 
-    }
+        List<Widget> rowWidgets = getRowsWList(scaleFactor, gridColWidths, bidi);
+        Alignment tableAlign = getTableAlignment(tblXml);
 
-
-
-    if (targetWidthPx != null && targetWidthPx > 0) {
-
-      // If we have an explicit target width (e.g. 92% of page), use it.
-
-      // But limit to screen width to prevent overflow
-
-      if (targetWidthPx > screenWidth) {
-
-        finalTableWidth = screenWidth;
-
-      } else {
-
-        finalTableWidth = targetWidthPx;
-
-      }
-
-      // Re-calculate scale factor: distribute the target width across the grid twips
-
-      // if totalGridTwips is 0 or 1, avoid div/0
-
-      if (totalGridTwips > 1) {
-
-        scaleFactor = finalTableWidth / totalGridTwips;
-
-      } else {
-
-        scaleFactor = 0.0667;
-
-      }
-
-    } else {
-
-      // Fallback to old Grid Logic
-
-      if (naturalWidthPx <= screenWidth) {
-
-        // If table fits, use its natural size
-
-        scaleFactor = 0.0667;
-
-        finalTableWidth = naturalWidthPx;
-
-      } else {
-
-        // If table is too big, scale it down to fit screen
-
-        finalTableWidth = screenWidth;
-
-        scaleFactor = screenWidth / totalGridTwips;
-
-      }
-
-    }
-
-
-
-    // Determine row direction from bidiVisual
-
-    bool bidi = isTableBidiVisual(tblXml);
-
-
-
-    // Generate Rows
-
-    List<Widget> rowWidgets = getRowsWList(scaleFactor, gridColWidths, bidi);
-
-
-
-    // Table alignment from w:jc in w:tblPr
-
-    Alignment tableAlign = getTableAlignment(tblXml);
-
-
-
-    return Container(
-
-      width: screenWidth,
-
-      alignment: tableAlign,
-
-      child: Container(
-
-        width: finalTableWidth,
-
-        child: Column(mainAxisSize: MainAxisSize.min, children: rowWidgets),
-
-      ),
-
+        return SizedBox(
+          width: availableWidth,
+          child: Align(
+            alignment: tableAlign,
+            child: Padding(
+              padding: bidi
+                  ? EdgeInsets.only(right: tableIndentPx)
+                  : EdgeInsets.only(left: tableIndentPx),
+              child: SizedBox(
+                width: finalTableWidth,
+                child: Column(mainAxisSize: MainAxisSize.min, children: rowWidgets),
+              ),
+            ),
+          ),
+        );
+      },
     );
 
   }
@@ -364,7 +267,8 @@ class WordTableWidget extends StatelessWidget {
 
     String? heightVal = trHeight.getAttribute('w:val');
 
-    String hRule = trHeight.getAttribute('w:hRule') ?? 'atLeast';
+    // OOXML: if w:hRule is omitted, the row height behaves as auto.
+    String hRule = trHeight.getAttribute('w:hRule') ?? 'auto';
 
 
 
@@ -572,7 +476,7 @@ class WordTableWidget extends StatelessWidget {
 
           rowsW.add(SizedBox(height: rowHeightPx, child: rowWidget));
 
-        } else {
+        } else if (hRule == 'atLeast') {
 
           rowsW.add(
 
@@ -585,6 +489,10 @@ class WordTableWidget extends StatelessWidget {
             ),
 
           );
+
+        } else {
+
+          rowsW.add(rowWidget);
 
         }
 
@@ -774,7 +682,11 @@ class WordTableWidget extends StatelessWidget {
 
 
 
-    var paragraphsXml = rowCell.findAllElements("w:p");
+    final paragraphsXml = TableCellContentResolver.resolveParagraphs(
+      rowCell,
+      trimTrailingStructuralEmptyParagraph:
+          trimTrailingStructuralEmptyCellParagraphs,
+    );
 
 
 
@@ -801,6 +713,8 @@ class WordTableWidget extends StatelessWidget {
         parent,
 
       ).fromXml(pXml, skipNumberingCounter: true);
+      paragraph.disableUrlAutoDetection = disableUrlAutoDetection;
+      paragraph.isTableCellParagraph = true;
 
 
 
@@ -1462,15 +1376,23 @@ class WordTableWidget extends StatelessWidget {
 
       if (borderEl == null && tblBorders != null) {
 
-        // Simple mapping: use table's insideH for top/bottom, insideV for left/right
+        if (sideName == 'top') {
 
-        if (sideName == 'top' || sideName == 'bottom') {
+          borderEl = tblBorders.getElement('w:top');
 
-          borderEl =
+        } else if (sideName == 'bottom') {
 
-              tblBorders.getElement('w:insideH') ??
+          borderEl = tblBorders.getElement('w:bottom');
 
-              tblBorders.getElement('w:$sideName');
+          // OOXML §17.4.22: insideH applies only to interior horizontal edges,
+          // not the outer top/bottom edges of the table. Render it once on the
+          // lower edge of each non-last row to avoid creating a false top border
+          // and to prevent double-thick lines between adjacent rows.
+          if (borderEl == null && rowIndex < totalRows - 1) {
+
+            borderEl = tblBorders.getElement('w:insideH');
+
+          }
 
         } else {
 
@@ -1490,13 +1412,19 @@ class WordTableWidget extends StatelessWidget {
 
       if (borderEl == null && styleBorders != null) {
 
-        if (sideName == 'top' || sideName == 'bottom') {
+        if (sideName == 'top') {
 
-          borderEl =
+          borderEl = styleBorders.getElement('w:top');
 
-              styleBorders.getElement('w:insideH') ??
+        } else if (sideName == 'bottom') {
 
-              styleBorders.getElement('w:$sideName');
+          borderEl = styleBorders.getElement('w:bottom');
+
+          if (borderEl == null && rowIndex < totalRows - 1) {
+
+            borderEl = styleBorders.getElement('w:insideH');
+
+          }
 
         } else {
 

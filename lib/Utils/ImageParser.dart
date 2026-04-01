@@ -19,6 +19,25 @@ import 'VectorPathParser.dart';
 
 part 'ImageParser.g.dart';
 
+const Map<String, int> _vmlNamedColors = {
+  'aqua': 0xFF00FFFF,
+  'black': 0xFF000000,
+  'blue': 0xFF0000FF,
+  'fuchsia': 0xFFFF00FF,
+  'gray': 0xFF808080,
+  'green': 0xFF008000,
+  'lime': 0xFF00FF00,
+  'maroon': 0xFF800000,
+  'navy': 0xFF000080,
+  'olive': 0xFF808000,
+  'purple': 0xFF800080,
+  'red': 0xFFFF0000,
+  'silver': 0xFFC0C0C0,
+  'teal': 0xFF008080,
+  'white': 0xFFFFFFFF,
+  'yellow': 0xFFFFFF00,
+};
+
 ImageData _imageData = ImageData();
 late XmlElement _drawingElement;
 
@@ -563,10 +582,8 @@ void _parseVmlData() {
       );
 
   if (shape.name.local == 'null') {
-    print("VML_DEBUG: No VML shape found in descendants");
     return;
   }
-  print("VML_DEBUG: Found VML shape type: ${shape.name.local}");
 
   // 2. Extract Dimensions from style attribute
   // style="...width:261.35pt;height:42.3pt..."
@@ -579,11 +596,7 @@ void _parseVmlData() {
     final styleMap = _parseVmlStyleMap(style);
     _parseVmlStyle(style);
     _applyVmlHorizontalPositioningFromStyleMap(styleMap);
-
-    print("VML_DEBUG: Extracted style map: $styleMap");
-    print(
-      "VML_DEBUG: Width after _parseVmlStyle: ${_imageData.width}, Height: ${_imageData.height}",
-    );
+    _applyVmlVerticalPositioningFromStyleMap(styleMap);
 
     // Extract VmlShapeData
     _imageData.vmlShapeData = VmlShapeData(
@@ -601,9 +614,6 @@ void _parseVmlData() {
       double f =
           double.tryParse(arcAttr.substring(0, arcAttr.length - 1)) ?? 13107.0;
       _imageData.vmlShapeData!.arcSize = f / 65536.0;
-      print(
-        "VML_DEBUG: arcsize converted from '${arcAttr}' to ${_imageData.vmlShapeData!.arcSize}",
-      );
     } else if (arcAttr.endsWith('%')) {
       double p =
           double.tryParse(arcAttr.substring(0, arcAttr.length - 1)) ?? 20.0;
@@ -612,23 +622,17 @@ void _parseVmlData() {
 
     // Stroke Color and Weight
     String strokeColorStr = shape.getAttribute('strokecolor') ?? '';
-    if (strokeColorStr.isNotEmpty && strokeColorStr.startsWith('#')) {
-      try {
-        _imageData.vmlShapeData!.strokeColor = Color(
-          int.parse(strokeColorStr.replaceFirst('#', 'FF'), radix: 16),
-        );
-      } catch (e) {}
+    final strokeColor = _parseVmlColorValue(strokeColorStr);
+    if (strokeColor != null) {
+      _imageData.vmlShapeData!.strokeColor = strokeColor;
     }
     String strokeWeightStr = shape.getAttribute('strokeweight') ?? '1.0';
     _imageData.vmlShapeData!.strokeWidth = _parseUnit(strokeWeightStr);
 
     String fillcolorAttr = shape.getAttribute('fillcolor') ?? '';
-    if (fillcolorAttr.isNotEmpty && fillcolorAttr.startsWith('#')) {
-      try {
-        _imageData.vmlShapeData!.fillColor = Color(
-          int.parse(fillcolorAttr.replaceFirst('#', 'FF'), radix: 16),
-        );
-      } catch (e) {}
+    final fillColor = _parseVmlColorValue(fillcolorAttr);
+    if (fillColor != null) {
+      _imageData.vmlShapeData!.fillColor = fillColor;
     }
 
     if (styleMap.containsKey('left') && styleMap.containsKey('margin-left')) {
@@ -662,9 +666,16 @@ void _parseVmlData() {
       _imageData.vmlShapeData!.textBoxElement = txbxContentElement;
     }
 
-    print(
-      "VML_DEBUG: Final VML data - shape=${_imageData.vmlShapeData?.shapeType}, w=${_imageData.width}, h=${_imageData.height}, arcSize=${_imageData.vmlShapeData?.arcSize}, strokeColor=${_imageData.vmlShapeData?.strokeColor}, fillColor=${_imageData.vmlShapeData?.fillColor}",
-    );
+    final textboxElement = shape.descendants
+        .whereType<xml.XmlElement>()
+        .firstWhere(
+          (e) => e.name.local == 'textbox',
+          orElse: () => xml.XmlElement(xml.XmlName('null')),
+        );
+    if (textboxElement.name.local != 'null') {
+      _imageData.vmlShapeData!.textBoxInset = textboxElement.getAttribute('inset');
+    }
+
   }
 
   // Handle v:line dimensions and position from 'from'/'to' attributes
@@ -691,6 +702,10 @@ void _parseVmlData() {
   final hasAbsolutePositioning =
       style?.toLowerCase().contains('position:absolute') == true;
   if (hasAbsolutePositioning) {
+    if (!_hasExplicitVmlVerticalReference(style)) {
+      _imageData.relativeFromV = 'paragraph';
+    }
+
     if (wrapElement.name.local != 'null') {
       _parseVmlWrap(shape);
     } else {
@@ -722,26 +737,10 @@ void _parseVmlData() {
     if (rId != null) {
       _imageData.rId = rId;
 
-      final bool isSpecialDebugRid = RegExp(r'^rId(1[3-9])$').hasMatch(rId);
-      if (isSpecialDebugRid) {
-        print(
-          'VML_DEBUG_PARSE: rId=$rId path=${getImageFrmRel(rId)} width=${_imageData.width} height=${_imageData.height} wrapMode=${_imageData.wrapMode} relH=${_imageData.relativeFromH} relV=${_imageData.relativeFromV} posX=${_imageData.posX} posY=${_imageData.posY}',
-        );
-      }
-
       _imageData.setImageMemory(
         _imageData.parent!,
         customRelIdList: _imageData.customRelIdList,
       );
-
-      if (isSpecialDebugRid) {
-        final memLen = _imageData.imageMemory?.length ?? 0;
-        final bytes = _imageData.imageMemory;
-        final head = bytes != null && bytes.length >= 4
-            ? bytes.take(4).toList()
-            : <int>[];
-        print('VML_DEBUG_MEM: rId=$rId memLen=$memLen head=$head');
-      }
     }
   }
 }
@@ -805,6 +804,29 @@ String? _normalizeVmlHorizontalAlign(String? value) {
   }
 }
 
+String? _normalizeVmlVerticalAlign(String? value) {
+  switch (value?.trim().toLowerCase()) {
+    case 'top':
+      return 'top';
+    case 'center':
+      return 'center';
+    case 'bottom':
+      return 'bottom';
+    default:
+      return null;
+  }
+}
+
+bool _hasExplicitVmlHorizontalReference(String? style) {
+  if (style == null) return false;
+  return style.toLowerCase().contains('mso-position-horizontal');
+}
+
+bool _hasExplicitVmlVerticalReference(String? style) {
+  if (style == null) return false;
+  return style.toLowerCase().contains('mso-position-vertical');
+}
+
 double _extractVmlStyleNumber(String? value) {
   if (value == null || value.isEmpty) return 0;
   final normalized = value.trim().toLowerCase();
@@ -821,18 +843,34 @@ void _parseVmlWrap(xml.XmlElement container) {
   );
 
   if (wrap.name.local == 'null') {
-    _imageData.relativeFromH = 'margin';
-    _imageData.relativeFromV = 'margin';
     _imageData.wrapMode = 'None';
     return;
   }
 
   final wrapType = wrap.getAttribute('type')?.toLowerCase();
+  final anchorY = wrap.getAttribute('anchory')?.trim().toLowerCase();
+  final anchorX = wrap.getAttribute('anchorx')?.trim().toLowerCase();
 
-  // w10:wrap describes how surrounding text wraps around a VML object.
-  // It does not define the object's positioning base. The positioning base
-  // must come from VML positioning attributes/styles such as
-  // mso-position-horizontal-relative / mso-position-vertical-relative.
+  if (_shouldUseWrapAnchorXForBodyTextBox(container)) {
+    if (anchorX == 'page') {
+      _imageData.relativeFromH = 'page';
+    } else if (anchorX == 'margin') {
+      _imageData.relativeFromH = 'margin';
+    } else if (anchorX == 'text') {
+      _imageData.relativeFromH = 'column';
+    }
+  }
+
+  if (anchorY == 'page') {
+    _imageData.relativeFromV = 'page';
+  } else if (anchorY == 'margin') {
+    _imageData.relativeFromV = 'margin';
+  } else if (anchorY == 'text') {
+    _imageData.relativeFromV = 'paragraph';
+  } else if (anchorY == 'line') {
+    _imageData.relativeFromV = 'line';
+  }
+
   if (wrapType == 'square') {
     _imageData.wrapMode = 'Square';
   } else if (wrapType == 'tight') {
@@ -843,6 +881,52 @@ void _parseVmlWrap(xml.XmlElement container) {
     _imageData.wrapMode = 'TopAndBottom';
   } else {
     _imageData.wrapMode = 'None';
+  }
+}
+
+bool _shouldUseWrapAnchorXForBodyTextBox(xml.XmlElement container) {
+  final paragraph = _imageData.parent?.parent;
+  final isHeaderOrFooter = paragraph?.isHeaderParagraph == true;
+  if (isHeaderOrFooter) {
+    return false;
+  }
+
+  if (_imageData.vmlShapeData?.textBoxElement == null) {
+    return false;
+  }
+
+  if (_imageData.posX != 0) {
+    return false;
+  }
+
+  final style = container.getAttribute('style');
+  if (_hasExplicitVmlHorizontalReference(style)) {
+    return false;
+  }
+
+  return true;
+}
+
+void _applyVmlVerticalPositioningFromStyleMap(Map<String, String> styleMap) {
+  final verticalAlign = _normalizeVmlVerticalAlign(
+    styleMap['mso-position-vertical'],
+  );
+
+  if (verticalAlign != null) {
+    _imageData.alingV = verticalAlign;
+  }
+
+  final relative = styleMap['mso-position-vertical-relative']
+      ?.trim()
+      .toLowerCase();
+  if (relative == 'page') {
+    _imageData.relativeFromV = 'page';
+  } else if (relative == 'margin') {
+    _imageData.relativeFromV = 'margin';
+  } else if (relative == 'text') {
+    _imageData.relativeFromV = 'paragraph';
+  } else if (relative == 'line') {
+    _imageData.relativeFromV = 'line';
   }
 }
 
@@ -858,9 +942,6 @@ void _parseVmlZIndex(String? zIndexValue) {
   _imageData.relativeHeight = zIndex;
   _imageData.vmlZIndex = zIndex;
 
-  debugPrint(
-    'VML_DEBUG: _parseVmlZIndex zIndex=$zIndex (from "$zIndexValue") behindDoc=${_imageData.behindDoc}',
-  );
 }
 
 double _parseUnit(String value) {
@@ -880,6 +961,40 @@ double _parseUnit(String value) {
     val = double.tryParse(value) ?? 0;
   }
   return val;
+}
+
+Color? _parseVmlColorValue(String? rawValue) {
+  if (rawValue == null) return null;
+
+  final value = rawValue.trim().toLowerCase();
+  if (value.isEmpty || value == 'none' || value == 'auto') return null;
+
+  if (_vmlNamedColors.containsKey(value)) {
+    return Color(_vmlNamedColors[value]!);
+  }
+
+  if (value.startsWith('#')) {
+    final hex = value.substring(1);
+    if (hex.length == 6) {
+      try {
+        return Color(int.parse('FF$hex', radix: 16));
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
+  final rgbMatch = RegExp(r'rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)').firstMatch(value);
+  if (rgbMatch != null) {
+    final r = int.tryParse(rgbMatch.group(1) ?? '');
+    final g = int.tryParse(rgbMatch.group(2) ?? '');
+    final b = int.tryParse(rgbMatch.group(3) ?? '');
+    if (r != null && g != null && b != null) {
+      return Color.fromARGB(255, r.clamp(0, 255), g.clamp(0, 255), b.clamp(0, 255));
+    }
+  }
+
+  return null;
 }
 
 void setDemenisions() {

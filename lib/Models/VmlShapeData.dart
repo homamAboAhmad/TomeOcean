@@ -27,6 +27,9 @@ class VmlShapeData {
   /// الـ XML الخام الخاص بالنص (للحفظ والاسترجاع من JSON Cache)
   String? textBoxXmlString;
 
+  /// قيمة inset الخام من v:textbox إن وجدت
+  String? textBoxInset;
+
   VmlShapeData({
     required this.shapeType,
     this.strokeWidth = 1.0,
@@ -36,6 +39,7 @@ class VmlShapeData {
     this.isStroked = true,
     this.arcSize = 0.2,
     this.textBoxXmlString,
+    this.textBoxInset,
   });
 
   // Getters for Colors
@@ -75,6 +79,7 @@ class VmlShapeData {
       isStroked: json['isStroked'] as bool? ?? true,
       arcSize: (json['arcSize'] as num?)?.toDouble() ?? 0.2,
       textBoxXmlString: json['textBoxXmlString'] as String?,
+      textBoxInset: json['textBoxInset'] as String?,
     );
   }
 
@@ -88,6 +93,7 @@ class VmlShapeData {
       'isStroked': isStroked,
       'arcSize': arcSize,
       'textBoxXmlString': textBoxXmlString,
+      'textBoxInset': textBoxInset,
     };
   }
 }

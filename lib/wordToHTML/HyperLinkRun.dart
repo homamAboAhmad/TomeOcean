@@ -14,27 +14,15 @@ class HyperLinkRun extends runT {
 
   @override
   void checkParaRpr() {
-    rpr?.b = prPr?.b;
-    rpr?.i = prPr?.i;
-    rpr?.u = prPr?.u;
-    rpr?.uColor = prPr?.uColor;
-    rpr?.color = prPr?.color;
-    rpr?.highlightColor = prPr?.highlightColor;
-    rpr?.rtl = prPr?.rtl;
-    rpr?.font ??= prPr?.font;
-    rpr?.fontSize = prPr?.fontSize;
-    rpr?.vertAlign = prPr?.vertAlign;
+    super.checkParaRpr();
   }
 
   @override
   InlineSpan toWidget() {
     if (url != null) {
-      // Force blue color and underline for hyperlinks
-      TextStyle style = getEffectiveTextStyle().copyWith(
-        color: Colors.blue,
-        decoration: TextDecoration.underline,
-        decorationColor: Colors.blue,
-      );
+      // Rendering must follow XML/style hierarchy; hyperlink presence alone
+      // does not imply forcing blue/underline.
+      TextStyle style = getEffectiveTextStyle();
 
       // Note: Tooltip cannot be used with TextSpan directly as it requires a Widget.
       // Using WidgetSpan breaks TOC layout, so we use TextSpan without tooltip.

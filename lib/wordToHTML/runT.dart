@@ -186,7 +186,8 @@ class runT {
 
     // Check for URLs in the text (simple check first for optimization)
     bool customUrlCheck =
-        fixedText.contains("http") || fixedText.contains("www");
+        !parent.disableUrlAutoDetection &&
+        (fixedText.contains("http") || fixedText.contains("www"));
     if (customUrlCheck) {
       contentSpans = _buildContentSpansWithIds(
         fixedText,

@@ -309,8 +309,15 @@ class RPr {
   }
 
   bool? isUnderLine() {
-    bool hasUnderLine = rPr?.getElement("w:u") != null;
-    if (hasUnderLine) return true;
+    final underlineElement = rPr?.getElement("w:u");
+    if (underlineElement == null) return null;
+
+    final value = underlineElement.getAttribute("w:val")?.toLowerCase();
+    if (value == "none" || value == "0" || value == "false" || value == "off") {
+      return false;
+    }
+
+    return true;
   }
 
   String? getUColor() {
