@@ -4,6 +4,7 @@ import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/Utils/TxtUtils.dart';
 import 'package:golden_shamela/WordToWidget/ImageToWidget.dart';
 import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
+import 'package:golden_shamela/wordToHTML/BidiTextNormalizer.dart';
 import 'package:golden_shamela/wordToHTML/PPr.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
@@ -37,6 +38,7 @@ class runT {
   /// Whether this run contains a w:tab element (for TOC entry/page number separation)
   /// This is serialized to cache since xmlRun is ignored
   bool hasTab = false;
+  bool hasExplicitRunDirection = false;
 
   @JsonKey(ignore: true)
   Paragraph parent;
@@ -96,6 +98,9 @@ class runT {
     if (xmlrPr != null) {
       rpr = RPr(this).fromXml(xmlrPr);
       rpr?.parent = this;
+      hasExplicitRunDirection =
+          xmlrPr.getElement("w:rtl") != null ||
+          xmlrPr.getElement("w:ltr") != null;
     }
     // التحقق من الرموز (w:sym) بعد استخراج النص وتعيين rpr
     checkSymbol();
@@ -164,7 +169,13 @@ class runT {
     checkSymbol();
 
     double vAlign = rpr?.getVertAlignNum() ?? 0;
+    final effectiveRtl = _hasEffectiveRtl;
     String fixedText = checkDiacritics();
+    fixedText = BidiTextNormalizer.normalizeForDisplay(
+      fixedText,
+      effectiveRtl: effectiveRtl,
+      hasExplicitRunDirection: hasExplicitRunDirection,
+    );
 
     // Get effective text style (falls back to prPr if rpr is null)
     TextStyle effectiveStyle = getEffectiveTextStyle();
@@ -643,7 +654,7 @@ class runT {
     } else {
       // FIX: في حالة النص العربي (RTL)، نستخدم الخط العربي (cs) للرموز أيضاً
       // بدلاً من uniqueFont (hAnsi) الذي قد يحتوي على glyphs غير متوقعة (مثل صدق الله العظيم بدلاً من النقطة)
-      if (rpr?.rtl == true) {
+      if (_hasEffectiveRtl) {
         return rpr?.font;
       }
       return rpr?.uniqueFont; // إذا كان النص غير محدد، نختار خط افتراضي
@@ -663,10 +674,17 @@ class runT {
   String checkDiacritics() {
     final doc = parent.parent.parent;
     String result = doc.withDiacritics ? (text ?? "") : removeDiacritics(text ?? "");
-    if (doc.useArabicNumerals && rpr?.rtl == true) {
+    if (doc.useArabicNumerals && _hasEffectiveRtl) {
       result = toArabicNumbers(result);
     }
     return result;
+  }
+
+  bool get _hasEffectiveRtl {
+    if (rpr?.rtl != null) {
+      return rpr!.rtl!;
+    }
+    return parent.textDirection == TextDirection.rtl;
   }
 
   /// Build spans checking for URLs first, then search highlights

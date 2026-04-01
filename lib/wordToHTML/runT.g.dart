@@ -26,6 +26,7 @@ runT _$runTFromJson(Map<String, dynamic> json) => runT.empty()
       : ImageData.fromJson(json['image'] as Map<String, dynamic>)
   ..toc = json['toc'] as String?
   ..hasTab = json['hasTab'] as bool
+  ..hasExplicitRunDirection = json['hasExplicitRunDirection'] as bool? ?? false
   ..isFootnoteRef = json['isFootnoteRef'] as bool;
 
 Map<String, dynamic> _$runTToJson(runT instance) => <String, dynamic>{
@@ -40,5 +41,6 @@ Map<String, dynamic> _$runTToJson(runT instance) => <String, dynamic>{
   'image': instance.image?.toJson(),
   'toc': instance.toc,
   'hasTab': instance.hasTab,
+  'hasExplicitRunDirection': instance.hasExplicitRunDirection,
   'isFootnoteRef': instance.isFootnoteRef,
 };
