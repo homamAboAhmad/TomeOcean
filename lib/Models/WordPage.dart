@@ -744,15 +744,6 @@ bool _isParagraphVisuallyRelevant(Paragraph paragraph) {
       .where((run) => run.image != null && run.image!.wrapMode == null)
       .toList();
   if (inlineImageRuns.isNotEmpty) {
-    final specialInlineRids = inlineImageRuns
-        .map((run) => run.image!.rId)
-        .where((rId) => RegExp(r'^rId(1[3-9])$').hasMatch(rId))
-        .toList();
-    if (specialInlineRids.isNotEmpty) {
-      print(
-        'VML_DEBUG_VISIBILITY: inline-image paragraph kept rIds=${specialInlineRids.join(',')} text="${paragraph.text.replaceAll('\n', ' ')}" textRuns=${paragraph.textRunTs.length} imageRuns=${paragraph.imageRunTs.length}',
-      );
-    }
     return true;
   }
 
@@ -768,7 +759,62 @@ bool _isParagraphVisuallyRelevant(Paragraph paragraph) {
     if (runText.isNotEmpty) return true;
   }
 
-  return false;
+  // In Word, an empty paragraph mark still occupies vertical space and carries
+  // paragraph formatting. We only drop paragraphs that are purely structural,
+  // such as hidden page markers or page-break carrier paragraphs.
+  return !_isPureStructuralParagraph(paragraph);
+}
+
+bool _isPureStructuralParagraph(Paragraph paragraph) {
+  final xml = paragraph.pXml;
+  if (xml == null) {
+    return false;
+  }
+
+  final hasVisibleNonTextContent = xml.descendants
+      .whereType<XmlElement>()
+      .any((element) {
+        switch (element.name.local) {
+          case 'drawing':
+          case 'pict':
+          case 'object':
+          case 'tab':
+          case 'sym':
+            return true;
+          default:
+            return false;
+        }
+      });
+  if (hasVisibleNonTextContent) {
+    return false;
+  }
+
+  final hasPageBreakOnly = xml
+      .findAllElements('w:br')
+      .any((br) => br.getAttribute('w:type') == 'page');
+  if (hasPageBreakOnly) {
+    return true;
+  }
+
+  if (paragraph.runs.isEmpty) {
+    return false;
+  }
+
+  return paragraph.runs.every((run) {
+    if (run.image != null) {
+      return false;
+    }
+
+    final runText = (run.text ?? '')
+        .replaceAll(RegExp(r'\{\{PG:\d+\}\}'), '')
+        .replaceAll('\u00A0', '')
+        .trim();
+    if (runText.isNotEmpty) {
+      return false;
+    }
+
+    return run.rpr?.vanish == true;
+  });
 }
 
 List<ImageData> getParagraphImages(List<Paragraph> paragraphs, SectPr sectPr) {
