@@ -4,6 +4,8 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/VmlShapeData.dart';
+import 'package:golden_shamela/Utils/VmlShapeTypeResolver.dart';
+import 'package:golden_shamela/Utils/VmlEffectsParser.dart';
 import 'package:golden_shamela/main.dart';
 import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 import 'package:golden_shamela/wordToHTML/MyInt.dart';
@@ -600,7 +602,7 @@ void _parseVmlData() {
 
     // Extract VmlShapeData
     _imageData.vmlShapeData = VmlShapeData(
-      shapeType: shape.name.local,
+      shapeType: VmlShapeTypeResolver.resolve(shape),
       arcSize:
           double.tryParse(
             shape.getAttribute('arcsize')?.replaceAll('f', '') ?? '0.2',
@@ -633,6 +635,19 @@ void _parseVmlData() {
     final fillColor = _parseVmlColorValue(fillcolorAttr);
     if (fillColor != null) {
       _imageData.vmlShapeData!.fillColor = fillColor;
+    }
+    _imageData.vmlShapeData!.fillStyle = VmlEffectsParser.parseFill(
+      shape,
+      fallbackColor: fillColor,
+    );
+    _imageData.vmlShapeData!.shadowStyle = VmlEffectsParser.parseShadow(shape);
+    final filledAttr = shape.getAttribute('filled')?.trim().toLowerCase();
+    if (filledAttr == 'f' || filledAttr == 'false') {
+      _imageData.vmlShapeData!.isFilled = false;
+    }
+    final strokedAttr = shape.getAttribute('stroked')?.trim().toLowerCase();
+    if (strokedAttr == 'f' || strokedAttr == 'false') {
+      _imageData.vmlShapeData!.isStroked = false;
     }
 
     if (styleMap.containsKey('left') && styleMap.containsKey('margin-left')) {

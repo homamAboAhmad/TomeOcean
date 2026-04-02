@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:golden_shamela/Models/VmlFillStyle.dart';
+import 'package:golden_shamela/Models/VmlShadowStyle.dart';
 import 'package:xml/xml.dart';
 
 /// بيانات شكل VML مخصصة (كالخطوط والمستطيلات وعناصر TextBox)
@@ -30,6 +32,10 @@ class VmlShapeData {
   /// قيمة inset الخام من v:textbox إن وجدت
   String? textBoxInset;
 
+  VmlFillStyle? fillStyle;
+
+  VmlShadowStyle? shadowStyle;
+
   VmlShapeData({
     required this.shapeType,
     this.strokeWidth = 1.0,
@@ -40,6 +46,8 @@ class VmlShapeData {
     this.arcSize = 0.2,
     this.textBoxXmlString,
     this.textBoxInset,
+    this.fillStyle,
+    this.shadowStyle,
   });
 
   // Getters for Colors
@@ -80,6 +88,12 @@ class VmlShapeData {
       arcSize: (json['arcSize'] as num?)?.toDouble() ?? 0.2,
       textBoxXmlString: json['textBoxXmlString'] as String?,
       textBoxInset: json['textBoxInset'] as String?,
+      fillStyle: json['fillStyle'] is Map<String, dynamic>
+          ? VmlFillStyle.fromJson(json['fillStyle'] as Map<String, dynamic>)
+          : null,
+      shadowStyle: json['shadowStyle'] is Map<String, dynamic>
+          ? VmlShadowStyle.fromJson(json['shadowStyle'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -94,6 +108,8 @@ class VmlShapeData {
       'arcSize': arcSize,
       'textBoxXmlString': textBoxXmlString,
       'textBoxInset': textBoxInset,
+      'fillStyle': fillStyle?.toJson(),
+      'shadowStyle': shadowStyle?.toJson(),
     };
   }
 }

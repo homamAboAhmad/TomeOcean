@@ -4191,3 +4191,12 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-04-02 09:05:24.497852 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.

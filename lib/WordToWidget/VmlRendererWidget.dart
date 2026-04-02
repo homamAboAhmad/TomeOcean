@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Models/VmlShapeData.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
+import 'package:golden_shamela/WordToWidget/VmlDiamondShapeWidget.dart';
 import 'package:golden_shamela/WordToWidget/RichTextBoxWidget.dart';
 
 /// ودجت مسؤول عن تجميع ورسم أشكال VML المختلفة مع النص الغني بداخلها
@@ -47,6 +48,7 @@ class VmlRendererWidget extends StatelessWidget {
     }
 
     // 2. تجميع بناء الشكل المراد رسمه (خلفية وحدود)
+    final decoration = _buildShapeDecoration(vml);
     Widget shapeWidget;
     switch (vml.shapeType.toLowerCase()) {
       case 'roundrect':
@@ -75,8 +77,21 @@ class VmlRendererWidget extends StatelessWidget {
         shapeWidget = Container(
           width: imageData.width > 0 ? imageData.width : null,
           height: imageData.height > 0 ? imageData.height : null,
-          decoration: decor,
+          decoration: decoration?.copyWith(borderRadius: borderRadius),
           clipBehavior: Clip.hardEdge,
+          child: contentWidget,
+        );
+        break;
+
+      case 'diamond':
+        shapeWidget = VmlDiamondShapeWidget(
+          width: imageData.width,
+          height: imageData.height,
+          fillColor: vml.isFilled ? (vml.fillColor ?? Colors.white) : null,
+          fillStyle: vml.fillStyle,
+          strokeColor: vml.isStroked ? vml.strokeColor : null,
+          strokeWidth: vml.strokeWidth,
+          shadowStyle: vml.shadowStyle,
           child: contentWidget,
         );
         break;
@@ -101,15 +116,25 @@ class VmlRendererWidget extends StatelessWidget {
 
       default:
         // أشكال أخرى (مسارات معقدة) يمكن إدراجها لاحقاً
-        shapeWidget = SizedBox(
+        shapeWidget = Container(
           width: imageData.width > 0 ? imageData.width : null,
           height: imageData.height > 0 ? imageData.height : null,
+          decoration: decoration,
           child: contentWidget,
         );
     }
 
     return shapeWidget;
   }
+}
+
+BoxDecoration? _buildShapeDecoration(VmlShapeData vml) {
+  final color = vml.isFilled ? (vml.fillColor ?? Colors.white) : null;
+  final border = vml.isStroked && vml.strokeColor != null
+      ? Border.all(color: vml.strokeColor!, width: vml.strokeWidth)
+      : null;
+  if (color == null && border == null) return null;
+  return BoxDecoration(color: color, border: border);
 }
 
 EdgeInsets _resolveTextBoxPadding(VmlShapeData vml) {

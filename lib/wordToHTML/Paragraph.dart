@@ -1434,6 +1434,10 @@ class Paragraph {
     var sortedImageRuns = imageRunTs
         .where((r) => r.image != null && r.image!.behindDoc == behindDoc)
         .toList();
+    final sourceOrder = <runT, int>{};
+    for (var i = 0; i < sortedImageRuns.length; i++) {
+      sourceOrder[sortedImageRuns[i]] = i;
+    }
 
     double _effectiveHeight(ImageData img) {
       if (img.vmlZIndex != 0) {
@@ -1457,7 +1461,7 @@ class Paragraph {
       if (aType == 'line' && bType != 'line') return -1;
       if (bType == 'line' && aType != 'line') return 1;
 
-      return aImg.posY.compareTo(bImg.posY);
+      return (sourceOrder[a] ?? 0).compareTo(sourceOrder[b] ?? 0);
     });
 
     // debug ordering for imaging layer decisions
