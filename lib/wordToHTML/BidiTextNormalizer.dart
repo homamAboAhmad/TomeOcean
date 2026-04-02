@@ -1,10 +1,5 @@
 ﻿class BidiTextNormalizer {
-  static const Map<String, String> _alwaysMirroredPairs = {
-    '«': '»',
-    '»': '«',
-    '‹': '›',
-    '›': '‹',
-  };
+  static const Map<String, String> _alwaysMirroredPairs = {};
 
   static const Map<String, String> _neutralInheritedRunPairs = {
     '[': ']',
@@ -13,6 +8,10 @@
     '}': '{',
     '<': '>',
     '>': '<',
+    '«': '»',
+    '»': '«',
+    '‹': '›',
+    '›': '‹',
   };
 
   static final RegExp _strongLtrRegex = RegExp(r'[A-Za-z]');
