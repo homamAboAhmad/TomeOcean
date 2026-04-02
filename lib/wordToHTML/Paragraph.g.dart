@@ -28,7 +28,9 @@ Paragraph _$ParagraphFromJson(Map<String, dynamic> json) => Paragraph.empty()
   ..textAlign = $enumDecode(_$TextAlignEnumMap, json['textAlign'])
   ..textDirection = $enumDecode(_$TextDirectionEnumMap, json['textDirection'])
   ..sectionType = json['sectionType'] as String
-  ..hyperlinkAnchor = json['hyperlinkAnchor'] as String?;
+  ..hyperlinkAnchor = json['hyperlinkAnchor'] as String?
+  ..suppressHyperlinkStyleInheritance =
+      json['suppressHyperlinkStyleInheritance'] as bool? ?? false;
 
 Map<String, dynamic> _$ParagraphToJson(Paragraph instance) => <String, dynamic>{
   'pPr': instance.pPr?.toJson(),
@@ -43,6 +45,8 @@ Map<String, dynamic> _$ParagraphToJson(Paragraph instance) => <String, dynamic>{
   'textDirection': _$TextDirectionEnumMap[instance.textDirection]!,
   'sectionType': instance.sectionType,
   'hyperlinkAnchor': instance.hyperlinkAnchor,
+  'suppressHyperlinkStyleInheritance':
+      instance.suppressHyperlinkStyleInheritance,
 };
 
 const _$TextAlignEnumMap = {

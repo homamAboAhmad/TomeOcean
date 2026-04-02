@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/Utils/TxtUtils.dart';
 import 'package:golden_shamela/WordToWidget/ImageToWidget.dart';
+import 'package:golden_shamela/wordToHTML/FieldResultHyperlinkDisplayOverride.dart';
 import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/wordToHTML/BidiTextNormalizer.dart';
 import 'package:golden_shamela/wordToHTML/GlyphEncodedDigitFonts.dart';
@@ -311,9 +312,17 @@ class runT {
       style = TextStyle(color: Colors.black, fontSize: 14, fontFamily: "jreg");
     }
 
+    if (prPr != null) {
+      style = FieldResultHyperlinkDisplayOverride.apply(
+        run: this,
+        runStyle: style,
+        paragraphStyle: prPr!.getTextStyle(),
+      );
+    }
+  
     // Note: Line height is controlled by StrutStyle in Paragraph._getTRunsW()
     // Do NOT set height here to avoid doubling the line spacing effect
-
+  
     return style;
   }
 

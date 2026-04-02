@@ -189,12 +189,12 @@ class RPr {
     fontSize = getFontSize();
     spacing = getSpacing();
     getFonts();
-    strike = hasStrike();
-    vertAlign = getVerticalAlign();
-    vanish = isVanish();
+      strike = hasStrike();
+      vertAlign = getVerticalAlign();
+      vanish = isVanish();
 
-    return this;
-  }
+      return this;
+    }
 
   TextStyle getTextStyle() {
     String? finalHlColor = _normalizeColor(highlightColor);

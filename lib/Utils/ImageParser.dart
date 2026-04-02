@@ -17,6 +17,7 @@ import 'package:golden_shamela/wordToHTML/RPr.dart';
 
 import '../wordToHTML/ExtractWordImages.dart';
 import 'DocxImageRelationshipRecovery.dart';
+import 'WpsPresetShapeParser.dart';
 import 'json_converters.dart';
 import 'VectorPathParser.dart';
 
@@ -168,10 +169,23 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
     return _imageData;
   }
 
-  // --- NEW: Check for Vector Shape (wps:wsp with a:custGeom) ---
-  // هذا يتعامل مع الأشكال المخصصة مثل الخط الزخرفي (Freeform) في الهيدر
+  // --- Check for DrawingML Wordprocessing Shapes (wps:wsp) ---
   var wspElement = drawingElement.findAllElements('wps:wsp').firstOrNull;
   if (wspElement != null) {
+    final presetShapeData = WpsPresetShapeParser.tryParse(wspElement);
+    if (presetShapeData != null) {
+      _imageData.vmlShapeData = presetShapeData;
+
+      setDemenisions();
+      checkFromPage();
+      checkRelativeFromV();
+      setOffsets();
+      setRelativeHeight();
+      checkWrapMode();
+
+      return _imageData;
+    }
+
     var custGeom = wspElement.findAllElements('a:custGeom').firstOrNull;
     if (custGeom != null) {
       // هذا شكل Vector مخصص - نحاول تحليله

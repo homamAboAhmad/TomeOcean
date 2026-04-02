@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:golden_shamela/TestApp2.dart';
@@ -8,6 +9,7 @@ import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/wordToHTML/ParagraphStrutResolver.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
+import 'package:golden_shamela/wordToHTML/HyperlinkDisplayContextResolver.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
 import 'package:golden_shamela/wordToHTML/TabStop.dart';
@@ -85,6 +87,11 @@ class Paragraph {
   /// Extracted from w:hyperlink during XML parsing for cache persistence
   String? hyperlinkAnchor;
 
+  /// Word keeps field-result hyperlinks functional while formatting their
+  /// visible text from the field context instead of the Hyperlink character
+  /// style. This flag records that XML-driven display context.
+  bool suppressHyperlinkStyleInheritance = false;
+
   @JsonKey(ignore: true)
   Map<String, RelId>? customRelIdList; // For parsing headers/footers with their own relationships
 
@@ -149,6 +156,17 @@ class Paragraph {
     paragraph.sectionType = json['sectionType'] as String? ?? 'main';
     paragraph.text =
         json['text'] as String? ?? ''; // Re-add text deserialization
+    paragraph.suppressHyperlinkStyleInheritance =
+        json['suppressHyperlinkStyleInheritance'] as bool? ?? false;
+    if (!paragraph.suppressHyperlinkStyleInheritance &&
+        paragraph.hyperlinkAnchor != null &&
+        paragraph.xmlString.isNotEmpty) {
+      paragraph.suppressHyperlinkStyleInheritance =
+          HyperlinkDisplayContextResolver.detectFromXmlString(
+            hyperlinkAnchor: paragraph.hyperlinkAnchor,
+            xmlString: paragraph.xmlString,
+          );
+    }
 
     // إعادة حساب المحاذاة من pPr عند التحميل من الكاش
     paragraph.getPAlign();
@@ -248,6 +266,12 @@ class Paragraph {
     // Track HYPERLINK field codes
     bool inHyperlinkField = false;
     String? hyperlinkFieldUrl;
+    final fieldInstructions = <String>[];
+
+    void addFieldInstruction(String? instruction) {
+      if (instruction == null || instruction.trim().isEmpty) return;
+      fieldInstructions.add(instruction);
+    }
 
     paragraphXml.childElements.forEach((element) {
       if (element.name.local == "r") {
@@ -265,16 +289,20 @@ class Paragraph {
           }
         }
 
-        if (hasBegin) inFieldCode = true;
-        if (hasSeparate) inFieldCode = false;
-        if (hasEnd) {
-          inFieldCode = false;
-        }
+          if (hasBegin) inFieldCode = true;
+          if (hasSeparate) inFieldCode = false;
+          if (hasEnd) {
+            inFieldCode = false;
+          }
 
-        // Check for PAGE instruction
-        if (inFieldCode || hasBegin) {
-          if (element.findAllElements("w:instrText").any((e) {
-            return e.text.toUpperCase().contains("PAGE");
+          for (var instrEl in element.findAllElements("w:instrText")) {
+            addFieldInstruction(instrEl.text);
+          }
+
+          // Check for PAGE instruction
+          if (inFieldCode || hasBegin) {
+            if (element.findAllElements("w:instrText").any((e) {
+              return e.text.toUpperCase().contains("PAGE");
           })) {
             pendingPageNum = true;
             pageNumReplaced = false; // Reset when starting a new PAGE field
@@ -390,6 +418,7 @@ class Paragraph {
         runs.add(runt0);
       } else if (element.name.local == "fldSimple") {
         String? instr = element.getAttribute("w:instr");
+        addFieldInstruction(instr);
 
         // Check for HYPERLINK in fldSimple
         if (instr != null && instr.toUpperCase().contains("HYPERLINK")) {
@@ -512,9 +541,14 @@ class Paragraph {
           }
         });
       }
-    });
-    fixPDirection();
-    getPAlign();
+      });
+      suppressHyperlinkStyleInheritance =
+          HyperlinkDisplayContextResolver.detectFromFieldInstructions(
+            hyperlinkAnchor: hyperlinkAnchor,
+            fieldInstructions: fieldInstructions,
+          );
+      fixPDirection();
+      getPAlign();
     getPTextDirection();
     getPageNum();
     // Note: checkHyperLink() was removed because hyperlinks are already processed
