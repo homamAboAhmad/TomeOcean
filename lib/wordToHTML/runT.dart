@@ -5,6 +5,7 @@ import 'package:golden_shamela/Utils/TxtUtils.dart';
 import 'package:golden_shamela/WordToWidget/ImageToWidget.dart';
 import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/wordToHTML/BidiTextNormalizer.dart';
+import 'package:golden_shamela/wordToHTML/GlyphEncodedDigitFonts.dart';
 import 'package:golden_shamela/wordToHTML/PPr.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
@@ -675,10 +676,31 @@ class runT {
   String checkDiacritics() {
     final doc = parent.parent.parent;
     String result = doc.withDiacritics ? (text ?? "") : removeDiacritics(text ?? "");
-    if (doc.useArabicNumerals && _hasEffectiveRtl) {
+    if (doc.useArabicNumerals &&
+        _hasEffectiveRtl &&
+        !_shouldPreserveWesternDigitsForGlyphFont()) {
       result = toArabicNumbers(result);
     }
     return result;
+  }
+
+  bool _shouldPreserveWesternDigitsForGlyphFont() {
+    final fontCandidates = [
+      rpr?.font,
+      rpr?.enFont,
+      rpr?.uniqueFont,
+      prPr?.font,
+      prPr?.enFont,
+      prPr?.uniqueFont,
+    ];
+
+    for (final fontFamily in fontCandidates) {
+      if (shouldPreserveWesternDigitsForFontFamily(fontFamily)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   bool get _hasEffectiveRtl {

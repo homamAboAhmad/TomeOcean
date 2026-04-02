@@ -760,12 +760,16 @@ class BookProcessingService {
     if (isolateResult['success'] == true) {
       final extractedFontPaths =
           isolateResult['extractedFontPaths'] as Map<String, dynamic>?;
+      final fontsList = (isolateResult['fontsList'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .toList();
       if (extractedFontPaths != null && extractedFontPaths.isNotEmpty) {
         final Map<String, String> fontsStrMap = extractedFontPaths.map(
           (k, v) => MapEntry(k.toString(), v.toString()),
         );
         await loadExtractedFonts(fontsStrMap);
       }
+      await loadKnownSystemFontsForDocument(fontsList);
     }
   }
 
@@ -861,7 +865,11 @@ class BookProcessingService {
 
     wordDocument.archive = null;
 
-    return {'success': true, 'extractedFontPaths': extractedFontPaths};
+    return {
+      'success': true,
+      'extractedFontPaths': extractedFontPaths,
+      'fontsList': wordDocument.fontsList,
+    };
   }
 
   Future<void> _deleteIfExists(String path) async {

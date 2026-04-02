@@ -7,7 +7,6 @@ import 'package:crypto/crypto.dart';
 import '../Utils/ArchiveToXml.dart';
 
 class EmbeddedFontExtractor {
-  /// يستخرج الخطوط المدمجة من أرشيف docx
   /// يُرجع Map<اسم_الخط, مسار_الملف_المحلي>
   static Future<Map<String, String>> extractEmbeddedFonts(
     Archive archive,
@@ -15,6 +14,7 @@ class EmbeddedFontExtractor {
     String? sharedFontsDirPath,
   ]) async {
     Map<String, String> extractedFonts = {};
+    
     Map<String, ArchiveFile> archiveMap = {};
     for (var file in archive) {
       archiveMap[file.name] = file;
@@ -22,7 +22,7 @@ class EmbeddedFontExtractor {
     
     // 1. قراءة fontTable.xml
     ArchiveFile? fontTableFile = archiveMap['word/fontTable.xml'];
-    if (fontTableFile == null) return extractedFonts;
+    if (fontTableFile == null) return {};
     
     XmlDocument fontTableDoc = ArchiveToXml(fontTableFile);
     
@@ -80,16 +80,13 @@ class EmbeddedFontExtractor {
         ArchiveFile? fontFile = archiveMap[fullPath];
         if (fontFile == null) continue;
         
-        // حساب هاش للملف للتحقق من التكرار عبر الكتب
         List<int> rawData = fontFile.content as List<int>;
         String fontHash = md5.convert(rawData).toString();
         
-        // مسار الحفظ في الكاش المشترك
         String safeFontName = fontName.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
         String localPath = p.join(sharedFontsDir.path, '${safeFontName}_${fontHash}_$embedType.ttf');
         File localFile = File(localPath);
         
-        // إذا كان الملف موجوداً مسبقاً في الكاش المشترك، نتجاوز استخراجه لتوفير الوقت
         if (!await localFile.exists()) {
           List<int> deobfuscatedData = _deobfuscateFont(rawData, fontKey);
           await localFile.writeAsBytes(deobfuscatedData);

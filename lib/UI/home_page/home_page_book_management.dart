@@ -77,6 +77,7 @@ class HomePageBookManagement {
             if (wordDocument.extractedFontPaths.isNotEmpty) {
               await loadExtractedFonts(wordDocument.extractedFontPaths);
             }
+            await loadKnownSystemFontsForDocument(wordDocument.fontsList);
 
             loadedFromCache = true;
           }

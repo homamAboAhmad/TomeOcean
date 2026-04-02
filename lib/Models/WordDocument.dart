@@ -469,6 +469,7 @@ List<String> problemFontsList = [
   "AL-Qairwan",
   "Hesham Gornata", // حروف مقطعة
   "Shurooq 03",
+  "Monotype Koufi",
 ];
 
 bool isProblemFont(String font) {
@@ -479,17 +480,19 @@ bool isProblemFont(String font) {
 /// Word often uses PostScript names (e.g. "Al-Jazeera-Arabic-Bold")
 /// Flutter/Windows expects Family Name (e.g. "Al-Jazeera-Arabic") + fontWeight/Style
 String normalizeFontFamily(String font) {
-  // 1. Remove common style suffixes (case-insensitive)
-  // We handle both hyphenated (-Bold) and spaced ( Bold) suffixes
+  // Remove style suffixes only when they appear at the END of the family name.
+  // Some Word fonts legitimately contain words like "Bold" inside the family
+  // name itself (for example: "mohammad bold art 1"), and stripping them
+  // blindly breaks the family lookup and forces Flutter to fallback.
   final suffixes = [
-    RegExp(r'[- ]?Bold', caseSensitive: false),
-    RegExp(r'[- ]?Italic', caseSensitive: false),
-    RegExp(r'[- ]?Regular', caseSensitive: false),
-    RegExp(r'[- ]?Medium', caseSensitive: false),
-    RegExp(r'[- ]?Light', caseSensitive: false),
-    RegExp(r'[- ]?Semibold', caseSensitive: false),
-    RegExp(r'[- ]?ExtraBold', caseSensitive: false),
-    RegExp(r'[- ]?Black', caseSensitive: false),
+    RegExp(r'[- ]+Bold$', caseSensitive: false),
+    RegExp(r'[- ]+Italic$', caseSensitive: false),
+    RegExp(r'[- ]+Regular$', caseSensitive: false),
+    RegExp(r'[- ]+Medium$', caseSensitive: false),
+    RegExp(r'[- ]+Light$', caseSensitive: false),
+    RegExp(r'[- ]+Semibold$', caseSensitive: false),
+    RegExp(r'[- ]+ExtraBold$', caseSensitive: false),
+    RegExp(r'[- ]+Black$', caseSensitive: false),
   ];
 
   String normalized = font;

@@ -6,26 +6,10 @@
 
 اقرأ أولًا:
 - `.agent/workflows/the-library-project-warnings.md`
-- `C:\Users\HP\.codex\skills\word-xml-master\SKILL.md`
 
 استعن بالمراجع المحلية:
 - `WordXmlDoumentation/key_sections.txt`
 - `WordXmlDoumentation/extracted_reference.txt`
-
-استخدم المهارات المناسبة حسب نوع المشكلة، خصوصًا:
-- `word-xml-master`
-- `paragraphs`
-- `ppr`
-- `runs`
-- `rpr`
-- `styles`
-- `sections`
-- `headers`
-- `footers`
-- `numbering`
-- `footnotes-endnotes`
-- `fields-hyperlinks`
-- `images`
 
 ## قواعد تنفيذ حاسمة
 

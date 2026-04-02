@@ -4083,3 +4083,111 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ أليس الصبح بقريب.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-04-01 22:56:35.445611 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-01 23:01:57.958848 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-01 23:16:03.707368 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 00:07:36.366309 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 00:45:36.065245 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 00:58:09.719671 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 06:22:33.895128 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 06:24:20.321629 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 06:44:40.052979 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 07:13:04.718984 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 07:41:17.077035 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 07:57:21.016048 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تفريغ ـ سلسلة وقفات مع غزوات النبي ﷺ؛ غزوة أحد.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
