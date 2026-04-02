@@ -12,6 +12,7 @@ import 'package:golden_shamela/UI/Search/widgets/no_results_widget.dart';
 import 'package:golden_shamela/UI/WordPageScreen.dart';
 import 'package:golden_shamela/Utils/FileToArchive.dart';
 import 'package:golden_shamela/Services/BookProcessingService.dart';
+import 'package:golden_shamela/Helpers/TextProcessor.dart';
 import 'package:golden_shamela/core/app_state.dart';
 
 /// Shamela-style search results view:
@@ -66,6 +67,10 @@ class _ShamelaSearchViewState extends State<ShamelaSearchView> {
   // ── Scroll controllers ──
   final ScrollController _resultsScrollCtrl = ScrollController();
   final ScrollController _previewScrollCtrl = ScrollController();
+
+  // ── Paragraph key infrastructure for scroll-to-match ──
+  final Map<int, GlobalKey> _paragraphKeys = {};
+  int? _targetParagraphIndex;
 
   @override
   void initState() {
@@ -130,6 +135,8 @@ class _ShamelaSearchViewState extends State<ShamelaSearchView> {
       _selectedResultIndex = index;
       _isLoadingPreview = true;
       _previewError = null;
+      _paragraphKeys.clear();
+      _targetParagraphIndex = null;
     });
 
     try {
@@ -140,13 +147,41 @@ class _ShamelaSearchViewState extends State<ShamelaSearchView> {
       doc.currentPage = targetPage;
       final page = await doc.getPage(targetPage);
 
+      // ابحث عن أول فقرة تحتوي على إحدى كلمات البحث (مع تطبيع عربي)
+      int? foundParagraphIndex;
+      if (widget.searchQueries.isNotEmpty) {
+        final normalizedQueries = widget.searchQueries
+            .map((q) => TextProcessor.normalizeArabic(q.trim()))
+            .where((q) => q.isNotEmpty)
+            .toList();
+        for (int pIdx = 0; pIdx < page.ps.length; pIdx++) {
+          final pText = TextProcessor.normalizeArabic(page.ps[pIdx].text);
+          final found = normalizedQueries.any((q) => pText.contains(q));
+          if (found) {
+            foundParagraphIndex = pIdx;
+            break;
+          }
+        }
+      }
+
       if (!mounted) return;
       setState(() {
         _previewDoc = doc;
         _previewPage = page;
         _isLoadingPreview = false;
+        _targetParagraphIndex = foundParagraphIndex;
       });
-      if (_previewScrollCtrl.hasClients) _previewScrollCtrl.jumpTo(0);
+
+      if (_targetParagraphIndex != null) {
+        // نحتاج إطارين: الأول ليُبنى الـ widget, الثاني ليتوفر الـ context
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollToTargetParagraph();
+          });
+        });
+      } else if (_previewScrollCtrl.hasClients) {
+        _previewScrollCtrl.jumpTo(0);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -154,6 +189,22 @@ class _ShamelaSearchViewState extends State<ShamelaSearchView> {
         _previewError = '$e';
       });
     }
+  }
+
+  void _scrollToTargetParagraph() {
+    final target = _targetParagraphIndex;
+    if (target == null) return;
+    final ctx = _paragraphKeys[target]?.currentContext;
+    if (ctx == null) {
+      // لم يُبنَ بعد، حاول مرة أخرى
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToTargetParagraph());
+      return;
+    }
+    Scrollable.ensureVisible(
+      ctx,
+      alignment: 0.18,
+      duration: Duration.zero,
+    );
   }
 
   Future<WordDocument> _loadDocument(String bookPath) async {
@@ -371,6 +422,8 @@ class _ShamelaSearchViewState extends State<ShamelaSearchView> {
                     child: WordPageScreen(
                       _previewPage!,
                       wordDocument: _previewDoc!,
+                      paragraphKeyBuilder: (pIdx) =>
+                          _paragraphKeys.putIfAbsent(pIdx, () => GlobalKey()),
                     ),
                   ),
                 ),
