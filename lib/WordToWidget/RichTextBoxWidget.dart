@@ -10,11 +10,13 @@ import 'package:golden_shamela/wordToHTML/ParagraphTable.dart';
 class RichTextBoxWidget extends StatelessWidget {
   final XmlElement textBoxElement;
   final WordPage wordPage;
+  final String? customPageNumber;
 
   const RichTextBoxWidget({
     Key? key,
     required this.textBoxElement,
     required this.wordPage,
+    this.customPageNumber,
   }) : super(key: key);
 
   @override
@@ -74,12 +76,15 @@ class RichTextBoxWidget extends StatelessWidget {
         final tableParagraph = ParagraphTable(wordPage);
         tableParagraph.pXml = element;
         tableParagraph.xmlString = element.toXmlString(pretty: false);
+        tableParagraph.customPageNumber = customPageNumber;
         tableParagraph.disableUrlAutoDetection = true;
         tableParagraph.trimTrailingStructuralEmptyCellParagraphs = true;
         return tableParagraph.toWidget(spacingAfterOverride: isLast ? 0 : null);
       }
 
-      final paragraph = Paragraph(wordPage).fromXml(element);
+      final paragraph = Paragraph(wordPage);
+      paragraph.customPageNumber = customPageNumber;
+      paragraph.fromXml(element);
       paragraph.disableUrlAutoDetection = true;
 
       // داخل text boxes ثابتة الارتفاع، نجنب آخر فقرة توليد فراغ سفلي زائد.

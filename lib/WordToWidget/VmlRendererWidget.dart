@@ -43,6 +43,7 @@ class VmlRendererWidget extends StatelessWidget {
         child: RichTextBoxWidget(
           textBoxElement: vml.textBoxElement!,
           wordPage: wordPage,
+          customPageNumber: imageData.parent?.parent.customPageNumber,
         ),
       );
     }
