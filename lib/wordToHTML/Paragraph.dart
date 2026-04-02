@@ -766,6 +766,14 @@ class Paragraph {
     double? spacingBeforeOverride,
     double? spacingAfterOverride,
   }) {
+    if (_shouldRenderAsHeaderPageLeaderLine()) {
+      return _buildHeaderPageLeaderLine(
+        suppressParagraphBorder: suppressParagraphBorder,
+        spacingBeforeOverride: spacingBeforeOverride,
+        spacingAfterOverride: spacingAfterOverride,
+      );
+    }
+
     // Check if this is a TOC entry OR uses right-aligned leader tabs - use special rendering
     // This ensures proportional tabs and leaders (tastir) appear correctly without stretching left tabs
     if (shouldRenderAsTOC()) {
@@ -894,6 +902,178 @@ class Paragraph {
   bool _isCenteredWithTabs() {
     if (textAlign != TextAlign.center) return false;
     return textRunTs.any((r) => r.hasTab);
+  }
+
+  bool _shouldRenderAsHeaderPageLeaderLine() {
+    if (!isHeaderParagraph) return false;
+    if (textAlign != TextAlign.justify) return false;
+    if (!xmlString.contains('PAGE')) return false;
+
+    final visibleRuns = textRunTs.where(_isRenderableTextRun).toList();
+    if (visibleRuns.length < 3) return false;
+
+    final pageRuns = _extractHeaderPageRuns(visibleRuns);
+    if (pageRuns.isEmpty) return false;
+
+    final dotLeaderIndex = visibleRuns.lastIndexWhere(_isDotLeaderRun);
+    if (dotLeaderIndex == -1) return false;
+
+    final pageStartIndex = visibleRuns.indexOf(pageRuns.first);
+    if (pageStartIndex <= dotLeaderIndex) return false;
+
+    return visibleRuns.take(dotLeaderIndex).any(_isRenderableTextRun);
+  }
+
+  bool _isRenderableTextRun(runT run) {
+    if (run.image != null) return false;
+    if (run.rpr?.vanish == true) return false;
+    return (run.text ?? '').trim().isNotEmpty;
+  }
+
+  bool _isDotLeaderRun(runT run) {
+    final text = run.text ?? '';
+    if (text.trim().isEmpty) return false;
+    return RegExp(r'^[\.\s]+$').hasMatch(text);
+  }
+
+  bool _isPageNumberRun(runT run) {
+    final text = (run.text ?? '').trim();
+    if (text.isEmpty) return false;
+    return RegExp(r'^[0-9\u0660-\u0669]+$').hasMatch(text);
+  }
+
+  List<runT> _extractHeaderPageRuns(List<runT> visibleRuns) {
+    final numberIndex = visibleRuns.lastIndexWhere(_isPageNumberRun);
+    if (numberIndex == -1) return const [];
+
+    int start = numberIndex;
+    int end = numberIndex;
+
+    if (numberIndex > 0) {
+      final prevText = (visibleRuns[numberIndex - 1].text ?? '').trim();
+      if (prevText == '(' || prevText == ')') {
+        start = numberIndex - 1;
+      }
+    }
+    if (numberIndex + 1 < visibleRuns.length) {
+      final nextText = (visibleRuns[numberIndex + 1].text ?? '').trim();
+      if (nextText == '(' || nextText == ')') {
+        end = numberIndex + 1;
+      }
+    }
+
+    return visibleRuns.sublist(start, end + 1);
+  }
+
+  Widget _buildHeaderPageLeaderLine({
+    bool suppressParagraphBorder = false,
+    double? spacingBeforeOverride,
+    double? spacingAfterOverride,
+  }) {
+    final visibleRuns = textRunTs.where(_isRenderableTextRun).toList();
+    final pageRuns = _extractHeaderPageRuns(visibleRuns);
+    final dotLeaderIndex = visibleRuns.lastIndexWhere(_isDotLeaderRun);
+    final pageStartIndex = visibleRuns.indexOf(pageRuns.first);
+
+    final titleRuns = visibleRuns.sublist(0, dotLeaderIndex);
+    final leaderRun = visibleRuns[dotLeaderIndex];
+
+    final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
+    final EdgeInsets headerTextInsets = applyHeaderTextInsets
+        ? EdgeInsets.only(
+            left: sectPr.leftMargin ?? 0,
+            right: sectPr.rightMargin ?? 0,
+          )
+        : EdgeInsets.zero;
+
+    final BoxDecoration? decoration = _getParagraphDecoration(
+      _getParagraphShadingColor(),
+      includeBorder: !suppressParagraphBorder,
+    );
+
+    final titleSpans = titleRuns.map((r) => r.toWidget()).toList();
+    final pageSpans = visibleRuns
+        .sublist(pageStartIndex, visibleRuns.length)
+        .map((r) => r.toWidget())
+        .toList();
+
+    return Padding(
+      padding: _getPPaddings(
+        spacingBeforeOverride: spacingBeforeOverride,
+        spacingAfterOverride: spacingAfterOverride,
+      ),
+      child: Container(
+        decoration: decoration,
+        child: Padding(
+          padding: headerTextInsets,
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: RichText(
+                    textDirection: TextDirection.rtl,
+                    maxLines: 1,
+                    overflow: TextOverflow.clip,
+                    text: TextSpan(
+                      style: prPr?.getTextStyle(),
+                      children: titleSpans,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _buildHeaderDotLeaderWidget(leaderRun),
+                ),
+                RichText(
+                  textDirection: TextDirection.rtl,
+                  maxLines: 1,
+                  overflow: TextOverflow.visible,
+                  text: TextSpan(
+                    style: prPr?.getTextStyle(),
+                    children: pageSpans,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderDotLeaderWidget(runT leaderRun) {
+    final style = leaderRun.getEffectiveTextStyle();
+    final sourceText = leaderRun.text ?? '.';
+    final compactDots = sourceText.replaceAll(' ', '');
+    final dotUnit = compactDots.isEmpty ? '.' : compactDots[0];
+    final leaderText = '$dotUnit ';
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (!constraints.hasBoundedWidth || constraints.maxWidth <= 0) {
+          return const SizedBox.shrink();
+        }
+
+        final fontSize = style.fontSize ?? 14.0;
+        final estimatedUnitWidth = fontSize * 0.45;
+        int repeatCount = (constraints.maxWidth / estimatedUnitWidth).floor();
+        if (repeatCount < 3) repeatCount = 3;
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text(
+            leaderText * repeatCount,
+            textDirection: TextDirection.ltr,
+            maxLines: 1,
+            overflow: TextOverflow.clip,
+            style: style,
+          ),
+        );
+      },
+    );
   }
 
   runT? _getSingleVisibleInlineImageRun() {

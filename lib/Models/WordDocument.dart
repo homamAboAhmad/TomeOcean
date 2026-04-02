@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'dart:ui'; // For FontWeight
+import 'package:golden_shamela/Services/KnownSystemFontsRegistry.dart';
 import 'package:archive/archive.dart';
 
 import 'dart:io';
@@ -480,6 +481,14 @@ bool isProblemFont(String font) {
 /// Word often uses PostScript names (e.g. "Al-Jazeera-Arabic-Bold")
 /// Flutter/Windows expects Family Name (e.g. "Al-Jazeera-Arabic") + fontWeight/Style
 String normalizeFontFamily(String font) {
+  // Some Windows-installed Arabic fonts are requested from Word using
+  // face-specific family names (for example "...-Bold"). If we strip the
+  // suffix we break the match between the dynamically loaded family name and
+  // the family used by TextStyle, causing Flutter to fall back to another font.
+  if (isKnownSystemFontFamily(font)) {
+    return font.trim();
+  }
+
   // Remove style suffixes only when they appear at the END of the family name.
   // Some Word fonts legitimately contain words like "Bold" inside the family
   // name itself (for example: "mohammad bold art 1"), and stripping them
