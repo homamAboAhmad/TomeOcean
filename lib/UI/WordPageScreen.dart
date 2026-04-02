@@ -55,7 +55,8 @@ class _WordPageScreenState extends State<WordPageScreen> {
                     ),
                   ],
                 ),
-                child: Stack(
+                child: ClipRect(
+                  child: Stack(
                     children: [
                       // 0. الإطار (Page Borders)
                       if (sectPr.sectPrElement != null)
@@ -203,6 +204,7 @@ class _WordPageScreenState extends State<WordPageScreen> {
                       ),
                     ],
                   ),
+                ),
               ),
             );
           },

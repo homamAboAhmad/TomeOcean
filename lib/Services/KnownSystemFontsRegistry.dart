@@ -2,7 +2,7 @@ import 'dart:io';
 
 
 /*
-أضف الخط اسم الخط إلى قائمة KnownSystemFontsRegistry بحيث يُحمَّل عند الحاجة فقط إذا طلبه الكتاب، مع أسماء ملفات ويندوز المحتملة لهذا الخط.*/ */
+أضف الخط اسم الخط إلى قائمة KnownSystemFontsRegistry بحيث يُحمَّل عند الحاجة فقط إذا طلبه الكتاب، مع أسماء ملفات ويندوز المحتملة لهذا الخط.*/ 
 const Map<String, List<String>> _knownSystemFontFiles = {
   'mohammad bold art 1': [
     'mohammad-bold-art-1.ttf',

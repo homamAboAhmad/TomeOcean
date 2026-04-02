@@ -522,7 +522,39 @@ class SectPr {
   }
 
   Widget getSectFooterWidget(WordPage wordPage, String pageNumStr) {
+    Map<String, RelId>? footerRelations;
     XmlElement? currentFooter = getRequestedFooter(wordPage.pageIndex);
+
+    String? path;
+    int pageInSection = wordPage.pageIndex - firstRange + 1;
+    bool titlePg = sectPrElement?.findElements("w:titlePg").isNotEmpty ?? false;
+    bool evenAndOddHeaders = parent.evenAndOddHeaders ?? false;
+    int currentSectionIndex = parent.sectPrList.indexOf(this);
+
+    if (pageInSection == 1 && titlePg) {
+      path =
+          footerFirstPath ??
+          _inheritFooterFirst(currentSectionIndex) ??
+          footerDefaultPath ??
+          footerOddPath ??
+          _inheritFooterOdd(currentSectionIndex);
+    } else if (evenAndOddHeaders && pageInSection.isEven) {
+      path =
+          footerEvenPath ??
+          _inheritFooterEven(currentSectionIndex) ??
+          footerOddPath ??
+          footerDefaultPath ??
+          _inheritFooterOdd(currentSectionIndex);
+    } else {
+      path =
+          footerOddPath ??
+          footerDefaultPath ??
+          _inheritFooterOdd(currentSectionIndex);
+    }
+
+    if (path != null) {
+      footerRelations = _loadRelationshipsForPart(path);
+    }
 
     if (currentFooter == null) {
       return Container();
@@ -534,6 +566,7 @@ class SectPr {
     for (var element in currentFooter.childElements) {
       if (element.name.local == "p") {
         Paragraph p = Paragraph(wordPage);
+        p.customRelIdList = footerRelations;
         p.customPageNumber = pageNumStr;
         p.isHeaderParagraph = true; // Set to true to apply same zero-default spacing in PPr.dart
         p.fromXml(element);
@@ -545,6 +578,7 @@ class SectPr {
           for (var child in sdtContent.childElements) {
             if (child.name.local == "p") {
               Paragraph p = Paragraph(wordPage);
+              p.customRelIdList = footerRelations;
               if (!pageNumReplacedInSdt) {
                 p.customPageNumber = pageNumStr;
               }
