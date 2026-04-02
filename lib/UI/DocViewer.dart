@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import 'package:flutter/services.dart';
 import 'package:golden_shamela/Helpers/FileHelper.dart';
@@ -65,6 +66,9 @@ class _DocViewerState extends State<DocViewer>
   final FocusNode _searchFocusNode = FocusNode();
   final Map<int, GlobalKey> _pageItemKeys = {};
   final Map<String, GlobalKey> _paragraphItemKeys = {};
+  final Map<int, double> _pageTopOffsets = {};
+  final Map<int, double> _pageExtents = {};
+  bool _suppressScrollPageTracking = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -76,6 +80,7 @@ class _DocViewerState extends State<DocViewer>
     _scrollController = ScrollController(); // Initialize ScrollController
     _currentPageNotifier = ValueNotifier(widget.wordDocument.currentPage);
     _zoomController = DocZoomController();
+    _zoomController.addListener(_handleZoomChanged);
     _initControllerAndSidebar();
 
     // Register TOC navigation callback
@@ -96,9 +101,19 @@ class _DocViewerState extends State<DocViewer>
     _pageNumberController.dispose();
     _scrollController.dispose(); // Dispose ScrollController
     _currentPageNotifier.dispose();
+    _zoomController.removeListener(_handleZoomChanged);
     _zoomController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _handleZoomChanged() {
+    _pageTopOffsets.clear();
+    _pageExtents.clear();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _capturePageMetrics(widget.wordDocument.currentPage);
+    });
   }
 
   @override
@@ -107,6 +122,8 @@ class _DocViewerState extends State<DocViewer>
     if (oldWidget.wordDocument != widget.wordDocument) {
       _initControllerAndSidebar();
       _visitedPagesSet.clear();
+      _pageTopOffsets.clear();
+      _pageExtents.clear();
       _jumpToPage(widget.wordDocument.currentPage);
     }
   }
@@ -151,9 +168,10 @@ class _DocViewerState extends State<DocViewer>
     _pageNumberController.text = (pageIndex + 1).toString();
     _visitedPagesSet.add(pageIndex);
     _currentPageNotifier.value = pageIndex; // Ensure UI updates immediately
+    _suppressScrollPageTracking = true;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToPage(pageIndex, allowFallbackEstimate: true);
+      _scrollToPage(pageIndex, remainingAttempts: 8);
     });
   }
 
@@ -168,8 +186,29 @@ class _DocViewerState extends State<DocViewer>
 
   void _handlePageReady(int pageIndex) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _capturePageMetrics(pageIndex);
       _scrollToSearchTargetWithinPage(pageIndex);
     });
+  }
+
+  void _capturePageMetrics(int pageIndex) {
+    final pageContext = _pageItemKeys[pageIndex]?.currentContext;
+    if (pageContext == null) return;
+
+    final renderObject = pageContext.findRenderObject();
+    if (renderObject == null || !renderObject.attached) return;
+
+    final viewport = RenderAbstractViewport.of(renderObject);
+    if (viewport == null) return;
+
+    final top = viewport.getOffsetToReveal(renderObject, 0.0).offset;
+    final bottom = viewport.getOffsetToReveal(renderObject, 1.0).offset;
+    final extent = (bottom - top).abs();
+
+    _pageTopOffsets[pageIndex] = top;
+    if (extent > 0) {
+      _pageExtents[pageIndex] = extent;
+    }
   }
 
   void _scrollToSearchTargetWithinPage(int pageIndex) {
@@ -192,7 +231,7 @@ class _DocViewerState extends State<DocViewer>
     );
   }
 
-  void _scrollToPage(int pageIndex, {required bool allowFallbackEstimate}) {
+  void _scrollToPage(int pageIndex, {required int remainingAttempts}) {
     if (!mounted || !_scrollController.hasClients) return;
 
     final targetContext = _pageItemKeys[pageIndex]?.currentContext;
@@ -203,36 +242,119 @@ class _DocViewerState extends State<DocViewer>
         duration: Duration.zero,
       );
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        _capturePageMetrics(pageIndex);
         _scrollToSearchTargetWithinPage(pageIndex);
+        _suppressScrollPageTracking = false;
       });
       return;
     }
 
-    if (!allowFallbackEstimate) {
+    final exactOffset = _pageTopOffsets[pageIndex];
+    if (exactOffset != null) {
+      final clamped = exactOffset.clamp(
+        _scrollController.position.minScrollExtent,
+        _scrollController.position.maxScrollExtent,
+      ).toDouble();
+      _scrollController.jumpTo(clamped);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToPage(pageIndex, remainingAttempts: remainingAttempts - 1);
+      });
       return;
     }
 
-    double pageHeight = (widget.wordDocument.getSectPrForPage(0).height ?? 1000);
-    double pageTotalHeight = (pageHeight * _zoomController.value) + 20.0;
+    if (remainingAttempts <= 0) {
+      _suppressScrollPageTracking = false;
+      return;
+    }
 
-    final sectPr = widget.wordDocument.getSectPrForPage(pageIndex);
-    double headerAwareOffset =
-        ((sectPr.headerMargin ?? 0) + sectPr.topMargin) *
-        _zoomController.value;
-
-    double offset =
-        20.0 + (pageIndex * pageTotalHeight) + headerAwareOffset - 0.01;
+    double offset = _estimatePageOffset(pageIndex);
     if (offset < 0) offset = 0;
     final maxOffset = _scrollController.position.maxScrollExtent;
     if (offset > maxOffset) offset = maxOffset;
     _scrollController.jumpTo(offset);
 
     // After the estimated jump, the target page should be built.
-    // Run one more pass to snap to the real page boundary instead of
-    // relying on a fixed-height approximation.
+    // Re-run after layout so we can refine with newly measured page offsets.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToPage(pageIndex, allowFallbackEstimate: false);
+      _scrollToPage(pageIndex, remainingAttempts: remainingAttempts - 1);
     });
+  }
+
+  double _estimatePageOffset(int pageIndex) {
+    final lowerPages = _pageTopOffsets.keys.where((page) => page < pageIndex).toList()
+      ..sort();
+    if (lowerPages.isNotEmpty) {
+      final anchorPage = lowerPages.last;
+      double offset = _pageTopOffsets[anchorPage]!;
+      for (int page = anchorPage; page < pageIndex; page++) {
+        offset += _estimatedPageExtent(page);
+      }
+      return offset;
+    }
+
+    final upperPages = _pageTopOffsets.keys.where((page) => page > pageIndex).toList()
+      ..sort();
+    if (upperPages.isNotEmpty) {
+      final anchorPage = upperPages.first;
+      double offset = _pageTopOffsets[anchorPage]!;
+      for (int page = anchorPage - 1; page >= pageIndex; page--) {
+        offset -= _estimatedPageExtent(page);
+      }
+      return offset;
+    }
+
+    double offset = 20.0;
+    for (int page = 0; page < pageIndex; page++) {
+      offset += _estimatedPageExtent(page);
+    }
+    return offset;
+  }
+
+  double _estimatedPageExtent(int pageIndex) {
+    final exactExtent = _pageExtents[pageIndex];
+    if (exactExtent != null) {
+      return exactExtent + 20.0;
+    }
+
+    final sectPr = widget.wordDocument.getSectPrForPage(pageIndex);
+    final baseHeight = sectPr.height ?? 1000;
+    return (baseHeight * _zoomController.value) + 20.0;
+  }
+
+  int _resolveCurrentPageFromScroll(double scrollOffset) {
+    if (_pageTopOffsets.isNotEmpty) {
+      final probeOffset = scrollOffset + 20.0;
+      final measuredPages = _pageTopOffsets.keys.toList()..sort();
+      int resolved = 0;
+      bool matchedMeasuredPage = false;
+
+      for (final page in measuredPages) {
+        final top = _pageTopOffsets[page]!;
+        final nextTop = _pageTopOffsets[page + 1];
+        if (probeOffset >= top) {
+          resolved = page;
+          matchedMeasuredPage = true;
+          if (nextTop != null && probeOffset < nextTop) {
+            break;
+          }
+        }
+      }
+
+      if (matchedMeasuredPage) {
+        return resolved.clamp(0, widget.wordDocument.pageFilePaths.length - 1)
+            as int;
+      }
+    }
+
+    double accumulated = 20.0;
+    for (int page = 0; page < widget.wordDocument.pageFilePaths.length; page++) {
+      accumulated += _estimatedPageExtent(page);
+      if (scrollOffset < accumulated) {
+        return page;
+      }
+    }
+
+    return widget.wordDocument.pageFilePaths.length - 1;
   }
 
   int? _findPreviousVisited() {
@@ -497,24 +619,13 @@ class _DocViewerState extends State<DocViewer>
                             child: NotificationListener<ScrollNotification>(
                               onNotification: (notification) {
                                 if (notification is ScrollUpdateNotification) {
-                                  // Calculate current page based on scroll offset
-                                  double pageBaseHeight =
-                                      (widget.wordDocument
-                                          .getSectPrForPage(0)
-                                          .height ??
-                                      1000);
-                                  double pageTotalHeight =
-                                      (pageBaseHeight * currentZoom) +
-                                      20.0; // Scaled height + spacing
+                                  if (_suppressScrollPageTracking) {
+                                    return false;
+                                  }
 
-                                  // ListView has 20px top padding.
-                                  // Use floor() to avoid flipping to the next page
-                                  // when the offset is near a boundary.
-                                  int newPageIndex =
-                                      ((_scrollController.offset - 20.0) /
-                                              pageTotalHeight)
-                                          .floor();
-                                  if (newPageIndex < 0) newPageIndex = 0;
+                                  int newPageIndex = _resolveCurrentPageFromScroll(
+                                    _scrollController.offset,
+                                  );
 
                                   if (newPageIndex !=
                                           widget.wordDocument.currentPage &&
