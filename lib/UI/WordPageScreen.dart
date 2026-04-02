@@ -10,8 +10,14 @@ import '../main.dart';
 class WordPageScreen extends StatefulWidget {
   WordPage wordPage;
   WordDocument wordDocument;
+  final GlobalKey? Function(int paragraphIndex)? paragraphKeyBuilder;
 
-  WordPageScreen(this.wordPage, {required this.wordDocument, super.key});
+  WordPageScreen(
+    this.wordPage, {
+    required this.wordDocument,
+    this.paragraphKeyBuilder,
+    super.key,
+  });
 
   @override
   State<WordPageScreen> createState() => _WordPageScreenState();
@@ -304,6 +310,9 @@ class _WordPageScreenState extends State<WordPageScreen> {
   }
 
   pageContentW(double flowClearance) {
-    return widget.wordPage.toWidget(topFlowClearance: flowClearance);
+    return widget.wordPage.toWidget(
+      topFlowClearance: flowClearance,
+      paragraphKeyBuilder: widget.paragraphKeyBuilder,
+    );
   }
 }

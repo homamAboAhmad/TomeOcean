@@ -128,7 +128,10 @@ class WordPage {
     return maxImageBottom;
   }
 
-  Widget toWidget({double topFlowClearance = 0}) {
+  Widget toWidget({
+    double topFlowClearance = 0,
+    GlobalKey? Function(int paragraphIndex)? paragraphKeyBuilder,
+  }) {
     final children = <Widget>[];
 
     if (topFlowClearance > 0) {
@@ -150,64 +153,70 @@ class WordPage {
         continue;
       }
 
+      Widget paragraphWidget;
+
       if (borderSpec == null) {
         final nextVisibleParagraph = _nextVisibleParagraph(index + 1);
-        children.add(
-          paragraph.toWidget(
-            spacingBeforeOverride: _collapsedSpacingBefore(
-              previousVisibleParagraph,
-              paragraph,
-            ),
-            spacingAfterOverride: nextVisibleParagraph == null
-                ? (paragraph.pPr?.spacingAfter ?? 0)
-                : 0,
+        paragraphWidget = paragraph.toWidget(
+          spacingBeforeOverride: _collapsedSpacingBefore(
+            previousVisibleParagraph,
+            paragraph,
           ),
+          spacingAfterOverride: nextVisibleParagraph == null
+              ? (paragraph.pPr?.spacingAfter ?? 0)
+              : 0,
         );
         previousVisibleParagraph = paragraph;
-        index++;
-        continue;
-      }
-
-      int logicalEnd = index;
-      while (logicalEnd + 1 < ps.length) {
-        final nextParagraph = ps[logicalEnd + 1];
-        final nextSpec = nextParagraph.getParagraphBorderSpec();
-        if (nextSpec == null || nextSpec.signature != borderSpec.signature) {
-          break;
+      } else {
+        int logicalEnd = index;
+        while (logicalEnd + 1 < ps.length) {
+          final nextParagraph = ps[logicalEnd + 1];
+          final nextSpec = nextParagraph.getParagraphBorderSpec();
+          if (nextSpec == null || nextSpec.signature != borderSpec.signature) {
+            break;
+          }
+          logicalEnd++;
         }
-        logicalEnd++;
-      }
 
-      final groupedParagraphs = ps
-          .sublist(index, logicalEnd + 1)
-          .where(_isParagraphVisuallyRelevant)
-          .toList();
+        final groupedParagraphs = ps
+            .sublist(index, logicalEnd + 1)
+            .where(_isParagraphVisuallyRelevant)
+            .toList();
 
-      if (groupedParagraphs.isEmpty) {
-        index = logicalEnd + 1;
-        continue;
-      }
+        if (groupedParagraphs.isEmpty) {
+          index = logicalEnd + 1;
+          continue;
+        }
 
-      final previousBorderedSpec = _lastVisibleBorderSpec(previousPage);
-      final nextBorderedSpec = _firstVisibleBorderSpec(nextPage);
-      final continuesFromPrevious =
-          index == 0 &&
-          previousBorderedSpec?.signature == borderSpec.signature;
-      final continuesToNext =
-          logicalEnd == ps.length - 1 &&
-          nextBorderedSpec?.signature == borderSpec.signature;
+        final previousBorderedSpec = _lastVisibleBorderSpec(previousPage);
+        final nextBorderedSpec = _firstVisibleBorderSpec(nextPage);
+        final continuesFromPrevious =
+            index == 0 &&
+            previousBorderedSpec?.signature == borderSpec.signature;
+        final continuesToNext =
+            logicalEnd == ps.length - 1 &&
+            nextBorderedSpec?.signature == borderSpec.signature;
 
-      children.add(
-        _ParagraphBorderGroupWidget(
+        paragraphWidget = _ParagraphBorderGroupWidget(
           paragraphs: groupedParagraphs,
           spec: borderSpec,
           previousParagraph: previousVisibleParagraph,
           paintTop: !continuesFromPrevious,
           paintBottom: !continuesToNext,
-        ),
-      );
-      previousVisibleParagraph = groupedParagraphs.last;
-      index = logicalEnd + 1;
+        );
+        previousVisibleParagraph = groupedParagraphs.last;
+        index = logicalEnd + 1;
+      }
+
+      // Apply paragraph key if supplied (used for search-result scrolling)
+      final key = paragraphKeyBuilder?.call(index);
+      if (key != null) {
+        children.add(KeyedSubtree(key: key, child: paragraphWidget));
+      } else {
+        children.add(paragraphWidget);
+      }
+
+      if (borderSpec == null) index++;
     }
 
     return Column(
@@ -215,17 +224,8 @@ class WordPage {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: children,
     );
-    // List<InlineSpan> spans =[];
-    // ps.forEach((p){
-    //   spans.addAll(p.getAllPSpans());
-    //   spans.add(TextSpan(text: "\n"));
-    // });
-    // return SelectableText.rich(
-    //     TextSpan(children: spans),
-    //   textDirection: TextDirection.rtl,
-    //
-    // );
   }
+
 
   Paragraph? _nextVisibleParagraph(int startIndex) {
     for (int i = startIndex; i < ps.length; i++) {

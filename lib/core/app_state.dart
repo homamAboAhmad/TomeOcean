@@ -23,13 +23,27 @@ class AppState {
   /// Search highlighting state - words to highlight when navigating from search results
   List<String> searchHighlightTerms = [];
 
+  /// Search target: page index to scroll to after navigation (null = no target)
+  int? searchTargetPageIndex;
+
+  /// Search target: paragraph index within the page to scroll to (null = page only)
+  int? searchTargetParagraphIndex;
+
   /// Clear search highlighting
   void clearSearchHighlight() {
     searchHighlightTerms = [];
+    searchTargetPageIndex = null;
+    searchTargetParagraphIndex = null;
   }
 
   /// Set search highlighting terms
   void setSearchHighlight(List<String> terms) {
     searchHighlightTerms = terms;
+  }
+
+  /// Set the search scroll target (page + paragraph)
+  void setSearchTarget(int pageIndex, int? paragraphIndex) {
+    searchTargetPageIndex = pageIndex;
+    searchTargetParagraphIndex = paragraphIndex;
   }
 }

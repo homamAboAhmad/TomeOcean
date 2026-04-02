@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 
 import 'package:flutter/material.dart';
 
@@ -63,8 +63,6 @@ class _DocViewerState extends State<DocViewer>
   late final ValueNotifier<int> _currentPageNotifier;
   late final DocZoomController _zoomController;
   final FocusNode _searchFocusNode = FocusNode();
-  final Map<int, GlobalKey> _pageItemKeys = {};
-  final Map<String, GlobalKey> _paragraphItemKeys = {};
 
   @override
   bool get wantKeepAlive => true;
@@ -152,87 +150,33 @@ class _DocViewerState extends State<DocViewer>
     _visitedPagesSet.add(pageIndex);
     _currentPageNotifier.value = pageIndex; // Ensure UI updates immediately
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToPage(pageIndex, allowFallbackEstimate: true);
-    });
-  }
+    // Update internal state if needed
+    // if (mounted) setState(() {}); // interactuall scroll handles this properly via notification
+    if (_scrollController.hasClients) {
+      // Calculation must match the ListView setup:
+      // ListView has padding: EdgeInsets.symmetric(vertical: 20) ΓåÆ 20px top
+      // Each page is followed by a 20px separator.
+      // offset = topPadding + pageIndex * (pageHeight + separator)
+      double pageHeight =
+          (widget.wordDocument.getSectPrForPage(0).height ?? 1000);
+      double pageTotalHeight = (pageHeight * _zoomController.value) + 20.0;
 
-  GlobalKey _getPageItemKey(int pageIndex) {
-    return _pageItemKeys.putIfAbsent(pageIndex, () => GlobalKey());
-  }
+      // Land slightly below the header/top area so the first visible content
+      // isn't hidden behind the header.
+      final sectPr = widget.wordDocument.getSectPrForPage(pageIndex);
+      double headerAwareOffset =
+          ((sectPr.headerMargin ?? 0) + sectPr.topMargin) *
+          _zoomController.value;
 
-  GlobalKey _getParagraphItemKey(int pageIndex, int paragraphIndex) {
-    final key = '$pageIndex:$paragraphIndex';
-    return _paragraphItemKeys.putIfAbsent(key, () => GlobalKey());
-  }
-
-  void _handlePageReady(int pageIndex) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToSearchTargetWithinPage(pageIndex);
-    });
-  }
-
-  void _scrollToSearchTargetWithinPage(int pageIndex) {
-    if (!mounted || !_scrollController.hasClients) return;
-
-    final appState = AppState();
-    if (appState.searchTargetPageIndex != pageIndex) return;
-
-    final paragraphIndex = appState.searchTargetParagraphIndex;
-    if (paragraphIndex == null) return;
-
-    final targetContext =
-        _paragraphItemKeys['$pageIndex:$paragraphIndex']?.currentContext;
-    if (targetContext == null) return;
-
-    Scrollable.ensureVisible(
-      targetContext,
-      alignment: 0.18,
-      duration: Duration.zero,
-    );
-  }
-
-  void _scrollToPage(int pageIndex, {required bool allowFallbackEstimate}) {
-    if (!mounted || !_scrollController.hasClients) return;
-
-    final targetContext = _pageItemKeys[pageIndex]?.currentContext;
-    if (targetContext != null) {
-      Scrollable.ensureVisible(
-        targetContext,
-        alignment: 0.0,
-        duration: Duration.zero,
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToSearchTargetWithinPage(pageIndex);
-      });
-      return;
+      // Subtract a tiny epsilon to guarantee we land *inside* the target page,
+      // not exactly at the boundary (which can be interpreted as the next page).
+      double offset =
+          20.0 + (pageIndex * pageTotalHeight) + headerAwareOffset - 0.01;
+      if (offset < 0) offset = 0;
+      final maxOffset = _scrollController.position.maxScrollExtent;
+      if (offset > maxOffset) offset = maxOffset;
+      _scrollController.jumpTo(offset);
     }
-
-    if (!allowFallbackEstimate) {
-      return;
-    }
-
-    double pageHeight = (widget.wordDocument.getSectPrForPage(0).height ?? 1000);
-    double pageTotalHeight = (pageHeight * _zoomController.value) + 20.0;
-
-    final sectPr = widget.wordDocument.getSectPrForPage(pageIndex);
-    double headerAwareOffset =
-        ((sectPr.headerMargin ?? 0) + sectPr.topMargin) *
-        _zoomController.value;
-
-    double offset =
-        20.0 + (pageIndex * pageTotalHeight) + headerAwareOffset - 0.01;
-    if (offset < 0) offset = 0;
-    final maxOffset = _scrollController.position.maxScrollExtent;
-    if (offset > maxOffset) offset = maxOffset;
-    _scrollController.jumpTo(offset);
-
-    // After the estimated jump, the target page should be built.
-    // Run one more pass to snap to the real page boundary instead of
-    // relying on a fixed-height approximation.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToPage(pageIndex, allowFallbackEstimate: false);
-    });
   }
 
   int? _findPreviousVisited() {
@@ -298,10 +242,10 @@ class _DocViewerState extends State<DocViewer>
     final text = page.text().trim();
     final int pageNum = widget.wordDocument.currentPage + 1;
     final String formatted =
-        '«$text» [${widget.wordDocument.title} (ص $pageNum)]';
+        '┬½$text┬╗ [${widget.wordDocument.title} (╪╡ $pageNum)]';
     await copyText(formatted);
     if (mounted) {
-      ShowSnackBar(context, "تم النسخ");
+      ShowSnackBar(context, "╪¬┘à ╪º┘ä┘å╪│╪«");
     }
   }
 
@@ -386,7 +330,7 @@ class _DocViewerState extends State<DocViewer>
                   valueListenable: widget.wordDocument.loadingMessage,
                   builder: (context, msg, _) {
                     return Text(
-                      msg ?? 'جاري التحميل...',
+                      msg ?? '╪¼╪º╪▒┘è ╪º┘ä╪¬╪¡┘à┘è┘ä...',
                       style: normalStyle(color: secondaryColor, fontSize: 18),
                       textAlign: TextAlign.center,
                     );
@@ -591,22 +535,11 @@ class _DocViewerState extends State<DocViewer>
                                                           height: 20,
                                                         ),
                                                 itemBuilder: (context, index) {
-                                                  return KeyedSubtree(
-                                                    key: _getPageItemKey(index),
-                                                    child: PageItemLoader(
-                                                      wordDocument: widget
-                                                          .wordDocument,
-                                                      pageIndex: index,
-                                                      zoomScale: currentZoom,
-                                                      paragraphKeyBuilder: (
-                                                        paragraphIndex,
-                                                      ) => _getParagraphItemKey(
-                                                        index,
-                                                        paragraphIndex,
-                                                      ),
-                                                      onPageReady:
-                                                          _handlePageReady,
-                                                    ),
+                                                  return PageItemLoader(
+                                                    wordDocument: widget
+                                                        .wordDocument,
+                                                    pageIndex: index,
+                                                    zoomScale: currentZoom,
                                                   );
                                                 },
                                               ),
@@ -659,16 +592,12 @@ class PageItemLoader extends StatefulWidget {
   final WordDocument wordDocument;
   final int pageIndex;
   final double zoomScale;
-  final GlobalKey? Function(int paragraphIndex)? paragraphKeyBuilder;
-  final ValueChanged<int>? onPageReady;
 
   const PageItemLoader({
     super.key,
     required this.wordDocument,
     required this.pageIndex,
     required this.zoomScale,
-    this.paragraphKeyBuilder,
-    this.onPageReady,
   });
 
   @override
@@ -734,11 +663,6 @@ class _PageItemLoaderState extends State<PageItemLoader>
                 child: Center(child: Text('Error: ${snapshot.error}')),
               );
             } else if (snapshot.hasData) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  widget.onPageReady?.call(widget.pageIndex);
-                }
-              });
               return Container(
                 width: baseW * widget.zoomScale,
                 constraints: BoxConstraints(
@@ -767,7 +691,6 @@ class _PageItemLoaderState extends State<PageItemLoader>
                       child: WordPageScreen(
                         snapshot.data!,
                         wordDocument: widget.wordDocument,
-                        paragraphKeyBuilder: widget.paragraphKeyBuilder,
                       ),
                     ),
                   ),

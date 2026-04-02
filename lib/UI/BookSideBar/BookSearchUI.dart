@@ -83,7 +83,11 @@ class _BookSearchUIState extends State<BookSearchUI> {
               _results.add(result);
               if (_results.length == 1) {
                 _selectedIndex = 0;
-                widget.onNavigateToPage(_results[0].pageIndex);
+                AppState().setSearchTarget(
+                  result.pageIndex,
+                  result.paragraphIndex,
+                );
+                widget.onNavigateToPage(result.pageIndex);
               }
             });
           },
@@ -123,7 +127,9 @@ class _BookSearchUIState extends State<BookSearchUI> {
   void _selectResult(int index) {
     if (index < 0 || index >= _results.length) return;
     setState(() => _selectedIndex = index);
-    widget.onNavigateToPage(_results[index].pageIndex);
+    final result = _results[index];
+    AppState().setSearchTarget(result.pageIndex, result.paragraphIndex);
+    widget.onNavigateToPage(result.pageIndex);
   }
 
   void _goToNextResult() {

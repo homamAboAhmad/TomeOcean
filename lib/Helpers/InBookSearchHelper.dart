@@ -5,11 +5,13 @@ import 'package:golden_shamela/Models/WordPage.dart';
 /// نتيجة بحث داخل الكتاب
 class InBookSearchResult {
   final int pageIndex;
+  final int paragraphIndex; // الفقرة الأولى التي تحتوي على الكلمة
   final String snippet;
   final int occurrences;
 
   InBookSearchResult({
     required this.pageIndex,
+    required this.paragraphIndex,
     required this.snippet,
     required this.occurrences,
   });
@@ -49,8 +51,23 @@ class InBookSearchHelper {
 
         final count = _countOccurrences(normalizedText, normalizedQuery);
         if (count > 0) {
+          // ابحث عن أول فقرة تحتوي على الكلمة
+          int firstParagraphIndex = 0;
+          for (int pIdx = 0; pIdx < page.ps.length; pIdx++) {
+            final pText = _normalizeForSearch(
+              page.ps[pIdx].text.replaceAll(_pgMarkerRegex, ''),
+              ignoreDiacritics: ignoreDiacritics,
+              ignoreHamzas: ignoreHamzas,
+            );
+            if (pText.contains(normalizedQuery)) {
+              firstParagraphIndex = pIdx;
+              break;
+            }
+          }
+
           yield InBookSearchResult(
             pageIndex: i,
+            paragraphIndex: firstParagraphIndex,
             snippet: _extractSnippet(pageText, query, ignoreDiacritics, ignoreHamzas),
             occurrences: count,
           );
@@ -61,6 +78,7 @@ class InBookSearchHelper {
       }
     }
   }
+
 
   /// البحث الكامل (غير متدفق) - يُستخدم للبحث السريع في كتب صغيرة
   Future<List<InBookSearchResult>> search({

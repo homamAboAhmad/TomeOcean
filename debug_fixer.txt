@@ -4434,3 +4434,36 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-04-02 16:06:26.363454 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex3_tes2t.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex3_tes2t.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex3_tes2t.docx
+Version: 3.0 (File Log Mode)
+Error processing docx: File is not a zip file
+Traceback (most recent call last):
+  File "fix_word_images.py", line 91, in process_docx
+  File "zipfile.py", line 1269, in __init__
+  File "zipfile.py", line 1336, in _RealGetContents
+zipfile.BadZipFile: File is not a zip file
+
+
+
+--- Session Start: 2026-04-02 16:06:28.084061 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex3_tes2t.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex3_tes2t.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex3_tes2t.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 16:16:24.704492 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex3_tes2t.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex3_tes2t.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex3_tes2t.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
