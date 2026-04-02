@@ -16,6 +16,7 @@ import 'package:xml/xml.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
 
 import '../wordToHTML/ExtractWordImages.dart';
+import 'DocxImageRelationshipRecovery.dart';
 import 'json_converters.dart';
 import 'VectorPathParser.dart';
 
@@ -1514,30 +1515,39 @@ class ImageData {
 
     // Strategy 1: Try direct lookup from relIdList first
     String? imgName;
+    String resolvedRId = rId;
+
+    if (customRelIdList == null) {
+      final recoveryMap = getMainDocumentEmbedRecoveryMap(wordDocument);
+      final recoveredRId = recoveryMap[rId];
+      if (recoveredRId != null && recoveredRId.isNotEmpty) {
+        resolvedRId = recoveredRId;
+      }
+    }
 
     // Check custom list first (for headers/footers)
     if (customRelIdList != null) {
-      if (customRelIdList.containsKey(rId)) {
-        imgName = customRelIdList[rId]?.Target;
+      if (customRelIdList.containsKey(resolvedRId)) {
+        imgName = customRelIdList[resolvedRId]?.Target;
         if (!_isLikelyImageTarget(imgName)) {
           imgName = null;
         }
-        // print("DEBUG_IMAGE: Found rId=$rId in customRelIdList -> $imgName");
+        // print("DEBUG_IMAGE: Found rId=$resolvedRId in customRelIdList -> $imgName");
       } else {
         print(
-          "DEBUG_IMAGE: ⚠️ rId=$rId NOT FOUND in customRelIdList. Keys: ${customRelIdList.keys.join(',')}",
+          "DEBUG_IMAGE: ⚠️ rId=$resolvedRId NOT FOUND in customRelIdList. Keys: ${customRelIdList.keys.join(',')}",
         );
       }
     }
 
     // Fallback to document list
     if (imgName == null) {
-      // print("DEBUG_IMAGE: Checking global relIdList for rId=$rId");
-      final globalTarget = wordDocument.relIdList[rId]?.Target;
+      // print("DEBUG_IMAGE: Checking global relIdList for rId=$resolvedRId");
+      final globalTarget = wordDocument.relIdList[resolvedRId]?.Target;
       if (_isLikelyImageTarget(globalTarget)) {
         imgName = globalTarget;
         print(
-          "DEBUG_IMAGE: Found rId=$rId in GLOBAL relIdList -> $imgName (Fallback triggered!)",
+          "DEBUG_IMAGE: Found rId=$resolvedRId in GLOBAL relIdList -> $imgName (Fallback triggered!)",
         );
       }
     }
@@ -1557,7 +1567,7 @@ class ImageData {
 
     // Strategy 3: Fallback - try global function (for backward compatibility)
     if (imgName == null || imgName.isEmpty) {
-      final fallbackTarget = getImageFrmRel(rId);
+      final fallbackTarget = getImageFrmRel(resolvedRId);
       if (_isLikelyImageTarget(fallbackTarget)) {
         imgName = fallbackTarget;
       }
