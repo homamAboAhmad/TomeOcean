@@ -30,6 +30,7 @@ import 'BookSideBar/BooksSideBarIcons.dart';
 import 'BookSideBar/SectionBookSideBar.dart';
 import 'BooksDrawer.dart';
 import 'DocViewer/doc_viewer_bottom_toolbar.dart';
+import 'DocViewer/page_viewport_tracker.dart';
 import 'DocViewer/doc_viewer_top_toolbar.dart';
 import 'WordPageScreen.dart';
 import 'custom_context_menu.dart';
@@ -63,12 +64,10 @@ class _DocViewerState extends State<DocViewer>
   late final ScrollController _scrollController;
   late final ValueNotifier<int> _currentPageNotifier;
   late final DocZoomController _zoomController;
+  late final PageViewportTracker _pageViewportTracker;
   final FocusNode _searchFocusNode = FocusNode();
   final Map<int, GlobalKey> _pageItemKeys = {};
   final Map<String, GlobalKey> _paragraphItemKeys = {};
-  final Map<int, double> _pageTopOffsets = {};
-  final Map<int, double> _pageExtents = {};
-  bool _suppressScrollPageTracking = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -80,6 +79,13 @@ class _DocViewerState extends State<DocViewer>
     _scrollController = ScrollController(); // Initialize ScrollController
     _currentPageNotifier = ValueNotifier(widget.wordDocument.currentPage);
     _zoomController = DocZoomController();
+    _pageViewportTracker = PageViewportTracker(
+      scrollController: _scrollController,
+      totalPages: () => widget.wordDocument.pageFilePaths.length,
+      zoomScale: () => _zoomController.value,
+      basePageHeightFor: (pageIndex) =>
+          widget.wordDocument.getSectPrForPage(pageIndex).height ?? 1000,
+    );
     _zoomController.addListener(_handleZoomChanged);
     _initControllerAndSidebar();
 
@@ -108,11 +114,13 @@ class _DocViewerState extends State<DocViewer>
   }
 
   void _handleZoomChanged() {
-    _pageTopOffsets.clear();
-    _pageExtents.clear();
+    _pageViewportTracker.clearMeasurements();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _capturePageMetrics(widget.wordDocument.currentPage);
+      _pageViewportTracker.capturePageMetrics(
+        pageKeys: _pageItemKeys,
+        pageIndex: widget.wordDocument.currentPage,
+      );
     });
   }
 
@@ -122,8 +130,7 @@ class _DocViewerState extends State<DocViewer>
     if (oldWidget.wordDocument != widget.wordDocument) {
       _initControllerAndSidebar();
       _visitedPagesSet.clear();
-      _pageTopOffsets.clear();
-      _pageExtents.clear();
+      _pageViewportTracker.clearMeasurements();
       _jumpToPage(widget.wordDocument.currentPage);
     }
   }
@@ -168,10 +175,14 @@ class _DocViewerState extends State<DocViewer>
     _pageNumberController.text = (pageIndex + 1).toString();
     _visitedPagesSet.add(pageIndex);
     _currentPageNotifier.value = pageIndex; // Ensure UI updates immediately
-    _suppressScrollPageTracking = true;
+    _pageViewportTracker.beginProgrammaticJump();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToPage(pageIndex, remainingAttempts: 8);
+      _pageViewportTracker.jumpToPage(
+        pageIndex: pageIndex,
+        pageKeys: _pageItemKeys,
+        onSettled: () => _scrollToSearchTargetWithinPage(pageIndex),
+      );
     });
   }
 
@@ -186,29 +197,12 @@ class _DocViewerState extends State<DocViewer>
 
   void _handlePageReady(int pageIndex) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _capturePageMetrics(pageIndex);
+      _pageViewportTracker.capturePageMetrics(
+        pageKeys: _pageItemKeys,
+        pageIndex: pageIndex,
+      );
       _scrollToSearchTargetWithinPage(pageIndex);
     });
-  }
-
-  void _capturePageMetrics(int pageIndex) {
-    final pageContext = _pageItemKeys[pageIndex]?.currentContext;
-    if (pageContext == null) return;
-
-    final renderObject = pageContext.findRenderObject();
-    if (renderObject == null || !renderObject.attached) return;
-
-    final viewport = RenderAbstractViewport.of(renderObject);
-    if (viewport == null) return;
-
-    final top = viewport.getOffsetToReveal(renderObject, 0.0).offset;
-    final bottom = viewport.getOffsetToReveal(renderObject, 1.0).offset;
-    final extent = (bottom - top).abs();
-
-    _pageTopOffsets[pageIndex] = top;
-    if (extent > 0) {
-      _pageExtents[pageIndex] = extent;
-    }
   }
 
   void _scrollToSearchTargetWithinPage(int pageIndex) {
@@ -229,132 +223,6 @@ class _DocViewerState extends State<DocViewer>
       alignment: 0.18,
       duration: Duration.zero,
     );
-  }
-
-  void _scrollToPage(int pageIndex, {required int remainingAttempts}) {
-    if (!mounted || !_scrollController.hasClients) return;
-
-    final targetContext = _pageItemKeys[pageIndex]?.currentContext;
-    if (targetContext != null) {
-      Scrollable.ensureVisible(
-        targetContext,
-        alignment: 0.0,
-        duration: Duration.zero,
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _capturePageMetrics(pageIndex);
-        _scrollToSearchTargetWithinPage(pageIndex);
-        _suppressScrollPageTracking = false;
-      });
-      return;
-    }
-
-    final exactOffset = _pageTopOffsets[pageIndex];
-    if (exactOffset != null) {
-      final clamped = exactOffset.clamp(
-        _scrollController.position.minScrollExtent,
-        _scrollController.position.maxScrollExtent,
-      ).toDouble();
-      _scrollController.jumpTo(clamped);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToPage(pageIndex, remainingAttempts: remainingAttempts - 1);
-      });
-      return;
-    }
-
-    if (remainingAttempts <= 0) {
-      _suppressScrollPageTracking = false;
-      return;
-    }
-
-    double offset = _estimatePageOffset(pageIndex);
-    if (offset < 0) offset = 0;
-    final maxOffset = _scrollController.position.maxScrollExtent;
-    if (offset > maxOffset) offset = maxOffset;
-    _scrollController.jumpTo(offset);
-
-    // After the estimated jump, the target page should be built.
-    // Re-run after layout so we can refine with newly measured page offsets.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _scrollToPage(pageIndex, remainingAttempts: remainingAttempts - 1);
-    });
-  }
-
-  double _estimatePageOffset(int pageIndex) {
-    final lowerPages = _pageTopOffsets.keys.where((page) => page < pageIndex).toList()
-      ..sort();
-    if (lowerPages.isNotEmpty) {
-      final anchorPage = lowerPages.last;
-      double offset = _pageTopOffsets[anchorPage]!;
-      for (int page = anchorPage; page < pageIndex; page++) {
-        offset += _estimatedPageExtent(page);
-      }
-      return offset;
-    }
-
-    final upperPages = _pageTopOffsets.keys.where((page) => page > pageIndex).toList()
-      ..sort();
-    if (upperPages.isNotEmpty) {
-      final anchorPage = upperPages.first;
-      double offset = _pageTopOffsets[anchorPage]!;
-      for (int page = anchorPage - 1; page >= pageIndex; page--) {
-        offset -= _estimatedPageExtent(page);
-      }
-      return offset;
-    }
-
-    double offset = 20.0;
-    for (int page = 0; page < pageIndex; page++) {
-      offset += _estimatedPageExtent(page);
-    }
-    return offset;
-  }
-
-  double _estimatedPageExtent(int pageIndex) {
-    final exactExtent = _pageExtents[pageIndex];
-    if (exactExtent != null) {
-      return exactExtent + 20.0;
-    }
-
-    final sectPr = widget.wordDocument.getSectPrForPage(pageIndex);
-    final baseHeight = sectPr.height ?? 1000;
-    return (baseHeight * _zoomController.value) + 20.0;
-  }
-
-  int _resolveCurrentPageFromScroll(double scrollOffset) {
-    if (_pageTopOffsets.isNotEmpty) {
-      final probeOffset = scrollOffset + 20.0;
-      final measuredPages = _pageTopOffsets.keys.toList()..sort();
-      int resolved = 0;
-      bool matchedMeasuredPage = false;
-
-      for (final page in measuredPages) {
-        final top = _pageTopOffsets[page]!;
-        final nextTop = _pageTopOffsets[page + 1];
-        if (probeOffset >= top) {
-          resolved = page;
-          matchedMeasuredPage = true;
-          if (nextTop != null && probeOffset < nextTop) {
-            break;
-          }
-        }
-      }
-
-      if (matchedMeasuredPage) {
-        return resolved.clamp(0, widget.wordDocument.pageFilePaths.length - 1)
-            as int;
-      }
-    }
-
-    double accumulated = 20.0;
-    for (int page = 0; page < widget.wordDocument.pageFilePaths.length; page++) {
-      accumulated += _estimatedPageExtent(page);
-      if (scrollOffset < accumulated) {
-        return page;
-      }
-    }
-
-    return widget.wordDocument.pageFilePaths.length - 1;
   }
 
   int? _findPreviousVisited() {
@@ -619,13 +487,15 @@ class _DocViewerState extends State<DocViewer>
                             child: NotificationListener<ScrollNotification>(
                               onNotification: (notification) {
                                 if (notification is ScrollUpdateNotification) {
-                                  if (_suppressScrollPageTracking) {
+                                  if (_pageViewportTracker
+                                      .suppressScrollTracking) {
                                     return false;
                                   }
 
-                                  int newPageIndex = _resolveCurrentPageFromScroll(
-                                    _scrollController.offset,
-                                  );
+                                  int newPageIndex = _pageViewportTracker
+                                      .resolveCurrentPageFromScroll(
+                                        _scrollController.offset,
+                                      );
 
                                   if (newPageIndex !=
                                           widget.wordDocument.currentPage &&
