@@ -98,7 +98,7 @@ class WordTableWidget extends StatelessWidget {
   WordTableWidget(
     this.tblXml,
     this.parent, {
-    this.disableUrlAutoDetection = false,
+    this.disableUrlAutoDetection = true,
     this.trimTrailingStructuralEmptyCellParagraphs = false,
   });
 

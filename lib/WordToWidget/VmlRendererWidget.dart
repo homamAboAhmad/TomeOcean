@@ -4,6 +4,7 @@ import 'package:golden_shamela/Models/VmlShapeData.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/WordToWidget/VmlDiamondShapeWidget.dart';
 import 'package:golden_shamela/WordToWidget/RichTextBoxWidget.dart';
+import 'package:golden_shamela/WordToWidget/VmlShapeFillResolver.dart';
 
 /// ودجت مسؤول عن تجميع ورسم أشكال VML المختلفة مع النص الغني بداخلها
 class VmlRendererWidget extends StatelessWidget {
@@ -49,7 +50,7 @@ class VmlRendererWidget extends StatelessWidget {
     }
 
     // 2. تجميع بناء الشكل المراد رسمه (خلفية وحدود)
-    final decoration = _buildShapeDecoration(vml);
+    final decoration = _buildShapeDecoration(vml, imageData);
     Widget shapeWidget;
     switch (vml.shapeType.toLowerCase()) {
       case 'roundrect':
@@ -88,7 +89,10 @@ class VmlRendererWidget extends StatelessWidget {
         shapeWidget = VmlDiamondShapeWidget(
           width: imageData.width,
           height: imageData.height,
-          fillColor: vml.isFilled ? (vml.fillColor ?? Colors.white) : null,
+          fillColor: VmlShapeFillResolver.resolveFillColor(
+            vml: vml,
+            imageData: imageData,
+          ),
           fillStyle: vml.fillStyle,
           strokeColor: vml.isStroked ? vml.strokeColor : null,
           strokeWidth: vml.strokeWidth,
@@ -129,8 +133,11 @@ class VmlRendererWidget extends StatelessWidget {
   }
 }
 
-BoxDecoration? _buildShapeDecoration(VmlShapeData vml) {
-  final color = vml.isFilled ? (vml.fillColor ?? Colors.white) : null;
+BoxDecoration? _buildShapeDecoration(VmlShapeData vml, ImageData imageData) {
+  final color = VmlShapeFillResolver.resolveFillColor(
+    vml: vml,
+    imageData: imageData,
+  );
   final border = vml.isStroked && vml.strokeColor != null
       ? Border.all(color: vml.strokeColor!, width: vml.strokeWidth)
       : null;

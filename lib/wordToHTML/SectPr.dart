@@ -534,10 +534,7 @@ class SectPr {
     if (pageInSection == 1 && titlePg) {
       path =
           footerFirstPath ??
-          _inheritFooterFirst(currentSectionIndex) ??
-          footerDefaultPath ??
-          footerOddPath ??
-          _inheritFooterOdd(currentSectionIndex);
+          _inheritFooterFirst(currentSectionIndex);
     } else if (evenAndOddHeaders && pageInSection.isEven) {
       path =
           footerEvenPath ??
@@ -797,10 +794,7 @@ class SectPr {
     if (pageInSection == 1 && titlePg) {
       path =
           footerFirstPath ??
-          _inheritFooterFirst(currentSectionIndex) ??
-          footerDefaultPath ??
-          footerOddPath ??
-          _inheritFooterOdd(currentSectionIndex);
+          _inheritFooterFirst(currentSectionIndex);
     }
     // Rule 2: Even/odd page footers (only if evenAndOddHeaders is enabled)
     else if (evenAndOddHeaders && pageInSection.isEven) {

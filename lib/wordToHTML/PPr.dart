@@ -137,23 +137,19 @@ class PPr {
     lineHeightSource = null;
     lineMultiple = null;
 
-    // Word 2007+ default line spacing is 1.15 (not 1.0!)
-    // When no spacing element exists, Word uses this default
+    // If spacing is still absent after style/default inheritance has been
+    // applied, OOXML says each attribute falls back to its own defined
+    // default. We should not inject a synthetic 10pt paragraph gap here,
+    // because that is a template/style convention, not a WordprocessingML
+    // default.
     if (spacing == null) {
       lineHeightSource = 'default';
       lineMultiple = 1.0;
       lineHeight =
           kArabicLineSpacingFactor; // Word 2007+ default for Arabic text (includes safety margin)
       forceStrutHeight = false;
-
-      // Default "Normal" style in Word 2007+ usually has 10pt spacing after.
-      // We apply the same correction factor to this default.
-      // However, Header and Footer paragraphs in Word usually default to 0pt spacing.
-      if (parent.isHeaderParagraph) {
-        spacingAfter = 0;
-      } else {
-        spacingAfter = 10.0 * 20.0 * twipsToPx * kArabicLineSpacingFactor;
-      }
+      spacingBefore = 0;
+      spacingAfter = 0;
       spacingAfterExplicit = false;
 
       return;

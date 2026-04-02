@@ -109,7 +109,7 @@ class Paragraph {
   /// Auto-linkifying plain URL text is not part of WordprocessingML rendering.
   /// Keep it opt-in for contexts that explicitly want it.
   @JsonKey(ignore: true)
-  bool disableUrlAutoDetection = false;
+  bool disableUrlAutoDetection = true;
 
   /// Table-cell paragraphs follow Word's table-specific grid rules.
   @JsonKey(ignore: true)
