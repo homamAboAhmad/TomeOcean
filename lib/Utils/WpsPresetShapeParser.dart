@@ -18,21 +18,21 @@ class WpsPresetShapeParser {
 
     final shape = VmlShapeData(shapeType: shapeType);
 
-    final solidFill = spPr.findAllElements('a:solidFill').firstOrNull;
-    final noFill = spPr.findAllElements('a:noFill').isNotEmpty;
+    final solidFill = _firstDirectChild(spPr, 'solidFill', 'a');
+    final noFill = _firstDirectChild(spPr, 'noFill', 'a') != null;
     if (solidFill != null) {
       shape.fillColor = _parseDrawingColor(solidFill);
     } else if (noFill) {
       shape.isFilled = false;
     }
 
-    final line = spPr.findAllElements('a:ln').firstOrNull;
+    final line = _firstDirectChild(spPr, 'ln', 'a');
     if (line != null) {
-      final lineNoFill = line.findAllElements('a:noFill').isNotEmpty;
+      final lineNoFill = _firstDirectChild(line, 'noFill', 'a') != null;
       if (lineNoFill) {
         shape.isStroked = false;
       } else {
-        final lineFill = line.findAllElements('a:solidFill').firstOrNull;
+        final lineFill = _firstDirectChild(line, 'solidFill', 'a');
         if (lineFill != null) {
           shape.strokeColor = _parseDrawingColor(lineFill);
         }
@@ -59,6 +59,20 @@ class WpsPresetShapeParser {
         return 'diamond';
       case 'ellipse':
         return 'oval';
+    }
+    return null;
+  }
+
+  static xml.XmlElement? _firstDirectChild(
+    xml.XmlElement parent,
+    String localName,
+    String? prefix,
+  ) {
+    for (final child in parent.childElements) {
+      if (child.name.local == localName &&
+          (prefix == null || child.name.prefix == prefix)) {
+        return child;
+      }
     }
     return null;
   }

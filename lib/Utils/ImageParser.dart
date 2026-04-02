@@ -175,6 +175,7 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
     final presetShapeData = WpsPresetShapeParser.tryParse(wspElement);
     if (presetShapeData != null) {
       _imageData.vmlShapeData = presetShapeData;
+      parseTextBox();
 
       setDemenisions();
       checkFromPage();

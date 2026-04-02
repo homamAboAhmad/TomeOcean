@@ -80,7 +80,7 @@ class VmlRendererWidget extends StatelessWidget {
           width: imageData.width > 0 ? imageData.width : null,
           height: imageData.height > 0 ? imageData.height : null,
           decoration: decoration?.copyWith(borderRadius: borderRadius),
-          clipBehavior: Clip.hardEdge,
+          clipBehavior: decoration != null ? Clip.hardEdge : Clip.none,
           child: contentWidget,
         );
         break;
