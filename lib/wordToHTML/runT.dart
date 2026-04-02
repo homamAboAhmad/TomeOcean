@@ -16,6 +16,7 @@ import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 import 'package:golden_shamela/core/app_state.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:golden_shamela/Helpers/TextProcessor.dart'; // Add TextProcessor
 
 part 'runT.g.dart';
 
@@ -198,7 +199,8 @@ class runT {
     } else {
       // Standard highlighting logic (refactored or inline)
       if (highlightTerms.isNotEmpty && fixedText.isNotEmpty) {
-        String pattern = highlightTerms.map(RegExp.escape).join('|');
+        String pattern = highlightTerms.map((t) => TextProcessor.buildSmartArabicPattern(t)).where((p) => p.isNotEmpty).join('|');
+        if (pattern.isEmpty) pattern = r'(?!x)x'; // impossible match if all empty
         RegExp regex = RegExp(pattern);
         int lastMatchEnd = 0;
         bool hasMatch = false;
@@ -757,7 +759,8 @@ class runT {
     }
 
     List<InlineSpan> spans = [];
-    String pattern = highlightTerms.map(RegExp.escape).join('|');
+    String pattern = highlightTerms.map((t) => TextProcessor.buildSmartArabicPattern(t)).where((p) => p.isNotEmpty).join('|');
+    if (pattern.isEmpty) pattern = r'(?!x)x'; // impossible match
     RegExp regex = RegExp(pattern);
 
     int lastMatchEnd = 0;

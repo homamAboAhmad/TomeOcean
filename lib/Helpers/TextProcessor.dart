@@ -59,6 +59,31 @@ class TextProcessor {
     return text.replaceAll(RegExp(r'[\u064B-\u0652]'), '');
   }
 
+  /// Builds a regex pattern that matches the word with optional diacritics/tatweel
+  /// and unifies hamzas, alif maksura, etc. for flexible highlighting/searching.
+  static String buildSmartArabicPattern(String term) {
+    if (term.trim().isEmpty) return '';
+    final normalized = normalizeArabic(term);
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < normalized.length; i++) {
+      final char = normalized[i];
+      if ('اأإآ'.contains(char)) {
+        buffer.write(r'[اأإآ]');
+      } else if ('هة'.contains(char)) {
+        buffer.write(r'[هة]');
+      } else if ('يىئ'.contains(char)) {
+        buffer.write(r'[يىئ]');
+      } else if ('وؤ'.contains(char)) {
+        buffer.write(r'[وؤ]');
+      } else {
+        buffer.write(RegExp.escape(char));
+      }
+      buffer.write(r'[\u064B-\u065F\u0640]*');
+    }
+    return buffer.toString();
+  }
+
   /// Unifies Hamza forms in Arabic text.
   /// Converts:
   /// - Hamza variations (أ, إ, آ) to Alif (ا)
