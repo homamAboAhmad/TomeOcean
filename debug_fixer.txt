@@ -4398,3 +4398,39 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-04-02 15:18:25.262610 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 15:19:48.655925 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 15:28:41.780623 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-02 15:36:24.508168 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_تساؤلات مهمة حول تفجيرات الجزائر وأجوبتها.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.

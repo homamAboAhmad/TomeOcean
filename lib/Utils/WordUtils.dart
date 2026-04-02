@@ -12,6 +12,7 @@ import 'package:xml/xml.dart';
 
 import '../wordToHTML/ParagraphTable.dart';
 import '../wordToHTML/SectPr.dart';
+import 'PageAnchorParagraphResolver.dart';
 import 'TxtUtils.dart';
 import 'XmlParagraphExtractor.dart';
 import 'package:golden_shamela/Utils/XmlElementClone.dart';
@@ -277,21 +278,20 @@ class WordUtils {
   int? _extractPgMarkerFromParagraph(XmlElement element) {
     // تجميع النص الكامل للفقرة للتعامل مع الماركرات المقسمة على عدة runs
     // Word قد يقسم النص: run1="{{", run2="PG:25", run3="}}"
-    String fullText = element
-        .findAllElements("w:t")
-        .map((e) => e.text)
-        .join("");
-
-    var match = RegExp(r"\{\{PG:(\d+)\}\}").firstMatch(fullText);
-    if (match != null) {
-      return int.parse(match.group(1)!);
-    }
-    return null;
+    final markers = _extractAllPgMarkersFromParagraph(element);
+    return markers.isEmpty ? null : markers.first;
   }
 
   /// استخراج كل أرقام الصفحات من فقرة (للفقرات التي تحتوي على أكثر من marker)
   /// تُرجع قائمة من أرقام الصفحات بترتيب ظهورها
   List<int> _extractAllPgMarkersFromParagraph(XmlElement element) {
+    final bookmarkPages = PageAnchorParagraphResolver.resolvePageNumbers(
+      element,
+    );
+    if (bookmarkPages != null && bookmarkPages.isNotEmpty) {
+      return bookmarkPages;
+    }
+
     List<int> pageNumbers = [];
 
     // نمر على كل الـ runs بالترتيب
@@ -348,13 +348,12 @@ class WordUtils {
 
     // 1. Check for Pre-Marker Content (Inherited from Previous Page)
     int firstMarkerIdx = markerChildIndices[0];
-    bool hasPreContent = false;
-    for (int i = 0; i < firstMarkerIdx; i++) {
-      if (allChildren[i].name.local != "pPr") {
-        hasPreContent = true;
-        break;
-      }
-    }
+    final prefixAnalysis = PageAnchorParagraphResolver.analyzeLeadingPrefix(
+      allChildren,
+      firstMarkerIdx,
+    );
+    final bool hasPreContent = prefixAnalysis.hasVisiblePreContent;
+    final int leadingStructuralStart = prefixAnalysis.leadingStructuralStart;
 
     if (hasPreContent && !isTocRow) {
       // Create Inherited Part: From Start (0) to First Marker (exclusive)
@@ -384,6 +383,9 @@ class WordUtils {
     // So the range MUST START AT 'markerChildIndices[m]' (Inclusive).
     for (int m = 0; m < markers.length; m++) {
       int start = markerChildIndices[m]; // Start AT the marker
+      if (m == 0 && !hasPreContent && leadingStructuralStart < firstMarkerIdx) {
+        start = leadingStructuralStart;
+      }
       int end = (m == markers.length - 1)
           ? allChildren.length
           : markerChildIndices[m + 1]; // End BEFORE next marker
