@@ -514,59 +514,34 @@ class _DocViewerState extends State<DocViewer>
                                           width: listViewWidth,
                                           child: SelectionAutoScroller(
                                             scrollController: _scrollController,
-                                            child: SelectionArea(
-                                              contextMenuBuilder:
-                                                  (
-                                                    context,
-                                                    selectableRegionState,
-                                                  ) {
-                                                    return CustomContextMenu(
-                                                      state:
-                                                          selectableRegionState,
-                                                      bookTitle: widget
-                                                          .wordDocument
-                                                          .title,
-                                                      pageNumber:
-                                                          widget
-                                                              .wordDocument
-                                                              .currentPage +
-                                                          1,
-                                                      contextMenuAnchors:
-                                                          selectableRegionState
-                                                              .contextMenuAnchors,
-                                                    );
-                                                  },
-                                              child: Scrollbar(
+                                            child: Scrollbar(
+                                              controller: _scrollController,
+                                              thumbVisibility: true,
+                                              trackVisibility: true,
+                                              child: ListView.separated(
                                                 controller: _scrollController,
-                                                thumbVisibility: true,
-                                                trackVisibility: true,
-                                                child: ListView.separated(
-                                                  controller: _scrollController,
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        vertical: 20,
-                                                        horizontal: 10,
-                                                      ),
-                                                  itemCount: widget
-                                                      .wordDocument
-                                                      .pageFilePaths
-                                                      .length,
-                                                  separatorBuilder:
-                                                      (context, index) =>
-                                                          const SizedBox(
-                                                            height: 20,
-                                                          ),
-                                                  itemBuilder:
-                                                      (context, index) {
-                                                        return PageItemLoader(
-                                                          wordDocument: widget
-                                                              .wordDocument,
-                                                          pageIndex: index,
-                                                          zoomScale:
-                                                              currentZoom,
-                                                        );
-                                                      },
-                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 20,
+                                                      horizontal: 10,
+                                                    ),
+                                                itemCount: widget
+                                                    .wordDocument
+                                                    .pageFilePaths
+                                                    .length,
+                                                separatorBuilder:
+                                                    (context, index) =>
+                                                        const SizedBox(
+                                                          height: 20,
+                                                        ),
+                                                itemBuilder: (context, index) {
+                                                  return PageItemLoader(
+                                                    wordDocument: widget
+                                                        .wordDocument,
+                                                    pageIndex: index,
+                                                    zoomScale: currentZoom,
+                                                  );
+                                                },
                                               ),
                                             ),
                                           ),
@@ -699,9 +674,24 @@ class _PageItemLoaderState extends State<PageItemLoader>
                   child: Container(
                     width: baseW,
                     constraints: BoxConstraints(minHeight: baseH),
-                    child: WordPageScreen(
-                      snapshot.data!,
-                      wordDocument: widget.wordDocument,
+                    child: SelectionArea(
+                      contextMenuBuilder:
+                          (
+                            context,
+                            selectableRegionState,
+                          ) {
+                            return CustomContextMenu(
+                              state: selectableRegionState,
+                              bookTitle: widget.wordDocument.title,
+                              pageNumber: widget.pageIndex + 1,
+                              contextMenuAnchors:
+                                  selectableRegionState.contextMenuAnchors,
+                            );
+                          },
+                      child: WordPageScreen(
+                        snapshot.data!,
+                        wordDocument: widget.wordDocument,
+                      ),
                     ),
                   ),
                 ),

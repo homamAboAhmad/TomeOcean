@@ -100,9 +100,11 @@ class _WordPageScreenState extends State<WordPageScreen> {
                             child: OverflowBox(
                               maxHeight: double.infinity,
                               alignment: Alignment.topLeft,
-                              child: Opacity(
-                                opacity: 0.5,
-                                child: pageHeaderW(),
+                              child: SelectionContainer.disabled(
+                                child: Opacity(
+                                  opacity: 0.5,
+                                  child: pageHeaderW(),
+                                ),
                               ),
                             ),
                           ),
@@ -187,7 +189,9 @@ class _WordPageScreenState extends State<WordPageScreen> {
                           child: OverflowBox(
                             maxHeight: double.infinity,
                             alignment: Alignment.topLeft,
-                            child: Opacity(opacity: 0.5, child: footerW()),
+                            child: SelectionContainer.disabled(
+                              child: Opacity(opacity: 0.5, child: footerW()),
+                            ),
                           ),
                         ),
                       ),
