@@ -259,6 +259,16 @@ class runT {
     }
 
     if (vAlign != 0) {
+      if (effectiveRtl) {
+        return TextSpan(
+          children: [
+            if (hasBrBefore) TextSpan(text: "\n", style: effectiveStyle),
+            ..._applyVisualBaselineShiftToSpans(contentSpans, vAlign),
+            if (hasBrAfter) TextSpan(text: "\n", style: effectiveStyle),
+          ],
+        );
+      }
+
       return WidgetSpan(
         alignment: PlaceholderAlignment.baseline,
         baseline: TextBaseline.alphabetic,
@@ -804,6 +814,46 @@ class runT {
       return [TextSpan(text: text, style: style)];
     }
     return spans;
+  }
+
+  List<InlineSpan> _applyVisualBaselineShiftToSpans(
+    List<InlineSpan> spans,
+    double offsetY,
+  ) {
+    return spans.map((span) {
+      if (span is! TextSpan) {
+        return span;
+      }
+
+      return _applyVisualBaselineShiftToTextSpan(span, offsetY);
+    }).toList();
+  }
+
+  TextSpan _applyVisualBaselineShiftToTextSpan(TextSpan span, double offsetY) {
+    final baseStyle = span.style ?? const TextStyle();
+    final textColor = baseStyle.color ?? Colors.black;
+    final shiftedStyle = baseStyle.copyWith(
+      color: Colors.transparent,
+      shadows: [
+        ...?baseStyle.shadows,
+        Shadow(color: textColor, offset: Offset(0, offsetY), blurRadius: 0),
+      ],
+    );
+
+    return TextSpan(
+      text: span.text,
+      children: span.children == null
+          ? null
+          : _applyVisualBaselineShiftToSpans(span.children!, offsetY),
+      style: shiftedStyle,
+      recognizer: span.recognizer,
+      mouseCursor: span.mouseCursor,
+      onEnter: span.onEnter,
+      onExit: span.onExit,
+      semanticsLabel: span.semanticsLabel,
+      locale: span.locale,
+      spellOut: span.spellOut,
+    );
   }
 
   /// Helper to build a clickable link span

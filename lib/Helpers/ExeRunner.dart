@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
@@ -31,26 +32,26 @@ class ExeRunner {
 
     try {
       final byteData = await rootBundle.load(assetPath);
-      final newFileSize = byteData.lengthInBytes;
+      final bundledExeBytes = byteData.buffer.asUint8List();
       
-      // Check if existing file needs update (compare size as version check)
+      // Check if existing file needs update by comparing the actual bytes.
       bool needsUpdate = true;
       if (await exeFile.exists()) {
         try {
-          final existingSize = await exeFile.length();
-          if (existingSize == newFileSize) {
+          final existingBytes = await exeFile.readAsBytes();
+          if (_bytesEqual(existingBytes, bundledExeBytes)) {
             needsUpdate = false;
           } else {
             // Delete old version to replace it
             await exeFile.delete();
           }
         } catch (e) {
-          print('Could not check existing exe size: $e');
+          print('Could not compare existing exe bytes: $e');
         }
       }
       
       if (needsUpdate) {
-        await exeFile.writeAsBytes(byteData.buffer.asUint8List());
+        await exeFile.writeAsBytes(bundledExeBytes);
         print('✓ pageRender.exe extracted/updated to: ${exeFile.path}');
       }
     } catch (e) {
@@ -119,5 +120,14 @@ class ExeRunner {
         print('Failed to kill process: $e');
       }
     }
+  }
+
+  static bool _bytesEqual(Uint8List a, Uint8List b) {
+    if (identical(a, b)) return true;
+    if (a.lengthInBytes != b.lengthInBytes) return false;
+    for (int i = 0; i < a.lengthInBytes; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 }
