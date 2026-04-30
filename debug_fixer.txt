@@ -4584,3 +4584,48 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_مسائل في فقه الخلافة.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-04-29 22:21:35.661180 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_أكثر من ألف سنة في اليوم والليلة.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-29 23:12:15.086858 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_أكثر من ألف سنة في اليوم والليلة.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 15:12:46.206096 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_أكثر من ألف سنة في اليوم والليلة.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 15:20:47.317544 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_أكثر من ألف سنة في اليوم والليلة.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 15:30:21.779218 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_أكثر من ألف سنة في اليوم والليلة.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.

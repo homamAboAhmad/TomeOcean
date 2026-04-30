@@ -221,22 +221,25 @@ def repaginate_and_save(docx_path):
         
         # WordOpenXML is Flat OPC format.
         # ElementTree strips original namespace prefixes (w:, etc.) and replaces them with ns0:,
-        # which breaks strict parsers like the Dart app. 
-        # We must extract the exact raw string of the document.xml part.
+        # which breaks strict parsers like the Dart app.
+        # We must extract the exact raw string of the needed XML parts.
         import re
-        document_xml_str = None
-        
-        # Regex to find the <pkg:part> block for /word/document.xml
-        # and capture everything inside its <pkg:xmlData> tag.
-        # Dotall is needed because the XML might contain newlines.
-        match = re.search(r'<pkg:part[^>]*pkg:name="/word/document\.xml"[^>]*>.*?<pkg:xmlData>(.*?)</pkg:xmlData>.*?</pkg:part>', flat_opc_xml, flags=re.DOTALL)
-        
-        if match:
-            # We add the XML declaration back since the raw extracted data won't have it
-            document_xml_str = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + match.group(1)
-                
+
+        def extract_flat_opc_part(part_name):
+            pattern = (
+                r'<pkg:part[^>]*pkg:name="' + re.escape(part_name) +
+                r'"[^>]*>.*?<pkg:xmlData>(.*?)</pkg:xmlData>.*?</pkg:part>'
+            )
+            match = re.search(pattern, flat_opc_xml, flags=re.DOTALL)
+            if not match:
+                return None
+            return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + match.group(1)
+
+        document_xml_str = extract_flat_opc_part('/word/document.xml')
+        document_rels_xml_str = extract_flat_opc_part('/word/_rels/document.xml.rels')
+
         if document_xml_str:
-            # استبدال word/document.xml داخل الأرشيف
+            # استبدال word/document.xml و document.xml.rels داخل الأرشيف
             import zipfile
             import os
             
@@ -246,12 +249,17 @@ def repaginate_and_save(docx_path):
                     for item in zin.infolist():
                         if item.filename == 'word/document.xml':
                             zout.writestr(item, document_xml_str.encode('utf-8'))
+                        elif item.filename == 'word/_rels/document.xml.rels' and document_rels_xml_str:
+                            zout.writestr(item, document_rels_xml_str.encode('utf-8'))
                         else:
                             zout.writestr(item, zin.read(item.filename))
             
             import shutil
             shutil.move(temp_zip_path, docx_path)
-            print("STATUS:Successfully updated document.xml from memory without saving.", flush=True)
+            if document_rels_xml_str:
+                print("STATUS:Successfully updated document.xml and document.xml.rels from Word memory without saving.", flush=True)
+            else:
+                print("STATUS:Successfully updated document.xml from Word memory without saving.", flush=True)
         else:
             print("ERROR: Could not find /word/document.xml in WordOpenXML output.", flush=True)
             

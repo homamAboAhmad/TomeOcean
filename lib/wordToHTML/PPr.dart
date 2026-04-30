@@ -6,6 +6,7 @@ import 'package:golden_shamela/wordToHTML/MyInt.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
+import 'package:golden_shamela/wordToHTML/NumberingMarkerNumeralResolver.dart';
 import 'package:golden_shamela/wordToHTML/abstractNum.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
 import 'package:golden_shamela/wordToHTML/TabStop.dart';
@@ -333,6 +334,11 @@ class PPr {
   void fixTextAlign() {
     if (isRtl && textAlign == null)
       textAlign = "right";
+    // OOXML jc is defined relative to the page, but Word's bidi paragraph
+    // behavior evaluates left/right against the paragraph reading order in
+    // practice. We mirror explicit left/right here to match Word rendering.
+    else if (isRtl && textAlign == "left")
+      textAlign = "right";
     else if (isRtl && textAlign == "right")
       textAlign = "left";
   }
@@ -602,10 +608,29 @@ class PPr {
       return const [TextSpan(text: "")];
     }
 
+    RPr? paraRPr;
+    if (xmlprPr != null) {
+      paraRPr = RPr(getEmptyRun()).fromXml(xmlprPr);
+    }
+
     String displayNumber = getDisblayNumber(
       level,
       numId: numId,
       paragraphNumber: paragraphNumber!,
+    );
+
+    displayNumber = resolveNumberingMarkerNumerals(
+      displayNumber: displayNumber,
+      useArabicNumerals: wordDocument.useArabicNumerals,
+      fontCandidates: [
+        level.fontFamily,
+        paraRPr?.font,
+        paraRPr?.enFont,
+        paraRPr?.uniqueFont,
+        parent.prPr?.font,
+        parent.prPr?.enFont,
+        parent.prPr?.uniqueFont,
+      ],
     );
 
     TextStyle? numberingStyle;
@@ -616,8 +641,7 @@ class PPr {
     Color? numberColor = _parseWordColor(level.color);
     Paint? backgroundPaint = _parseHighlight(level.highlightColor);
 
-    if (numberColor == null && xmlprPr != null) {
-      RPr paraRPr = RPr(getEmptyRun()).fromXml(xmlprPr);
+    if (numberColor == null && paraRPr != null) {
       numberColor = _parseWordColor(paraRPr.color);
       backgroundPaint ??= _parseHighlight(paraRPr.highlightColor);
     }

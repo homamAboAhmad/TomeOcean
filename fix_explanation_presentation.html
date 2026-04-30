@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شرح إصلاح مشكلة الفوتر</title>
+  <style>
+    :root {
+      --bg: #f6f1e8;
+      --paper: #fffaf2;
+      --ink: #1d1b18;
+      --muted: #6c6257;
+      --accent: #8f3d2e;
+      --accent-soft: #ead1c6;
+      --line: #dccdbb;
+      --shadow: 0 20px 60px rgba(71, 49, 33, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, #f0dccf 0, transparent 24rem),
+        linear-gradient(180deg, #f7f2eb 0%, #efe4d3 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    .deck {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 32px 20px 88px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .titlebox {
+      background: rgba(255, 250, 242, 0.78);
+      border: 1px solid rgba(143, 61, 46, 0.12);
+      border-radius: 22px;
+      padding: 18px 22px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .titlebox h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.7rem, 3vw, 2.8rem);
+    }
+
+    .titlebox p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .counter {
+      min-width: 104px;
+      text-align: center;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+      color: var(--accent);
+      box-shadow: var(--shadow);
+    }
+
+    .slide {
+      display: none;
+      min-height: 68vh;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 34px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide.active { display: block; }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(143, 61, 46, 0.08), transparent 70%);
+      pointer-events: none;
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 18px;
+      font-size: clamp(1.5rem, 2.4vw, 2.3rem);
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 1.06rem;
+    }
+
+    p, li {
+      font-size: 1.05rem;
+      line-height: 1.9;
+    }
+
+    ul {
+      margin: 0;
+      padding-right: 22px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .flow {
+      display: grid;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .step {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .badge {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+    }
+
+    .code {
+      direction: ltr;
+      text-align: left;
+      white-space: pre-wrap;
+      background: #221d19;
+      color: #f6eee7;
+      border-radius: 18px;
+      padding: 18px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.92rem;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    .note {
+      border-right: 5px solid var(--accent);
+      background: var(--accent-soft);
+      padding: 14px 16px;
+      border-radius: 16px;
+      margin-top: 16px;
+    }
+
+    .good { color: #21603b; }
+    .warn { color: #8c4c00; }
+
+    .nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 18px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 20px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 14px 22px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    button.secondary {
+      background: #fff;
+      color: var(--accent);
+      border: 1px solid var(--line);
+    }
+
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ccb8a5;
+    }
+
+    .dot.active {
+      background: var(--accent);
+      transform: scale(1.2);
+    }
+
+    @media (max-width: 700px) {
+      .slide { padding: 24px 20px; }
+      .topbar { flex-direction: column; align-items: stretch; }
+      .counter { align-self: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck">
+    <div class="topbar">
+      <div class="titlebox">
+        <h1>شرح إصلاح مشكلة الفوتر</h1>
+        <p>عرض مبسط يشرح أين كانت المشكلة، كيف تم حلها، وما مدى تأثير الحل على بقية الكتب.</p>
+      </div>
+      <div class="counter" id="counter">1 / 6</div>
+    </div>
+
+    <section class="slide active">
+      <h2>1. ما المشكلة أصلًا؟</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>ما الذي ظهر في التطبيق؟</h3>
+          <p>رقم الصفحة كان ظاهرًا في Word، لكن التطبيق كان يقول إنه لا يوجد Footer لهذه الصفحة.</p>
+        </div>
+        <div class="card">
+          <h3>لماذا كان هذا محيرًا؟</h3>
+          <p>لأن المستند الأصلي نفسه يحتوي فعلًا على <code>footer1.xml</code> وفيه حقل <code>PAGE</code>.</p>
+        </div>
+        <div class="card">
+          <h3>الملاحظة الحاسمة</h3>
+          <p>الخطأ لم يكن في العرض البصري، بل في الربط بين <code>document.xml</code> و<code>document.xml.rels</code>.</p>
+        </div>
+      </div>
+      <div class="note">
+        الفكرة الأساسية: الفوتر لم يكن "مفقودًا" من الملف، بل التطبيق كان يصل إلى مرجع خاطئ بدل المرجع الحقيقي.
+      </div>
+    </section>
+
+    <section class="slide">
+      <h2>2. أين كان الخلل تقنيًا؟</h2>
+      <div class="flow">
+        <div class="step">
+          <div class="badge">1</div>
+          <div>
+            <h3>داخل <code>document.xml</code></h3>
+            <p>قسم الصفحة <code>sectPr</code> كان يشير إلى <code>footerReference</code> عبر <code>r:id</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="badge">2</div>
+          <div>
+            <h3>داخل <code>document.xml.rels</code></h3>
+            <p>هذا الملف هو الذي يفسر كل <code>r:id</code> ويحوّله إلى ملف فعلي مثل <code>footer1.xml</code> أو <code>header1.xml</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="badge">3</div>
+          <div>
+            <h3>النتيجة عند عدم التطابق</h3>
+            <p>صار <code>sectPr</code> يطلب رقم علاقة، لكن جدول العلاقات يفسره لملف آخر. فبدل أن نصل إلى الفوتر، كنا نصل إلى هيدر أو حتى صورة.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <h2>3. لماذا حدث ذلك أثناء المعالجة؟</h2>
+      <p>في مرحلة Word، كان السكربت يأخذ من Word نسخة محدثة من <code>document.xml</code> عبر <code>WordOpenXML</code>.</p>
+      <div class="code">قبل الإصلاح:
+- نحدّث word/document.xml فقط
+- نترك word/_rels/document.xml.rels كما كان قديمًا</div>
+      <p>إذا كان Word غيّر أرقام العلاقات داخل <code>document.xml</code>، فسيصبح الملفان غير متوافقين:</p>
+      <div class="code">document.xml         => يطلب rId12 / rId13
+document.xml.rels    => ما زال يعرّف rId13 / rId14 بطريقة قديمة</div>
+      <div class="note">
+        وهذا يفسر تمامًا لماذا بدا أن الفوتر "غير موجود" رغم أنه موجود فعليًا في المستند.
+      </div>
+    </section>
+
+    <section class="slide">
+      <h2>4. كيف كان الحل؟</h2>
+      <p>الحل كان صغيرًا ومباشرًا جدًا داخل <code>pageRender.py</code>:</p>
+      <div class="flow">
+        <div class="step">
+          <div class="badge">1</div>
+          <div>
+            <h3>استخراج جزأين بدل جزء واحد</h3>
+            <p>لم نعد نستخرج من <code>WordOpenXML</code> ملف <code>document.xml</code> فقط، بل أيضًا <code>document.xml.rels</code> إذا كان موجودًا.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="badge">2</div>
+          <div>
+            <h3>تحديثهما معًا داخل الحزمة</h3>
+            <p>أثناء إعادة كتابة ملف الـ <code>docx</code>، صار التحديث يشمل ملف المحتوى وملف العلاقات معًا.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="badge">3</div>
+          <div>
+            <h3>النتيجة</h3>
+            <p>عندما يطلب <code>sectPr</code> الفوتر عبر <code>r:id</code>، يجد العلاقة الصحيحة ويصل إلى <code>footer1.xml</code> بدل أن يضل الطريق.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <h2>5. هل للحل آثار سلبية؟</h2>
+      <div class="grid">
+        <div class="card">
+          <h3 class="good">لماذا الحل آمن نسبيًا؟</h3>
+          <ul>
+            <li>لم نغيّر منطق الفقرات أو الرنز أو الـ BiDi.</li>
+            <li>لم نغيّر الترقيم أو الـ layout داخل Flutter.</li>
+            <li>لم نعدّل كيفية اختيار الفوتر داخل التطبيق.</li>
+            <li>صححنا فقط اتساق ملفين يجب أصلًا أن يبقيا متوافقين.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 class="warn">ما الخطر المحتمل؟</h3>
+          <ul>
+            <li>إذا لم يُرجع Word جزء <code>document.xml.rels</code> في بعض الملفات، فالكود يعود تلقائيًا للسلوك القديم.</li>
+            <li>إذا كان هناك ملف نادر يعتمد على بقاء العلاقات القديمة رغم تغيّر <code>document.xml</code>، فهذه حالة غير منطقية أصلًا، لكنها نظريًا تستحق الانتباه.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note">
+        الخلاصة العملية: التأثير المتوقع على بقية الكتب منخفض، لأن الحل لا يفرض سلوكًا جديدًا، بل يمنع عدم التوافق الداخلي بين ملفات المستند.
+      </div>
+    </section>
+
+    <section class="slide">
+      <h2>6. الخلاصة النهائية</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>المشكلة لم تكن:</h3>
+          <p>لا في <code>pageInSection</code>، ولا في RTL، ولا في Flutter rendering.</p>
+        </div>
+        <div class="card">
+          <h3>المشكلة كانت:</h3>
+          <p>عدم تزامن <code>document.xml</code> مع <code>document.xml.rels</code> بعد المعالجة.</p>
+        </div>
+        <div class="card">
+          <h3>الحل كان:</h3>
+          <p>تحديث الملفين معًا عند سحب التعديلات من Word.</p>
+        </div>
+      </div>
+      <div class="note">
+        إذا عاد نفس النوع من الخطأ مستقبلًا، فالأولوية تكون دائمًا لفحص اتساق:
+        <code>sectPr → r:id → document.xml.rels → target part</code>
+      </div>
+      <div class="dots" id="dots"></div>
+    </section>
+  </div>
+
+  <div class="nav">
+    <button class="secondary" id="prevBtn">السابق</button>
+    <button id="nextBtn">التالي</button>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const counter = document.getElementById("counter");
+    const nextBtn = document.getElementById("nextBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const dotsHost = document.getElementById("dots");
+    let index = 0;
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement("div");
+      dot.className = "dot";
+      dot.addEventListener("click", () => show(i));
+      dotsHost.appendChild(dot);
+    });
+
+    function show(i) {
+      index = Math.max(0, Math.min(slides.length - 1, i));
+      slides.forEach((slide, idx) => slide.classList.toggle("active", idx === index));
+      counter.textContent = `${index + 1} / ${slides.length}`;
+      nextBtn.textContent = index === slides.length - 1 ? "إعادة" : "التالي";
+      prevBtn.disabled = index === 0;
+      prevBtn.style.opacity = index === 0 ? "0.5" : "1";
+      Array.from(dotsHost.children).forEach((dot, idx) => {
+        dot.classList.toggle("active", idx === index);
+      });
+    }
+
+    nextBtn.addEventListener("click", () => {
+      if (index === slides.length - 1) {
+        show(0);
+      } else {
+        show(index + 1);
+      }
+    });
+
+    prevBtn.addEventListener("click", () => show(index - 1));
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft") show(index + 1);
+      if (event.key === "ArrowRight") show(index - 1);
+    });
+
+    show(0);
+  </script>
+</body>
+</html>
