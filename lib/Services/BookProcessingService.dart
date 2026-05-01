@@ -872,11 +872,24 @@ class BookProcessingService {
     };
   }
 
-  Future<void> _deleteIfExists(String path) async {
+  Future<void> _deleteIfExists(String path, {int maxRetries = 3}) async {
     if (path.isEmpty) return;
     final file = File(path);
-    if (await file.exists()) {
-      await file.delete();
+    if (!await file.exists()) return;
+
+    int attempt = 0;
+    while (true) {
+      try {
+        await file.delete();
+        return;
+      } catch (e) {
+        attempt++;
+        if (attempt >= maxRetries) {
+          debugPrint("Failed to delete $path after $maxRetries attempts: $e");
+          return;
+        }
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
     }
   }
 

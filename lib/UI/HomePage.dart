@@ -4,7 +4,6 @@ import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/UI/DocViewer.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
-import 'package:golden_shamela/UI/Widgets/IndexingDialog.dart';
 import 'package:golden_shamela/UI/SettingsScreen.dart';
 import 'package:golden_shamela/UI/AuthorsManagement/authors_management_screen.dart';
 import 'package:golden_shamela/UI/Search/shamela_search_view.dart';
@@ -155,11 +154,6 @@ class _HomePageState extends State<HomePage> {
               onPressed: () => _searchHandlers!.openSearchWindow(),
             ),
             _buildAppBarAction(
-              icon: Icons.storage_rounded,
-              tooltip: 'فهرسة الكتب',
-              onPressed: () => _showIndexingDialog(context),
-            ),
-            _buildAppBarAction(
               icon: Icons.people_outline_rounded,
               tooltip: 'إدارة المؤلفين',
               onPressed: () => Navigator.push(
@@ -308,13 +302,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showIndexingDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const IndexingDialog(),
-    );
-  }
 
   Future<void> _onBookSelected(
     File book, {

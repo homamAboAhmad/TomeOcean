@@ -49,6 +49,22 @@ class WordPage {
     return wordPage;
   }
 
+  /// النص المعروض فعلاً لكل فقرة مرئية — يطابق ما يضعه Flutter في الحافظة تماماً
+  List<String> getVisibleRenderedTexts() {
+    final result = <String>[];
+    for (final p in ps) {
+      if (_isParagraphVisuallyRelevant(p)) {
+        result.add(p.renderedPlainText);
+      }
+    }
+    for (final fn in fns) {
+      for (final p in fn.paragraphs) {
+        result.add(p.renderedPlainText);
+      }
+    }
+    return result;
+  }
+
   /// نص الصفحة (المتن + الحواشي) مع فواصل واضحة بينهما
   /// نضيف سطرين فارغين بين المتن والحواشي، وسطرين في النهاية حتى يكون هناك
   /// فراغ عند دمج صفحات متعددة.

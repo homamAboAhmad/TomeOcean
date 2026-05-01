@@ -32,6 +32,7 @@ import 'DocViewer/doc_viewer_bottom_toolbar.dart';
 import 'DocViewer/page_viewport_tracker.dart';
 import 'DocViewer/doc_viewer_top_toolbar.dart';
 import 'WordPageScreen.dart';
+import 'clipboard_post_processor.dart';
 import 'custom_context_menu.dart';
 import '../Utils/Widgets/SelectionAutoScroller.dart';
 
@@ -730,24 +731,41 @@ class _PageItemLoaderState extends State<PageItemLoader>
                   child: Container(
                     width: baseW,
                     constraints: BoxConstraints(minHeight: baseH),
-                    child: SelectionArea(
-                      contextMenuBuilder:
-                          (
-                            context,
-                            selectableRegionState,
-                          ) {
-                            return CustomContextMenu(
-                              state: selectableRegionState,
-                              bookTitle: widget.wordDocument.title,
-                              pageNumber: widget.pageIndex + 1,
-                              contextMenuAnchors:
-                                  selectableRegionState.contextMenuAnchors,
-                            );
-                          },
-                      child: WordPageScreen(
-                        snapshot.data!,
-                        wordDocument: widget.wordDocument,
-                        paragraphKeyBuilder: widget.paragraphKeyBuilder,
+                    child: Focus(
+                      onKeyEvent: (node, event) {
+                        if (event is KeyDownEvent &&
+                            event.logicalKey == LogicalKeyboardKey.keyC &&
+                            HardwareKeyboard.instance.isControlPressed) {
+                          // Let Flutter's default Ctrl+C happen first,
+                          // then post-process clipboard to add paragraph breaks
+                          final wp = snapshot.data!;
+                          Future.delayed(
+                            const Duration(milliseconds: 100),
+                            () => ClipboardPostProcessor.postProcessClipboard(wp),
+                          );
+                        }
+                        return KeyEventResult.ignored;
+                      },
+                      child: SelectionArea(
+                        contextMenuBuilder:
+                            (
+                              context,
+                              selectableRegionState,
+                            ) {
+                              return CustomContextMenu(
+                                state: selectableRegionState,
+                                bookTitle: widget.wordDocument.title,
+                                pageNumber: widget.pageIndex + 1,
+                                contextMenuAnchors:
+                                    selectableRegionState.contextMenuAnchors,
+                                wordPage: snapshot.data!,
+                              );
+                            },
+                        child: WordPageScreen(
+                          snapshot.data!,
+                          wordDocument: widget.wordDocument,
+                          paragraphKeyBuilder: widget.paragraphKeyBuilder,
+                        ),
                       ),
                     ),
                   ),

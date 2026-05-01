@@ -67,6 +67,8 @@ class Paragraph {
 
   @JsonKey(ignore: true)
   String? customPageNumber;
+  @JsonKey(ignore: true)
+  String? _cachedRenderedPlainText;
   List<runT> runs = [];
   String text = ""; // Reverted to field
   @JsonKey(ignore: true)
@@ -875,6 +877,11 @@ class Paragraph {
     }
 
     List<InlineSpan> spans = getPSpans();
+
+    // Cache the plain text from these spans for clipboard matching
+    final buf = StringBuffer();
+    _collectSpanText(spans, buf);
+    _cachedRenderedPlainText = buf.toString();
 
     // لون تظليل الفقرة (إن وجد في w:pPr/w:shd)
     Color? backgroundColor = _getParagraphShadingColor();
@@ -2159,13 +2166,66 @@ class Paragraph {
 
     List<InlineSpan> spans = [
       // w:firstLine — indent ONLY the first line (not all lines like container padding would)
+      // Use TextSpan instead of WidgetSpan(SizedBox) so the indent remains
+      // selectable. WidgetSpan with a non-selectable child breaks SelectableRegion.
       if (pPr?.firstLineIndent != null && pPr!.firstLineIndent! > 0)
-        WidgetSpan(child: SizedBox(width: pPr!.firstLineIndent!)),
+        _firstLineIndentSpan(pPr!.firstLineIndent!, _effectiveIndentStyle()),
       ...(pPr?.getNumberingSpans() ?? const [TextSpan(text: "")]),
       ...textRunTs.map((e) => e.toWidgetWithImg()).toList(),
     ];
     spans = fixRtlWidgetSpan(spans);
     return spans;
+  }
+
+  /// Returns the exact plain text that Flutter's clipboard would contain for
+  /// this paragraph. Walks the rendered InlineSpan tree from getPSpans() and
+  /// collects TextSpan.text values only (WidgetSpans produce \uFFFC which the
+  /// caller strips, so we skip them here).
+  String get renderedPlainText {
+    if (_cachedRenderedPlainText != null) return _cachedRenderedPlainText!;
+    // Fallback: compute from spans (may differ from actual render)
+    final spans = getPSpans();
+    final buffer = StringBuffer();
+    _collectSpanText(spans, buffer);
+    return buffer.toString();
+  }
+
+  /// Returns the effective TextStyle for the first-line indent span,
+  /// derived from the paragraph's run properties so the space glyph
+  /// matches the actual font used in rendering.
+  TextStyle _effectiveIndentStyle() {
+    if (prPr != null) return prPr!.getTextStyle();
+    if (textRunTs.isNotEmpty) return textRunTs.first.getEffectiveTextStyle();
+    return const TextStyle();
+  }
+
+  /// Creates a selectable TextSpan for first-line indent instead of
+  /// WidgetSpan(SizedBox) which breaks SelectableRegion flow.
+  static TextSpan _firstLineIndentSpan(double indentPx, TextStyle baseStyle) {
+    // Measure a single space with the actual font to compute letterSpacing
+    final painter = TextPainter(
+      text: TextSpan(text: ' ', style: baseStyle),
+      textDirection: TextDirection.rtl,
+      maxLines: 1,
+    )..layout();
+    final spaceAdvance = painter.width;
+    final extraSpacing = indentPx - spaceAdvance;
+    if (extraSpacing > 0) {
+      return TextSpan(text: ' ', style: baseStyle.copyWith(letterSpacing: extraSpacing));
+    }
+    return TextSpan(text: ' ', style: baseStyle);
+  }
+
+  static void _collectSpanText(List<InlineSpan> spans, StringBuffer buffer) {
+    for (final span in spans) {
+      if (span is TextSpan) {
+        if (span.text != null) buffer.write(span.text);
+        if (span.children != null) {
+          _collectSpanText(span.children!.cast<InlineSpan>(), buffer);
+        }
+      }
+      // WidgetSpan → \uFFFC in clipboard → skip
+    }
   }
 
   EdgeInsets _getPPaddings({

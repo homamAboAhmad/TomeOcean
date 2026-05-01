@@ -4629,3 +4629,107 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-04-30 15:48:00.145525 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البرامج العملية للحياة اليومية.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 15:54:02.516525 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البرامج العملية للحياة اليومية.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 16:05:52.307354 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البرامج العملية للحياة اليومية.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 16:07:09.777193 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-04-30 16:11:34.795725 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البرامج العملية للحياة اليومية.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 16:14:19.415830 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_البرامج العملية للحياة اليومية.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_البرامج العملية للحياة اليومية.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 16:15:01.605285 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-04-30 17:49:02.125713 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_أكثر من ألف سنة في اليوم والليلة.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_أكثر من ألف سنة في اليوم والليلة.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 22:02:10.647639 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_قضايا ساخنة مع الشيخ أيمن الظواهري - 1427 هـ.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_قضايا ساخنة مع الشيخ أيمن الظواهري - 1427 هـ.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_قضايا ساخنة مع الشيخ أيمن الظواهري - 1427 هـ.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-04-30 22:09:09.246225 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_كيف تسبق العلماء؟.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_كيف تسبق العلماء؟.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_كيف تسبق العلماء؟.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.

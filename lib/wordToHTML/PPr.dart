@@ -685,7 +685,24 @@ class PPr {
       default:
         final spacerWidth = hangingPx - markerWidth;
         if (spacerWidth > 0) {
-          spans.add(WidgetSpan(child: SizedBox(width: spacerWidth)));
+          // Use TextSpan instead of WidgetSpan(SizedBox) so the spacer
+          // remains selectable. WidgetSpan with a non-selectable child
+          // (SizedBox) breaks SelectableRegion flow across paragraphs.
+          final spacePainter = TextPainter(
+            text: TextSpan(text: ' ', style: effectiveMarkerStyle),
+            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+            maxLines: 1,
+          )..layout();
+          final spaceAdvance = spacePainter.width;
+          final extraSpacing = spacerWidth - spaceAdvance;
+          if (extraSpacing > 0) {
+            spans.add(TextSpan(
+              text: ' ',
+              style: effectiveMarkerStyle.copyWith(letterSpacing: extraSpacing),
+            ));
+          } else {
+            spans.add(const TextSpan(text: ' '));
+          }
         }
         break;
     }

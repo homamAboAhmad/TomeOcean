@@ -11,6 +11,7 @@ import 'package:golden_shamela/wordToHTML/PPr.dart';
 import 'package:golden_shamela/wordToHTML/Paragraph.dart';
 import 'package:golden_shamela/wordToHTML/RPr.dart';
 import 'package:golden_shamela/wordToHTML/TabStop.dart';
+import 'package:golden_shamela/wordToHTML/WordSymbolResolver.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 import 'package:golden_shamela/wordToHTML/DocRelations.dart';
@@ -167,7 +168,7 @@ class runT {
       return TextSpan(text: "");
     }
 
-    Widget? tab = getTabWidget();
+    InlineSpan? tabSpan = getTabSpan();
     // fixFnr() removed - parentheses are now fixed in addFnToPage
     checkSymbol();
 
@@ -282,17 +283,16 @@ class runT {
           ),
         ),
       );
-    } else if (tab != null) {
-      return WidgetSpan(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (hasBrBefore) Text("\n", style: effectiveStyle),
-            Text.rich(TextSpan(children: contentSpans), style: effectiveStyle),
-            if (hasBrAfter) Text("\n", style: effectiveStyle),
-            tab,
-          ],
-        ),
+    } else if (tabSpan != null) {
+      // Use TextSpan children instead of WidgetSpan(Row) so the tab
+      // content remains selectable within SelectableRegion.
+      return TextSpan(
+        children: [
+          if (hasBrBefore) TextSpan(text: "\n", style: effectiveStyle),
+          ...contentSpans,
+          if (hasBrAfter) TextSpan(text: "\n", style: effectiveStyle),
+          tabSpan,
+        ],
       );
     } else {
       // Reconstruct full span sequence with breaks
@@ -416,15 +416,11 @@ class runT {
     if ((text?.isEmpty ?? true) && xmlRun != null) {
       var symElement = xmlRun!.findElements("w:sym").firstOrNull;
       if (symElement != null) {
-        String? charHex = symElement.getAttribute("w:char");
-        if (charHex != null && charHex.isNotEmpty) {
-          try {
-            int codePoint = int.parse(charHex, radix: 16);
-            text = String.fromCharCode(codePoint);
-          } catch (e) {
-            text = "?"; // رمز بديل
-          }
-        }
+        final resolved = resolveWordSymbol(
+          fontName: symElement.getAttribute("w:font"),
+          charHex: symElement.getAttribute("w:char"),
+        );
+        text = resolved?.text ?? "?";
       }
     }
   }
@@ -439,28 +435,29 @@ class runT {
       var symElement = xmlRun!.findElements("w:sym").firstOrNull;
       String? fontName = symElement?.getAttribute("w:font");
       String? charHex = symElement?.getAttribute("w:char");
+      final resolved = resolveWordSymbol(fontName: fontName, charHex: charHex);
 
-      if (fontName != null && fontName.isNotEmpty) {
+      if (resolved?.fontFamily != null && resolved!.fontFamily!.isNotEmpty) {
+        rpr?.font = resolved.fontFamily;
+      } else if (fontName != null && fontName.isNotEmpty) {
         rpr?.font = fontName;
       }
 
-      if (charHex != null && charHex.isNotEmpty) {
-        try {
-          int codePoint = int.parse(charHex, radix: 16);
-          if (text?.isEmpty ?? true) {
-            text = String.fromCharCode(codePoint);
-          }
-        } catch (e) {
-          if (text?.isEmpty ?? true) {
-            text = "?";
-          }
-        }
-      } else {
-        if (text?.isEmpty ?? true) {
-          text = "?";
-        }
-      }
+      text = resolved?.text ?? "?";
     } else {
+      final resolvedFromCache = resolveCachedWordSymbol(
+        fontName: rpr?.font,
+        text: text,
+      );
+      if (resolvedFromCache != null) {
+        if (resolvedFromCache.fontFamily != null &&
+            resolvedFromCache.fontFamily!.isNotEmpty) {
+          rpr?.font = resolvedFromCache.fontFamily;
+        }
+        text = resolvedFromCache.text;
+        return;
+      }
+
       // تحديد الخط المناسب حسب نوع النص
       if (rpr != null) {
         String? appropriateFont = changeFontByTxt(text);
@@ -475,7 +472,7 @@ class runT {
     return xmlRun?.findElements("w:sym").isNotEmpty ?? false;
   }
 
-  Widget? getTabWidget() {
+  InlineSpan? getTabSpan() {
     if (xmlRun?.getElement("w:tab") == null) return null;
 
     // Get tab stops from parent paragraph's pPr
@@ -500,14 +497,27 @@ class runT {
     bool hasLeader = tabStop?.hasLeader ?? false;
 
     if (hasLeader) {
-      return _buildLeaderWidget(leaderType, tabWidth);
+      return _buildLeaderSpan(leaderType, tabWidth);
     } else {
-      // No leader - just space
-      return SizedBox(width: tabWidth);
+      // No leader — use a space + letterSpacing to fill the tab width
+      final effectiveStyle = getEffectiveTextStyle();
+      final painter = TextPainter(
+        text: TextSpan(text: ' ', style: effectiveStyle),
+        textDirection: TextDirection.ltr,
+        maxLines: 1,
+      )..layout();
+      final spaceAdvance = painter.width;
+      final extraSpacing = tabWidth - spaceAdvance;
+      if (extraSpacing > 0) {
+        return TextSpan(text: ' ', style: effectiveStyle.copyWith(letterSpacing: extraSpacing));
+      }
+      return TextSpan(text: ' ', style: effectiveStyle);
     }
   }
 
-  Widget _buildLeaderWidget(String? leaderType, double width) {
+  /// Builds a leader span (dots, underscores, etc.) as a selectable TextSpan
+  /// instead of a non-selectable Widget.
+  TextSpan _buildLeaderSpan(String? leaderType, double width) {
     String leaderChar;
     switch (leaderType) {
       case "dot":
@@ -537,21 +547,14 @@ class runT {
     int charCount = (width / charWidth).floor();
     if (charCount < 1) charCount = 1;
 
-    return SizedBox(
-      width: width,
-      child: Text(
-        leaderChar * charCount,
-        textAlign: TextAlign.center,
-        maxLines: 1,
-        softWrap: false,
-        overflow: TextOverflow.clip,
-        style: TextStyle(
-          fontFamily: "jreg",
-          color: Colors.black,
-          letterSpacing: leaderChar == "_"
-              ? 0
-              : 1.0, // Underscores need no spacing
-        ),
+    return TextSpan(
+      text: leaderChar * charCount,
+      style: TextStyle(
+        fontFamily: "jreg",
+        color: Colors.black,
+        letterSpacing: leaderChar == "_"
+            ? 0
+            : 1.0, // Underscores need no spacing
       ),
     );
   }

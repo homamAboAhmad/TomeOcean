@@ -21,7 +21,9 @@ class StatusTranslator {
     'Footnote mapping skipped': 'تم تخطي ربط الحواشي',
     'Running unified VBA macro...': 'جاري تشغيل المعالجة الموحدة (VBA)...',
     'Extracting modified XML from Word memory...': 'جاري استخراج XML من ذاكرة Word...',
-    'Successfully updated document.xml from memory without saving.': 'تم تحديث document.xml بنجاح.',
+    'Successfully updated document.xml and document.xml.rels from Word memory without saving.':
+        'تم تحديث بيانات المستند بنجاح.',
+    'Successfully updated document.xml from memory without saving.': 'تم تحديث بيانات المستند بنجاح.',
     'Processing XML with page break detection...': 'جاري معالجة XML وكشف فواصل الصفحات...',
     'Macro execution skipped (template missing).': 'تم تخطي الماكرو (القالب غير موجود).',
     'Macro execution skipped.': 'تم تخطي الماكرو.',

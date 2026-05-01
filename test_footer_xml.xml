@@ -1,459 +1,58 @@
 ╔══════════════════════════════════════════════════════════════════╗
 ║                     FOOTER XML START                              ║
 ╚══════════════════════════════════════════════════════════════════╝
-<w:ftr xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex" xmlns:cx1="http://schemas.microsoft.com/office/drawing/2015/9/8/chartex" xmlns:cx2="http://schemas.microsoft.com/office/drawing/2015/10/21/chartex" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:w15="http://schemas.microsoft.com/office/word/2012/wordml" xmlns:w16se="http://schemas.microsoft.com/office/word/2015/wordml/symex" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 w15 w16se wp14">
-  <w:p w:rsidR="00DC7BF8" w:rsidRDefault="002F44B7">
+<w:ftr xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:w10="urn:schemas-microsoft-com:office:word" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml" xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup" xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk" xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml" xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 wp14">
+  <w:sdt>
+    <w:sdtPr>
+      <w:rPr>
+        <w:rtl/>
+      </w:rPr>
+      <w:id w:val="-1881848323"/>
+      <w:docPartObj>
+        <w:docPartGallery w:val="Page Numbers (Bottom of Page)"/>
+        <w:docPartUnique/>
+      </w:docPartObj>
+    </w:sdtPr>
+    <w:sdtEndPr>
+      <w:rPr>
+        <w:noProof/>
+      </w:rPr>
+    </w:sdtEndPr>
+    <w:sdtContent>
+      <w:p w:rsidR="00E04EEE" w:rsidRDefault="00E04EEE">
+        <w:pPr>
+          <w:pStyle w:val="Footer"/>
+          <w:jc w:val="center"/>
+        </w:pPr>
+        <w:r>
+          <w:fldChar w:fldCharType="begin"/>
+        </w:r>
+        <w:r>
+          <w:instrText xml:space="preserve">PAGE \* MERGEFORMAT</w:instrText>
+        </w:r>
+        <w:r>
+          <w:fldChar w:fldCharType="separate"/>
+        </w:r>
+        <w:r w:rsidR="00897785">
+          <w:rPr>
+            <w:noProof/>
+            <w:rtl/>
+          </w:rPr>
+          <w:t>12</w:t>
+        </w:r>
+        <w:r>
+          <w:rPr>
+            <w:noProof/>
+          </w:rPr>
+          <w:fldChar w:fldCharType="end"/>
+        </w:r>
+      </w:p>
+    </w:sdtContent>
+  </w:sdt>
+  <w:p w:rsidR="00E04EEE" w:rsidRDefault="00E04EEE">
     <w:pPr>
-      <w:pStyle w:val="a6"/>
+      <w:pStyle w:val="Footer"/>
     </w:pPr>
-    <w:r>
-      <w:rPr>
-        <w:noProof/>
-      </w:rPr>
-      <w:drawing>
-        <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251657728" behindDoc="1" locked="0" layoutInCell="1" allowOverlap="1" wp14:anchorId="24F9224B" wp14:editId="04A5530B">
-          <wp:simplePos x="0" y="0"/>
-          <wp:positionH relativeFrom="column">
-            <wp:posOffset>-427355</wp:posOffset>
-          </wp:positionH>
-          <wp:positionV relativeFrom="paragraph">
-            <wp:posOffset>136416</wp:posOffset>
-          </wp:positionV>
-          <wp:extent cx="6306206" cy="563946"/>
-          <wp:effectExtent l="0" t="0" r="0" b="7620"/>
-          <wp:wrapNone/>
-          <wp:docPr id="18" name="صورة 18" descr="هامش2"/>
-          <wp:cNvGraphicFramePr>
-            <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>
-          </wp:cNvGraphicFramePr>
-          <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
-              <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
-                <pic:nvPicPr>
-                  <pic:cNvPr id="0" name="Picture 5" descr="هامش2"/>
-                  <pic:cNvPicPr>
-                    <a:picLocks noChangeArrowheads="1"/>
-                  </pic:cNvPicPr>
-                </pic:nvPicPr>
-                <pic:blipFill>
-                  <a:blip r:embed="rId1">
-                    <a:extLst>
-                      <a:ext uri="{28A0092B-C50C-407E-A947-70E740481C1C}">
-                        <a14:useLocalDpi xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" val="0"/>
-                      </a:ext>
-                    </a:extLst>
-                  </a:blip>
-                  <a:srcRect/>
-                  <a:stretch>
-                    <a:fillRect/>
-                  </a:stretch>
-                </pic:blipFill>
-                <pic:spPr bwMode="auto">
-                  <a:xfrm>
-                    <a:off x="0" y="0"/>
-                    <a:ext cx="6306206" cy="563946"/>
-                  </a:xfrm>
-                  <a:prstGeom prst="rect">
-                    <a:avLst/>
-                  </a:prstGeom>
-                  <a:noFill/>
-                  <a:ln>
-                    <a:noFill/>
-                  </a:ln>
-                </pic:spPr>
-              </pic:pic>
-            </a:graphicData>
-          </a:graphic>
-          <wp14:sizeRelH relativeFrom="page">
-            <wp14:pctWidth>0</wp14:pctWidth>
-          </wp14:sizeRelH>
-          <wp14:sizeRelV relativeFrom="page">
-            <wp14:pctHeight>0</wp14:pctHeight>
-          </wp14:sizeRelV>
-        </wp:anchor>
-      </w:drawing>
-    </w:r>
-    <w:r w:rsidR="008E372B">
-      <w:rPr>
-        <w:noProof/>
-      </w:rPr>
-      <mc:AlternateContent>
-        <mc:Choice Requires="wps">
-          <w:drawing>
-            <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251658752" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1" wp14:anchorId="6DB040E8" wp14:editId="1DB6E35E">
-              <wp:simplePos x="0" y="0"/>
-              <wp:positionH relativeFrom="column">
-                <wp:posOffset>-658890</wp:posOffset>
-              </wp:positionH>
-              <wp:positionV relativeFrom="paragraph">
-                <wp:posOffset>-36099</wp:posOffset>
-              </wp:positionV>
-              <wp:extent cx="800100" cy="554786"/>
-              <wp:effectExtent l="19050" t="19050" r="57150" b="74295"/>
-              <wp:wrapNone/>
-              <wp:docPr id="1" name="AutoShape 6"/>
-              <wp:cNvGraphicFramePr>
-                <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>
-              </wp:cNvGraphicFramePr>
-              <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-                <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
-                  <wps:wsp>
-                    <wps:cNvSpPr>
-                      <a:spLocks noChangeArrowheads="1"/>
-                    </wps:cNvSpPr>
-                    <wps:spPr bwMode="auto">
-                      <a:xfrm>
-                        <a:off x="0" y="0"/>
-                        <a:ext cx="800100" cy="554786"/>
-                      </a:xfrm>
-                      <a:prstGeom prst="flowChartDecision">
-                        <a:avLst/>
-                      </a:prstGeom>
-                      <a:gradFill rotWithShape="1">
-                        <a:gsLst>
-                          <a:gs pos="0">
-                            <a:srgbClr val="D6B19C"/>
-                          </a:gs>
-                          <a:gs pos="30000">
-                            <a:srgbClr val="D49E6C"/>
-                          </a:gs>
-                          <a:gs pos="70000">
-                            <a:srgbClr val="A65528"/>
-                          </a:gs>
-                          <a:gs pos="100000">
-                            <a:srgbClr val="663012"/>
-                          </a:gs>
-                        </a:gsLst>
-                        <a:path path="shape">
-                          <a:fillToRect l="50000" t="50000" r="50000" b="50000"/>
-                        </a:path>
-                      </a:gradFill>
-                      <a:ln w="9525">
-                        <a:solidFill>
-                          <a:srgbClr val="C58F2D"/>
-                        </a:solidFill>
-                        <a:miter lim="800000"/>
-                        <a:headEnd/>
-                        <a:tailEnd/>
-                      </a:ln>
-                      <a:effectLst>
-                        <a:outerShdw dist="45791" dir="3378596" algn="ctr" rotWithShape="0">
-                          <a:srgbClr val="000099">
-                            <a:alpha val="56000"/>
-                          </a:srgbClr>
-                        </a:outerShdw>
-                      </a:effectLst>
-                    </wps:spPr>
-                    <wps:txbx>
-                      <w:txbxContent>
-                        <w:p w:rsidR="001269D8" w:rsidRPr="00926605" w:rsidRDefault="001269D8" w:rsidP="001269D8">
-                          <w:pPr>
-                            <w:jc w:val="center"/>
-                            <w:rPr>
-                              <w:rFonts w:cs="Traditional Arabic"/>
-                              <w:b/>
-                              <w:bCs/>
-                              <w:sz w:val="28"/>
-                              <w:szCs w:val="28"/>
-                            </w:rPr>
-                          </w:pPr>
-                          <w:r w:rsidRPr="00926605">
-                            <w:rPr>
-                              <w:rStyle w:val="a7"/>
-                              <w:rFonts w:cs="Traditional Arabic"/>
-                              <w:b/>
-                              <w:bCs/>
-                              <w:sz w:val="28"/>
-                              <w:szCs w:val="28"/>
-                            </w:rPr>
-                            <w:fldChar w:fldCharType="begin"/>
-                          </w:r>
-                          <w:r w:rsidRPr="00926605">
-                            <w:rPr>
-                              <w:rStyle w:val="a7"/>
-                              <w:rFonts w:cs="Traditional Arabic"/>
-                              <w:b/>
-                              <w:bCs/>
-                              <w:sz w:val="28"/>
-                              <w:szCs w:val="28"/>
-                            </w:rPr>
-                            <w:instrText xml:space="preserve">PAGE</w:instrText>
-                          </w:r>
-                          <w:r w:rsidRPr="00926605">
-                            <w:rPr>
-                              <w:rStyle w:val="a7"/>
-                              <w:rFonts w:cs="Traditional Arabic"/>
-                              <w:b/>
-                              <w:bCs/>
-                              <w:sz w:val="28"/>
-                              <w:szCs w:val="28"/>
-                            </w:rPr>
-                            <w:fldChar w:fldCharType="separate"/>
-                          </w:r>
-                          <w:r w:rsidR="00037A8C">
-                            <w:rPr>
-                              <w:rStyle w:val="a7"/>
-                              <w:rFonts w:cs="Traditional Arabic"/>
-                              <w:b/>
-                              <w:bCs/>
-                              <w:noProof/>
-                              <w:sz w:val="28"/>
-                              <w:szCs w:val="28"/>
-                              <w:rtl/>
-                            </w:rPr>
-                            <w:t>3</w:t>
-                          </w:r>
-                          <w:r w:rsidRPr="00926605">
-                            <w:rPr>
-                              <w:rStyle w:val="a7"/>
-                              <w:rFonts w:cs="Traditional Arabic"/>
-                              <w:b/>
-                              <w:bCs/>
-                              <w:sz w:val="28"/>
-                              <w:szCs w:val="28"/>
-                            </w:rPr>
-                            <w:fldChar w:fldCharType="end"/>
-                          </w:r>
-                        </w:p>
-                      </w:txbxContent>
-                    </wps:txbx>
-                    <wps:bodyPr rot="0" vert="horz" wrap="square" lIns="91440" tIns="45720" rIns="91440" bIns="45720" anchor="t" anchorCtr="0" upright="1">
-                      <a:noAutofit/>
-                    </wps:bodyPr>
-                  </wps:wsp>
-                </a:graphicData>
-              </a:graphic>
-              <wp14:sizeRelH relativeFrom="page">
-                <wp14:pctWidth>0</wp14:pctWidth>
-              </wp14:sizeRelH>
-              <wp14:sizeRelV relativeFrom="page">
-                <wp14:pctHeight>0</wp14:pctHeight>
-              </wp14:sizeRelV>
-            </wp:anchor>
-          </w:drawing>
-        </mc:Choice>
-        <mc:Fallback>
-          <w:pict>
-            <v:shapetype w14:anchorId="6DB040E8" id="_x0000_t110" coordsize="21600,21600" o:spt="110" path="m10800,l,10800,10800,21600,21600,10800xe">
-              <v:stroke joinstyle="miter"/>
-              <v:path gradientshapeok="t" o:connecttype="rect" textboxrect="5400,5400,16200,16200"/>
-            </v:shapetype>
-            <v:shape id="_x0000_s1030" type="#_x0000_t110" style="position:absolute;left:0;text-align:left;margin-left:-51.9pt;margin-top:-2.85pt;width:63pt;height:43.7pt;z-index:251658752;visibility:visible;mso-wrap-style:square;mso-width-percent:0;mso-height-percent:0;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;mso-width-percent:0;mso-height-percent:0;mso-width-relative:page;mso-height-relative:page;v-text-anchor:top" o:gfxdata="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&#xA;AA==&#xA;" fillcolor="#d6b19c" strokecolor="#c58f2d">
-              <v:fill color2="#663012" rotate="t" focusposition=".5,.5" focussize="" colors="0 #d6b19c;19661f #d49e6c;45875f #a65528;1 #663012" focus="100%" type="gradientRadial"/>
-              <v:shadow on="t" color="#009" opacity="36700f" offset=",3pt"/>
-              <v:textbox>
-                <w:txbxContent>
-                  <w:p w:rsidR="001269D8" w:rsidRPr="00926605" w:rsidRDefault="001269D8" w:rsidP="001269D8">
-                    <w:pPr>
-                      <w:jc w:val="center"/>
-                      <w:rPr>
-                        <w:rFonts w:cs="Traditional Arabic"/>
-                        <w:b/>
-                        <w:bCs/>
-                        <w:sz w:val="28"/>
-                        <w:szCs w:val="28"/>
-                      </w:rPr>
-                    </w:pPr>
-                    <w:r w:rsidRPr="00926605">
-                      <w:rPr>
-                        <w:rStyle w:val="a7"/>
-                        <w:rFonts w:cs="Traditional Arabic"/>
-                        <w:b/>
-                        <w:bCs/>
-                        <w:sz w:val="28"/>
-                        <w:szCs w:val="28"/>
-                      </w:rPr>
-                      <w:fldChar w:fldCharType="begin"/>
-                    </w:r>
-                    <w:r w:rsidRPr="00926605">
-                      <w:rPr>
-                        <w:rStyle w:val="a7"/>
-                        <w:rFonts w:cs="Traditional Arabic"/>
-                        <w:b/>
-                        <w:bCs/>
-                        <w:sz w:val="28"/>
-                        <w:szCs w:val="28"/>
-                      </w:rPr>
-                      <w:instrText xml:space="preserve">PAGE</w:instrText>
-                    </w:r>
-                    <w:r w:rsidRPr="00926605">
-                      <w:rPr>
-                        <w:rStyle w:val="a7"/>
-                        <w:rFonts w:cs="Traditional Arabic"/>
-                        <w:b/>
-                        <w:bCs/>
-                        <w:sz w:val="28"/>
-                        <w:szCs w:val="28"/>
-                      </w:rPr>
-                      <w:fldChar w:fldCharType="separate"/>
-                    </w:r>
-                    <w:r w:rsidR="00037A8C">
-                      <w:rPr>
-                        <w:rStyle w:val="a7"/>
-                        <w:rFonts w:cs="Traditional Arabic"/>
-                        <w:b/>
-                        <w:bCs/>
-                        <w:noProof/>
-                        <w:sz w:val="28"/>
-                        <w:szCs w:val="28"/>
-                        <w:rtl/>
-                      </w:rPr>
-                      <w:t>3</w:t>
-                    </w:r>
-                    <w:r w:rsidRPr="00926605">
-                      <w:rPr>
-                        <w:rStyle w:val="a7"/>
-                        <w:rFonts w:cs="Traditional Arabic"/>
-                        <w:b/>
-                        <w:bCs/>
-                        <w:sz w:val="28"/>
-                        <w:szCs w:val="28"/>
-                      </w:rPr>
-                      <w:fldChar w:fldCharType="end"/>
-                    </w:r>
-                  </w:p>
-                </w:txbxContent>
-              </v:textbox>
-            </v:shape>
-          </w:pict>
-        </mc:Fallback>
-      </mc:AlternateContent>
-    </w:r>
-    <w:r w:rsidR="00FB11F5">
-      <w:rPr>
-        <w:noProof/>
-      </w:rPr>
-      <mc:AlternateContent>
-        <mc:Choice Requires="wps">
-          <w:drawing>
-            <wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="251659776" behindDoc="0" locked="0" layoutInCell="1" allowOverlap="1" wp14:anchorId="0C3D53F6" wp14:editId="27CAAA6F">
-              <wp:simplePos x="0" y="0"/>
-              <wp:positionH relativeFrom="column">
-                <wp:posOffset>3352800</wp:posOffset>
-              </wp:positionH>
-              <wp:positionV relativeFrom="paragraph">
-                <wp:posOffset>36195</wp:posOffset>
-              </wp:positionV>
-              <wp:extent cx="2976880" cy="485775"/>
-              <wp:effectExtent l="0" t="0" r="4445" b="1905"/>
-              <wp:wrapNone/>
-              <wp:docPr id="2" name="Text Box 8"/>
-              <wp:cNvGraphicFramePr>
-                <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>
-              </wp:cNvGraphicFramePr>
-              <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-                <a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape">
-                  <wps:wsp>
-                    <wps:cNvSpPr txBox="1">
-                      <a:spLocks noChangeArrowheads="1"/>
-                    </wps:cNvSpPr>
-                    <wps:spPr bwMode="auto">
-                      <a:xfrm>
-                        <a:off x="0" y="0"/>
-                        <a:ext cx="2976880" cy="485775"/>
-                      </a:xfrm>
-                      <a:prstGeom prst="rect">
-                        <a:avLst/>
-                      </a:prstGeom>
-                      <a:noFill/>
-                      <a:ln>
-                        <a:noFill/>
-                      </a:ln>
-                      <a:extLst>
-                        <a:ext uri="{909E8E84-426E-40DD-AFC4-6F175D3DCCD1}">
-                          <a14:hiddenFill xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main">
-                            <a:solidFill>
-                              <a:srgbClr val="FFFFFF"/>
-                            </a:solidFill>
-                          </a14:hiddenFill>
-                        </a:ext>
-                        <a:ext uri="{91240B29-F687-4F45-9708-019B960494DF}">
-                          <a14:hiddenLine xmlns:a14="http://schemas.microsoft.com/office/drawing/2010/main" w="9525">
-                            <a:solidFill>
-                              <a:srgbClr val="000000"/>
-                            </a:solidFill>
-                            <a:miter lim="800000"/>
-                            <a:headEnd/>
-                            <a:tailEnd/>
-                          </a14:hiddenLine>
-                        </a:ext>
-                      </a:extLst>
-                    </wps:spPr>
-                    <wps:txbx>
-                      <w:txbxContent>
-                        <w:p w:rsidR="00E37A0E" w:rsidRPr="008A450A" w:rsidRDefault="00E37A0E" w:rsidP="00B30FF4">
-                          <w:pPr>
-                            <w:jc w:val="center"/>
-                            <w:rPr>
-                              <w:rFonts w:cs="mohammad bold art 1"/>
-                              <w:sz w:val="38"/>
-                              <w:szCs w:val="38"/>
-                              <w:rtl/>
-                            </w:rPr>
-                          </w:pPr>
-                          <w:r w:rsidRPr="008A450A">
-                            <w:rPr>
-                              <w:rFonts w:cs="mohammad bold art 1" w:hint="cs"/>
-                              <w:sz w:val="38"/>
-                              <w:szCs w:val="38"/>
-                              <w:rtl/>
-                            </w:rPr>
-                            <w:t>للشيخ أبي الحسن رشيد البليدي</w:t>
-                          </w:r>
-                        </w:p>
-                      </w:txbxContent>
-                    </wps:txbx>
-                    <wps:bodyPr rot="0" vert="horz" wrap="square" lIns="91440" tIns="45720" rIns="91440" bIns="45720" anchor="t" anchorCtr="0" upright="1">
-                      <a:noAutofit/>
-                    </wps:bodyPr>
-                  </wps:wsp>
-                </a:graphicData>
-              </a:graphic>
-              <wp14:sizeRelH relativeFrom="page">
-                <wp14:pctWidth>0</wp14:pctWidth>
-              </wp14:sizeRelH>
-              <wp14:sizeRelV relativeFrom="page">
-                <wp14:pctHeight>0</wp14:pctHeight>
-              </wp14:sizeRelV>
-            </wp:anchor>
-          </w:drawing>
-        </mc:Choice>
-        <mc:Fallback>
-          <w:pict>
-            <v:shapetype w14:anchorId="0C3D53F6" id="_x0000_t202" coordsize="21600,21600" o:spt="202" path="m,l,21600r21600,l21600,xe">
-              <v:stroke joinstyle="miter"/>
-              <v:path gradientshapeok="t" o:connecttype="rect"/>
-            </v:shapetype>
-            <v:shape id="_x0000_s1031" type="#_x0000_t202" style="position:absolute;left:0;text-align:left;margin-left:264pt;margin-top:2.85pt;width:234.4pt;height:38.25pt;z-index:251659776;visibility:visible;mso-wrap-style:square;mso-width-percent:0;mso-height-percent:0;mso-wrap-distance-left:9pt;mso-wrap-distance-top:0;mso-wrap-distance-right:9pt;mso-wrap-distance-bottom:0;mso-position-horizontal:absolute;mso-position-horizontal-relative:text;mso-position-vertical:absolute;mso-position-vertical-relative:text;mso-width-percent:0;mso-height-percent:0;mso-width-relative:page;mso-height-relative:page;v-text-anchor:top" o:gfxdata="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&#xA;AAAAAA==&#xA;" filled="f" stroked="f">
-              <v:textbox>
-                <w:txbxContent>
-                  <w:p w:rsidR="00E37A0E" w:rsidRPr="008A450A" w:rsidRDefault="00E37A0E" w:rsidP="00B30FF4">
-                    <w:pPr>
-                      <w:jc w:val="center"/>
-                      <w:rPr>
-                        <w:rFonts w:cs="mohammad bold art 1"/>
-                        <w:sz w:val="38"/>
-                        <w:szCs w:val="38"/>
-                        <w:rtl/>
-                      </w:rPr>
-                    </w:pPr>
-                    <w:r w:rsidRPr="008A450A">
-                      <w:rPr>
-                        <w:rFonts w:cs="mohammad bold art 1" w:hint="cs"/>
-                        <w:sz w:val="38"/>
-                        <w:szCs w:val="38"/>
-                        <w:rtl/>
-                      </w:rPr>
-                      <w:t>للشيخ أبي الحسن رشيد البليدي</w:t>
-                    </w:r>
-                  </w:p>
-                </w:txbxContent>
-              </v:textbox>
-            </v:shape>
-          </w:pict>
-        </mc:Fallback>
-      </mc:AlternateContent>
-    </w:r>
   </w:p>
 </w:ftr>
 ╔══════════════════════════════════════════════════════════════════╗
