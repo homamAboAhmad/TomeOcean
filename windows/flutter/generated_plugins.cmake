@@ -4,7 +4,9 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_multi_window
+  irondash_engine_context
   screen_retriever
+  super_native_extensions
   url_launcher_windows
   window_manager
 )

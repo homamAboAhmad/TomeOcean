@@ -65,6 +65,22 @@ class WordPage {
     return result;
   }
 
+  /// الفقرات المرئية ككائنات Paragraph — لاستخدامها في بناء HTML للنسخ مع التنسيق
+  List<Paragraph> getVisibleParagraphs() {
+    final result = <Paragraph>[];
+    for (final p in ps) {
+      if (_isParagraphVisuallyRelevant(p)) {
+        result.add(p);
+      }
+    }
+    for (final fn in fns) {
+      for (final p in fn.paragraphs) {
+        result.add(p);
+      }
+    }
+    return result;
+  }
+
   /// نص الصفحة (المتن + الحواشي) مع فواصل واضحة بينهما
   /// نضيف سطرين فارغين بين المتن والحواشي، وسطرين في النهاية حتى يكون هناك
   /// فراغ عند دمج صفحات متعددة.

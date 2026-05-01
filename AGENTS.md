@@ -106,6 +106,40 @@
   - هذا يضمن مطابقة النص المعروض فعليًا وليس ناتج إعادة استدعاء `getPSpans()`
 - لا تعدّل هذا المسار إلا إذا كانت المشكلة مرتبطة مباشرة بالنسخ
 
+### 8) تحديد النص عبر الفقرات المرقّمة
+- **المشكلة**: `SelectableRegion` يتوقف عند الفقرات المرقّمة آليًا ولا يمكن تحديد الصفحة كاملة
+- **السبب**: `WidgetSpan` بعناصر غير قابلة للتحديد (`SizedBox`، `Row`) يقطع تدفق التحديد — Flutter لا يستطيع مد التحديد عبرها
+- **الحل**: استبدال كل `WidgetSpan` ذي عنصر غير قابل للتحديد بـ `TextSpan` مع `letterSpacing` لتحقيق نفس العرض البصري مع إمكانية التحديد
+- **الملفات المعدّلة**:
+  - `lib/wordToHTML/PPr.dart` — فاصل الترقيم (tab suffix): `WidgetSpan(child: SizedBox(width: spacerWidth))` → `TextSpan(text: ' ', style: effectiveMarkerStyle.copyWith(letterSpacing: extraSpacing))`
+  - `lib/wordToHTML/Paragraph.dart` — مسافة أول سطر (firstLineIndent): `WidgetSpan(child: SizedBox(width: indentPx))` → `_firstLineIndentSpan()` باستخدام `TextSpan` مع `letterSpacing`
+  - `lib/wordToHTML/runT.dart` — علامات التبويب (tabs): `getTabWidget()` → `getTabSpan()` يُرجع `InlineSpan?` بدل `Widget?`، والفرع في `toWidget()` صار `TextSpan(children: [..., tabSpan])` بدل `WidgetSpan(Row(...))`
+- **القياس**: يستخدم `TextPainter` مع `TextStyle` الفعلي (خط الفقرة) لقياس عرض المسافة وحساب `letterSpacing` المطلوب بدقة
+- **آثار جانبية**:
+  - مسافة إضافية في الحافظة عند النسخ (أقرب لسلوك Word الفعلي)
+  - عرض بصري تقريبي (فرق ≤1px ممكن بسبب sub-pixel rounding)
+  - أثر إيجابي على RTL: تقليل عدد `WidgetSpan` يقلل احتمال مشاكل `fixRtlWidgetSpan`
+- لا تعدّل هذا المسار إلا إذا كانت المشكلة مرتبطة مباشرة بالتحديد أو بالمسافات الفاصلة
+
+### 9) النسخ مع التنسيق (Rich Clipboard)
+- **الميزة**: عند نسخ نص من التطبيق، يوضع على الحافظة نص عادي + HTML مع تنسيقات CSS داخلية، بحيث عند اللصق في Word أو محررات أخرى يُحافظ على التنسيق (bold, italic, color, font, underline, size, background)
+- **التنفيذ**:
+  - حزمة `super_clipboard` تضع `Formats.htmlText` + `Formats.plainText` على حافظة ويندوز في عملية واحدة
+  - `RichClipboardBuilder` يحوّل شجرة `InlineSpan` (من `getPSpans()`) إلى HTML مع CSS داخلي
+  - `ClipboardPostProcessor.postProcessClipboardRich()` يحدد الفقرات المحددة ويولّد HTML + نص عادي
+- **الملفات المعدّلة/المضافة**:
+  - `lib/wordToHTML/RichClipboardBuilder.dart` — جديد: تحويل InlineSpan → HTML
+  - `lib/UI/clipboard_post_processor.dart` — إضافة `postProcessClipboardRich()`
+  - `lib/UI/custom_context_menu.dart` — `_handleCopy` يستخدم النسخ الغني
+  - `lib/UI/DocViewer.dart` — Ctrl+C يستخدم النسخ الغني
+  - `lib/Models/WordPage.dart` — إضافة `getVisibleParagraphs()` لإرجاع كائنات Paragraph
+  - `pubspec.yaml` — إضافة `super_clipboard: ^0.9.1`
+- **التنسيقات المدعومة**: bold, italic, underline, line-through, color, font-family, font-size, letter-spacing, background-color, text-align, direction (RTL)
+- **خارج النطاق**: صور، جداول، أرقام حواشي مرتبطة
+- **Fallback**: إذا فشل `super_clipboard`، يُستخدم النص العادي فقط
+- **"نسخ مع المرجع"**: يبقى نصًا عاديًا (التنسيق غير مناسب للمرجع)
+- لا تعدّل هذا المسار إلا إذا كانت المشكلة مرتبطة مباشرة بالنسخ مع التنسيق
+
 ## كيف يعمل التطبيق باختصار
 
 1. يقرأ XML الخاص بالمستند

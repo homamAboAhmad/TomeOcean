@@ -22,18 +22,30 @@ class CustomContextMenu extends StatelessWidget {
   final TextSelectionToolbarAnchors contextMenuAnchors;
   final WordPage wordPage;
 
-  Future<String> _copyWithParagraphBreaks() async {
+  Future<String> _copyPlain() async {
     state.copySelection(SelectionChangedCause.toolbar);
     await Future.delayed(const Duration(milliseconds: 100));
     return ClipboardPostProcessor.postProcessClipboard(wordPage);
   }
 
+  Future<String> _copyRich() async {
+    state.copySelection(SelectionChangedCause.toolbar);
+    await Future.delayed(const Duration(milliseconds: 100));
+    return ClipboardPostProcessor.postProcessClipboardRich(wordPage);
+  }
+
   void _handleCopy() async {
-    await _copyWithParagraphBreaks();
+    await _copyPlain();
+    state.hideToolbar();
+  }
+
+  void _handleCopyRich() async {
+    await _copyRich();
+    state.hideToolbar();
   }
 
   void _handleCopyReference() async {
-    final text = await _copyWithParagraphBreaks();
+    final text = await _copyPlain();
     if (text.isNotEmpty) {
       final formatted = '«$text» [$bookTitle (ص $pageNumber)]';
       await Clipboard.setData(ClipboardData(text: formatted));
@@ -42,7 +54,7 @@ class CustomContextMenu extends StatelessWidget {
   }
 
   void _handleGoogleSearch() async {
-    final text = await _copyWithParagraphBreaks();
+    final text = await _copyPlain();
     if (text.isNotEmpty) {
       final Uri googleUrl = Uri.parse(
         'https://www.google.com/search?q=${Uri.encodeComponent(text)}',
@@ -99,6 +111,10 @@ class CustomContextMenu extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildMenuItem(label: 'نسخ', onPressed: _handleCopy),
+                  _buildMenuItem(
+                    label: 'نسخ مع التنسيق',
+                    onPressed: _handleCopyRich,
+                  ),
                   _buildMenuItem(
                     label: 'نسخ مع المرجع',
                     onPressed: _handleCopyReference,

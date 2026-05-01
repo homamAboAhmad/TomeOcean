@@ -54,6 +54,7 @@ dependencies:
   desktop_multi_window: ^0.3.0
   google_fonts: ^6.1.0
   arabic_reshaper: ^0.0.1
+  super_clipboard: ^0.9.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,5 +1,15 @@
 import 'package:flutter/services.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
+import 'package:golden_shamela/wordToHTML/Paragraph.dart';
+import 'package:golden_shamela/wordToHTML/RichClipboardBuilder.dart';
+import 'package:super_clipboard/super_clipboard.dart';
+
+/// نتيجة مطابقة الفقرات المحددة في الحافظة.
+class _MatchResult {
+  final List<String> parts;
+  final List<Paragraph> paragraphs;
+  const _MatchResult(this.parts, this.paragraphs);
+}
 
 /// يعالج نص الحافظة بعد نسخ Flutter الافتراضي لإضافة فواصل فقرات (\n)
 /// بين الفقرات، مما يحافظ على حدود الفقرات كما في مستند Word الأصلي.
@@ -10,50 +20,81 @@ import 'package:golden_shamela/Models/WordPage.dart';
 class ClipboardPostProcessor {
   ClipboardPostProcessor._();
 
-  /// يُنفّذ بعد نسخ Flutter الافتراضي (من قائمة السياق أو Ctrl+C)
-  /// لإضافة فواصل فقرات بين الفقرات المحددة.
+  /// يُنفّذ بعد نسخ Flutter الافتراضي لإضافة فواصل فقرات بين الفقرات المحددة.
+  static Future<String> postProcessClipboard(WordPage wordPage) async {
+    final result = await _matchSelectedParagraphs(wordPage);
+    if (result == null) return '';
+
+    final plainText = result.parts.join('\n');
+    await Clipboard.setData(ClipboardData(text: plainText));
+    return plainText;
+  }
+
+  /// نسخ مع التنسيق: يضع نصًا عاديًا + HTML على الحافظة.
+  /// عند اللصق في Word أو محررات أخرى يُحافظ على التنسيق.
+  static Future<String> postProcessClipboardRich(WordPage wordPage) async {
+    final result = await _matchSelectedParagraphs(wordPage);
+    if (result == null) return '';
+
+    final plainText = result.parts.join('\n');
+    final htmlText = result.paragraphs.isNotEmpty
+        ? RichClipboardBuilder.buildHtmlFromParagraphs(result.paragraphs)
+        : '';
+
+    try {
+      final clipboard = SystemClipboard.instance;
+      if (clipboard != null) {
+        final item = DataWriterItem();
+        item.add(Formats.htmlText(htmlText));
+        item.add(Formats.plainText(plainText));
+        await clipboard.write([item]);
+      } else {
+        await Clipboard.setData(ClipboardData(text: plainText));
+      }
+    } catch (e) {
+      print('RichClipboard: super_clipboard failed: $e');
+      await Clipboard.setData(ClipboardData(text: plainText));
+    }
+
+    return plainText;
+  }
+
+  /// يطابق نص الحافظة مع الفقرات المرئية ويعيد أجزاء النص العادي
+  /// وكائنات الفقرات المحددة.
   ///
   /// الخوارزمية:
   /// 1. يقرأ نص الحافظة الذي وضعه Flutter
   /// 2. يجلب النص المعروض لكل فقرة مرئية من [WordPage]
-  /// 3. يُطبّع كلا النصين (يطبّع = يزيل الاختلافات مثل رموز PUA و\t)
+  /// 3. يُطبّع كلا النصين (يزيل الاختلافات مثل رموز PUA و\t)
   /// 4. يبحث عن نص الحافظة المُطبّع داخل النص المُطبّع الكامل
   /// 5. يُقسّم نص الحافظة الأصلي عند حدود الفقرات مع إدراج \n
-  static Future<String> postProcessClipboard(WordPage wordPage) async {
+  static Future<_MatchResult?> _matchSelectedParagraphs(
+      WordPage wordPage) async {
     final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
     final flutterText = clipboardData?.text ?? '';
-    if (flutterText.isEmpty) return '';
+    if (flutterText.isEmpty) return null;
 
-    // إزالة \uFFFC (عنصر WidgetSpan)
     final stripped = flutterText.replaceAll('\uFFFC', '');
-    if (stripped.trim().isEmpty) return '';
+    if (stripped.trim().isEmpty) return null;
 
-    // النص المعروض لكل فقرة مرئية
     final renderedTexts = wordPage.getVisibleRenderedTexts();
-    if (renderedTexts.isEmpty) {
-      await Clipboard.setData(ClipboardData(text: stripped));
-      return stripped;
+    final visibleParagraphs = wordPage.getVisibleParagraphs();
+
+    if (renderedTexts.isEmpty || visibleParagraphs.isEmpty) {
+      return _MatchResult([stripped], []);
     }
 
-    // تطبيع كلا النصين للمطابقة
     final normTexts = renderedTexts.map(_normalizeForMatch).toList();
     final flatNorm = normTexts.join('');
     final clipNorm = _normalizeForMatch(stripped);
 
-    // البحث عن نص الحافظة المُطبّع داخل النص المُطبّع الكامل
     final matchStart = flatNorm.indexOf(clipNorm);
-    if (matchStart < 0) {
-      await Clipboard.setData(ClipboardData(text: stripped));
-      return stripped;
-    }
+    if (matchStart < 0) return _MatchResult([stripped], []);
     final matchEnd = matchStart + clipNorm.length;
 
-    // بناء خريطة من مواضع clipNorm → مواضع stripped
-    // (لأن التطبيع يحذف أحرف من stripped، نحتاج خريطة لإرجاع المواضع)
     final normToClipPos = _buildNormToSourceMap(stripped);
-
-    // تقسيم نص الحافظة عند حدود الفقرات
     final parts = <String>[];
+    final selectedParagraphs = <Paragraph>[];
     int normPos = 0;
 
     for (int p = 0; p < renderedTexts.length; p++) {
@@ -66,14 +107,16 @@ class ClipboardPostProcessor {
         continue;
       }
 
-      // حساب التداخل بنسبي clipNorm
+      if (p < visibleParagraphs.length) {
+        selectedParagraphs.add(visibleParagraphs[p]);
+      }
+
       final overlapStartCN =
           (matchStart > paraNormStart ? matchStart : paraNormStart) -
               matchStart;
       final overlapEndCN =
           (matchEnd < paraNormEnd ? matchEnd : paraNormEnd) - matchStart;
 
-      // تحويل المواضع المُطبّعة إلى مواضع أصلية في stripped
       if (overlapStartCN < normToClipPos.length &&
           overlapEndCN < normToClipPos.length) {
         final clipStart = normToClipPos[overlapStartCN];
@@ -84,14 +127,8 @@ class ClipboardPostProcessor {
       normPos = paraNormEnd;
     }
 
-    if (parts.isEmpty) {
-      await Clipboard.setData(ClipboardData(text: stripped));
-      return stripped;
-    }
-
-    final result = parts.join('\n');
-    await Clipboard.setData(ClipboardData(text: result));
-    return result;
+    if (parts.isEmpty) return _MatchResult([stripped], []);
+    return _MatchResult(parts, selectedParagraphs);
   }
 
   /// يُطبّع النص للمطابقة: يزيل الأحرف التي تختلف بين حافظة Flutter
