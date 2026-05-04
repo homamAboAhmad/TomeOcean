@@ -185,6 +185,10 @@ class WordPage {
         continue;
       }
 
+      // Save the current index before border groups may advance it,
+      // so each widget gets a unique GlobalKey.
+      final keyIndex = index;
+
       Widget paragraphWidget;
 
       if (borderSpec == null) {
@@ -241,7 +245,9 @@ class WordPage {
       }
 
       // Apply paragraph key if supplied (used for search-result scrolling)
-      final key = paragraphKeyBuilder?.call(index);
+      // Use keyIndex (saved before border groups mutate `index`) to avoid
+      // duplicate keys when a bordered group advances index to logicalEnd+1.
+      final key = paragraphKeyBuilder?.call(keyIndex);
       if (key != null) {
         children.add(KeyedSubtree(key: key, child: paragraphWidget));
       } else {

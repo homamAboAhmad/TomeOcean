@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'package:golden_shamela/TestApp2.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
+import 'package:golden_shamela/wordToHTML/HeaderFooterDotLeader.dart';
 import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/wordToHTML/ParagraphStrutResolver.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
@@ -101,6 +102,12 @@ class Paragraph {
   @JsonKey(ignore: true)
   bool isHeaderParagraph = false;
 
+  @JsonKey(ignore: true)
+  bool isFooterParagraph = false;
+
+  @JsonKey(ignore: true)
+  double footerStoryYOffset = 0;
+
   /// Flag to prevent text wrapping (used for single words in tables to avoid forced breaks)
   @JsonKey(ignore: true)
   bool preventWrap = false;
@@ -123,6 +130,11 @@ class Paragraph {
   /// Table-cell paragraphs follow Word's table-specific grid rules.
   @JsonKey(ignore: true)
   bool isTableCellParagraph = false;
+
+  /// Word may resolve auto text color inside VML text boxes against the
+  /// surrounding shape fill, even when the runs have no explicit w:color.
+  @JsonKey(ignore: true)
+  Color? textBoxFillColor;
 
   Paragraph(this.parent);
 
@@ -536,8 +548,13 @@ class Paragraph {
               prPr: prPr,
               pPr: pPr,
             ).fromXml(child);
-            run.url = url;
-            run.tooltip = tooltip;
+
+            if (url != null && url.startsWith("_")) {
+              hyperlinkAnchor = url;
+              run.url = null;
+            } else {
+              run.url = url;
+            }
             run.parent = this;
             runs.add(run);
           }
@@ -802,8 +819,17 @@ class Paragraph {
     double? spacingBeforeOverride,
     double? spacingAfterOverride,
   }) {
-    if (_shouldRenderAsHeaderPageLeaderLine()) {
-      return _buildHeaderPageLeaderLine(
+    // Fallback for header/footer paragraphs that encode a leader as literal
+    // dots in text runs instead of a Word tab stop leader.
+    final headerFooterDotLeaderParts = HeaderFooterDotLeaderResolver.tryExtract(
+      isHeaderParagraph: isHeaderParagraph,
+      hasFramePr: _hasFramePr(),
+      hasExplicitLineBreaks: _hasExplicitLineBreaks(),
+      textRuns: textRunTs,
+    );
+    if (headerFooterDotLeaderParts != null) {
+      return _buildHeaderFooterDotLeaderLine(
+        parts: headerFooterDotLeaderParts,
         suppressParagraphBorder: suppressParagraphBorder,
         spacingBeforeOverride: spacingBeforeOverride,
         spacingAfterOverride: spacingAfterOverride,
@@ -945,80 +971,27 @@ class Paragraph {
     return textRunTs.any((r) => r.hasTab);
   }
 
-  bool _shouldRenderAsHeaderPageLeaderLine() {
+  bool _hasExplicitLineBreaks() {
+    return textRunTs.any((run) => run.hasBrBefore || run.hasBrAfter);
+  }
+
+  bool _hasFramePr() {
+    return pPr?.xmlpPr?.getElement("w:framePr") != null;
+  }
+
+  bool _shouldKeepHeaderFooterSingleLine() {
     if (!isHeaderParagraph) return false;
-    if (textAlign != TextAlign.justify) return false;
-    if (!xmlString.contains('PAGE')) return false;
-
-    final visibleRuns = textRunTs.where(_isRenderableTextRun).toList();
-    if (visibleRuns.length < 3) return false;
-
-    final pageRuns = _extractHeaderPageRuns(visibleRuns);
-    if (pageRuns.isEmpty) return false;
-
-    final dotLeaderIndex = visibleRuns.lastIndexWhere(_isDotLeaderRun);
-    if (dotLeaderIndex == -1) return false;
-
-    final pageStartIndex = visibleRuns.indexOf(pageRuns.first);
-    if (pageStartIndex <= dotLeaderIndex) return false;
-
-    return visibleRuns.take(dotLeaderIndex).any(_isRenderableTextRun);
+    if (_hasFramePr()) return false;
+    if (_hasExplicitLineBreaks()) return false;
+    return true;
   }
 
-  bool _isRenderableTextRun(runT run) {
-    if (run.image != null) return false;
-    if (run.rpr?.vanish == true) return false;
-    return (run.text ?? '').trim().isNotEmpty;
-  }
-
-  bool _isDotLeaderRun(runT run) {
-    final text = run.text ?? '';
-    if (text.trim().isEmpty) return false;
-    return RegExp(r'^[\.\s]+$').hasMatch(text);
-  }
-
-  bool _isPageNumberRun(runT run) {
-    final text = (run.text ?? '').trim();
-    if (text.isEmpty) return false;
-    return RegExp(r'^[0-9\u0660-\u0669]+$').hasMatch(text);
-  }
-
-  List<runT> _extractHeaderPageRuns(List<runT> visibleRuns) {
-    final numberIndex = visibleRuns.lastIndexWhere(_isPageNumberRun);
-    if (numberIndex == -1) return const [];
-
-    int start = numberIndex;
-    int end = numberIndex;
-
-    if (numberIndex > 0) {
-      final prevText = (visibleRuns[numberIndex - 1].text ?? '').trim();
-      if (prevText == '(' || prevText == ')') {
-        start = numberIndex - 1;
-      }
-    }
-    if (numberIndex + 1 < visibleRuns.length) {
-      final nextText = (visibleRuns[numberIndex + 1].text ?? '').trim();
-      if (nextText == '(' || nextText == ')') {
-        end = numberIndex + 1;
-      }
-    }
-
-    return visibleRuns.sublist(start, end + 1);
-  }
-
-  Widget _buildHeaderPageLeaderLine({
+  Widget _buildHeaderFooterDotLeaderLine({
+    required HeaderFooterDotLeaderParts parts,
     bool suppressParagraphBorder = false,
     double? spacingBeforeOverride,
     double? spacingAfterOverride,
   }) {
-    final visibleRuns = textRunTs.where(_isRenderableTextRun).toList();
-    final pageRuns = _extractHeaderPageRuns(visibleRuns);
-    final dotLeaderIndex = visibleRuns.lastIndexWhere(_isDotLeaderRun);
-    final pageStartIndex = visibleRuns.indexOf(pageRuns.first);
-
-    final titleRuns = visibleRuns.sublist(0, dotLeaderIndex);
-    final leaderRun = visibleRuns[dotLeaderIndex];
-
     final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
     final EdgeInsets headerTextInsets = applyHeaderTextInsets
         ? EdgeInsets.only(
@@ -1032,88 +1005,24 @@ class Paragraph {
       includeBorder: !suppressParagraphBorder,
     );
 
-    final titleSpans = titleRuns.map((r) => r.toWidget()).toList();
-    final pageSpans = visibleRuns
-        .sublist(pageStartIndex, visibleRuns.length)
-        .map((r) => r.toWidget())
-        .toList();
-
     return Padding(
       padding: _getPPaddings(
         spacingBeforeOverride: spacingBeforeOverride,
         spacingAfterOverride: spacingAfterOverride,
       ),
-      child: Container(
-        decoration: decoration,
-        child: Padding(
-          padding: headerTextInsets,
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Flexible(
-                  fit: FlexFit.loose,
-                  child: RichText(
-                    textDirection: TextDirection.rtl,
-                    maxLines: 1,
-                    overflow: TextOverflow.clip,
-                    text: TextSpan(
-                      style: prPr?.getTextStyle(),
-                      children: titleSpans,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: _buildHeaderDotLeaderWidget(leaderRun),
-                ),
-                RichText(
-                  textDirection: TextDirection.rtl,
-                  maxLines: 1,
-                  overflow: TextOverflow.visible,
-                  text: TextSpan(
-                    style: prPr?.getTextStyle(),
-                    children: pageSpans,
-                  ),
-                ),
-              ],
+      child: SizedBox(
+        width: double.infinity,
+        child: Container(
+          decoration: decoration,
+          child: Padding(
+            padding: headerTextInsets,
+            child: HeaderFooterDotLeaderLine(
+              parts: parts,
+              paragraphStyle: prPr?.getTextStyle(),
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildHeaderDotLeaderWidget(runT leaderRun) {
-    final style = leaderRun.getEffectiveTextStyle();
-    final sourceText = leaderRun.text ?? '.';
-    final compactDots = sourceText.replaceAll(' ', '');
-    final dotUnit = compactDots.isEmpty ? '.' : compactDots[0];
-    final leaderText = '$dotUnit ';
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (!constraints.hasBoundedWidth || constraints.maxWidth <= 0) {
-          return const SizedBox.shrink();
-        }
-
-        final fontSize = style.fontSize ?? 14.0;
-        final estimatedUnitWidth = fontSize * 0.45;
-        int repeatCount = (constraints.maxWidth / estimatedUnitWidth).floor();
-        if (repeatCount < 3) repeatCount = 3;
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          child: Text(
-            leaderText * repeatCount,
-            textDirection: TextDirection.ltr,
-            maxLines: 1,
-            overflow: TextOverflow.clip,
-            style: style,
-          ),
-        );
-      },
     );
   }
 
@@ -1622,6 +1531,7 @@ class Paragraph {
     final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
     double leftMargin = sectPr.leftMargin ?? 0;
     double pageWidth = sectPr.width ?? 595;
+    double pageHeight = sectPr.height ?? 842;
     double rightMargin = sectPr.rightMargin ?? 0;
     double marginAreaWidth = pageWidth - leftMargin - rightMargin;
 
@@ -1690,6 +1600,13 @@ class Paragraph {
       var img = run.image!;
       double left = 0;
       double top = img.posY; // relativeFromV="paragraph" يعني posY نسبي للفقرة
+
+      if (isFooterParagraph && img.relativeFromV == "page") {
+        top =
+            img.posY -
+            (pageHeight - sectPr.bottomMargin) -
+            footerStoryYOffset;
+      }
 
       // تصحيح موقع مربعات النص إذا كان هناك صور تسبب التفافاً
       // نستخدم ارتفاع الصورة كموقع جديد (الصورة تبدأ من أعلى الفقرة تقريباً)
@@ -2263,6 +2180,71 @@ class Paragraph {
     );
   }
 
+  double estimateFooterStoryBlockHeight() {
+    final paddings = getPPaddingsForLayout();
+    final explicitBreaks = textRunTs.fold<int>(0, (count, run) {
+      var next = count;
+      if (run.hasBrBefore) next++;
+      if (run.hasBrAfter) next++;
+      return next;
+    });
+    final lineCount = explicitBreaks + 1;
+    return paddings.top +
+        paddings.bottom +
+        (_measureParagraphLineHeight() * lineCount);
+  }
+
+  double _measureParagraphLineHeight() {
+    final wordDocument = parent.parent;
+    final strutConfig = ParagraphStrutResolver.resolve(
+      pPr: pPr,
+      prPr: prPr,
+      textRuns: textRunTs,
+      isTableCellParagraph: isTableCellParagraph || this is ParagraphTable,
+      adjustLineHeightInTable: wordDocument.adjustLineHeightInTable,
+      sectPr: wordDocument.getSectPrForPage(parent.pageIndex),
+    );
+
+    final painter = TextPainter(
+      text: TextSpan(
+        style: strutConfig.paragraphTextStyle,
+        text: _paragraphMeasurementSampleText(),
+      ),
+      textDirection: textDirection,
+      strutStyle: StrutStyle(
+        forceStrutHeight: strutConfig.forceStrutHeight,
+        height: strutConfig.lineHeight,
+        fontSize: strutConfig.strutFontSize,
+        leading: strutConfig.strutLeading,
+        fontFamily: strutConfig.strutBaseStyle.fontFamily,
+        fontFamilyFallback: strutConfig.strutBaseStyle.fontFamilyFallback,
+      ),
+      maxLines: 1,
+    )..layout();
+
+    final metrics = painter.computeLineMetrics();
+    if (metrics.isEmpty) {
+      return 0;
+    }
+
+    return metrics.first.height;
+  }
+
+  String _paragraphMeasurementSampleText() {
+    for (final run in textRunTs) {
+      if (run.rpr?.vanish == true) {
+        continue;
+      }
+
+      final text = (run.text ?? '').trim();
+      if (text.isNotEmpty) {
+        return String.fromCharCode(text.runes.first);
+      }
+    }
+
+    return '\u00A0';
+  }
+
   _getImageRunsW() {
     // العودة للطريقة الأصلية - استخدام getImageWidget
     return Stack(
@@ -2275,6 +2257,8 @@ class Paragraph {
 
   _getTRunsW(List<InlineSpan> spans) {
     final wordDocument = parent.parent;
+    final effectivePreventWrap =
+        preventWrap || _shouldKeepHeaderFooterSingleLine();
     final strutConfig = ParagraphStrutResolver.resolve(
       pPr: pPr,
       prPr: prPr,
@@ -2287,8 +2271,10 @@ class Paragraph {
       TextSpan(style: strutConfig.paragraphTextStyle, children: spans),
       textAlign: textAlign,
       textDirection: textDirection,
-      softWrap: shrinkTextLayerWidth ? false : !preventWrap,
-      overflow: preventWrap ? TextOverflow.visible : TextOverflow.clip,
+      softWrap: shrinkTextLayerWidth ? false : !effectivePreventWrap,
+      overflow: effectivePreventWrap
+          ? TextOverflow.visible
+          : TextOverflow.clip,
       strutStyle: StrutStyle(
         forceStrutHeight: strutConfig.forceStrutHeight,
         height: strutConfig.lineHeight,

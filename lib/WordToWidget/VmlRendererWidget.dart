@@ -5,8 +5,16 @@ import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/WordToWidget/VmlDiamondShapeWidget.dart';
 import 'package:golden_shamela/WordToWidget/RichTextBoxWidget.dart';
 import 'package:golden_shamela/WordToWidget/VmlShapeFillResolver.dart';
+import 'package:golden_shamela/WordToWidget/VmlLinePainter.dart';
+import 'package:golden_shamela/WordToWidget/VmlTextBoxInsetResolver.dart';
 
-/// ودجت مسؤول عن تجميع ورسم أشكال VML المختلفة مع النص الغني بداخلها
+/// ودجت مسؤول عن تجميع ورسم أشكال VML المختلفة مع النص الغني بداخلها.
+///
+/// يدعم الأشكال التالية:
+/// - `roundrect` / `rect`: مستطيل عادي أو بزوايا دائرية
+/// - `diamond`: شكل معيّن (يُفوَّض إلى `VmlDiamondShapeWidget`)
+/// - `line`: خط مستقيم (يُفوَّض الرسم إلى `VmlLinePainter`)
+/// - أي شكل آخر: حاوية بسيطة مع خلفية وحدود
 class VmlRendererWidget extends StatelessWidget {
   final ImageData imageData;
   final WordPage wordPage;
@@ -26,6 +34,7 @@ class VmlRendererWidget extends StatelessWidget {
     final vml = imageData.vmlShapeData!;
     Widget contentWidget = const SizedBox.shrink();
 
+    // محتوى صورة إن وُجدت وليس هناك textbox
     if (imageData.imageMemory != null &&
         imageData.imageMemory!.isNotEmpty &&
         vml.textBoxElement == null) {
@@ -38,49 +47,45 @@ class VmlRendererWidget extends StatelessWidget {
       );
     }
 
+    // محتوى نصي غني إن وُجد textbox
     if (vml.textBoxElement != null) {
       contentWidget = Padding(
-        padding: _resolveTextBoxPadding(vml),
+        padding: VmlTextBoxInsetResolver.resolve(vml.textBoxInset),
         child: RichTextBoxWidget(
           textBoxElement: vml.textBoxElement!,
           wordPage: wordPage,
           customPageNumber: imageData.parent?.parent.customPageNumber,
+          textBoxFillColor: vml.fillColor,
         ),
       );
     }
 
-    // 2. تجميع بناء الشكل المراد رسمه (خلفية وحدود)
-    final decoration = _buildShapeDecoration(vml, imageData);
+    // بناء الشكل المراد رسمه (خلفية وحدود)
+    final fillDecoration = _buildShapeFillDecoration(vml, imageData);
+    final borderDecoration = _buildShapeBorderDecoration(vml);
     Widget shapeWidget;
     switch (vml.shapeType.toLowerCase()) {
       case 'roundrect':
       case 'rect':
-        // بناء صندوق مستطيل أو بحواف دائرية
         BorderRadius? borderRadius;
         if (vml.shapeType.toLowerCase() == 'roundrect') {
-          // حساب الزاوية الدائرية (تعتمد على القيمة الكسرية arcSize، الافتراضي 20%)
           final double minDim = imageData.width < imageData.height
               ? imageData.width
               : imageData.height;
           borderRadius = BorderRadius.circular(minDim * vml.arcSize);
         }
 
-        BoxDecoration decor = BoxDecoration(
-          color:
-              vml.fillColor ??
-              Colors
-                  .white, // إذا لم يكن هناك fillcolor، استخدم white (كما في الوورد)
-          borderRadius: borderRadius,
-          border: vml.strokeColor != null
-              ? Border.all(color: vml.strokeColor!, width: vml.strokeWidth)
-              : null,
-        );
-
         shapeWidget = Container(
           width: imageData.width > 0 ? imageData.width : null,
           height: imageData.height > 0 ? imageData.height : null,
-          decoration: decoration?.copyWith(borderRadius: borderRadius),
-          clipBehavior: decoration != null ? Clip.hardEdge : Clip.none,
+          decoration: fillDecoration?.copyWith(borderRadius: borderRadius),
+          foregroundDecoration: borderDecoration?.copyWith(
+            borderRadius: borderRadius,
+          ),
+          clipBehavior:
+              (fillDecoration != null || borderDecoration != null)
+              ? Clip.hardEdge
+              : Clip.none,
           child: contentWidget,
         );
         break;
@@ -102,17 +107,17 @@ class VmlRendererWidget extends StatelessWidget {
         break;
 
       case 'line':
-        // رسم خط يمر من عبر الإحداثيات (بسيط أفقياً أو قطرياً)
-        // يتم التعامل معه كخلفية لـ CustomPaint
         shapeWidget = SizedBox(
           width: imageData.width,
           height: imageData.height < 2
               ? 8.0
-              : imageData.height, // زيادة الارتفاع ليتسع للخط ظاهرياً
+              : imageData.height,
           child: CustomPaint(
-            painter: _VmlLinePainter(
+            painter: VmlLinePainter(
               color: vml.strokeColor ?? Colors.black,
               strokeWidth: vml.strokeWidth,
+              dashStyle: vml.strokeDashStyle,
+              endCap: vml.strokeEndCap,
             ),
             child: contentWidget,
           ),
@@ -120,11 +125,11 @@ class VmlRendererWidget extends StatelessWidget {
         break;
 
       default:
-        // أشكال أخرى (مسارات معقدة) يمكن إدراجها لاحقاً
         shapeWidget = Container(
           width: imageData.width > 0 ? imageData.width : null,
           height: imageData.height > 0 ? imageData.height : null,
-          decoration: decoration,
+          decoration: fillDecoration,
+          foregroundDecoration: borderDecoration,
           child: contentWidget,
         );
     }
@@ -133,95 +138,21 @@ class VmlRendererWidget extends StatelessWidget {
   }
 }
 
-BoxDecoration? _buildShapeDecoration(VmlShapeData vml, ImageData imageData) {
+/// بناء زخرفة الخلفية للشكل
+BoxDecoration? _buildShapeFillDecoration(VmlShapeData vml, ImageData imageData) {
   final color = VmlShapeFillResolver.resolveFillColor(
     vml: vml,
     imageData: imageData,
   );
+  if (color == null) return null;
+  return BoxDecoration(color: color);
+}
+
+/// بناء زخرفة الحدود للشكل
+BoxDecoration? _buildShapeBorderDecoration(VmlShapeData vml) {
   final border = vml.isStroked && vml.strokeColor != null
       ? Border.all(color: vml.strokeColor!, width: vml.strokeWidth)
       : null;
-  if (color == null && border == null) return null;
-  return BoxDecoration(color: color, border: border);
-}
-
-EdgeInsets _resolveTextBoxPadding(VmlShapeData vml) {
-  // Microsoft VML inset order is left, top, right, bottom.
-  // Missing values fall back to 0.1in, 0.05in, 0.1in, 0.05in.
-  const defaults = ['0.1in', '0.05in', '0.1in', '0.05in'];
-  final raw = vml.textBoxInset;
-  if (raw == null || raw.trim().isEmpty) {
-    return EdgeInsets.fromLTRB(
-      _parseInsetUnit(defaults[0]),
-      _parseInsetUnit(defaults[1]),
-      _parseInsetUnit(defaults[2]),
-      _parseInsetUnit(defaults[3]),
-    );
-  }
-
-  final parts = raw
-      .split(RegExp(r'[,\s]+'))
-      .map((e) => e.trim())
-      .where((e) => e.isNotEmpty)
-      .toList();
-
-  String valueAt(int index) => index < parts.length ? parts[index] : defaults[index];
-
-  return EdgeInsets.fromLTRB(
-    _parseInsetUnit(valueAt(0)),
-    _parseInsetUnit(valueAt(1)),
-    _parseInsetUnit(valueAt(2)),
-    _parseInsetUnit(valueAt(3)),
-  );
-}
-
-double _parseInsetUnit(String value) {
-  final normalized = value.trim().toLowerCase();
-  if (normalized.isEmpty) return 0;
-  if (normalized.endsWith('pt')) {
-    return (double.tryParse(normalized.replaceAll('pt', '')) ?? 0) * 1.333;
-  }
-  if (normalized.endsWith('px')) {
-    return double.tryParse(normalized.replaceAll('px', '')) ?? 0;
-  }
-  if (normalized.endsWith('in')) {
-    return (double.tryParse(normalized.replaceAll('in', '')) ?? 0) * 96.0;
-  }
-  if (normalized.endsWith('cm')) {
-    return (double.tryParse(normalized.replaceAll('cm', '')) ?? 0) * (96.0 / 2.54);
-  }
-  if (normalized.endsWith('mm')) {
-    return (double.tryParse(normalized.replaceAll('mm', '')) ?? 0) * (96.0 / 25.4);
-  }
-  return double.tryParse(normalized) ?? 0;
-}
-
-class _VmlLinePainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-
-  _VmlLinePainter({required this.color, required this.strokeWidth});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    // خط يبدأ من أعلى اليسار إلى أسفل اليمين (بناءً على افتراض الإحداثيات المنظمة)
-    // العرض والارتفاع المستخرجين يمثلان حدود الخط
-    canvas.drawLine(
-      const Offset(0, 0),
-      Offset(
-        size.width,
-        size.height == 8.0 ? 0 : size.height,
-      ), // إذا كان 8.0 يعني خط أفقي صِرف
-      paint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  if (border == null) return null;
+  return BoxDecoration(border: border);
 }

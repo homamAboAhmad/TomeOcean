@@ -32,6 +32,12 @@ class VmlShapeData {
   /// قيمة inset الخام من v:textbox إن وجدت
   String? textBoxInset;
 
+  /// نمط VML للحدود/الخطوط مثل dashstyle="1 1"
+  String? strokeDashStyle;
+
+  /// نمط نهاية الخط من v:stroke@endcap (flat/square/round)
+  String? strokeEndCap;
+
   VmlFillStyle? fillStyle;
 
   VmlShadowStyle? shadowStyle;
@@ -46,6 +52,8 @@ class VmlShapeData {
     this.arcSize = 0.2,
     this.textBoxXmlString,
     this.textBoxInset,
+    this.strokeDashStyle,
+    this.strokeEndCap,
     this.fillStyle,
     this.shadowStyle,
   });
@@ -88,6 +96,8 @@ class VmlShapeData {
       arcSize: (json['arcSize'] as num?)?.toDouble() ?? 0.2,
       textBoxXmlString: json['textBoxXmlString'] as String?,
       textBoxInset: json['textBoxInset'] as String?,
+      strokeDashStyle: json['strokeDashStyle'] as String?,
+      strokeEndCap: json['strokeEndCap'] as String?,
       fillStyle: json['fillStyle'] is Map<String, dynamic>
           ? VmlFillStyle.fromJson(json['fillStyle'] as Map<String, dynamic>)
           : null,
@@ -108,6 +118,8 @@ class VmlShapeData {
       'arcSize': arcSize,
       'textBoxXmlString': textBoxXmlString,
       'textBoxInset': textBoxInset,
+      'strokeDashStyle': strokeDashStyle,
+      'strokeEndCap': strokeEndCap,
       'fillStyle': fillStyle?.toJson(),
       'shadowStyle': shadowStyle?.toJson(),
     };

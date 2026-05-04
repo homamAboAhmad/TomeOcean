@@ -31,6 +31,7 @@ class SectPr {
   double leftMargin = 8;
   double rightMargin = 8;
   double? headerMargin; // المسافة من حافة الصفحة إلى الهيدر
+  double? footerMargin; // المسافة من حافة الصفحة إلى الفوتر
   int firstRange = 0;
   int lastRange = 0;
   @JsonKey(ignore: true)
@@ -78,6 +79,7 @@ class SectPr {
     required this.leftMargin,
     required this.rightMargin,
     this.headerMargin,
+    this.footerMargin,
     required this.parent,
     this.sectPrElement,
     this.pgNumFmt,
@@ -116,7 +118,8 @@ class SectPr {
   String toString() {
     return 'Page Size: ${width}x$height twips\n'
         'Margins - Top: $topMargin, Bottom: $bottomMargin, '
-        'Left: $leftMargin, Right: $rightMargin';
+        'Left: $leftMargin, Right: $rightMargin, '
+        'Header: $headerMargin, Footer: $footerMargin';
   }
 
   double? get docGridLinePitchPx {
@@ -143,6 +146,7 @@ class SectPr {
     double? leftMargin;
     double? rightMargin;
     double? headerMargin;
+    double? footerMargin;
     // Parse page size <w:pgSz>
     final pgSzElement = sectPrElement.findElements('w:pgSz').firstOrNull;
     if (pgSzElement != null) {
@@ -161,6 +165,9 @@ class SectPr {
       rightMargin = double.tryParse(pgMarElement.getAttribute('w:right') ?? '');
       headerMargin = double.tryParse(
         pgMarElement.getAttribute('w:header') ?? '',
+      );
+      footerMargin = double.tryParse(
+        pgMarElement.getAttribute('w:footer') ?? '',
       );
     }
 
@@ -237,6 +244,7 @@ class SectPr {
       leftMargin: leftMargin?.twipsToDp(),
       rightMargin: rightMargin?.twipsToDp(),
       headerMargin: headerMargin?.twipsToDp(),
+      footerMargin: footerMargin?.twipsToDp(),
       parent: parent0,
       sectPrElement: sectPrElement,
       pgNumFmt: pgNumFmt,
@@ -434,7 +442,7 @@ class SectPr {
     String? path;
     int pageInSection = wordPage.pageIndex - firstRange + 1;
     bool titlePg = sectPrElement?.findElements("w:titlePg").isNotEmpty ?? false;
-    bool evenAndOddHeaders = parent.evenAndOddHeaders ?? false;
+    final useEvenHeader = _shouldUseEvenHeaderFooter(wordPage.pageIndex);
 
     int sectionIndex = parent.sectPrList.indexOf(this);
 
@@ -444,7 +452,7 @@ class SectPr {
       } else {
         path = _inheritHeaderFirst(sectionIndex);
       }
-    } else if (evenAndOddHeaders && pageInSection.isEven) {
+    } else if (useEvenHeader) {
       if (headerEvenPath != null) {
         path = headerEvenPath;
       } else {
@@ -528,14 +536,14 @@ class SectPr {
     String? path;
     int pageInSection = wordPage.pageIndex - firstRange + 1;
     bool titlePg = sectPrElement?.findElements("w:titlePg").isNotEmpty ?? false;
-    bool evenAndOddHeaders = parent.evenAndOddHeaders ?? false;
+    final useEvenFooter = _shouldUseEvenHeaderFooter(wordPage.pageIndex);
     int currentSectionIndex = parent.sectPrList.indexOf(this);
 
     if (pageInSection == 1 && titlePg) {
       path =
           footerFirstPath ??
           _inheritFooterFirst(currentSectionIndex);
-    } else if (evenAndOddHeaders && pageInSection.isEven) {
+    } else if (useEvenFooter) {
       path =
           footerEvenPath ??
           _inheritFooterEven(currentSectionIndex) ??
@@ -566,6 +574,7 @@ class SectPr {
         p.customRelIdList = footerRelations;
         p.customPageNumber = pageNumStr;
         p.isHeaderParagraph = true; // Set to true to apply same zero-default spacing in PPr.dart
+        p.isFooterParagraph = true;
         p.fromXml(element);
         footerParagraphs.add(p);
       } else if (element.name.local == "sdt") {
@@ -580,6 +589,7 @@ class SectPr {
                 p.customPageNumber = pageNumStr;
               }
               p.isHeaderParagraph = true; // Set to true to apply same zero-default spacing in PPr.dart
+              p.isFooterParagraph = true;
               p.fromXml(child);
               if (p.runs.any((r) => r.text == pageNumStr)) {
                 pageNumReplacedInSdt = true;
@@ -591,14 +601,42 @@ class SectPr {
       }
     }
 
+    final footerStoryYOffset = _estimateFooterStoryYOffset(footerParagraphs);
+    for (final paragraph in footerParagraphs) {
+      paragraph.footerStoryYOffset = footerStoryYOffset;
+    }
+
     double width = parent.getSectPrForPage(wordPage.pageIndex).width ?? 595;
     return SizedBox(
       width: width,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: FooterFrameLayout.build(footerParagraphs),
+      child: Transform.translate(
+        offset: Offset(0, footerStoryYOffset),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: FooterFrameLayout.build(footerParagraphs),
+        ),
       ),
     );
+  }
+
+  double _estimateFooterStoryYOffset(List<Paragraph> footerParagraphs) {
+    if (footerParagraphs.isEmpty) {
+      return 0;
+    }
+
+    if (footerParagraphs.any(
+      (p) => p.pPr?.xmlpPr?.getElement("w:framePr") != null,
+    )) {
+      return 0;
+    }
+
+    final footerDistance = footerMargin ?? bottomMargin;
+    final estimatedStoryHeight = footerParagraphs.fold<double>(
+      0,
+      (sum, paragraph) => sum + paragraph.estimateFooterStoryBlockHeight(),
+    );
+
+    return bottomMargin - footerDistance - estimatedStoryHeight;
   }
 
   /// حساب ارتفاع الهيدر بناءً على الصور الموجودة فيه
@@ -647,8 +685,7 @@ class SectPr {
 
   XmlElement? getRequestedHeader(int docPageIndex) {
     bool titlePg = sectPrElement?.findElements("w:titlePg").isNotEmpty ?? false;
-    // Check if evenAndOddHeaders is enabled in document settings
-    bool evenAndOddHeaders = parent.evenAndOddHeaders ?? false;
+    final useEvenHeader = _shouldUseEvenHeaderFooter(docPageIndex);
 
     String? path;
 
@@ -671,7 +708,7 @@ class SectPr {
       }
     }
     // Rule 2: Even/odd page headers (only if evenAndOddHeaders is enabled)
-    else if (evenAndOddHeaders && pageInSection.isEven) {
+    else if (useEvenHeader) {
       // وفقاً للمرجع: إذا لا يوجد headerEven:
       // - ورث من القسم السابق
       // - أو أنشئ هيدر فارغ
@@ -782,7 +819,7 @@ class SectPr {
 
   XmlElement? getRequestedFooter(int docPageIndex) {
     bool titlePg = sectPrElement?.findElements("w:titlePg").isNotEmpty ?? false;
-    bool evenAndOddHeaders = parent.evenAndOddHeaders ?? false;
+    final useEvenFooter = _shouldUseEvenHeaderFooter(docPageIndex);
     int currentSectionIndex = parent.sectPrList.indexOf(this);
 
     String? path;
@@ -797,7 +834,7 @@ class SectPr {
           _inheritFooterFirst(currentSectionIndex);
     }
     // Rule 2: Even/odd page footers (only if evenAndOddHeaders is enabled)
-    else if (evenAndOddHeaders && pageInSection.isEven) {
+    else if (useEvenFooter) {
       path =
           footerEvenPath ??
           _inheritFooterEven(currentSectionIndex) ??
@@ -833,6 +870,25 @@ class SectPr {
     // كتب مثل ex7 تحتوي على زخارف بداخل <w:pict> أو <w:drawing>
     bool hasPictOrDrawing = currentHeader.descendants.whereType<XmlElement>().any((e) => e.name.local == "pict" || e.name.local == "drawing");
     
+    return hasPictOrDrawing;
+  }
+
+  /// للفوترات الزخرفية المبنية من VML/صور عائمة على حواف الصفحة.
+  /// هذه الحالات ليست page borders عادية من sectPr، بل قصة header/footer
+  /// مستقلة يجب ألا نعاملها كحدود قابلة للتمديد مع ارتفاع الحاوية.
+  bool hasVmlFrameInFooter(int docPageIndex) {
+    XmlElement? currentFooter = getRequestedFooter(docPageIndex);
+    if (currentFooter == null) return false;
+
+    bool hasFramePr = currentFooter.descendants
+        .whereType<XmlElement>()
+        .any((e) => e.name.local == "framePr");
+    if (hasFramePr) return false;
+
+    bool hasPictOrDrawing = currentFooter.descendants
+        .whereType<XmlElement>()
+        .any((e) => e.name.local == "pict" || e.name.local == "drawing");
+
     return hasPictOrDrawing;
   }
 
@@ -886,6 +942,35 @@ class SectPr {
 
     int pagesInSection = lastRange - firstRange;
     return start + pagesInSection;
+  }
+
+  int _calculatePageNumberValueForParity(int pageIndex) {
+    int start;
+
+    if (pgNumStart != null) {
+      start = pgNumStart!;
+    } else {
+      int myIndex = parent.sectPrList.indexOf(this);
+      if (myIndex > 0) {
+        SectPr prevSectPr = parent.sectPrList[myIndex - 1];
+        int prevLastPageNum = prevSectPr._calculateLastPageNumber();
+        start = prevLastPageNum + 1;
+      } else {
+        start = 1;
+      }
+    }
+
+    int relativeIndex = pageIndex - firstRange;
+    return start + relativeIndex;
+  }
+
+  bool _shouldUseEvenHeaderFooter(int pageIndex) {
+    if (!(parent.evenAndOddHeaders ?? false)) {
+      return false;
+    }
+
+    final pageNumberValue = _calculatePageNumberValueForParity(pageIndex);
+    return pageNumberValue.isEven;
   }
 }
 

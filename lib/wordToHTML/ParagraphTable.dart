@@ -68,6 +68,7 @@ class ParagraphTable extends Paragraph {
             disableUrlAutoDetection: disableUrlAutoDetection,
             trimTrailingStructuralEmptyCellParagraphs:
                 trimTrailingStructuralEmptyCellParagraphs,
+            textBoxFillColor: textBoxFillColor,
           )
         : SizedBox.shrink();
 
@@ -92,6 +93,7 @@ class WordTableWidget extends StatelessWidget {
   WordPage parent;
   final bool disableUrlAutoDetection;
   final bool trimTrailingStructuralEmptyCellParagraphs;
+  final Color? textBoxFillColor;
 
 
 
@@ -100,6 +102,7 @@ class WordTableWidget extends StatelessWidget {
     this.parent, {
     this.disableUrlAutoDetection = true,
     this.trimTrailingStructuralEmptyCellParagraphs = false,
+    this.textBoxFillColor,
   });
 
 
@@ -715,6 +718,7 @@ class WordTableWidget extends StatelessWidget {
       ).fromXml(pXml, skipNumberingCounter: true);
       paragraph.disableUrlAutoDetection = disableUrlAutoDetection;
       paragraph.isTableCellParagraph = true;
+      paragraph.textBoxFillColor = textBoxFillColor;
 
 
 

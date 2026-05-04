@@ -14,6 +14,7 @@ SectPr _$SectPrFromJson(Map<String, dynamic> json) => SectPr.emptyJson()
   ..leftMargin = (json['leftMargin'] as num).toDouble()
   ..rightMargin = (json['rightMargin'] as num).toDouble()
   ..headerMargin = (json['headerMargin'] as num?)?.toDouble()
+  ..footerMargin = (json['footerMargin'] as num?)?.toDouble()
   ..firstRange = (json['firstRange'] as num).toInt()
   ..lastRange = (json['lastRange'] as num).toInt()
   ..footerFirst = const XmlElementConverter().fromJson(
@@ -63,6 +64,7 @@ Map<String, dynamic> _$SectPrToJson(SectPr instance) => <String, dynamic>{
   'leftMargin': instance.leftMargin,
   'rightMargin': instance.rightMargin,
   'headerMargin': instance.headerMargin,
+  'footerMargin': instance.footerMargin,
   'firstRange': instance.firstRange,
   'lastRange': instance.lastRange,
   'footerFirst': const XmlElementConverter().toJson(instance.footerFirst),

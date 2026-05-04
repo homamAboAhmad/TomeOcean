@@ -623,12 +623,17 @@ class runT {
       rpr?.vanish = styleVanish;
     }
 
-    // Auto-contrast: if text has no explicit color and paragraph has dark shading,
-    // use white text. This matches Word's behavior for "auto" color.
+    // Auto-contrast: if text has no explicit color and the visual background
+    // is known (paragraph shading or enclosing VML textbox fill), resolve
+    // Word's auto color against that background.
     if (rpr?.color == null) {
-      Color? paragraphBg = _getParagraphShadingColor();
-      if (paragraphBg != null && _isDarkColor(paragraphBg)) {
-        rpr?.color = "FFFFFF";
+      final wordDocument = parent.parent.parent;
+      final backgroundColor =
+          _getParagraphShadingColor() ?? parent.textBoxFillColor;
+      if (backgroundColor != null) {
+        rpr?.color = _isDarkColor(backgroundColor)
+            ? wordDocument.autoLightColor
+            : wordDocument.autoDarkColor;
       }
     }
   }

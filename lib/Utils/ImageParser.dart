@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/VmlShapeData.dart';
 import 'package:golden_shamela/Utils/VmlShapeTypeResolver.dart';
+import 'package:golden_shamela/Utils/VmlColorResolver.dart';
 import 'package:golden_shamela/Utils/VmlEffectsParser.dart';
 import 'package:golden_shamela/main.dart';
 import 'package:golden_shamela/wordToHTML/DocRelations.dart';
@@ -22,25 +23,6 @@ import 'json_converters.dart';
 import 'VectorPathParser.dart';
 
 part 'ImageParser.g.dart';
-
-const Map<String, int> _vmlNamedColors = {
-  'aqua': 0xFF00FFFF,
-  'black': 0xFF000000,
-  'blue': 0xFF0000FF,
-  'fuchsia': 0xFFFF00FF,
-  'gray': 0xFF808080,
-  'green': 0xFF008000,
-  'lime': 0xFF00FF00,
-  'maroon': 0xFF800000,
-  'navy': 0xFF000080,
-  'olive': 0xFF808000,
-  'purple': 0xFF800080,
-  'red': 0xFFFF0000,
-  'silver': 0xFFC0C0C0,
-  'teal': 0xFF008080,
-  'white': 0xFFFFFFFF,
-  'yellow': 0xFFFFFF00,
-};
 
 ImageData _imageData = ImageData();
 late XmlElement _drawingElement;
@@ -640,15 +622,31 @@ void _parseVmlData() {
 
     // Stroke Color and Weight
     String strokeColorStr = shape.getAttribute('strokecolor') ?? '';
-    final strokeColor = _parseVmlColorValue(strokeColorStr);
+    final strokeColor = parseVmlColorValue(
+      strokeColorStr,
+      wordDocument: _imageData.parent?.parent.parent.parent,
+    );
     if (strokeColor != null) {
       _imageData.vmlShapeData!.strokeColor = strokeColor;
     }
     String strokeWeightStr = shape.getAttribute('strokeweight') ?? '1.0';
     _imageData.vmlShapeData!.strokeWidth = _parseUnit(strokeWeightStr);
+    final strokeElement = shape.childElements.firstWhere(
+      (e) => e.name.local == 'stroke',
+      orElse: () => xml.XmlElement(xml.XmlName('null')),
+    );
+    if (strokeElement.name.local != 'null') {
+      _imageData.vmlShapeData!.strokeDashStyle =
+          strokeElement.getAttribute('dashstyle');
+      _imageData.vmlShapeData!.strokeEndCap =
+          strokeElement.getAttribute('endcap');
+    }
 
     String fillcolorAttr = shape.getAttribute('fillcolor') ?? '';
-    final fillColor = _parseVmlColorValue(fillcolorAttr);
+    final fillColor = parseVmlColorValue(
+      fillcolorAttr,
+      wordDocument: _imageData.parent?.parent.parent.parent,
+    );
     if (fillColor != null) {
       _imageData.vmlShapeData!.fillColor = fillColor;
     }
@@ -801,10 +799,9 @@ void _applyVmlHorizontalPositioningFromStyleMap(Map<String, String> styleMap) {
   final horizontalAlign = _normalizeVmlHorizontalAlign(
     styleMap['mso-position-horizontal'],
   );
-
-  if (horizontalAlign == null) return;
-
-  _imageData.alignH = horizontalAlign;
+  if (horizontalAlign != null) {
+    _imageData.alignH = horizontalAlign;
+  }
 
   final relative = styleMap['mso-position-horizontal-relative']
       ?.trim()
@@ -815,7 +812,7 @@ void _applyVmlHorizontalPositioningFromStyleMap(Map<String, String> styleMap) {
     _imageData.relativeFromH = 'margin';
   } else if (relative == 'text') {
     _imageData.relativeFromH = 'column';
-  } else {
+  } else if (horizontalAlign != null) {
     // In VML, style-based horizontal positioning commonly describes page-level placement
     // even when the relative attribute is omitted.
     _imageData.relativeFromH = 'page';
@@ -992,40 +989,6 @@ double _parseUnit(String value) {
     val = double.tryParse(value) ?? 0;
   }
   return val;
-}
-
-Color? _parseVmlColorValue(String? rawValue) {
-  if (rawValue == null) return null;
-
-  final value = rawValue.trim().toLowerCase();
-  if (value.isEmpty || value == 'none' || value == 'auto') return null;
-
-  if (_vmlNamedColors.containsKey(value)) {
-    return Color(_vmlNamedColors[value]!);
-  }
-
-  if (value.startsWith('#')) {
-    final hex = value.substring(1);
-    if (hex.length == 6) {
-      try {
-        return Color(int.parse('FF$hex', radix: 16));
-      } catch (_) {
-        return null;
-      }
-    }
-  }
-
-  final rgbMatch = RegExp(r'rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)').firstMatch(value);
-  if (rgbMatch != null) {
-    final r = int.tryParse(rgbMatch.group(1) ?? '');
-    final g = int.tryParse(rgbMatch.group(2) ?? '');
-    final b = int.tryParse(rgbMatch.group(3) ?? '');
-    if (r != null && g != null && b != null) {
-      return Color.fromARGB(255, r.clamp(0, 255), g.clamp(0, 255), b.clamp(0, 255));
-    }
-  }
-
-  return null;
 }
 
 void setDemenisions() {

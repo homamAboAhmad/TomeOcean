@@ -72,11 +72,34 @@ class _WordPageScreenState extends State<WordPageScreen> {
                               sectPr.sectPrElement!,
                             );
                             if (borders == null) return const SizedBox.shrink();
-                            return Positioned(
-                              top: 0,
-                              left: 0,
-                              width: pageWidth,
-                              height: pageHeight,
+
+                            final hasHeaderFooterVmlFrame =
+                                sectPr.hasVmlFrameInHeader(
+                                  widget.wordPage.pageIndex,
+                                ) ||
+                                sectPr.hasVmlFrameInFooter(
+                                  widget.wordPage.pageIndex,
+                                );
+
+                            if (hasHeaderFooterVmlFrame) {
+                              return Positioned(
+                                top: 0,
+                                left: 0,
+                                width: pageWidth,
+                                height: pageHeight,
+                                child: IgnorePointer(
+                                  child: CustomPaint(
+                                    painter: PageBorderPainter(
+                                      borders: borders,
+                                      pageWidth: pageWidth,
+                                      pageHeight: pageHeight,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return Positioned.fill(
                               child: IgnorePointer(
                                 child: CustomPaint(
                                   painter: PageBorderPainter(
@@ -247,34 +270,38 @@ class _WordPageScreenState extends State<WordPageScreen> {
   }
 
   getSectionMargins() {
+    final sectPr = wordDocument.getSectPrForPage(widget.wordPage.pageIndex);
+
     // حساب ارتفاع الهيدر (من ملفات الهيدر المنفصلة)
-    double headerHeight = wordDocument
-        .getSectPrForPage(widget.wordPage.pageIndex)
-        .getHeaderHeight(widget.wordPage);
-    double baseTopMargin =
-        wordDocument.getSectPrForPage(widget.wordPage.pageIndex).topMargin ??
-        8.0;
+    double headerHeight = sectPr.getHeaderHeight(widget.wordPage);
+    double baseTopMargin = sectPr.topMargin ?? 8.0;
+    final hasHeaderVmlFrame = sectPr.hasVmlFrameInHeader(
+      widget.wordPage.pageIndex,
+    );
 
     // فحص وجود صور "إطارات" داخل محتوى الصفحة نفسها
     // (صور كبيرة، خلف النص، في بداية الصفحة)
     double framePadding = 0;
-    for (var p in widget.wordPage.ps.take(3)) {
-      // نفحص أول 3 فقرات فقط
-      for (var run in p.runs) {
-        if (run.image != null && run.image!.behindDoc) {
-          // إذا وجدنا صورة كبيرة (يفترض أنها إطار)، نزيد الهامش العلوي
-          // القيمة 80 هي تقدير لسمك الزخرفة العلوية للإطار المعتاد
-          if (run.image!.height > 400) {
-            framePadding = 60.0;
+    if (!hasHeaderVmlFrame) {
+      for (var p in widget.wordPage.ps.take(3)) {
+        // نفحص أول 3 فقرات فقط
+        for (var run in p.runs) {
+          if (run.image != null && run.image!.behindDoc) {
+            // إذا وجدنا صورة كبيرة (يفترض أنها إطار)، نزيد الهامش العلوي
+            // القيمة 80 هي تقدير لسمك الزخرفة العلوية للإطار المعتاد
+            if (run.image!.height > 400) {
+              framePadding = 60.0;
+            }
           }
         }
       }
     }
 
     // الهامش العلوي الفعال = الأكبر بين (ارتفاع الهيدر) و (الهامش الأصلي) + هامش الإطار إن وجد
-    double effectiveTopMargin =
-        (headerHeight > baseTopMargin ? headerHeight : baseTopMargin) +
-        framePadding;
+    double effectiveTopMargin = hasHeaderVmlFrame
+        ? baseTopMargin
+        : (headerHeight > baseTopMargin ? headerHeight : baseTopMargin) +
+              framePadding;
 
     // تصحيح إضافي: إذا كان الهامش صغيراً جداً (< 20) ووجدنا إطاراً، نرفعه أكثر
     if (effectiveTopMargin < 40 && framePadding > 0) {
@@ -282,20 +309,10 @@ class _WordPageScreenState extends State<WordPageScreen> {
     }
 
     return EdgeInsets.only(
-      left:
-          wordDocument.getSectPrForPage(widget.wordPage.pageIndex).leftMargin ??
-          8.0,
-      right:
-          wordDocument
-              .getSectPrForPage(widget.wordPage.pageIndex)
-              .rightMargin ??
-          8.0,
+      left: sectPr.leftMargin ?? 8.0,
+      right: sectPr.rightMargin ?? 8.0,
       top: effectiveTopMargin,
-      bottom:
-          wordDocument
-              .getSectPrForPage(widget.wordPage.pageIndex)
-              .bottomMargin ??
-          8.0,
+      bottom: sectPr.bottomMargin ?? 8.0,
     );
   }
 

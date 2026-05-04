@@ -11,12 +11,14 @@ class RichTextBoxWidget extends StatelessWidget {
   final XmlElement textBoxElement;
   final WordPage wordPage;
   final String? customPageNumber;
+  final Color? textBoxFillColor;
 
   const RichTextBoxWidget({
     Key? key,
     required this.textBoxElement,
     required this.wordPage,
     this.customPageNumber,
+    this.textBoxFillColor,
   }) : super(key: key);
 
   @override
@@ -79,11 +81,13 @@ class RichTextBoxWidget extends StatelessWidget {
         tableParagraph.customPageNumber = customPageNumber;
         tableParagraph.disableUrlAutoDetection = true;
         tableParagraph.trimTrailingStructuralEmptyCellParagraphs = true;
+        tableParagraph.textBoxFillColor = textBoxFillColor;
         return tableParagraph.toWidget(spacingAfterOverride: isLast ? 0 : null);
       }
 
       final paragraph = Paragraph(wordPage);
       paragraph.customPageNumber = customPageNumber;
+      paragraph.textBoxFillColor = textBoxFillColor;
       paragraph.fromXml(element);
       paragraph.disableUrlAutoDetection = true;
 

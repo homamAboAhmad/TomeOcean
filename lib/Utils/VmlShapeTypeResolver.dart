@@ -37,6 +37,9 @@ class VmlShapeTypeResolver {
         return 'textbox';
       case '75':
         return 'picture';
+      case '20': // straight connector
+      case '32': // straight line
+        return 'line';
       default:
         return localName;
     }

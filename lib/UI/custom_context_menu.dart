@@ -111,10 +111,16 @@ class CustomContextMenu extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildMenuItem(label: 'نسخ', onPressed: _handleCopy),
-                  _buildMenuItem(
-                    label: 'نسخ مع التنسيق',
-                    onPressed: _handleCopyRich,
-                  ),
+                  // نسخ مع التنسيق: يضع على الحافظة نص عادي + HTML مع CSS داخلي
+                  // التنسيقات المنسوخة: غامق (bold)، مائل (italic)، تسطير (underline)،
+                  // يتوسط (line-through)، لون النص (color)، خط (font-family)،
+                  // حجم الخط (font-size)، تباعد الأحرف (letter-spacing)،
+                  // لون الخلفية، محاذاة النص (text-align)، اتجاه (RTL/LTR)
+                  // TODO: تفعيل عند الحاجة
+                  // _buildMenuItem(
+                  //   label: 'نسخ مع التنسيق',
+                  //   onPressed: _handleCopyRich,
+                  // ),
                   _buildMenuItem(
                     label: 'نسخ مع المرجع',
                     onPressed: _handleCopyReference,
