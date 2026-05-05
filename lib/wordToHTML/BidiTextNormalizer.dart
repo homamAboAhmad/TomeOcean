@@ -1,4 +1,4 @@
-﻿class BidiTextNormalizer {
+class BidiTextNormalizer {
   static const Map<String, String> _alwaysMirroredPairs = {};
 
   static const Map<String, String> _neutralInheritedRunPairs = {

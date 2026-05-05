@@ -14,6 +14,7 @@ import 'DocTheme.dart';
 import 'DocumentDefaults.dart';
 import 'DocumentStyles.dart';
 import 'ExtractWordImages.dart';
+import 'ReferencedRunFontsCollector.dart';
 
 Future<List<WordPage>> AddDocData(
   Archive archive,
@@ -27,7 +28,12 @@ Future<List<WordPage>> AddDocData(
   // print("AddDocData: Extracted images.");
   wordDocument.relIdList = addDocRelations(archiveMap);
   // print("AddDocData: Added relations.");
-  wordDocument.fontsList = addDocFonts(archiveMap[WORD_FONTS_TABLE]);
+  final declaredFonts = addDocFonts(archiveMap[WORD_FONTS_TABLE]);
+  final referencedFonts = collectReferencedRunFonts(archiveMap);
+  wordDocument.fontsList = {
+    ...declaredFonts,
+    ...referencedFonts,
+  }.toList();
   // print("AddDocData: Added fonts.");
   addDefaults(archiveMap[WORD_STYLES], wordDocument);
   // print("AddDocData: Added defaults.");

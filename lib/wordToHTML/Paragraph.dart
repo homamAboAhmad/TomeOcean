@@ -1610,7 +1610,9 @@ class Paragraph {
 
       // تصحيح موقع مربعات النص إذا كان هناك صور تسبب التفافاً
       // نستخدم ارتفاع الصورة كموقع جديد (الصورة تبدأ من أعلى الفقرة تقريباً)
-      if (maxWrapImageHeight > 0 &&
+      if (!isHeaderParagraph &&
+          !isFooterParagraph &&
+          maxWrapImageHeight > 0 &&
           img.relativeFromV == "paragraph" &&
           (img.textBoxText != null && img.textBoxText!.isNotEmpty)) {
         // إذا كان موقع مربع النص الأصلي داخل منطقة الصورة الملتفة

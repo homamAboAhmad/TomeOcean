@@ -98,6 +98,66 @@ class EmbeddedFontExtractor {
     
     return extractedFonts;
   }
+
+  /// يستعيد خرائط الخطوط المضمّنة من مجلد _shared_fonts عندما تكون
+  /// metadata القديمة لا تحتوي extractedFontPaths.
+  static Future<Map<String, String>> recoverSharedFontPaths(
+    Iterable<String> fontFamilies, [
+    String? sharedFontsDirPath,
+  ]) async {
+    late final Directory sharedFontsDir;
+    if (sharedFontsDirPath != null && sharedFontsDirPath.isNotEmpty) {
+      sharedFontsDir = Directory(sharedFontsDirPath);
+    } else {
+      final appDocsDir = await getApplicationDocumentsDirectory();
+      sharedFontsDir = Directory(
+        p.join(appDocsDir.path, 'tome_ocean', '_shared_fonts'),
+      );
+    }
+    if (!await sharedFontsDir.exists()) {
+      return {};
+    }
+
+    final entries = await sharedFontsDir.list().toList();
+    final files = entries
+        .where((entry) => entry is File)
+        .cast<File>()
+        .where((file) {
+          final name = p.basename(file.path).toLowerCase();
+          return name.endsWith('.ttf') || name.endsWith('.otf');
+        })
+        .toList();
+    if (files.isEmpty) {
+      return {};
+    }
+
+    final recovered = <String, String>{};
+    for (final rawFamily in fontFamilies) {
+      final family = rawFamily.trim();
+      if (family.isEmpty) continue;
+
+      final safeFontName = family.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+      final matches = files
+          .where((file) => p.basename(file.path).startsWith('${safeFontName}_'))
+          .toList();
+      if (matches.isEmpty) continue;
+
+      matches.sort((a, b) {
+        final aName = p.basename(a.path).toLowerCase();
+        final bName = p.basename(b.path).toLowerCase();
+        final aRegular = aName.contains('embedregular.ttf');
+        final bRegular = bName.contains('embedregular.ttf');
+        if (aRegular != bRegular) {
+          return aRegular ? -1 : 1;
+        }
+        return aName.compareTo(bName);
+      });
+
+      recovered[family] = matches.first.path;
+    }
+
+    return recovered;
+  }
   
   /// فك تشفير الخطوط المحمية (ODTTF format)
   /// حسب مواصفات ECMA-376 Part 2:

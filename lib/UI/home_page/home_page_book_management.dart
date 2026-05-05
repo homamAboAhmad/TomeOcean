@@ -10,6 +10,7 @@ import 'package:golden_shamela/Utils/SnackBar.dart';
 import 'package:golden_shamela/core/app_state.dart';
 import 'package:golden_shamela/Services/BookProcessingService.dart'
     show BookProcessingService, CACHE_VERSION;
+import 'package:golden_shamela/Services/EmbeddedFontExtractor.dart';
 import 'package:golden_shamela/FontsLoaderController.dart';
 
 /// Book management operations for HomePage
@@ -72,7 +73,20 @@ class HomePageBookManagement {
                 .map((file) => p.basename(file.path))
                 .toList();
             wordDocument.initLoadedPages();
-            
+
+            if (wordDocument.extractedFontPaths.isEmpty &&
+                wordDocument.fontsList.isNotEmpty) {
+              wordDocument.extractedFontPaths =
+                  await EmbeddedFontExtractor.recoverSharedFontPaths(
+                wordDocument.fontsList,
+              );
+              if (wordDocument.extractedFontPaths.isNotEmpty) {
+                final updatedMetadata = Map<String, dynamic>.from(jsonMap);
+                updatedMetadata.addAll(wordDocument.toMetadataJson());
+                await metadataFile.writeAsString(jsonEncode(updatedMetadata));
+              }
+            }
+
             // تحميل الخطوط المستخرجة إن وجدت
             if (wordDocument.extractedFontPaths.isNotEmpty) {
               await loadExtractedFonts(wordDocument.extractedFontPaths);

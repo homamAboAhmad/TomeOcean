@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:golden_shamela/Services/SystemFontMetadataResolver.dart';
 
 
 /*
@@ -35,28 +36,48 @@ const Map<String, List<String>> _knownSystemFontFiles = {
   'yakout linotype light': [
     'Yakout-Linotype-Light.ttf',
   ],
+  'pt bold heading': [
+    'PTBLDARC.TTF',
+  ],
 };
 
 List<String>? resolveKnownSystemFontPaths(String fontFamily) {
   final normalizedFamily = normalizeKnownSystemFontKey(fontFamily);
   final candidateFiles = _knownSystemFontFiles[normalizedFamily];
-  if (candidateFiles == null) return null;
-
   final fontDirectories = _getSystemFontDirectories();
-  final paths = <String>[];
+  if (candidateFiles != null) {
+    final paths = <String>[];
 
-  for (final fontDirectory in fontDirectories) {
-    for (final fontFileName in candidateFiles) {
-      paths.add('$fontDirectory\\$fontFileName');
+    for (final fontDirectory in fontDirectories) {
+      for (final fontFileName in candidateFiles) {
+        paths.add('$fontDirectory\\$fontFileName');
+      }
     }
+
+    return paths;
   }
 
-  return paths;
+  return SystemFontMetadataResolver.resolveFontPaths(
+    fontFamily,
+    fontDirectories: fontDirectories,
+  );
 }
 
 bool isKnownSystemFontFamily(String fontFamily) {
   final normalizedFamily = normalizeKnownSystemFontKey(fontFamily);
   return _knownSystemFontFiles.containsKey(normalizedFamily);
+}
+
+bool canResolveSystemFontFamily(String fontFamily) {
+  final normalizedFamily = normalizeKnownSystemFontKey(fontFamily);
+  if (_knownSystemFontFiles.containsKey(normalizedFamily)) {
+    return true;
+  }
+
+  return SystemFontMetadataResolver.canResolveFontFamily(
+    fontFamily,
+    fontDirectories: _getSystemFontDirectories(),
+  );
 }
 
 String normalizeKnownSystemFontKey(String fontFamily) {

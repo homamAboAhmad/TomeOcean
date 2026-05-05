@@ -139,6 +139,8 @@ class WordDocument {
     final json = _$WordDocumentToJson(this);
     // Ensure pages are not included in metadata, as they are now lazy-loaded
     json.remove('pages');
+    json['fontsList'] = fontsList;
+    json['extractedFontPaths'] = extractedFontPaths;
     return json;
   }
 
@@ -182,6 +184,12 @@ class WordDocument {
       wordDocument.extractedFontPaths = Map<String, String>.from(
         json['extractedFontPaths'] as Map,
       );
+    }
+
+    if (json['fontsList'] != null) {
+      wordDocument.fontsList = (json['fontsList'] as List<dynamic>)
+          .map((e) => e.toString())
+          .toList();
     }
 
     return wordDocument;
@@ -485,7 +493,7 @@ String normalizeFontFamily(String font) {
   // face-specific family names (for example "...-Bold"). If we strip the
   // suffix we break the match between the dynamically loaded family name and
   // the family used by TextStyle, causing Flutter to fall back to another font.
-  if (isKnownSystemFontFamily(font)) {
+  if (canResolveSystemFontFamily(font)) {
     return font.trim();
   }
 

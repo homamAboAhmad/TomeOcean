@@ -75,15 +75,21 @@ class VmlRendererWidget extends StatelessWidget {
           borderRadius = BorderRadius.circular(minDim * vml.arcSize);
         }
 
+        final shapeDecoration =
+            fillDecoration?.copyWith(borderRadius: borderRadius) ??
+            (borderDecoration != null
+                ? BoxDecoration(borderRadius: borderRadius)
+                : null);
+
         shapeWidget = Container(
           width: imageData.width > 0 ? imageData.width : null,
           height: imageData.height > 0 ? imageData.height : null,
-          decoration: fillDecoration?.copyWith(borderRadius: borderRadius),
+          decoration: shapeDecoration,
           foregroundDecoration: borderDecoration?.copyWith(
             borderRadius: borderRadius,
           ),
           clipBehavior:
-              (fillDecoration != null || borderDecoration != null)
+              (shapeDecoration != null)
               ? Clip.hardEdge
               : Clip.none,
           child: contentWidget,
@@ -144,15 +150,34 @@ BoxDecoration? _buildShapeFillDecoration(VmlShapeData vml, ImageData imageData) 
     vml: vml,
     imageData: imageData,
   );
-  if (color == null) return null;
-  return BoxDecoration(color: color);
+  final boxShadow = _buildShapeBoxShadow(vml);
+  if (color == null && boxShadow == null) return null;
+  return BoxDecoration(color: color, boxShadow: boxShadow);
 }
 
 /// بناء زخرفة الحدود للشكل
 BoxDecoration? _buildShapeBorderDecoration(VmlShapeData vml) {
-  final border = vml.isStroked && vml.strokeColor != null
-      ? Border.all(color: vml.strokeColor!, width: vml.strokeWidth)
+  final strokeColor = vml.strokeColor ?? Colors.black;
+  final border = vml.isStroked
+      ? Border.all(color: strokeColor, width: vml.strokeWidth)
       : null;
   if (border == null) return null;
   return BoxDecoration(border: border);
+}
+
+List<BoxShadow>? _buildShapeBoxShadow(VmlShapeData vml) {
+  final shadow = vml.shadowStyle;
+  if (shadow == null || !shadow.enabled) return null;
+
+  final shadowColor =
+      (shadow.color ?? Colors.black).withOpacity(shadow.opacity.clamp(0.0, 1.0));
+
+  return [
+    BoxShadow(
+      color: shadowColor,
+      offset: Offset(shadow.offsetX, shadow.offsetY),
+      blurRadius: 0,
+      spreadRadius: 0,
+    ),
+  ];
 }
