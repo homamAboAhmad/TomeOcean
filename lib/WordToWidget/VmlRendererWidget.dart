@@ -38,11 +38,18 @@ class VmlRendererWidget extends StatelessWidget {
     if (imageData.imageMemory != null &&
         imageData.imageMemory!.isNotEmpty &&
         vml.textBoxElement == null) {
+      final isPictureShape = vml.shapeType.toLowerCase() == 'picture';
       contentWidget = Image.memory(
         imageData.imageMemory!,
         width: imageData.width > 0 ? imageData.width : null,
         height: imageData.height > 0 ? imageData.height : null,
-        fit: imageData.isStretched ? BoxFit.fill : BoxFit.contain,
+        // In Word VML, a picture shape (o:spt="75") paints the image into the
+        // shape rectangle itself. Using contain here invents white bands when
+        // the bitmap ratio differs from the VML shape ratio, which is not what
+        // Word does for this picture-shape case.
+        fit: isPictureShape
+            ? BoxFit.fill
+            : (imageData.isStretched ? BoxFit.fill : BoxFit.contain),
         gaplessPlayback: true,
       );
     }

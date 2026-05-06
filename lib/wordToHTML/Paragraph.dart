@@ -1290,6 +1290,9 @@ class Paragraph {
   Widget _buildTOCWidget() {
     // Split runs at the LAST tab (the leader tab before page number).
     // Earlier tabs are internal (e.g. between "1-" and text).
+    // Important: in WordprocessingML the page number may live in the SAME run
+    // as the last w:tab (`<w:tab/><w:t>107</w:t>`), so we must preserve that
+    // run's text instead of dropping the whole run as "tab only".
     List<runT> entryRuns = [];
     List<runT> pageNumRuns = [];
     int lastTabIndex = -1;
@@ -1301,7 +1304,13 @@ class Paragraph {
     }
 
     for (int i = 0; i < textRunTs.length; i++) {
-      if (i == lastTabIndex) continue; // Skip the leader tab itself
+      if (i == lastTabIndex) {
+        final tabRun = textRunTs[i];
+        if ((tabRun.text?.trim().isNotEmpty ?? false)) {
+          pageNumRuns.add(tabRun);
+        }
+        continue;
+      }
       if (lastTabIndex != -1 && i > lastTabIndex) {
         pageNumRuns.add(textRunTs[i]);
       } else {
@@ -1370,7 +1379,13 @@ class Paragraph {
                     textDirection: TextDirection.ltr, // Numbers are LTR
                     text: TextSpan(
                       style: prPr?.getTextStyle(),
-                      children: pageNumRuns.map((r) => r.toWidget()).toList(),
+                      children: pageNumRuns
+                          .map(
+                            (r) => r.hasTab
+                                ? _buildTOCPageNumberSpan(r)
+                                : r.toWidget(),
+                          )
+                          .toList(),
                     ),
                   ),
               ],
@@ -1379,6 +1394,11 @@ class Paragraph {
         ),
       ),
     );
+  }
+
+  InlineSpan _buildTOCPageNumberSpan(runT run) {
+    final text = run.checkDiacritics();
+    return TextSpan(text: text, style: run.getEffectiveTextStyle());
   }
 
   /// Get the main font from TOC entry runs (first run that has a font defined)

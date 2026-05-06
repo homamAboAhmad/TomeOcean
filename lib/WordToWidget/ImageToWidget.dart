@@ -42,7 +42,9 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
     );
   }
 
-  // NEW: Handle VML shapes first, because textBoxText in VML should be rendered inside the shape
+  // VML shapes are rendered by the dedicated VML widget. The classification
+  // of the shape itself must be corrected at parse time, not by special-casing
+  // individual VML pictures here.
   if (image.vmlShapeData != null) {
     return VmlRendererWidget(
       imageData: image,

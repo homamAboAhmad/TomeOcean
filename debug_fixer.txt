@@ -5174,3 +5174,271 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_واعتصموا.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-05-05 13:21:37.497068 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_واعتصموا.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_واعتصموا.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_واعتصموا.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-05 13:27:59.142063 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_واعتصموا.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_واعتصموا.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_واعتصموا.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 09:25:42.295591 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 09:28:07.068330 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 09:30:30.557536 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 09:32:47.058553 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 09:34:29.595449 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 09:36:27.077321 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 09:46:11.534771 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 09:47:18.203950 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_واعتصموا.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_واعتصموا.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_واعتصموا.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 10:12:11.996815 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_الأرشيف الجامع لكلمات وخطابات الشيخ أبي مصعب الزرقاوي ـ شبكة البراق الإسلامية.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_الأرشيف الجامع لكلمات وخطابات الشيخ أبي مصعب الزرقاوي ـ شبكة البراق الإسلامية.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_الأرشيف الجامع لكلمات وخطابات الشيخ أبي مصعب الزرقاوي ـ شبكة البراق الإسلامية.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 10:20:08.961412 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 10:28:09.022212 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 10:32:24.580454 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 10:37:19.662105 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 10:40:20.932875 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 10:46:40.854953 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 11:00:54.184753 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 13:14:00.542105 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 13:23:42.688821 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 13:24:28.978661 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex7__50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex7__50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex7__50p.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image1.emf
+  -> Converting image1.emf to PNG...
+  -> Replaced image1.emf with PNG data.
+Found EMF image: image2.emf
+  -> Converting image2.emf to PNG...
+  -> Replaced image2.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-05-06 13:30:35.768177 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 13:32:57.248037 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 13:37:18.754918 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 13:45:57.535843 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 13:49:24.935449 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 13:50:22.104693 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 14:34:00.548828 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex10_50p.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex10_50p.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 14:34:59.268644 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex12الجامع.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.

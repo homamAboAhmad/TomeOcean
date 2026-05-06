@@ -22,13 +22,15 @@ class VmlShapeTypeResolver {
     );
 
     if (shapeTypeElement == null || shapeTypeElement.name.local == 'null') {
-      return localName;
+      return _fallbackShapeType(shape, localName);
     }
 
-    final officeShapeType = shapeTypeElement.getAttribute(
-      'spt',
-      namespace: 'urn:schemas-microsoft-com:office:office',
-    )?.trim();
+    // Word VML can serialize this as o:spt="75". In some documents the
+    // namespace-qualified lookup misses it even though the attribute exists,
+    // so we intentionally match by local name to keep classification tied to
+    // the actual XML rather than later rendering heuristics.
+    final officeShapeType =
+        _getAttributeByLocalName(shapeTypeElement, 'spt')?.trim();
 
     switch (officeShapeType) {
       case '110':
@@ -41,7 +43,29 @@ class VmlShapeTypeResolver {
       case '32': // straight line
         return 'line';
       default:
-        return localName;
+        return _fallbackShapeType(shape, localName);
     }
+  }
+
+  static String? _getAttributeByLocalName(
+    xml.XmlElement element,
+    String localName,
+  ) {
+    for (final attribute in element.attributes) {
+      if (attribute.name.local.toLowerCase() == localName.toLowerCase()) {
+        return attribute.value;
+      }
+    }
+    return null;
+  }
+
+  static String _fallbackShapeType(xml.XmlElement shape, String localName) {
+    final hasImageData = shape.descendants.whereType<xml.XmlElement>().any(
+      (element) => element.name.local.toLowerCase() == 'imagedata',
+    );
+    if (hasImageData) {
+      return 'picture';
+    }
+    return localName;
   }
 }

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:golden_shamela/Services/KnownSystemFontsRegistry.dart';
+import 'package:golden_shamela/Services/SystemFontMetadataResolver.dart';
 
 final List<String> _fontFiles = [
   'Traditional Arabic.ttf',
@@ -49,26 +50,35 @@ Future<void> loadKnownSystemFontsForDocument(
     if (candidatePaths == null) continue;
     if (!_markFontFamilyAsPending(family)) continue;
 
-    bool loaded = false;
-    for (final fontPath in candidatePaths) {
+    final normalizedPaths = <String>{...candidatePaths};
+    final fontLoader = FontLoader(family);
+    bool addedAnyFace = false;
+
+    for (final fontPath in normalizedPaths) {
       final file = File(fontPath);
       if (!await file.exists()) continue;
 
       try {
-        final fontBytes = Uint8List.fromList(await file.readAsBytes());
-        final fontLoader = FontLoader(family);
+        final fontBytes = await _readPreparedFontBytes(file);
         fontLoader.addFont(Future.value(ByteData.view(fontBytes.buffer)));
-        await fontLoader.load();
-        debugPrint('Loaded known system font: $family <- $fontPath');
-        loaded = true;
-        break;
+        addedAnyFace = true;
+        debugPrint('Queued known system font face: $family <- $fontPath');
       } catch (e) {
         debugPrint('Failed to load known system font "$family": $e');
       }
     }
 
-    if (!loaded) {
-      _loadedFontFamilies.remove(family.toLowerCase());
+    if (!addedAnyFace) {
+      _unmarkFontFamily(family);
+      continue;
+    }
+
+    try {
+      await fontLoader.load();
+      debugPrint('Loaded known system font family: $family');
+    } catch (e) {
+      debugPrint('Failed to finalize known system font family "$family": $e');
+      _unmarkFontFamily(family);
     }
   }
 }
@@ -83,12 +93,13 @@ Future<void> loadExtractedFonts(Map<String, String> fontPaths) async {
       if (!await fontFile.exists()) continue;
       if (!_markFontFamilyAsPending(fontFamily)) continue;
 
-      final fontBytes = Uint8List.fromList(await fontFile.readAsBytes());
+      final fontBytes = await _readPreparedFontBytes(fontFile);
       final fontLoader = FontLoader(fontFamily);
       fontLoader.addFont(Future.value(ByteData.view(fontBytes.buffer)));
       await fontLoader.load();
     } catch (e) {
       debugPrint('Failed to load extracted font "$fontFamily": $e');
+      _unmarkFontFamily(fontFamily);
     }
   }
 }
@@ -100,6 +111,15 @@ bool _markFontFamilyAsPending(String fontFamily) {
   }
   _loadedFontFamilies.add(normalized);
   return true;
+}
+
+void _unmarkFontFamily(String fontFamily) {
+  _loadedFontFamilies.remove(fontFamily.trim().toLowerCase());
+}
+
+Future<Uint8List> _readPreparedFontBytes(File fontFile) async {
+  final rawBytes = Uint8List.fromList(await fontFile.readAsBytes());
+  return SystemFontMetadataResolver.prepareFontBytesForFlutter(rawBytes);
 }
 
 String removeExt(String fileName) {

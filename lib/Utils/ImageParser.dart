@@ -588,6 +588,7 @@ void _parseVmlData() {
   // 2. Extract Dimensions from style attribute
   // style="...width:261.35pt;height:42.3pt..."
   String? style = shape.getAttribute('style');
+  final shapeTypeElement = _resolveReferencedVmlShapeTypeElement(shape);
   final wrapElement = shape.childElements.firstWhere(
     (e) => e.name.local == 'wrap',
     orElse: () => xml.XmlElement(xml.XmlName('null')),
@@ -655,11 +656,19 @@ void _parseVmlData() {
       fallbackColor: fillColor,
     );
     _imageData.vmlShapeData!.shadowStyle = VmlEffectsParser.parseShadow(shape);
-    final filledAttr = shape.getAttribute('filled')?.trim().toLowerCase();
+    // VML allows visual defaults such as filled/stroked to live on the
+    // referenced v:shapetype. If v:shape omits them, Word still inherits those
+    // defaults; treating the omission as "true" invents borders/fills that are
+    // not present in the XML-rendered document.
+    final filledAttr =
+        shape.getAttribute('filled')?.trim().toLowerCase() ??
+        shapeTypeElement?.getAttribute('filled')?.trim().toLowerCase();
     if (filledAttr == 'f' || filledAttr == 'false') {
       _imageData.vmlShapeData!.isFilled = false;
     }
-    final strokedAttr = shape.getAttribute('stroked')?.trim().toLowerCase();
+    final strokedAttr =
+        shape.getAttribute('stroked')?.trim().toLowerCase() ??
+        shapeTypeElement?.getAttribute('stroked')?.trim().toLowerCase();
     if (strokedAttr == 'f' || strokedAttr == 'false') {
       _imageData.vmlShapeData!.isStroked = false;
     }
@@ -772,6 +781,42 @@ void _parseVmlData() {
       );
     }
   }
+}
+
+xml.XmlElement? _resolveReferencedVmlShapeTypeElement(xml.XmlElement shape) {
+  final typeRef = shape.getAttribute('type')?.trim();
+  if (typeRef == null || typeRef.isEmpty) return null;
+
+  final normalizedId = typeRef.startsWith('#') ? typeRef.substring(1) : typeRef;
+  final pict = shape.parentElement;
+  final localShapeTypeElement = pict?.childElements.firstWhere(
+    (e) =>
+        e.name.local.toLowerCase() == 'shapetype' &&
+        e.getAttribute('id') == normalizedId,
+    orElse: () => xml.XmlElement(xml.XmlName('null')),
+  );
+  if (localShapeTypeElement != null &&
+      localShapeTypeElement.name.local != 'null') {
+    return localShapeTypeElement;
+  }
+
+  // Some Word VML stories declare the reusable shapetype in a previous w:pict
+  // within the same header/footer/body story, not beside this v:shape itself.
+  final ancestorElements = shape.ancestors.whereType<xml.XmlElement>().toList();
+  if (ancestorElements.isEmpty) return null;
+  final storyRoot = ancestorElements.last;
+
+  final shapeTypeElement = storyRoot.descendants
+      .whereType<xml.XmlElement>()
+      .firstWhere(
+        (e) =>
+            e.name.local.toLowerCase() == 'shapetype' &&
+            e.getAttribute('id') == normalizedId,
+        orElse: () => xml.XmlElement(xml.XmlName('null')),
+      );
+
+  if (shapeTypeElement.name.local == 'null') return null;
+  return shapeTypeElement;
 }
 
 void _parseVmlStyle(String style) {
