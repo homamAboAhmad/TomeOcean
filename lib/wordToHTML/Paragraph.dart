@@ -9,6 +9,7 @@ import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/wordToHTML/HeaderFooterDotLeader.dart';
 import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/wordToHTML/ParagraphStrutResolver.dart';
+import 'package:golden_shamela/wordToHTML/PositionalTabLayout.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/HyperlinkDisplayContextResolver.dart';
 import 'package:golden_shamela/wordToHTML/runT.dart';
@@ -850,6 +851,14 @@ class Paragraph {
 
     // Check for centered paragraph with tabs (like headers: "أعمال [TAB] ❀ [TAB] الرافعي")
     // These need Row layout to distribute content evenly
+    if (_hasPositionalTabs()) {
+      return _buildPositionalTabsWidget(
+        suppressParagraphBorder: suppressParagraphBorder,
+        spacingBeforeOverride: spacingBeforeOverride,
+        spacingAfterOverride: spacingAfterOverride,
+      );
+    }
+
     if (_isCenteredWithTabs()) {
       return _buildCenteredTabsWidget(
         suppressParagraphBorder: suppressParagraphBorder,
@@ -969,6 +978,10 @@ class Paragraph {
   bool _isCenteredWithTabs() {
     if (textAlign != TextAlign.center) return false;
     return textRunTs.any((r) => r.hasTab);
+  }
+
+  bool _hasPositionalTabs() {
+    return textRunTs.any((r) => r.hasPositionalTab);
   }
 
   bool _hasExplicitLineBreaks() {
@@ -1136,6 +1149,85 @@ class Paragraph {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: children,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPositionalTabsWidget({
+    bool suppressParagraphBorder = false,
+    double? spacingBeforeOverride,
+    double? spacingAfterOverride,
+  }) {
+    final segments = <PositionalTabSegment>[];
+    final currentSegment = <runT>[];
+    final firstPositionalTab = textRunTs.cast<runT?>().firstWhere(
+      (run) => run?.hasPositionalTab == true,
+      orElse: () => null,
+    );
+    final defaultAlignment = PositionalTabLayoutResolver.resolveDefaultAlignment(
+      paragraphTextAlign: textAlign,
+      paragraphDirection: textDirection,
+      firstPositionalTabAlignment: firstPositionalTab?.positionalTabAlignment,
+    );
+    String currentAlignment = defaultAlignment;
+
+    void flushCurrentSegment() {
+      if (currentSegment.isEmpty) return;
+      segments.add(
+        PositionalTabSegment(
+          spans: currentSegment.map((r) => r.toWidget()).toList(),
+          alignment: currentAlignment,
+        ),
+      );
+      currentSegment.clear();
+    }
+
+    for (final run in textRunTs) {
+      if (run.hasPositionalTab) {
+        flushCurrentSegment();
+        currentAlignment = PositionalTabLayoutResolver.normalizeAlignment(
+          run.positionalTabAlignment,
+          fallbackAlignment: defaultAlignment,
+        );
+        continue;
+      }
+      currentSegment.add(run);
+    }
+    flushCurrentSegment();
+
+    final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
+    final EdgeInsets headerTextInsets = isHeaderParagraph && applyHeaderTextInsets
+        ? EdgeInsets.only(
+            left: sectPr.leftMargin ?? 0,
+            right: sectPr.rightMargin ?? 0,
+          )
+        : EdgeInsets.zero;
+
+    final BoxDecoration? decoration = _getParagraphDecoration(
+      _getParagraphShadingColor(),
+      includeBorder: !suppressParagraphBorder,
+    );
+
+    return GestureDetector(
+      onLongPress: () => printParagraphXml(),
+      child: Padding(
+        padding: _getPPaddings(
+          spacingBeforeOverride: spacingBeforeOverride,
+          spacingAfterOverride: spacingAfterOverride,
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          child: Container(
+            decoration: decoration,
+            child: Padding(
+              padding: headerTextInsets,
+              child: PositionalTabLayout(
+                segments: segments,
+                textDirection: textDirection,
+              ),
             ),
           ),
         ),

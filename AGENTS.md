@@ -218,6 +218,55 @@
   - رسم النقاط أو توزيعها دون التأكد أولًا أن الفقرة صُنّفت أصلًا كحالة `literal dot leader`
 - ابدأ دائمًا من XML الفعلي: هل الحالة `tab leader` حقيقي، أم `literal dots`, أم `PAGE field`, أم `framePr`, ثم اختر المسار المناسب بأقل نطاق ممكن
 
+### 10.1) `w:ptab` في الهيدر/الفوتر ليس هو `w:tab`
+- **الحالة المؤكدة**: بعض الهيدرز تحتوي داخل الفقرة نفسها على `w:ptab` مثل:
+  - `w:ptab w:alignment="center" w:relativeTo="margin"`
+  - ثم `w:ptab w:alignment="right" w:relativeTo="margin"`
+  - ثم نص لاحق يجب أن يتموضع وفق هذه المناطق كما في Word
+- **المرجع الصحيح**:
+  - `17.3.3.23 ptab (Absolute Position Tab Character)`
+  - هذا العنصر **يتجاهل** custom tab stops العادية من `w:tabs`
+  - ويتموضع بالنسبة لما يحدده `alignment` و`relativeTo`
+- **الجذر الحقيقي للمشكلة السابقة**:
+  - التطبيق كان يدعم `w:tab` فقط
+  - وكان يهمل `w:ptab` تمامًا، فيندمج النص كله داخل فقرة واحدة ويضيع معنى التموضع
+  - ثم اتضح أيضًا أن تتابع `ptab center` ثم `ptab right` قبل النص التالي يعني أن **آخر `ptab` قبل النص** هو الذي يحدد موضع هذا النص
+- **الإصلاح الحالي الصحيح**:
+  - في `lib/wordToHTML/runT.dart`:
+    - حفظ معلومات `w:ptab` في:
+      - `hasPositionalTab`
+      - `positionalTabAlignment`
+      - `positionalTabRelativeTo`
+  - في `lib/wordToHTML/PositionalTabLayout.dart`:
+    - ملف مستقل لمسؤولية واحدة: تفسير وعرض segments الناتجة عن `w:ptab`
+  - في `lib/wordToHTML/Paragraph.dart`:
+    - يكتشف فقط أن الفقرة تحتوي `w:ptab`
+    - ويقسم الـ runs إلى segments عند `ptab`
+    - ويفوض العرض إلى `PositionalTabLayout`
+- **قاعدة مهمة ثبتت من الحالة المؤكدة**:
+  - في نمط header/footer الكلاسيكي `left / center / right`
+  - النص **قبل أول `ptab`** يبقى في منطقة اليسار
+  - والنص الذي يأتي بعد عدة `ptab` متتالية يتبع **آخر `ptab` قبله**
+- **هل هذا ترقيع؟**
+  - ليس hack بصريًا ولا تعديل بكسلات عشوائي
+  - الجذر مبني على XML نفسه وعلى مرجع `ptab`
+  - لكن التنفيذ الحالي **محدود النطاق عمدًا** للحالة المؤكدة:
+    - `relativeTo="margin"`
+    - محاذاة `left/center/right`
+    - سياق الهيدر/الفوتر
+  - لذلك لا تفترض أنه محرك كامل لكل أشكال `w:ptab` في WordprocessingML
+- **ما يجب عدم فعله**:
+  - لا تعالج هذه الحالة بإعادة استخدام مسار `w:tab` العادي
+  - لا تحولها إلى `Spacer()` أو `Row(spaceBetween)` عام
+  - لا تفترض أن اسم الـ style مثل `header` أو `a5` يكفي لتشخيصها؛ العبرة بوجود `w:ptab` فعليًا
+  - لا تُسقط `ptab` الثاني لمجرد أنه متتالٍ؛ إذا كان آخر `ptab` قبل النص فهو مؤثر
+- **خطوات التشخيص الصحيحة**:
+  1. افحص هل العنصر في XML هو `w:ptab` أم `w:tab`
+  2. افحص `alignment`
+  3. افحص `relativeTo`
+  4. افحص هل توجد عدة `ptab` متتالية قبل النص
+  5. افحص موضع النص قبل أول `ptab` وموضع النص بعد آخر `ptab` بمقارنة Word
+
 ### 11) `VML textbox` overflow داخل الهيدر/الفوتر
 - **الحالة المؤكدة**: بعض الهيدرز تأتي كأشكال VML مثل `v:roundrect` بارتفاع ثابت، وداخلها `v:textbox > w:txbxContent`.
 - **الجذر الحقيقي للمشكلة**:

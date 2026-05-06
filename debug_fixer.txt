@@ -5442,3 +5442,30 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex12الجامع.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-05-06 14:49:53.219667 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_إبراهام عيسى .. بقية قوم لوط.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_إبراهام عيسى .. بقية قوم لوط.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_إبراهام عيسى .. بقية قوم لوط.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 14:57:52.864987 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_إبراهام عيسى .. بقية قوم لوط.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_إبراهام عيسى .. بقية قوم لوط.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_إبراهام عيسى .. بقية قوم لوط.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-06 15:09:31.709827 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_إبراهام عيسى .. بقية قوم لوط.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_إبراهام عيسى .. بقية قوم لوط.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_إبراهام عيسى .. بقية قوم لوط.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.

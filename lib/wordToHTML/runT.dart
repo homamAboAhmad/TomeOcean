@@ -42,6 +42,9 @@ class runT {
   /// Whether this run contains a w:tab element (for TOC entry/page number separation)
   /// This is serialized to cache since xmlRun is ignored
   bool hasTab = false;
+  bool hasPositionalTab = false;
+  String? positionalTabAlignment;
+  String? positionalTabRelativeTo;
   bool hasExplicitRunDirection = false;
 
   @JsonKey(ignore: true)
@@ -89,6 +92,10 @@ class runT {
     this.xmlRun = xmlRun;
     // Check for tab element (used for TOC entry/page number separation)
     hasTab = xmlRun?.getElement("w:tab") != null;
+    final positionalTab = xmlRun?.getElement("w:ptab");
+    hasPositionalTab = positionalTab != null;
+    positionalTabAlignment = positionalTab?.getAttribute("w:alignment");
+    positionalTabRelativeTo = positionalTab?.getAttribute("w:relativeTo");
     getText();
 
     checkBr();
