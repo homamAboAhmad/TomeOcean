@@ -4,9 +4,9 @@ import 'package:golden_shamela/Models/VmlShapeData.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/WordToWidget/VmlDiamondShapeWidget.dart';
 import 'package:golden_shamela/WordToWidget/RichTextBoxWidget.dart';
+import 'package:golden_shamela/WordToWidget/ShapeTextBoxInsetResolver.dart';
 import 'package:golden_shamela/WordToWidget/VmlShapeFillResolver.dart';
 import 'package:golden_shamela/WordToWidget/VmlLinePainter.dart';
-import 'package:golden_shamela/WordToWidget/VmlTextBoxInsetResolver.dart';
 
 /// ودجت مسؤول عن تجميع ورسم أشكال VML المختلفة مع النص الغني بداخلها.
 ///
@@ -56,8 +56,8 @@ class VmlRendererWidget extends StatelessWidget {
 
     // محتوى نصي غني إن وُجد textbox
     if (vml.textBoxElement != null) {
-      contentWidget = Padding(
-        padding: VmlTextBoxInsetResolver.resolve(vml.textBoxInset),
+      Widget textBoxContent = Padding(
+        padding: ShapeTextBoxInsetResolver.resolve(vml),
         child: RichTextBoxWidget(
           textBoxElement: vml.textBoxElement!,
           wordPage: wordPage,
@@ -65,6 +65,25 @@ class VmlRendererWidget extends StatelessWidget {
           textBoxFillColor: vml.fillColor,
         ),
       );
+
+      if (vml.textNoAutofit) {
+        // DrawingML `a:noAutofit` means Word does not shrink text to stay
+        // inside the fixed textbox rectangle. Let the content keep its
+        // natural height instead of forcing a tight Flutter flex layout.
+        textBoxContent = Align(
+          alignment: Alignment.topCenter,
+          child: OverflowBox(
+            alignment: Alignment.topCenter,
+            minWidth: 0,
+            maxWidth: imageData.width > 0 ? imageData.width : double.infinity,
+            minHeight: 0,
+            maxHeight: double.infinity,
+            child: textBoxContent,
+          ),
+        );
+      }
+
+      contentWidget = textBoxContent;
     }
 
     // بناء الشكل المراد رسمه (خلفية وحدود)

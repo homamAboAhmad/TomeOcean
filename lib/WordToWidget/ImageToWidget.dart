@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
+import 'package:golden_shamela/wordToHTML/PageFieldDisplayNumeralResolver.dart';
 import 'package:golden_shamela/wordToHTML/SectPr.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'VectorShapeWidget.dart';
@@ -69,6 +70,18 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
 
     double fontSize = (image.textSize ?? 20.0);
     String? fontFamily = image.fontFamily;
+    String displayText = image.textBoxText!;
+    final customPageNumber = image.parent?.parent.customPageNumber;
+    final useArabicNumerals =
+        image.parent?.parent.parent.parent.useArabicNumerals ?? true;
+
+    if (image.containsPageField && customPageNumber != null) {
+      displayText = resolvePageFieldDisplayNumerals(
+        pageNumber: customPageNumber,
+        useArabicNumerals: useArabicNumerals,
+        fontFamily: fontFamily,
+      );
+    }
 
     // Return a simple container with the text.
     // We do NOT apply absolute positioning offsets (left/top) here because
@@ -79,7 +92,7 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
       height: image.height > 0 ? image.height : null,
       child: Center(
         child: Text(
-          image.textBoxText!,
+          displayText,
           textAlign: TextAlign.center,
           style: TextStyle(
             color: textColor,

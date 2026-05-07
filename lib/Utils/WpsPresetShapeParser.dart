@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/VmlShapeData.dart';
+import 'package:golden_shamela/Utils/WpsShapeStyleResolver.dart';
 import 'package:xml/xml.dart' as xml;
 
 /// يحول subset محافظ من wps:wsp + a:prstGeom إلى VmlShapeData قابلة للرسم.
@@ -17,33 +17,21 @@ class WpsPresetShapeParser {
     if (shapeType == null) return null;
 
     final shape = VmlShapeData(shapeType: shapeType);
-
-    final solidFill = _firstDirectChild(spPr, 'solidFill', 'a');
-    final noFill = _firstDirectChild(spPr, 'noFill', 'a') != null;
-    if (solidFill != null) {
-      shape.fillColor = _parseDrawingColor(solidFill);
-    } else if (noFill) {
+    final style = WpsShapeStyleResolver.resolve(wspElement);
+    if (style.fillColor != null) {
+      shape.fillColor = style.fillColor;
+    }
+    if (style.isFilled == false) {
       shape.isFilled = false;
     }
-
-    final line = _firstDirectChild(spPr, 'ln', 'a');
-    if (line != null) {
-      final lineNoFill = _firstDirectChild(line, 'noFill', 'a') != null;
-      if (lineNoFill) {
-        shape.isStroked = false;
-      } else {
-        final lineFill = _firstDirectChild(line, 'solidFill', 'a');
-        if (lineFill != null) {
-          shape.strokeColor = _parseDrawingColor(lineFill);
-        }
-        final widthAttr = line.getAttribute('w');
-        if (widthAttr != null) {
-          final widthEmu = double.tryParse(widthAttr) ?? 0;
-          if (widthEmu > 0) {
-            shape.strokeWidth = widthEmu / 9525.0;
-          }
-        }
-      }
+    if (style.strokeColor != null) {
+      shape.strokeColor = style.strokeColor;
+    }
+    if (style.isStroked == false) {
+      shape.isStroked = false;
+    }
+    if (style.strokeWidth != null && style.strokeWidth! > 0) {
+      shape.strokeWidth = style.strokeWidth!;
     }
 
     return shape;
@@ -63,40 +51,4 @@ class WpsPresetShapeParser {
     return null;
   }
 
-  static xml.XmlElement? _firstDirectChild(
-    xml.XmlElement parent,
-    String localName,
-    String? prefix,
-  ) {
-    for (final child in parent.childElements) {
-      if (child.name.local == localName &&
-          (prefix == null || child.name.prefix == prefix)) {
-        return child;
-      }
-    }
-    return null;
-  }
-
-  static Color? _parseDrawingColor(xml.XmlElement solidFill) {
-    final srgbClr = solidFill.findAllElements('a:srgbClr').firstOrNull;
-    if (srgbClr != null) {
-      final val = srgbClr.getAttribute('val');
-      if (val != null && val.length == 6) {
-        try {
-          return Color(int.parse('FF$val', radix: 16));
-        } catch (_) {}
-      }
-    }
-
-    final schemeClr = solidFill.findAllElements('a:schemeClr').firstOrNull;
-    final schemeVal = schemeClr?.getAttribute('val');
-    if (schemeVal == 'bg1' || schemeVal == 'lt1') {
-      return Colors.white;
-    }
-    if (schemeVal == 'tx1' || schemeVal == 'dk1') {
-      return Colors.black;
-    }
-
-    return null;
-  }
 }

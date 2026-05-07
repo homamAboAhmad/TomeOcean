@@ -286,9 +286,6 @@
   - لا يغيّر line-height العام للفقرات
   - لا يغيّر `RichTextBoxWidget` نفسه
   - لا يمس `VmlDiamondShapeWidget` ولا مسار `line` المرسوم بـ `CustomPaint`
-- **محاولة فاشلة تم التراجع عنها**:
-  - تعطيل أو تغيير strut/line-height خصيصًا لفقرات `txbxContent`
-  - هذه لم تكن الجذر الحقيقي هنا، ولا ينبغي إعادتها إلا إذا أثبت XML وحسابات المساحة أن المشكلة فعلًا من النص لا من صندوق الشكل
 - عند ظهور overflow صغير وثابت داخل `VML textbox`، افحص أولًا: هل مساحة الطفل انكمشت بسبب `border/padding` أو `inset` قبل العبث بمقاييس النص
 
 ### 12) خطوط VML المتقطعة (`dashstyle`) ونوع نهاية الخط (`endcap`)
@@ -391,11 +388,142 @@
   3. لا تفترض أن `v:shapetype` سيكون sibling مباشرًا؛ قد يلزم البحث داخل الـ story الحالي كله
   4. إذا كان `v:shapetype` يقول `stroked="f"` لكن التطبيق يرسم إطارًا، فالمشكلة في توريث خصائص VML لا في ملف الصورة
 
+### 16) أشكال `wsp` في الهيدر/الفوتر قد ترسم حدودًا وهمية إذا فُصل فرع DrawingML عن fallback الـ `VML`
+- **الحالة المؤكدة**: في هيدر يحوي صندوقًا نصيًا وصندوقًا/زخرفة حول عبارة مثل `الأعمال الكاملة` ظهرت حدود رمادية/سوداء في التطبيق، بينما Word لا يرسم أي حدود حول هذه العناصر.
+- **الجذر الحقيقي**:
+  - الـ XML كان يستخدم `mc:AlternateContent`
+  - الفرع الحديث (`mc:Choice`) يحوي `wps:wsp`
+  - والفرع البديل (`mc:Fallback`) يحوي `w:pict`/`VML` لنفس الشكل
+  - في الحالات المؤكدة كان `wps:spPr` يصرّح:
+    - `a:noFill`
+    - وأحيانًا `a:ln > a:noFill`
+  - كما أن fallback الـ `VML` كان يصرّح أيضًا `filled="f"` و`stroked="f"`
+  - المشكلة كانت من مسارين:
+    - مسار `prstGeom` كان يقرأ `wsp` فقط، وإذا غاب `a:ln` لم يكن يستفيد من fallback المقابل
+    - ومسار `custGeom` كان قد يختلق `stroke` أسود افتراضيًا عند غياب اللون، حتى لو كان الـ XML يصرّح بنيويًا بأنه `noFill/noLine`
+- **الحل الصحيح الحالي**:
+  - ملف جديد: `lib/Utils/WpsShapeStyleResolver.dart`
+  - مسؤوليته الوحيدة: استخراج دلالة الشكل البصرية من `wps:spPr` أولًا، ثم الاستعانة بـ fallback الـ `VML` الموافق داخل `mc:AlternateContent` فقط عند الحاجة
+  - تم توصيله بـ:
+    - `lib/Utils/WpsPresetShapeParser.dart` لمسار `a:prstGeom`
+    - `lib/Utils/ImageParser.dart` لمسار `a:custGeom`
+  - القواعد الحالية:
+    - `a:noFill` تعني لا تعبئة
+    - `a:ln > a:noFill` تعني لا حد
+    - إذا لم يكرّر فرع `wsp` راية `filled/stroked` لكن fallback المقابل يصرّح `f/false`، نأخذ هذه الدلالة لأنها تخص **نفس الشكل** داخل `AlternateContent`
+    - لا نولّد `stroke` أسود افتراضيًا إلا إذا غاب كل تصريح بنيوي عن `noFill/noLine` في فرع `wsp` وfallback معًا
+- **المرجع الذي بُني عليه الحل**:
+  - `wsp` داخل WordprocessingML يأتي في `AlternateContent/Choice` و`w:pict` كـ `Fallback` لنفس الشكل:
+    - Microsoft Learn: `DrawingML Shapes in WordprocessingML`
+  - `a:noFill` هو عنصر DrawingML صريح يمثل `NoFill`
+  - وفي VML فإن `stroked` و`filled` يحددان هل يُرسم الحد أو التعبئة أصلًا
+- **لماذا هذا ليس ترقيعًا**:
+  - لم نخفِ الحدود من طبقة Flutter ولا من `WordPageScreen`
+  - ولم نضع استثناء باسم شكل أو كتاب
+  - بل أصلحنا تفسير البنية الدلالية للشكل نفسه عبر فرعي `AlternateContent`
+  - الربط بين `wsp` وfallback الـ `VML` هنا ليس تخمينًا بصريًا، بل مبني على طبيعة `mc:AlternateContent` نفسها
+- **ما يجب عدم فعله**:
+  - لا تضف `Border.none` أو `strokeColor = null` في طبقة العرض العامة لمجرد أن شكلاً واحدًا يبدو مزعجًا
+  - لا تعتبر غياب `a:ln` في `wsp` دليلاً كافيًا وحده على وجود حد افتراضي إذا كان fallback المقابل يقول `stroked="f"`
+  - لا تُعِد fallback `vectorStrokeColor = black` بشكل أعمى في `custGeom`
+  - لا تتجاهل فرع `mc:Fallback` عند تشخيص مشاكل `wsp` في Word headers/footers
+- **خطوات التشخيص الصحيحة**:
+  1. افحص هل العنصر داخل `mc:AlternateContent`
+  2. افحص `wps:spPr`:
+     - هل يوجد `a:noFill`؟
+     - هل يوجد `a:ln`؟ وهل داخله `a:noFill`؟
+  3. افحص fallback المقابل:
+     - هل الشكل `v:shape` أو `v:rect` يحمل `filled="f"` أو `stroked="f"`؟
+  4. إذا كان Word لا يرسم حدًا والتطبيق يرسمه، فابدأ من resolver الخاص بـ `wsp/VML` قبل أي تعديل في layout أو paint
+
+### 17) تبديل أرقام `PAGE field` يجب أن يبقى محصورًا في النص المعروض لا في أكواد الرموز
+- **الحالة المؤكدة**: ميزة التبديل بين الأرقام العربية والإنجليزية كانت تعمل في أغلب الكتب، لكن سقطت في بعض حالات أرقام الصفحات داخل TextBox/field-result، مع وجود خطر كبير إذا امتد التبديل إلى أكواد رموز مثل `F072` الخاصة بـ `w:sym`.
+- **القاعدة الصحيحة**:
+  - لا يجوز تبديل الأرقام داخل XML الخام
+  - ولا داخل `w:char` أو أسماء glyph/fonts
+  - بل فقط داخل **نتيجة `PAGE field` بعد أن تصبح نصًا معروضًا**
+- **الحل الصحيح الحالي**:
+  - ملف مستقل: `lib/wordToHTML/PageFieldDisplayNumeralResolver.dart`
+  - مسؤوليته الوحيدة: تقرير ما إذا كان النص الحالي هو نتيجة `PAGE field` قابلة لتبديل الأرقام، مع حماية الحالات التي يكون فيها النص جزءًا من ترميز glyph/symbol
+  - تم توصيله بالمسارات التي كانت تعرض PAGE fallback كنص مسطح:
+    - `lib/wordToHTML/Paragraph.dart`
+    - `lib/WordToWidget/ImageToWidget.dart`
+- **لماذا هذا ليس ترقيعًا**:
+  - لأنه لا يعتمد على اسم كتاب أو قيمة رقم بعينها
+  - ولا يبدّل كل ما يشبه الأرقام عشوائيًا
+  - بل يميّز بين **field-result display text** وبين **بيانات ترميز الخط/الرمز**
+- **ما يجب عدم فعله**:
+  - لا تطبّق تحويل الأرقام على `w:sym`
+  - لا تطبّقه على `w:char="F072"` أو ما شابهه
+  - لا تفترض أن أي أرقام داخل textbox هي رقم صفحة؛ ابدأ من XML/field context
+
+### 18) فوترات `wp:anchor` قد تختفي إذا فُسِّر `relativeFrom="margin"` كأنه `page`
+- **الحالة المؤكدة**: بعض أرقام الصفحات في الفوتر لم تكن تظهر أصلًا، رغم أن Word يعرضها أسفل الصفحة، لأن العنصر كان عائمًا (`wp:anchor`) داخل story الفوتر.
+- **الجذر الحقيقي**:
+  - `wp:positionV/@relativeFrom` لم يكن دائمًا `page`
+  - الحالة المؤكدة كانت `relativeFrom="margin"`
+  - التطبيق كان يعامل `posOffset` وكأنه محسوب من حافة الصفحة دائمًا، فيسقط العنصر خارج حاوية الفوتر
+- **المرجع الصحيح**:
+  - قيم `VerticalRelativePositionValues`
+  - وشرح `VerticalPosition.RelativeFrom`
+  - `margin` تعني Page Margin لا Page Edge
+- **الحل الصحيح الحالي**:
+  - ملف مستقل: `lib/wordToHTML/FooterFloatingPositionResolver.dart`
+  - مسؤوليته الوحيدة: تحويل الإحداثي الرأسي للعناصر العائمة في الفوتر من فضاء الصفحة/الهوامش إلى إحداثي محلي داخل حاوية الفوتر
+  - يستخدم الآن من `lib/wordToHTML/Paragraph.dart` بدل إبقاء هذه الحسابات داخله
+- **حدود التعديل**:
+  - محصور في عناصر **الفوتر العائمة** فقط
+  - لا يغيّر الهوامش العامة
+  - لا يغيّر `header` ولا العناصر inline
+- **ما يجب عدم فعله**:
+  - لا تبدأ بتعديل `footerStoryYOffset` أو هوامش الصفحة إذا كانت المشكلة في عنصر عائم واحد
+  - افحص أولًا `relativeFromV` ومرجعه الحقيقي في XML
+
+### 19) صناديق نص `wps:wsp` في الفوتر قد تحتاج `wps:bodyPr` و`a:noAutofit` و`w:pBdr` معًا
+- **الحالة المؤكدة**: بعد ظهور رقم الصفحة في الفوتر بقي:
+  - `RenderFlex overflow` صغير داخل textbox
+  - ثم اتضح أيضًا أن هناك خطًا صغيرًا فوق رقم الصفحة في Word لكنه غائب في التطبيق
+- **الجذور الحقيقية كانت متعددة**:
+  1. التطبيق كان يقرأ textbox وكأنه VML-only، بينما المصدر الفعلي `wps:wsp`
+  2. Insets الصحيحة للنص ليست دائمًا من `v:textbox inset`، بل قد تكون من `wps:bodyPr lIns/tIns/rIns/bIns`
+  3. بعض الحالات تصرّح `a:noAutofit`، أي إن Word لا يحشر النص داخل الصندوق بتصغيره
+  4. الخط الصغير فوق رقم الصفحة لم يكن حد الشكل، بل `w:txbxContent > w:p > w:pPr > w:pBdr > w:top`
+- **الحل الصحيح الحالي**:
+  - `lib/Utils/WpsBodyPropertiesParser.dart`
+    - مسؤولية واحدة: قراءة `wps:bodyPr` واستخراج insets من EMU إلى logical px
+    - ويكشف أيضًا `a:noAutofit`
+  - `lib/WordToWidget/ShapeTextBoxInsetResolver.dart`
+    - يفضّل قيم DrawingML (`wps:bodyPr`) ثم يعود فقط عند الحاجة إلى `v:textbox inset`
+  - `lib/WordToWidget/VmlTextBoxInsetResolver.dart`
+    - يحلل inset الخام محافظًا حتى مع قيم فيها خانات فارغة مثل `,0,,0`
+  - `lib/WordToWidget/VmlRendererWidget.dart`
+    - إذا كانت الحالة `textNoAutofit=true` يعرض المحتوى عبر `OverflowBox` محاذى للأعلى بدل forcing flex ضيق يخالف معنى `noAutofit`
+  - `lib/WordToWidget/RichTextBoxWidget.dart`
+    - لم يعد يكبت `w:pBdr` الخاص بفقرات `txbxContent` لأن هذا الحد قد يكون جزءًا من المحتوى الفعلي مثل الخط فوق رقم الصفحة
+  - `lib/Models/VmlShapeData.dart`
+    - يخزّن الآن:
+      - `textBoxInsetPx`
+      - `textNoAutofit`
+- **لماذا هذا ليس ترقيعًا**:
+  - لم نخفِ overflow بتصغير الخط أو line-height العام
+  - ولم نرسم الخط فوق الرقم يدويًا
+  - بل أعدنا للتطبيق قراءة دلالات XML الصحيحة من:
+    - `wps:bodyPr`
+    - `a:noAutofit`
+    - `w:pBdr`
+- **قاعدة مهمة**:
+  - إذا كان textbox من نوع `wps:wsp` فلا تجعل `v:textbox inset` هو المصدر الأول للحقيقة
+  - وإذا كان Word يرسم خطًا صغيرًا داخل textbox، فتحقق أولًا هل هو `w:pBdr` قبل أن تظنه stroke للشكل
+- **ما يجب عدم فعله**:
+  - لا تبدأ بتقليص line-height العام للفقرات
+  - لا تكبت حدود فقرات `txbxContent` بشكل أعمى
+  - لا تعالج overflow المتبقي بإزاحة بصرية ثابتة قبل فحص `bodyPr/noAutofit`
+
 ## كيف يعمل التطبيق باختصار
 
 1. يقرأ XML الخاص بالمستند
 2. يُقسَّم إلى صفحات وفقرات وruns
-3. كل `Paragraph` تحلل:
+  3. كل `Paragraph` تحلل:
    - `pPr`
    - `rPr`
    - runs

@@ -18,7 +18,9 @@ import 'package:golden_shamela/wordToHTML/RPr.dart';
 
 import '../wordToHTML/ExtractWordImages.dart';
 import 'DocxImageRelationshipRecovery.dart';
+import 'WpsBodyPropertiesParser.dart';
 import 'WpsPresetShapeParser.dart';
+import 'WpsShapeStyleResolver.dart';
 import 'json_converters.dart';
 import 'VectorPathParser.dart';
 
@@ -157,6 +159,10 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
     final presetShapeData = WpsPresetShapeParser.tryParse(wspElement);
     if (presetShapeData != null) {
       _imageData.vmlShapeData = presetShapeData;
+      _imageData.vmlShapeData!.textBoxInsetPx =
+          WpsBodyPropertiesParser.tryParseInsetPx(wspElement);
+      _imageData.vmlShapeData!.textNoAutofit =
+          WpsBodyPropertiesParser.hasNoAutoFit(wspElement);
       parseTextBox();
 
       setDemenisions();
@@ -1232,39 +1238,29 @@ void _parseVectorPath(xml.XmlElement custGeom, xml.XmlElement wspElement) {
 
 /// استخراج ألوان التعبئة والحدود من wps:wsp
 void _parseVectorColors(xml.XmlElement wspElement) {
-  // البحث عن wps:spPr (Shape Properties)
-  final spPr = wspElement.findAllElements('wps:spPr').firstOrNull;
-  if (spPr == null) return;
+  final style = WpsShapeStyleResolver.resolve(wspElement);
 
-  // استخراج لون التعبئة من a:solidFill
-  final solidFill = spPr.findAllElements('a:solidFill').firstOrNull;
-  if (solidFill != null) {
-    _imageData.vectorFillColor = _parseDrawingColor(solidFill);
+  _imageData.vectorFillColor = style.fillColor;
+
+  if (style.isStroked == false) {
+    _imageData.vectorStrokeColor = null;
+    return;
   }
 
-  // استخراج لون الحدود من a:ln > a:solidFill
-  final ln = spPr.findAllElements('a:ln').firstOrNull;
-  if (ln != null) {
-    final lnFill = ln.findAllElements('a:solidFill').firstOrNull;
-    if (lnFill != null) {
-      _imageData.vectorStrokeColor = _parseDrawingColor(lnFill);
-    }
-
-    // استخراج سمك الحدود
-    final wAttr = ln.getAttribute('w');
-    if (wAttr != null) {
-      // عرض الخط بـ EMUs، نحوله إلى pixels
-      final widthEmu = double.tryParse(wAttr) ?? 0;
-      _imageData.vectorStrokeWidth = widthEmu / 9525.0;
-      if (_imageData.vectorStrokeWidth < 0.5) {
-        _imageData.vectorStrokeWidth = 1.0; // الحد الأدنى
-      }
+  _imageData.vectorStrokeColor = style.strokeColor;
+  if (style.strokeWidth != null) {
+    _imageData.vectorStrokeWidth = style.strokeWidth!;
+    if (_imageData.vectorStrokeWidth < 0.5) {
+      _imageData.vectorStrokeWidth = 1.0;
     }
   }
 
-  // إذا لم يكن هناك تعبئة ولا حدود، استخدم الأسود كافتراضي للحدود
+  // فقط عند غياب أي تصريح بنيوي عن noFill/noLine أو fallback VML،
+  // نُبقي fallback القديم ليتوافق مع الأشكال التي تعتمد على الافتراضات.
   if (_imageData.vectorFillColor == null &&
-      _imageData.vectorStrokeColor == null) {
+      _imageData.vectorStrokeColor == null &&
+      style.isFilled == null &&
+      style.isStroked == null) {
     _imageData.vectorStrokeColor = const Color(0xFF000000);
   }
 }

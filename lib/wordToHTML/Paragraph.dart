@@ -7,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/TestApp2.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/wordToHTML/HeaderFooterDotLeader.dart';
+import 'package:golden_shamela/wordToHTML/FooterFloatingPositionResolver.dart';
 import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/wordToHTML/ParagraphStrutResolver.dart';
+import 'package:golden_shamela/wordToHTML/PageFieldDisplayNumeralResolver.dart';
 import 'package:golden_shamela/wordToHTML/PositionalTabLayout.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/HyperlinkDisplayContextResolver.dart';
@@ -1082,6 +1084,24 @@ class Paragraph {
       return null;
     }
 
+    final hasStructuralInlineCompanion = textRunTs.any((r) {
+      if (r.image != null) {
+        return false;
+      }
+      return r.hasTab ||
+          r.hasPositionalTab ||
+          r.hasBrBefore ||
+          r.hasBrAfter;
+    });
+
+    // An inline drawing followed by a tab/break is not a standalone
+    // image-only paragraph. Keep the normal inline-run pipeline so Word's
+    // line-level structure (for example image + tab in footer/header stories)
+    // remains intact.
+    if (hasStructuralInlineCompanion) {
+      return null;
+    }
+
     return inlineImageRuns.first;
   }
 
@@ -1713,11 +1733,13 @@ class Paragraph {
       double left = 0;
       double top = img.posY; // relativeFromV="paragraph" يعني posY نسبي للفقرة
 
-      if (isFooterParagraph && img.relativeFromV == "page") {
-        top =
-            img.posY -
-            (pageHeight - sectPr.bottomMargin) -
-            footerStoryYOffset;
+      if (isFooterParagraph) {
+        top = FooterFloatingPositionResolver.resolveTop(
+          image: img,
+          sectPr: sectPr,
+          pageHeight: pageHeight,
+          footerStoryYOffset: footerStoryYOffset,
+        );
       }
 
       // تصحيح موقع مربعات النص إذا كان هناك صور تسبب التفافاً
@@ -1852,7 +1874,11 @@ class Paragraph {
                     // استبدال النص برقم الصفحة الفعلي إذا كان يحتوي على حقل PAGE
                     String displayText = img.textBoxText!;
                     if (img.containsPageField && customPageNumber != null) {
-                      displayText = customPageNumber!;
+                      displayText = resolvePageFieldDisplayNumerals(
+                        pageNumber: customPageNumber!,
+                        useArabicNumerals: parent.parent.useArabicNumerals,
+                        fontFamily: fontFamily,
+                      );
                     }
 
                     return Container(
@@ -2305,10 +2331,18 @@ class Paragraph {
     final lineCount = explicitBreaks + 1;
     return paddings.top +
         paddings.bottom +
-        (_measureParagraphLineHeight() * lineCount);
+        (_measureFooterLineBoxHeight() * lineCount);
   }
 
-  double _measureParagraphLineHeight() {
+  double _measureFooterLineBoxHeight() {
+    final textLineHeight = _measureParagraphTextLineHeight();
+    final inlineObjectHeight = _measureInlineLineObjectHeight();
+    return inlineObjectHeight > textLineHeight
+        ? inlineObjectHeight
+        : textLineHeight;
+  }
+
+  double _measureParagraphTextLineHeight() {
     final wordDocument = parent.parent;
     final strutConfig = ParagraphStrutResolver.resolve(
       pPr: pPr,
@@ -2342,6 +2376,23 @@ class Paragraph {
     }
 
     return metrics.first.height;
+  }
+
+  double _measureInlineLineObjectHeight() {
+    double maxHeight = 0;
+
+    for (final run in textRunTs) {
+      final image = run.image;
+      if (image == null || image.wrapMode != null) {
+        continue;
+      }
+
+      if (image.height > maxHeight) {
+        maxHeight = image.height;
+      }
+    }
+
+    return maxHeight;
   }
 
   String _paragraphMeasurementSampleText() {

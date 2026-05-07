@@ -3,7 +3,10 @@
 ╚══════════════════════════════════════════════════════════════════╝
 
 --- Paragraph 0 ---
-<w:p w14:paraId="4E9D0B9A" w14:textId="77777777" w:rsidR="004F58EF" w:rsidRPr="006B3B06" w:rsidRDefault="004F58EF" w:rsidP="004F58EF"><w:pPr><w:bidi w:val="0"/><w:rPr><w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/><w:bCs/><w:caps/><w:color w:val="000000" w:themeColor="text1"/><w:sz w:val="144"/><w:szCs w:val="144"/><w:rtl/></w:rPr></w:pPr><w:bookmarkStart w:id="14" w:name="ShamelaPage_6"/><w:bookmarkStart w:id="15" w:name="TheLibraryPage_7"/><w:r><w:rPr><w:vanish/></w:rPr><w:t>{{PG:7}}</w:t></w:r><w:bookmarkEnd w:id="15"/><w:bookmarkEnd w:id="14"/><w:r w:rsidRPr="006B3B06"><w:rPr><w:rFonts w:ascii="Traditional Arabic" w:hAnsi="Traditional Arabic" w:cs="Traditional Arabic"/><w:bCs/><w:caps/><w:color w:val="000000" w:themeColor="text1"/><w:sz w:val="144"/><w:szCs w:val="144"/><w:rtl/></w:rPr><w:br w:type="page"/></w:r></w:p>
+<w:p w14:paraId="555FB21D" w14:textId="1B85487A" w:rsidR="00D56F5C" w:rsidRDefault="00316658" w:rsidP="007021B3"><w:pPr><w:pStyle w:val="a4"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:rPr><w:vanish/></w:rPr><w:t>{{PG:10}}</w:t></w:r><w:bookmarkEnd w:id="36"/><w:r><w:rPr><w:rFonts w:hint="cs"/><w:rtl/></w:rPr><w:lastRenderedPageBreak/><w:t>الشرعي هو نفس خطاب الله تعالى، وهو إذا ما نسب إلى الحكم سمي إيجابا، وإذا نسب إلى ما فيه الحكم سمي وجوبا، وهما متحدان بالذات مختلفان بالاعتبار).</w:t></w:r></w:p>
+
+--- Paragraph 1 ---
+<w:p w14:paraId="216D4665" w14:textId="58C003D3" w:rsidR="00D024EC" w:rsidRDefault="00DA2007" w:rsidP="007021B3"><w:pPr><w:pStyle w:val="a4"/><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr><w:rPr><w:rtl/></w:rPr></w:pPr><w:r><w:rPr><w:rFonts w:hint="cs"/><w:rtl/></w:rPr><w:t>تقسيم الأحكام التكليفية إلى خمسة هو تقسيم جمهور الأصوليين، أما الحنفية فإن الأقسام عندهم سبعة: الفرض، الإيجاب، التحريم، الكراهة التحريمية، الكراهة الت</w:t></w:r><w:r w:rsidR="00741983"><w:rPr><w:rFonts w:hint="cs"/><w:rtl/></w:rPr><w:t>ن</w:t></w:r><w:r><w:rPr><w:rFonts w:hint="cs"/><w:rtl/></w:rPr><w:t>زيهية، الندب، الإباحة.</w:t></w:r></w:p>
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                      PAGE XML END                                ║

@@ -23,14 +23,20 @@ class VmlTextBoxInsetResolver {
       );
     }
 
-    final parts = rawInset
-        .split(RegExp(r'[,\s]+'))
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
+    final commaSeparated = rawInset.contains(',');
+    final parts = commaSeparated
+        ? rawInset.split(',').map((e) => e.trim()).toList()
+        : rawInset
+              .split(RegExp(r'\s+'))
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList();
 
-    String valueAt(int index) =>
-        index < parts.length ? parts[index] : _defaults[index];
+    String valueAt(int index) {
+      if (index >= parts.length) return _defaults[index];
+      final value = parts[index];
+      return value.isEmpty ? _defaults[index] : value;
+    }
 
     return EdgeInsets.fromLTRB(
       _parseUnit(valueAt(0)),

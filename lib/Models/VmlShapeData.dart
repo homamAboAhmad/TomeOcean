@@ -32,6 +32,13 @@ class VmlShapeData {
   /// قيمة inset الخام من v:textbox إن وجدت
   String? textBoxInset;
 
+  /// Insets محسوبة مسبقًا بالـ logical pixels عندما تأتي من DrawingML
+  /// مثل `wps:bodyPr lIns/tIns/rIns/bIns`.
+  List<double>? textBoxInsetPx;
+
+  /// DrawingML `a:noAutofit` داخل `wps:bodyPr`
+  bool textNoAutofit;
+
   /// نمط VML للحدود/الخطوط مثل dashstyle="1 1"
   String? strokeDashStyle;
 
@@ -52,6 +59,8 @@ class VmlShapeData {
     this.arcSize = 0.2,
     this.textBoxXmlString,
     this.textBoxInset,
+    this.textBoxInsetPx,
+    this.textNoAutofit = false,
     this.strokeDashStyle,
     this.strokeEndCap,
     this.fillStyle,
@@ -96,6 +105,10 @@ class VmlShapeData {
       arcSize: (json['arcSize'] as num?)?.toDouble() ?? 0.2,
       textBoxXmlString: json['textBoxXmlString'] as String?,
       textBoxInset: json['textBoxInset'] as String?,
+      textBoxInsetPx: (json['textBoxInsetPx'] as List<dynamic>?)
+          ?.map((e) => (e as num).toDouble())
+          .toList(),
+      textNoAutofit: json['textNoAutofit'] as bool? ?? false,
       strokeDashStyle: json['strokeDashStyle'] as String?,
       strokeEndCap: json['strokeEndCap'] as String?,
       fillStyle: json['fillStyle'] is Map<String, dynamic>
@@ -118,6 +131,8 @@ class VmlShapeData {
       'arcSize': arcSize,
       'textBoxXmlString': textBoxXmlString,
       'textBoxInset': textBoxInset,
+      'textBoxInsetPx': textBoxInsetPx,
+      'textNoAutofit': textNoAutofit,
       'strokeDashStyle': strokeDashStyle,
       'strokeEndCap': strokeEndCap,
       'fillStyle': fillStyle?.toJson(),

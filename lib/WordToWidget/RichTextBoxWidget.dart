@@ -97,7 +97,9 @@ class RichTextBoxWidget extends StatelessWidget {
         paragraph.pPr?.spacingBefore = 0;
       }
 
-      return paragraph.toWidget(suppressParagraphBorder: true);
+      // حدود الفقرة داخل `w:txbxContent` جزء من المحتوى نفسه، مثل الخط
+      // الصغير فوق رقم الصفحة، وليست هي حدود الشكل الخارجي.
+      return paragraph.toWidget();
     } catch (e) {
       return null;
     }
