@@ -7,6 +7,7 @@ import 'package:golden_shamela/Models/VmlShapeData.dart';
 import 'package:golden_shamela/Utils/VmlShapeTypeResolver.dart';
 import 'package:golden_shamela/Utils/VmlColorResolver.dart';
 import 'package:golden_shamela/Utils/VmlEffectsParser.dart';
+import 'package:golden_shamela/Utils/VmlShapeDataParser.dart';
 import 'package:golden_shamela/main.dart';
 import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 import 'package:golden_shamela/wordToHTML/MyInt.dart';
@@ -204,7 +205,11 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
   if (isVml) {
     _imageData.isVml = true;
     _parseVmlData();
-    parseTextBox();
+    // VML groups own their children; do not lift a child's txbxContent onto
+    // the group container itself, or the picture sibling disappears.
+    if (!_imageData.isGroup) {
+      parseTextBox();
+    }
     // NOTE: Do NOT call checkFromPage(), checkRelativeFromV(), setOffsets(), checkWrapMode()
     // for VML elements! These functions look for wp:anchor/wp:positionH/wp:positionV
     // which only exist in OOXML (w:drawing). VML positioning is already handled
@@ -499,7 +504,14 @@ void _parseVmlData() {
     _imageData.groupImages = [];
     _imageData.posX = _parseUnit(groupStyleMap['margin-left'] ?? '0');
     _imageData.posY = _parseUnit(groupStyleMap['margin-top'] ?? '0');
-    _parseVmlWrap(group);
+    final groupHasAbsolutePositioning =
+        groupStyle?.toLowerCase().contains('position:absolute') == true;
+    // A v:group without position:absolute behaves as an inline/line object.
+    // Its child shapes can still use absolute coordinates inside coordsize.
+    _imageData.isInlineVmlGroup = !groupHasAbsolutePositioning;
+    if (groupHasAbsolutePositioning) {
+      _parseVmlWrap(group);
+    }
     _parseVmlZIndex(groupStyleMap['z-index']);
 
     for (final shape in group.childElements.where(
@@ -531,6 +543,11 @@ void _parseVmlData() {
       childImage.behindDoc = _imageData.behindDoc;
       childImage.relativeHeight = _imageData.relativeHeight;
       childImage.isVml = true;
+      childImage.vmlShapeData = VmlShapeDataParser.buildForShape(
+        shape: shape,
+        parseUnit: _parseUnit,
+        wordDocument: _imageData.parent?.parent.parent.parent,
+      );
 
       final lockElement = shape.childElements.firstWhere(
         (e) => e.name.local == 'lock',
@@ -559,6 +576,27 @@ void _parseVmlData() {
             customRelIdList: _imageData.customRelIdList,
           );
         }
+      }
+
+      final txbxContentElement = shape.descendants
+          .whereType<xml.XmlElement>()
+          .firstWhere(
+            (e) => e.name.local == 'txbxContent',
+            orElse: () => xml.XmlElement(xml.XmlName('null')),
+          );
+      if (txbxContentElement.name.local != 'null') {
+        childImage.vmlShapeData!.textBoxElement = txbxContentElement;
+      }
+
+      final textboxElement = shape.descendants
+          .whereType<xml.XmlElement>()
+          .firstWhere(
+            (e) => e.name.local == 'textbox',
+            orElse: () => xml.XmlElement(xml.XmlName('null')),
+          );
+      if (textboxElement.name.local != 'null') {
+        childImage.vmlShapeData!.textBoxInset =
+            textboxElement.getAttribute('inset');
       }
 
       _imageData.groupImages.add(childImage);
@@ -594,7 +632,8 @@ void _parseVmlData() {
   // 2. Extract Dimensions from style attribute
   // style="...width:261.35pt;height:42.3pt..."
   String? style = shape.getAttribute('style');
-  final shapeTypeElement = _resolveReferencedVmlShapeTypeElement(shape);
+  final shapeTypeElement =
+      VmlShapeDataParser.resolveReferencedShapeTypeElement(shape);
   final wrapElement = shape.childElements.firstWhere(
     (e) => e.name.local == 'wrap',
     orElse: () => xml.XmlElement(xml.XmlName('null')),
@@ -787,42 +826,6 @@ void _parseVmlData() {
       );
     }
   }
-}
-
-xml.XmlElement? _resolveReferencedVmlShapeTypeElement(xml.XmlElement shape) {
-  final typeRef = shape.getAttribute('type')?.trim();
-  if (typeRef == null || typeRef.isEmpty) return null;
-
-  final normalizedId = typeRef.startsWith('#') ? typeRef.substring(1) : typeRef;
-  final pict = shape.parentElement;
-  final localShapeTypeElement = pict?.childElements.firstWhere(
-    (e) =>
-        e.name.local.toLowerCase() == 'shapetype' &&
-        e.getAttribute('id') == normalizedId,
-    orElse: () => xml.XmlElement(xml.XmlName('null')),
-  );
-  if (localShapeTypeElement != null &&
-      localShapeTypeElement.name.local != 'null') {
-    return localShapeTypeElement;
-  }
-
-  // Some Word VML stories declare the reusable shapetype in a previous w:pict
-  // within the same header/footer/body story, not beside this v:shape itself.
-  final ancestorElements = shape.ancestors.whereType<xml.XmlElement>().toList();
-  if (ancestorElements.isEmpty) return null;
-  final storyRoot = ancestorElements.last;
-
-  final shapeTypeElement = storyRoot.descendants
-      .whereType<xml.XmlElement>()
-      .firstWhere(
-        (e) =>
-            e.name.local.toLowerCase() == 'shapetype' &&
-            e.getAttribute('id') == normalizedId,
-        orElse: () => xml.XmlElement(xml.XmlName('null')),
-      );
-
-  if (shapeTypeElement.name.local == 'null') return null;
-  return shapeTypeElement;
 }
 
 void _parseVmlStyle(String style) {
@@ -1454,6 +1457,8 @@ class ImageData {
   bool isGroup = false;
   @JsonKey(defaultValue: false)
   bool isVml = false;
+  @JsonKey(defaultValue: false)
+  bool isInlineVmlGroup = false;
   @JsonKey(ignore: true)
   List<ImageData> groupImages = [];
 
@@ -1492,8 +1497,13 @@ class ImageData {
 
   Map<String, dynamic> toJson() {
     final map = _$ImageDataToJson(this);
+    map['isVml'] = isVml;
+    map['isInlineVmlGroup'] = isInlineVmlGroup;
     if (vmlShapeData != null) {
       map['vmlShapeData'] = vmlShapeData!.toJson();
+    }
+    if (groupImages.isNotEmpty) {
+      map['groupImages'] = groupImages.map((image) => image.toJson()).toList();
     }
     return map;
   }
@@ -1501,6 +1511,9 @@ class ImageData {
   static ImageData fromMap(Map<String, dynamic> json, runT parent) {
     final imageData = _$ImageDataFromJson(json);
     imageData.parent = parent;
+    imageData.isVml = json['isVml'] as bool? ?? imageData.isVml;
+    imageData.isInlineVmlGroup =
+        json['isInlineVmlGroup'] as bool? ?? imageData.isInlineVmlGroup;
 
     if (json['vmlShapeData'] != null) {
       try {
@@ -1510,6 +1523,13 @@ class ImageData {
       } catch (e) {
         debugPrint("Error deserializing vmlShapeData: $e");
       }
+    }
+
+    if (json['groupImages'] is List) {
+      imageData.groupImages = (json['groupImages'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map((childJson) => ImageData.fromMap(childJson, parent))
+          .toList();
     }
 
     // If imageMemory is empty but we have an rId, reload from docImages

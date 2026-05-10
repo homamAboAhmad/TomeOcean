@@ -446,6 +446,53 @@ def process_xml_with_page_breaks(docx_path, output_path):
         
         # جمع كل الفقرات أولاً (لأننا سنضيف عناصر جديدة)
         all_paras = list(body.findall(f".//{{{NS['w']}}}p"))
+        body_paras = [
+            child for child in list(body)
+            if child.tag == f"{{{NS['w']}}}p"
+        ]
+
+        def paragraph_has_pg_marker(para):
+            for t_elem in para.findall(f".//{{{NS['w']}}}t"):
+                if t_elem.text and re.search(r'\{\{PG:\d+\}\}', t_elem.text):
+                    return True
+            return False
+
+        def paragraph_has_page_anchor(para):
+            for bm in para.findall(f".//{{{NS['w']}}}bookmarkStart"):
+                name = bm.attrib.get(f"{{{NS['w']}}}name", "")
+                if name.startswith("TheLibraryPage_"):
+                    return True
+            return False
+
+        def paragraph_has_body_image(para):
+            return (
+                len(para.findall(f".//{{{NS['w']}}}pict")) > 0 or
+                len(para.findall(f".//{{{NS['w']}}}drawing")) > 0
+            )
+
+        def inject_missing_page_marker_before_anchor(anchor_para, missing_page):
+            """
+            Word can put a page anchor after an image-started page without a
+            lastRenderedPageBreak marker in the image paragraph. When the next
+            explicit TheLibraryPage bookmark jumps over exactly that page, bind
+            the missing page to the nearest preceding body paragraph containing
+            the image/drawing instead of merging it into the previous page.
+            """
+            try:
+                anchor_index = body_paras.index(anchor_para)
+            except ValueError:
+                return False
+
+            for prev_index in range(anchor_index - 1, -1, -1):
+                candidate = body_paras[prev_index]
+                if paragraph_has_page_anchor(candidate):
+                    return False
+                if paragraph_has_body_image(candidate):
+                    if paragraph_has_pg_marker(candidate):
+                        return False
+                    candidate.insert(0, create_hidden_run_element(f"{{{{PG:{missing_page}}}}}"))
+                    return True
+            return False
         
         for para in all_paras:
             para_index += 1
@@ -494,6 +541,17 @@ def process_xml_with_page_breaks(docx_path, output_path):
                     # استخراج رقم الصفحة
                     try:
                         new_page_num = int(bm_name.split("_")[1])
+                        # Conservative Word-parity fix: a missing page between
+                        # two explicit TheLibraryPage anchors is only injected
+                        # when the skipped page starts at a preceding body image.
+                        if new_page_num > current_page + 1:
+                            for missing_page in range(current_page + 1, new_page_num):
+                                if inject_missing_page_marker_before_anchor(para, missing_page):
+                                    injected_count += 1
+                                    print(
+                                        f"STATUS:Injected missing image-start page marker PG:{missing_page} before anchor PG:{new_page_num}",
+                                        flush=True,
+                                    )
                         current_page = new_page_num
                     except:
                         continue

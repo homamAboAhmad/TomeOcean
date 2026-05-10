@@ -6,6 +6,7 @@ import 'package:golden_shamela/wordToHTML/SectPr.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'VectorShapeWidget.dart';
 import 'GroupImageWidget.dart';
+import 'DrawingAnchorPositionResolver.dart';
 import 'package:golden_shamela/WordToWidget/VmlRendererWidget.dart';
 
 SectPr? _resolveImageSectPr(ImageData imageData) {
@@ -41,6 +42,10 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
       strokeColor: image.vectorStrokeColor,
       strokeWidth: image.vectorStrokeWidth,
     );
+  }
+
+  if (image.isGroup) {
+    return GroupImageWidget(imageData: image);
   }
 
   // VML shapes are rendered by the dedicated VML widget. The classification
@@ -108,15 +113,12 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
   // الحصول على أبعاد الصفحة والهوامش
   final sectPr = _resolveImageSectPr(image);
   double pageWidth = sectPr?.width ?? 595;
-  double pageHeight = sectPr?.height ?? 842;
   double leftMargin = sectPr?.leftMargin ?? 0;
   double rightMargin = sectPr?.rightMargin ?? 0;
   double topMargin = sectPr?.topMargin ?? 0;
-  double bottomMargin = sectPr?.bottomMargin ?? 0;
 
   // حساب منطقة الهامش (margin area)
   double marginAreaWidth = pageWidth - leftMargin - rightMargin;
-  double marginAreaHeight = pageHeight - topMargin - bottomMargin;
 
   double posX = 0;
   double posY = 0;
@@ -125,9 +127,6 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
   // إذا كان posX != 0 أو posY != 0، فهذا يعني استخدام posOffset
   bool usesHAlign =
       image.posX == 0 && (image.alignH == "center" || image.alignH == "right");
-  bool usesVAlign =
-      image.posY == 0 && (image.alingV == "center" || image.alingV == "bottom");
-
   // Check for RTL context
   // Standard OpenXML Logic:
   // If paragraph is bidi (RTL), relativeFrom="margin" implies origin is Right Margin.
@@ -208,32 +207,15 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
     }
   }
 
-  // حساب الموضع الرأسي
-  if (usesVAlign && image.alingV == "center") {
-    if (image.relativeFromV == "page") {
-      posY = (pageHeight - image.height) / 2;
-    } else {
-      posY = topMargin + (marginAreaHeight - image.height) / 2;
-    }
-  } else if (usesVAlign && image.alingV == "bottom") {
-    if (image.relativeFromV == "page") {
-      posY = pageHeight - image.height;
-    } else {
-      posY = pageHeight - bottomMargin - image.height;
-    }
+  if (sectPr != null) {
+    posY = DrawingAnchorPositionResolver.resolveTop(
+      image: image,
+      sectPr: sectPr,
+    );
   } else {
-    // posOffset
-    if (image.relativeFromV == "page" ||
-        image.relativeFromV == "topMargin") {
-      posY = image.posY;
-    } else if (image.relativeFromV == "paragraph") {
-      // OOXML Spec: relativeFrom="paragraph" means offset from the paragraph's position.
-      // At page level, the paragraph is at approximately topMargin from the page top.
-      // This handles wrapNone full-page images (e.g., covers with negative offsets).
-      posY = image.posY + topMargin;
-    } else {
-      posY = image.posY + topMargin;
-    }
+    posY = image.relativeFromV == "page" || image.relativeFromV == "topMargin"
+        ? image.posY
+        : image.posY + topMargin;
   }
 
   // Determine Final Alignment
@@ -430,6 +412,14 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
   }
 
   // Create the interactive image widget (GestureDetector wrapper)
+  if (innerOnly) {
+    return Container(
+      width: image.width > 0 ? image.width : null,
+      height: image.wrapMode == null ? null : (image.height > 0 ? image.height : null),
+      child: innerContent,
+    );
+  }
+
   content = GestureDetector(
     onTap: () async {
       // Check if image has a hyperlink
@@ -462,19 +452,10 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
       cursor: image.hyperlinkUrl != null && image.hyperlinkUrl!.isNotEmpty
           ? SystemMouseCursors.click
           : SystemMouseCursors.basic,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (isSpecialDebugRid) {
-            print(
-              'VML_DEBUG_WIDGET_LAYOUT: rId=${image.rId} constraints=$constraints containerW=${image.width} containerH=${image.wrapMode == null ? 'auto' : image.height} inline=${image.wrapMode == null}',
-            );
-          }
-          return Container(
-            width: image.width > 0 ? image.width : null,
-            height: image.wrapMode == null ? null : (image.height > 0 ? image.height : null),
-            child: innerContent,
-          );
-        },
+      child: Container(
+        width: image.width > 0 ? image.width : null,
+        height: image.wrapMode == null ? null : (image.height > 0 ? image.height : null),
+        child: innerContent,
       ),
     ),
   );

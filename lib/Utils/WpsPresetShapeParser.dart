@@ -45,10 +45,14 @@ class WpsPresetShapeParser {
         return 'roundrect';
       case 'diamond':
         return 'diamond';
+      case 'bracketPair':
+        return 'bracketPair';
       case 'ellipse':
         return 'oval';
+      // Line/connector shapes used in headers/footers for decorative rules
+      case 'straightConnector1':
+        return 'line';
     }
     return null;
   }
-
 }

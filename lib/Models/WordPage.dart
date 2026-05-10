@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
+import 'package:golden_shamela/WordToWidget/DrawingAnchorPositionResolver.dart';
 import 'package:golden_shamela/wordToHTML/FootNote.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -136,14 +137,11 @@ class WordPage {
       if (img.behindDoc) continue;
       if (img.wrapMode == null || img.wrapMode == 'None') continue;
 
-      // Image bottom relative to page top
-      double imgBottomFromPageTop;
-      if (img.relativeFromV == 'page' || img.relativeFromV == 'topMargin') {
-        imgBottomFromPageTop = img.posY + img.height;
-      } else {
-        // margin-relative (most common for these images)
-        imgBottomFromPageTop = topMargin + img.posY + img.height;
-      }
+      final imgTopFromPageTop = DrawingAnchorPositionResolver.resolveTop(
+        image: img,
+        sectPr: sectPr,
+      );
+      final imgBottomFromPageTop = imgTopFromPageTop + img.height;
 
       // Image bottom relative to where the content Column actually starts
       double imgBottomInColumn = imgBottomFromPageTop - effectiveTopMargin;
@@ -233,10 +231,13 @@ class WordPage {
             logicalEnd == ps.length - 1 &&
             nextBorderedSpec?.signature == borderSpec.signature;
 
+        final nextVisibleParagraph = _nextVisibleParagraph(logicalEnd + 1);
+
         paragraphWidget = _ParagraphBorderGroupWidget(
           paragraphs: groupedParagraphs,
           spec: borderSpec,
           previousParagraph: previousVisibleParagraph,
+          nextParagraph: nextVisibleParagraph,
           paintTop: !continuesFromPrevious,
           paintBottom: !continuesToNext,
         );
@@ -263,7 +264,6 @@ class WordPage {
       children: children,
     );
   }
-
 
   Paragraph? _nextVisibleParagraph(int startIndex) {
     for (int i = startIndex; i < ps.length; i++) {
@@ -457,7 +457,7 @@ class WordPage {
     try {
       SectPr sectPr = parent.getSectPrForPage(this.pageIndex);
       XmlElement? header = sectPr.getRequestedHeader(this.pageIndex);
-      
+
       if (header != null) {
         StringBuffer headerBuffer = StringBuffer();
         headerBuffer.writeln(
@@ -469,9 +469,9 @@ class WordPage {
         headerBuffer.writeln(
           "╚══════════════════════════════════════════════════════════════════╝",
         );
-        
+
         headerBuffer.writeln(header.toXmlString(pretty: true));
-        
+
         headerBuffer.writeln(
           "╔══════════════════════════════════════════════════════════════════╗",
         );
@@ -498,7 +498,7 @@ class WordPage {
     try {
       SectPr sectPr = parent.getSectPrForPage(this.pageIndex);
       XmlElement? footer = sectPr.getRequestedFooter(this.pageIndex);
-      
+
       if (footer != null) {
         StringBuffer footerBuffer = StringBuffer();
         footerBuffer.writeln(
@@ -510,9 +510,9 @@ class WordPage {
         footerBuffer.writeln(
           "╚══════════════════════════════════════════════════════════════════╝",
         );
-        
+
         footerBuffer.writeln(footer.toXmlString(pretty: true));
-        
+
         footerBuffer.writeln(
           "╔══════════════════════════════════════════════════════════════════╗",
         );
@@ -533,13 +533,13 @@ class WordPage {
       print("❌ Error saving footer XML to file: $e");
     }
   }
-
- }
+}
 
 class _ParagraphBorderGroupWidget extends StatelessWidget {
   final List<Paragraph> paragraphs;
   final ParagraphBorderSpec spec;
   final Paragraph? previousParagraph;
+  final Paragraph? nextParagraph;
   final bool paintTop;
   final bool paintBottom;
 
@@ -547,43 +547,81 @@ class _ParagraphBorderGroupWidget extends StatelessWidget {
     required this.paragraphs,
     required this.spec,
     this.previousParagraph,
+    this.nextParagraph,
     this.paintTop = true,
     this.paintBottom = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    // w:pBdr's "space" attribute = gap between the border line and the text
+    // (inner padding).  This is the ONLY spacing that belongs inside the box.
     final topSpace = _spaceToPx(spec.top?.space ?? 0);
     final bottomSpace = _spaceToPx(spec.bottom?.space ?? 0);
     final leftSpace = _spaceToPx(spec.left?.space ?? 0);
     final rightSpace = _spaceToPx(spec.right?.space ?? 0);
 
-    return CustomPaint(
-      foregroundPainter: _ParagraphBorderGroupPainter(
-        spec: spec,
-        paintTop: paintTop,
-        paintBottom: paintBottom,
+    // In Word, w:spacing before/after is the paragraph MARGIN and appears
+    // OUTSIDE the border box, not inside it.  Apply it as an outer Padding
+    // so the CustomPaint (= the border) covers only the content area.
+    final outerTopSpacing = _collapsedSpacingBefore(
+      previousParagraph,
+      paragraphs.first,
+    );
+    // Only apply spacingAfter when this group is the last visible element;
+    // otherwise the next element's spacingBefore handles the collapsed gap.
+    final outerBottomSpacing = nextParagraph == null
+        ? (paragraphs.last.pPr?.spacingAfter ?? 0.0)
+        : 0.0;
+
+    // Paragraph shading fills the entire area inside the border, including the
+    // w:pBdr space gap (see §17.3.1.31 shd — background is behind the paragraph).
+    Color? backgroundColor;
+    for (final p in paragraphs) {
+      backgroundColor = p.paragraphShadingColor;
+      if (backgroundColor != null) break;
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(
+        top: outerTopSpacing,
+        bottom: outerBottomSpacing,
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          top: paintTop ? topSpace : 0,
-          bottom: paintBottom ? bottomSpace : 0,
-          left: leftSpace,
-          right: rightSpace,
+      child: CustomPaint(
+        foregroundPainter: _ParagraphBorderGroupPainter(
+          spec: spec,
+          paintTop: paintTop,
+          paintBottom: paintBottom,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: List.generate(paragraphs.length, (index) {
-            final paragraph = paragraphs[index];
-            final previous = index == 0 ? previousParagraph : paragraphs[index - 1];
-            final isLast = index == paragraphs.length - 1;
-            return paragraph.toWidget(
-              suppressParagraphBorder: true,
-              spacingBeforeOverride: _collapsedSpacingBefore(previous, paragraph),
-              spacingAfterOverride: isLast ? (paragraph.pPr?.spacingAfter ?? 0) : 0,
-            );
-          }),
+        child: Container(
+          color: backgroundColor,
+          child: Padding(
+            padding: EdgeInsets.only(
+              top: paintTop ? topSpace : 0,
+              bottom: paintBottom ? bottomSpace : 0,
+              left: leftSpace,
+              right: rightSpace,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: List.generate(paragraphs.length, (index) {
+                final paragraph = paragraphs[index];
+                final previous = index == 0
+                    ? previousParagraph
+                    : paragraphs[index - 1];
+                return paragraph.toWidget(
+                  suppressParagraphBorder: true,
+                  // First paragraph: outer spacing is in the wrapping Padding
+                  spacingBeforeOverride: index == 0
+                      ? 0
+                      : _collapsedSpacingBefore(previous, paragraph),
+                  // All paragraphs: outer bottom spacing is in wrapping Padding
+                  spacingAfterOverride: 0,
+                );
+              }),
+            ),
+          ),
         ),
       ),
     );
@@ -645,7 +683,12 @@ class _ParagraphBorderGroupPainter extends CustomPainter {
       return;
     }
 
-    _drawLine(canvas, Offset(rect.left, adjustedY), Offset(rect.right, adjustedY), side);
+    _drawLine(
+      canvas,
+      Offset(rect.left, adjustedY),
+      Offset(rect.right, adjustedY),
+      side,
+    );
   }
 
   void _paintVertical(
@@ -665,7 +708,12 @@ class _ParagraphBorderGroupPainter extends CustomPainter {
       return;
     }
 
-    _drawLine(canvas, Offset(adjustedX, rect.top), Offset(adjustedX, rect.bottom), side);
+    _drawLine(
+      canvas,
+      Offset(adjustedX, rect.top),
+      Offset(adjustedX, rect.bottom),
+      side,
+    );
   }
 
   void _drawDoubleHorizontal(
@@ -739,8 +787,88 @@ class _ParagraphBorderGroupPainter extends CustomPainter {
     final paint = Paint()
       ..color = side.color
       ..strokeWidth = width
-      ..style = PaintingStyle.stroke;
-    canvas.drawLine(start, end, paint);
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.butt;
+
+    final dashPattern = _borderDashPattern(side.style, width);
+    if (dashPattern != null) {
+      _drawDashedLine(canvas, start, end, paint, dashPattern);
+    } else {
+      canvas.drawLine(start, end, paint);
+    }
+  }
+
+  /// Returns the [dash, gap, …] segment lengths for a dashed OOXML border
+  /// style, or null when the style should be drawn as a solid line.
+  List<double>? _borderDashPattern(String style, double width) {
+    final w = width.clamp(0.5, 6.0);
+    switch (style) {
+      // ── dotted ──────────────────────────────────────────────────────────
+      case 'dotted':
+      case 'dottedHeavy':
+        return [w, w * 2];
+      // ── dashed ──────────────────────────────────────────────────────────
+      case 'dashed':
+      case 'dashSmallGap':
+      case 'dashedSmallGap':
+      case 'dashLargeGap':
+      case 'dashLarge':
+        return [w * 3, w * 2];
+      // ── dot‑dash (one dot, one dash) ─────────────────────────────────────
+      case 'dotDash':
+      case 'dashDot':
+        return [w, w * 2, w * 3, w * 2];
+      // ── dot‑dot‑dash (two dots, one dash) ───────────────────────────────
+      case 'dotDotDash':
+      case 'dashDotDot':
+        return [w, w * 2, w, w * 2, w * 3, w * 2];
+      // ── all other styles (single, double, inset, outset, thick …) ───────
+      default:
+        return null;
+    }
+  }
+
+  /// Draws a dashed line from [start] to [end] using the given [pattern].
+  /// [pattern] is a list of [dash, gap, dash, gap …] pixel lengths.
+  void _drawDashedLine(
+    Canvas canvas,
+    Offset start,
+    Offset end,
+    Paint paint,
+    List<double> pattern,
+  ) {
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    final totalLength = math.sqrt(dx * dx + dy * dy);
+    if (totalLength == 0) return;
+
+    final ux = dx / totalLength;
+    final uy = dy / totalLength;
+
+    double distance = 0;
+    int index = 0;
+    bool drawing = true;
+
+    while (distance < totalLength) {
+      final segLen = math.min(
+        pattern[index % pattern.length],
+        totalLength - distance,
+      );
+      if (drawing && segLen > 0) {
+        final segStart = Offset(
+          start.dx + ux * distance,
+          start.dy + uy * distance,
+        );
+        final segEnd = Offset(
+          start.dx + ux * (distance + segLen),
+          start.dy + uy * (distance + segLen),
+        );
+        canvas.drawLine(segStart, segEnd, paint);
+      }
+      distance += pattern[index % pattern.length];
+      index++;
+      drawing = !drawing;
+    }
   }
 
   @override
@@ -793,7 +921,9 @@ bool _isParagraphVisuallyRelevant(Paragraph paragraph) {
 
   for (final run in paragraph.runs) {
     if (run.rpr?.vanish == true) continue;
-    final runText = (run.text ?? '').replaceAll(RegExp(r'\{\{PG:\d+\}\}'), '').trim();
+    final runText = (run.text ?? '')
+        .replaceAll(RegExp(r'\{\{PG:\d+\}\}'), '')
+        .trim();
     if (runText.isNotEmpty) return true;
   }
 
@@ -809,20 +939,20 @@ bool _isPureStructuralParagraph(Paragraph paragraph) {
     return false;
   }
 
-  final hasVisibleNonTextContent = xml.descendants
-      .whereType<XmlElement>()
-      .any((element) {
-        switch (element.name.local) {
-          case 'drawing':
-          case 'pict':
-          case 'object':
-          case 'tab':
-          case 'sym':
-            return true;
-          default:
-            return false;
-        }
-      });
+  final hasVisibleNonTextContent = xml.descendants.whereType<XmlElement>().any((
+    element,
+  ) {
+    switch (element.name.local) {
+      case 'drawing':
+      case 'pict':
+      case 'object':
+      case 'tab':
+      case 'sym':
+        return true;
+      default:
+        return false;
+    }
+  });
   if (hasVisibleNonTextContent) {
     return false;
   }
@@ -857,8 +987,10 @@ bool _isPureStructuralParagraph(Paragraph paragraph) {
 
 List<ImageData> getParagraphImages(List<Paragraph> paragraphs, SectPr sectPr) {
   // Content area = page area minus margins. Images exceeding this MUST be at page level.
-  double contentW = (sectPr.width ?? 595) - sectPr.leftMargin - sectPr.rightMargin;
-  double contentH = (sectPr.height ?? 842) - sectPr.topMargin - sectPr.bottomMargin;
+  double contentW =
+      (sectPr.width ?? 595) - sectPr.leftMargin - sectPr.rightMargin;
+  double contentH =
+      (sectPr.height ?? 842) - sectPr.topMargin - sectPr.bottomMargin;
 
   List<ImageData> list = [];
   paragraphs.forEach((p) {
@@ -871,7 +1003,8 @@ List<ImageData> getParagraphImages(List<Paragraph> paragraphs, SectPr sectPr) {
       // (e.g., full-page covers) must be at page level to extend beyond margins.
       // Small paragraph-relative images stay at paragraph level for correct positioning.
       bool isParaRelative = r.isRelativeFromVParagraph();
-      bool exceedsContentArea = r.image != null &&
+      bool exceedsContentArea =
+          r.image != null &&
           (r.image!.width > contentW + 20 || r.image!.height > contentH + 20);
 
       if (r.image != null &&

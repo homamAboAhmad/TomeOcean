@@ -306,20 +306,20 @@ class Paragraph {
           }
         }
 
-          if (hasBegin) inFieldCode = true;
-          if (hasSeparate) inFieldCode = false;
-          if (hasEnd) {
-            inFieldCode = false;
-          }
+        if (hasBegin) inFieldCode = true;
+        if (hasSeparate) inFieldCode = false;
+        if (hasEnd) {
+          inFieldCode = false;
+        }
 
-          for (var instrEl in element.findAllElements("w:instrText")) {
-            addFieldInstruction(instrEl.text);
-          }
+        for (var instrEl in element.findAllElements("w:instrText")) {
+          addFieldInstruction(instrEl.text);
+        }
 
-          // Check for PAGE instruction
-          if (inFieldCode || hasBegin) {
-            if (element.findAllElements("w:instrText").any((e) {
-              return e.text.toUpperCase().contains("PAGE");
+        // Check for PAGE instruction
+        if (inFieldCode || hasBegin) {
+          if (element.findAllElements("w:instrText").any((e) {
+            return e.text.toUpperCase().contains("PAGE");
           })) {
             pendingPageNum = true;
             pageNumReplaced = false; // Reset when starting a new PAGE field
@@ -563,14 +563,14 @@ class Paragraph {
           }
         });
       }
-      });
-      suppressHyperlinkStyleInheritance =
-          HyperlinkDisplayContextResolver.detectFromFieldInstructions(
-            hyperlinkAnchor: hyperlinkAnchor,
-            fieldInstructions: fieldInstructions,
-          );
-      fixPDirection();
-      getPAlign();
+    });
+    suppressHyperlinkStyleInheritance =
+        HyperlinkDisplayContextResolver.detectFromFieldInstructions(
+          hyperlinkAnchor: hyperlinkAnchor,
+          fieldInstructions: fieldInstructions,
+        );
+    fixPDirection();
+    getPAlign();
     getPTextDirection();
     getPageNum();
     // Note: checkHyperLink() was removed because hyperlinks are already processed
@@ -592,6 +592,7 @@ class Paragraph {
     int fieldDepth = 0; // Track nested field depth
     bool currentFieldIsPage = false;
     bool currentFieldIsNumPages = false;
+    bool currentFieldHasSeparate = false;
     bool pageNumReplaced =
         false; // Track if we already replaced the page number
     for (var child in sdtContent.childElements) {
@@ -646,6 +647,7 @@ class Paragraph {
           if (fieldDepth == 1) {
             currentFieldIsPage = false;
             currentFieldIsNumPages = false;
+            currentFieldHasSeparate = false;
           }
         }
 
@@ -676,6 +678,9 @@ class Paragraph {
 
         // Skip field character runs (begin, separate, end)
         if (hasBegin || hasSeparate) {
+          if (hasSeparate && fieldDepth > 0) {
+            currentFieldHasSeparate = true;
+          }
           continue;
         }
 
@@ -685,17 +690,18 @@ class Paragraph {
             fieldDepth = 0;
             currentFieldIsPage = false;
             currentFieldIsNumPages = false;
+            currentFieldHasSeparate = false;
           }
           continue;
         }
 
         // Skip NUMPAGES result (when inside NUMPAGES field)
-        if (currentFieldIsNumPages && fieldDepth > 0) {
+        if (currentFieldIsNumPages && fieldDepth > 0 && currentFieldHasSeparate) {
           continue;
         }
 
         // Handle PAGE field content
-        if (currentFieldIsPage && fieldDepth > 0) {
+        if (currentFieldIsPage && fieldDepth > 0 && currentFieldHasSeparate) {
           if (!pageNumReplaced && customPageNumber != null) {
             // First run inside PAGE field - replace with actual page number
             runt0.text = customPageNumber!;
@@ -706,7 +712,6 @@ class Paragraph {
           }
         }
 
-        // Skip empty runs
         if (runt0.text == null || runt0.text!.isEmpty) {
           continue;
         }
@@ -879,6 +884,7 @@ class Paragraph {
       final image = singleInlineImageRun.image!;
       final double indent = pPr?.firstLineIndent ?? 0;
       final bool isRtlParagraph = textDirection == TextDirection.rtl;
+      final bool isInlineVmlGroup = image.isGroup && image.isInlineVmlGroup;
       final bool isSpecialDebugRid = RegExp(
         r'^rId(1[3-9])$',
       ).hasMatch(image.rId);
@@ -897,15 +903,21 @@ class Paragraph {
         child: Container(
           decoration: decoration,
           child: Padding(
-            padding: EdgeInsetsDirectional.only(start: indent > 0 ? indent : 0),
+            padding: EdgeInsetsDirectional.only(
+              start: isInlineVmlGroup ? 0 : (indent > 0 ? indent : 0),
+            ),
             child: Align(
-              alignment: textAlign == TextAlign.center
+              alignment: isInlineVmlGroup
+                  ? Alignment.center
+                  : textAlign == TextAlign.center
                   ? Alignment.center
                   : textAlign == TextAlign.left
-                      ? Alignment.centerLeft
-                      : textAlign == TextAlign.right
-                          ? Alignment.centerRight
-                          : (isRtlParagraph ? Alignment.centerRight : Alignment.centerLeft),
+                  ? Alignment.centerLeft
+                  : textAlign == TextAlign.right
+                  ? Alignment.centerRight
+                  : (isRtlParagraph
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft),
               child: getImageWidget(image),
             ),
           ),
@@ -934,7 +946,8 @@ class Paragraph {
     List<Widget> frontImages = _getPositionedImages(false);
 
     final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
-    final EdgeInsets headerTextInsets = isHeaderParagraph && applyHeaderTextInsets
+    final EdgeInsets headerTextInsets =
+        isHeaderParagraph && applyHeaderTextInsets
         ? EdgeInsets.only(
             left: sectPr.leftMargin ?? 0,
             right: sectPr.rightMargin ?? 0,
@@ -1088,10 +1101,7 @@ class Paragraph {
       if (r.image != null) {
         return false;
       }
-      return r.hasTab ||
-          r.hasPositionalTab ||
-          r.hasBrBefore ||
-          r.hasBrAfter;
+      return r.hasTab || r.hasPositionalTab || r.hasBrBefore || r.hasBrAfter;
     });
 
     // An inline drawing followed by a tab/break is not a standalone
@@ -1187,11 +1197,13 @@ class Paragraph {
       (run) => run?.hasPositionalTab == true,
       orElse: () => null,
     );
-    final defaultAlignment = PositionalTabLayoutResolver.resolveDefaultAlignment(
-      paragraphTextAlign: textAlign,
-      paragraphDirection: textDirection,
-      firstPositionalTabAlignment: firstPositionalTab?.positionalTabAlignment,
-    );
+    final defaultAlignment =
+        PositionalTabLayoutResolver.resolveDefaultAlignment(
+          paragraphTextAlign: textAlign,
+          paragraphDirection: textDirection,
+          firstPositionalTabAlignment:
+              firstPositionalTab?.positionalTabAlignment,
+        );
     String currentAlignment = defaultAlignment;
 
     void flushCurrentSegment() {
@@ -1219,7 +1231,8 @@ class Paragraph {
     flushCurrentSegment();
 
     final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
-    final EdgeInsets headerTextInsets = isHeaderParagraph && applyHeaderTextInsets
+    final EdgeInsets headerTextInsets =
+        isHeaderParagraph && applyHeaderTextInsets
         ? EdgeInsets.only(
             left: sectPr.leftMargin ?? 0,
             right: sectPr.rightMargin ?? 0,
@@ -1263,6 +1276,11 @@ class Paragraph {
       pXml ??= XmlDocument.parse(xmlString).rootElement;
       pPr?.xmlpPr ??= pXml?.getElement("w:pPr");
       pPr?.xmlprPr ??= pPr?.xmlpPr?.getElement("w:rPr");
+      // Re-apply style merging so that paragraph-style-inherited properties
+      // such as w:pBdr and w:shd are present in xmlpPr.
+      // This is necessary when the Paragraph was restored from JSON cache,
+      // where getPStyle() was never called during construction.
+      pPr?.getPStyle();
     } catch (_) {}
   }
 
@@ -1623,6 +1641,11 @@ class Paragraph {
     }
   }
 
+  /// Public getter: returns the paragraph fill colour from [w:shd], or null.
+  /// Used by [_ParagraphBorderGroupWidget] to paint the background across the
+  /// full interior of the border box (including the w:pBdr space gaps).
+  Color? get paragraphShadingColor => _getParagraphShadingColor();
+
   // قراءة تظليل الفقرة من w:pPr/w:shd
   Color? _getParagraphShadingColor() {
     try {
@@ -1804,7 +1827,6 @@ class Paragraph {
         } else {
           left = isHeaderParagraph ? img.posX + leftMargin : img.posX;
         }
-
       }
 
       widgets.add(
@@ -1816,25 +1838,7 @@ class Paragraph {
           // IgnorePointer prevents images from capturing pointer events
           // (which would block text selection/scrolling underneath)
           child: IgnorePointer(
-            child: GestureDetector(
-              onTap: () {
-                /* print(
-                  "═══════════════════════════════════════════════════════════",
-                );
-                print("IMAGE TAPPED (Positioned in Paragraph): ${img.rId}");
-                print("  Calculated: left=$left, top=$top");
-                print("  XML: posX=${img.posX}, posY=${img.posY}");
-                print("  behindDoc: ${img.behindDoc}");
-                print("  isHeaderParagraph: $isHeaderParagraph");
-                print("  TextBox Content: ${img.textBoxText}");
-                print(
-                  "  Font: ${img.fontFamily}, Size: ${img.textSize}, Color: ${img.textColor}",
-                );
-                print(
-                  "═══════════════════════════════════════════════════════════",
-                ); */
-              },
-              child: Builder(
+            child: Builder(
                 builder: (context) {
                   // NEW: Handle VML shapes via VmlRendererWidget
                   if (img.vmlShapeData != null) {
@@ -2020,7 +2024,6 @@ class Paragraph {
 
                   return imageWidget;
                 },
-              ),
             ),
           ),
         ),
@@ -2268,7 +2271,10 @@ class Paragraph {
     final spaceAdvance = painter.width;
     final extraSpacing = indentPx - spaceAdvance;
     if (extraSpacing > 0) {
-      return TextSpan(text: ' ', style: baseStyle.copyWith(letterSpacing: extraSpacing));
+      return TextSpan(
+        text: ' ',
+        style: baseStyle.copyWith(letterSpacing: extraSpacing),
+      );
     }
     return TextSpan(text: ' ', style: baseStyle);
   }
@@ -2297,7 +2303,8 @@ class Paragraph {
     // Footnote paragraphs inherit from "Footnote Text" style which has w:after="0".
     // PPr defaults to ~18.7px when no w:spacing element exists (body-text default).
     // For footnotes, only apply spacingAfter when it was explicitly set in the XML.
-    double bottom = spacingAfterOverride ??
+    double bottom =
+        spacingAfterOverride ??
         ((sectionType == 'footnote' && pPr?.spacingAfterExplicit != true)
             ? 0
             : (pPr?.spacingAfter ?? 0));
@@ -2437,9 +2444,7 @@ class Paragraph {
       textAlign: textAlign,
       textDirection: textDirection,
       softWrap: shrinkTextLayerWidth ? false : !effectivePreventWrap,
-      overflow: effectivePreventWrap
-          ? TextOverflow.visible
-          : TextOverflow.clip,
+      overflow: effectivePreventWrap ? TextOverflow.visible : TextOverflow.clip,
       strutStyle: StrutStyle(
         forceStrutHeight: strutConfig.forceStrutHeight,
         height: strutConfig.lineHeight,

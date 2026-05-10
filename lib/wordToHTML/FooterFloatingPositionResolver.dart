@@ -32,6 +32,9 @@ class FooterFloatingPositionResolver {
     }
 
     if (relativeFromV == "bottomMargin") {
+      if (image.alingV == "center") {
+        return (sectPr.bottomMargin - image.height) / 2 - footerStoryYOffset;
+      }
       return image.posY - footerStoryYOffset;
     }
 

@@ -1,5 +1,5 @@
-import 'package:golden_shamela/main.dart';
 import 'package:xml/xml.dart';
+import 'package:golden_shamela/Utils/FldCharTocMarker.dart';
 
 List<XmlElement> getAllXmlParagraphs(XmlElement? body) {
   if (body == null) return [];
@@ -52,6 +52,10 @@ List<XmlElement> getAllXmlParagraphs(XmlElement? body) {
   //
   // });
   // print("foundHeadings $foundHeadings");
+
+  // Mark fldChar-based TOC paragraphs with isSdtRow (same as w:sdt-based TOCs)
+  markFldCharTocParagraphs(allPs);
+
   return allPs;
 }
 

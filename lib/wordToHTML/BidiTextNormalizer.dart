@@ -2,6 +2,8 @@ class BidiTextNormalizer {
   static const Map<String, String> _alwaysMirroredPairs = {};
 
   static const Map<String, String> _neutralInheritedRunPairs = {
+    '(': ')',
+    ')': '(',
     '[': ']',
     ']': '[',
     '{': '}',
@@ -19,7 +21,7 @@ class BidiTextNormalizer {
     r'[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]',
   );
   static final RegExp _neutralMirroringCandidateRegex = RegExp(
-    r'^[\s0-9\u0660-\u0669\[\]\{\}<>«»‹›]+$',
+    r'^[\s0-9\u0660-\u0669\(\)\[\]\{\}<>«»‹›]+$',
   );
 
   static String normalizeForDisplay(

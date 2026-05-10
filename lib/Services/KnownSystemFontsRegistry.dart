@@ -37,7 +37,7 @@ const Map<String, List<String>> _knownSystemFontFiles = {
     'Yakout-Linotype-Light.ttf',
   ],
   'pt bold heading': [
-    'PTBLDARC.TTF',
+    'PTBLDHAD.TTF',
   ],
 };
 

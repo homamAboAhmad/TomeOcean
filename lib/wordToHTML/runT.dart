@@ -120,7 +120,6 @@ class runT {
 
     bool isImg = isImageRun(xmlRun);
     if (isImg) {
-      // print("DEBUG: Found image run in fromXml");
       try {
         image = parseImageData(this, customRelIdList: customRelIdList);
         // if (image != null) {

@@ -3,6 +3,7 @@ import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Models/VmlShapeData.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/WordToWidget/VmlDiamondShapeWidget.dart';
+import 'package:golden_shamela/WordToWidget/VmlBracketPairShapeWidget.dart';
 import 'package:golden_shamela/WordToWidget/RichTextBoxWidget.dart';
 import 'package:golden_shamela/WordToWidget/ShapeTextBoxInsetResolver.dart';
 import 'package:golden_shamela/WordToWidget/VmlShapeFillResolver.dart';
@@ -83,7 +84,18 @@ class VmlRendererWidget extends StatelessWidget {
         );
       }
 
-      contentWidget = textBoxContent;
+      // Some VML text boxes are fixed-height containers whose Word rendering
+      // may clip the last line slightly. We intentionally let txbxContent keep
+      // its natural Flutter height here, limited to the VML text-box path only,
+      // so we do not lose readable text because of small font metric differences.
+      contentWidget = OverflowBox(
+        alignment: Alignment.topCenter,
+        minWidth: 0,
+        maxWidth: imageData.width > 0 ? imageData.width : double.infinity,
+        minHeight: 0,
+        maxHeight: double.infinity,
+        child: textBoxContent,
+      );
     }
 
     // بناء الشكل المراد رسمه (خلفية وحدود)
@@ -124,6 +136,22 @@ class VmlRendererWidget extends StatelessWidget {
 
       case 'diamond':
         shapeWidget = VmlDiamondShapeWidget(
+          width: imageData.width,
+          height: imageData.height,
+          fillColor: VmlShapeFillResolver.resolveFillColor(
+            vml: vml,
+            imageData: imageData,
+          ),
+          fillStyle: vml.fillStyle,
+          strokeColor: vml.isStroked ? vml.strokeColor : null,
+          strokeWidth: vml.strokeWidth,
+          shadowStyle: vml.shadowStyle,
+          child: contentWidget,
+        );
+        break;
+
+      case 'bracketpair':
+        shapeWidget = VmlBracketPairShapeWidget(
           width: imageData.width,
           height: imageData.height,
           fillColor: VmlShapeFillResolver.resolveFillColor(

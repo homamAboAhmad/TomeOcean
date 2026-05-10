@@ -577,6 +577,33 @@ class WordUtils {
       pages[page]!.add(element);
     }
 
+    void moveTrailingImageStartedContentToMissingPage(int missingPage) {
+      // Fallback for already-processed XML: if Word's explicit page anchor
+      // skips one page and the trailing content starts with an image/drawing,
+      // move only that trailing image-started block to the missing page.
+      final currentItems = pages[currentPage];
+      if (currentItems == null || currentItems.length < 2) return;
+
+      final firstImageIndex = currentItems.indexWhere((element) {
+        if (element.name.local != "p") return false;
+        return element.findAllElements("w:pict").isNotEmpty ||
+            element.findAllElements("w:drawing").isNotEmpty;
+      });
+
+      if (firstImageIndex <= 0) return;
+
+      final trailing = currentItems.sublist(firstImageIndex).toList();
+      if (trailing.isEmpty) return;
+
+      currentItems.removeRange(firstImageIndex, currentItems.length);
+      pages.putIfAbsent(missingPage, () => []);
+      pages[missingPage]!.addAll(trailing);
+
+      debugPrint(
+        "PAGE ANCHOR GAP: Moved ${trailing.length} image-started paragraphs from page $currentPage to missing page $missingPage.",
+      );
+    }
+
     debugPrint("--- Start Grouping Paragraphs (Map Phase) ---");
 
     for (var element in rawPs) {
@@ -592,6 +619,16 @@ class WordUtils {
         }
 
         if (markers.isNotEmpty) {
+          final purePageAnchorMarkers =
+              PageAnchorParagraphResolver.resolvePageNumbers(element);
+          // Do not infer page breaks from layout. This handles only a direct
+          // one-page gap between explicit Word-derived page anchors.
+          if (purePageAnchorMarkers != null &&
+              purePageAnchorMarkers.length == 1 &&
+              purePageAnchorMarkers.first == currentPage + 2) {
+            moveTrailingImageStartedContentToMissingPage(currentPage + 1);
+          }
+
           if (markers.length > 1) {
             debugPrint(
               "MULTI-MARKER: Found ${markers.length} markers in one paragraph: $markers",
