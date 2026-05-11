@@ -3,7 +3,7 @@ import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 
 const SDT_ROW_HTML = "sdtr";
 
-extension Paragraphhyperlink on Paragraph {
+extension Paragraphhyperlink on ParagraphMembers {
   void checkHyperLink() {
     final hyperlinkElement = pXml?.getElement("w:hyperlink");
     if (hyperlinkElement == null) return;

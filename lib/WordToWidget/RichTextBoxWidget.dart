@@ -12,6 +12,7 @@ class RichTextBoxWidget extends StatelessWidget {
   final WordPage wordPage;
   final String? customPageNumber;
   final Color? textBoxFillColor;
+  final bool resolveHeaderFooterFields;
 
   const RichTextBoxWidget({
     Key? key,
@@ -19,6 +20,7 @@ class RichTextBoxWidget extends StatelessWidget {
     required this.wordPage,
     this.customPageNumber,
     this.textBoxFillColor,
+    this.resolveHeaderFooterFields = false,
   }) : super(key: key);
 
   @override
@@ -79,6 +81,7 @@ class RichTextBoxWidget extends StatelessWidget {
         tableParagraph.pXml = element;
         tableParagraph.xmlString = element.toXmlString(pretty: false);
         tableParagraph.customPageNumber = customPageNumber;
+        tableParagraph.resolveHeaderFooterFields = resolveHeaderFooterFields;
         tableParagraph.disableUrlAutoDetection = true;
         tableParagraph.trimTrailingStructuralEmptyCellParagraphs = true;
         tableParagraph.textBoxFillColor = textBoxFillColor;
@@ -87,6 +90,10 @@ class RichTextBoxWidget extends StatelessWidget {
 
       final paragraph = Paragraph(wordPage);
       paragraph.customPageNumber = customPageNumber;
+      // `w:txbxContent` is parsed through a fresh Paragraph. Do not mark it as
+      // a header paragraph because that also changes header-specific layout
+      // rules; this flag only enables dynamic header/footer field resolution.
+      paragraph.resolveHeaderFooterFields = resolveHeaderFooterFields;
       paragraph.textBoxFillColor = textBoxFillColor;
       paragraph.fromXml(element);
       paragraph.disableUrlAutoDetection = true;

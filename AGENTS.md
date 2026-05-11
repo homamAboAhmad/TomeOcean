@@ -287,6 +287,9 @@
   - والحد يرسم في `foregroundDecoration`
   - مع الإبقاء على `clipBehavior` للشكل عندما توجد تعبئة أو حدود، حتى لا نفقد قصّ `roundrect`
   - النتيجة: يبقى الحد مرسومًا بصريًا، لكن لا يعود يقلّص مساحة النص الداخلية
+- **حالة مؤكدة إضافية**:
+  - إذا اختفى محتوى textbox داخل VML/WPS مع أخطاء Flutter من نوع `RenderConstrainedOverflowBox object was given an infinite size` أو `Offset argument contained a NaN value`، فابدأ من قيود التخطيط لا من `PAGE field`.
+  - في `lib/WordToWidget/VmlRendererWidget.dart` يجب ألا يستخدم `OverflowBox` داخل شكل VML قيمة `maxHeight: double.infinity`؛ Word يعرض textbox داخل صفحة محدودة، لذلك الحد البنيوي المحافظ هو ارتفاع الصفحة، مع fallback إلى ارتفاع الشكل.
 - **لماذا هذا محافظ**:
   - التعديل محصور في أشكال VML التي تُرسم عبر `Container`
   - لا يغيّر `ParagraphStrutResolver`
@@ -596,7 +599,7 @@
   - `lib/wordToHTML/Paragraph.dart` لا يطبق `firstLineIndent` ومحاذاة RTL على فقرة لا تحتوي إلا `inline VML group`، حتى لا تتحرك الحاوية أفقياً كأنها نص عربي.
 - **ملاحظة عن `VML textbox overflow`**:
   - بعض صناديق VML ثابتة الارتفاع وقد يقص Word آخر سطر قليلًا.
-  - في `VmlRendererWidget` نترك `txbxContent` يأخذ ارتفاعه الطبيعي عبر `OverflowBox` في مسار VML textbox فقط؛ هذا مقصود حتى لا نخسر نصًا بسبب اختلاف بسيط في مقاييس الخط بين Word وFlutter.
+  - في `VmlRendererWidget` نترك `txbxContent` يأخذ ارتفاعه الطبيعي عبر `OverflowBox` في مسار VML textbox فقط، لكن مع حد أقصى finite مأخوذ من ارتفاع الصفحة؛ هذا مقصود حتى لا نخسر نصًا بسبب اختلاف بسيط في مقاييس الخط بين Word وFlutter، وفي الوقت نفسه لا نعطي Flutter قيد `double.infinity` داخل شكل متموضع.
   - لا توسع هذا السلوك إلى كل الفقرات أو كل textboxes قبل وجود دليل XML واضح.
 - **لماذا هذا ليس ترقيعًا بصريًا**:
   - القرار مبني على بنية XML: `v:group` حاوية، و`v:shape` أطفال مستقلون، و`coordsize` نظام إحداثيات داخلي.
@@ -687,3 +690,15 @@
 - `D:\ImportantProjects\golden_shamela\test_page_xml.xml`
 - `D:\ImportantProjects\golden_shamela\test_header_xml.xml`
 - `D:\ImportantProjects\golden_shamela\test_footer_xml.xml`
+
+## Paragraph.dart Split Map
+
+- `lib/wordToHTML/Paragraph.dart` remains the orchestration layer for parsing a paragraph and building its visible widgets/spans.
+- `lib/wordToHTML/ParagraphMembers.dart` is the internal state contract for the extracted mixins. Do not put behavior there; it exists only to avoid a Dart mixin cycle where mixins depend on `Paragraph` while `Paragraph` is composed from them.
+- `lib/wordToHTML/ParagraphBorderSpec.dart` contains only the immutable paragraph-border data model used by `w:pBdr` grouping.
+- `lib/wordToHTML/ParagraphDebugPrinter.dart` contains debug dump/file IO only; keep diagnostic output there instead of growing `Paragraph.dart`.
+- `lib/wordToHTML/ParagraphTocNavigator.dart` contains TOC tap/bookmark navigation only; it must not change TOC layout or Word XML interpretation.
+- `lib/wordToHTML/ParagraphXmlParsing.dart` contains the main `fromXml` flow; `ParagraphXmlParsingHelpers.dart` contains SDT/section/run grouping helpers.
+- `lib/wordToHTML/ParagraphLayoutFlags.dart` contains tiny shared layout predicates used by multiple mixins.
+- `lib/wordToHTML/ParagraphRendering.dart`, `ParagraphDecoration.dart`, `ParagraphTocRendering.dart`, `ParagraphFloatingImages.dart`, and `ParagraphInlineSpans.dart` split rendering, borders/shading, TOC row rendering, floating images, and text-span/line measurement.
+- Prefer this pattern for future cleanup: extract a clearly bounded responsibility first, keep behavior unchanged, and avoid moving layout-sensitive XML math until there is visual evidence and a precise Word/OOXML reason.

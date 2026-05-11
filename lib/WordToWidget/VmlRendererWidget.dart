@@ -33,6 +33,7 @@ class VmlRendererWidget extends StatelessWidget {
     }
 
     final vml = imageData.vmlShapeData!;
+    final overflowMaxHeight = _resolveOverflowMaxHeight(imageData, wordPage);
     Widget contentWidget = const SizedBox.shrink();
 
     // محتوى صورة إن وُجدت وليس هناك textbox
@@ -64,6 +65,10 @@ class VmlRendererWidget extends StatelessWidget {
           wordPage: wordPage,
           customPageNumber: imageData.parent?.parent.customPageNumber,
           textBoxFillColor: vml.fillColor,
+          resolveHeaderFooterFields:
+              imageData.parent?.parent.isHeaderParagraph == true ||
+              imageData.parent?.parent.isFooterParagraph == true ||
+              imageData.parent?.parent.resolveHeaderFooterFields == true,
         ),
       );
 
@@ -78,7 +83,7 @@ class VmlRendererWidget extends StatelessWidget {
             minWidth: 0,
             maxWidth: imageData.width > 0 ? imageData.width : double.infinity,
             minHeight: 0,
-            maxHeight: double.infinity,
+            maxHeight: overflowMaxHeight,
             child: textBoxContent,
           ),
         );
@@ -93,7 +98,7 @@ class VmlRendererWidget extends StatelessWidget {
         minWidth: 0,
         maxWidth: imageData.width > 0 ? imageData.width : double.infinity,
         minHeight: 0,
-        maxHeight: double.infinity,
+        maxHeight: overflowMaxHeight,
         child: textBoxContent,
       );
     }
@@ -196,6 +201,24 @@ class VmlRendererWidget extends StatelessWidget {
 
     return shapeWidget;
   }
+}
+
+double _resolveOverflowMaxHeight(ImageData imageData, WordPage wordPage) {
+  final pageHeight =
+      wordPage.parent.getSectPrForPage(wordPage.pageIndex).height ?? 0;
+  if (pageHeight > 0 && pageHeight.isFinite) {
+    // Word text boxes live on a finite page. Flutter cannot size an
+    // OverflowBox to Infinity inside a positioned VML shape, so the page
+    // height is the conservative structural cap for noAutofit overflow.
+    return pageHeight;
+  }
+
+  final shapeHeight = imageData.height;
+  if (shapeHeight > 0 && shapeHeight.isFinite) {
+    return shapeHeight;
+  }
+
+  return 1000;
 }
 
 /// بناء زخرفة الخلفية للشكل

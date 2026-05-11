@@ -150,7 +150,7 @@ class runT {
         image?.relativeFromV == "line";
   }
 
-  InlineSpan toWidgetWithImg() {
+  InlineSpan toWidgetWithImg({bool preserveLineBreaks = true}) {
     // Fix: Check image property instead of xmlRun since xmlRun is not saved in cache
     if (image != null) {
       Widget w = getImageWidget(image!);
@@ -158,10 +158,10 @@ class runT {
       // We treat the text box as an inline widget. It should flow naturally after the preceding element.
       return WidgetSpan(child: w);
     } else
-      return toWidget();
+      return toWidget(preserveLineBreaks: preserveLineBreaks);
   }
 
-  InlineSpan toWidget() {
+  InlineSpan toWidget({bool preserveLineBreaks = true}) {
     // Skip hidden/vanish text (like injected {{PG:X}} markers)
     if (rpr?.vanish == true) {
       return TextSpan(text: "");
@@ -269,9 +269,17 @@ class runT {
       if (effectiveRtl) {
         return TextSpan(
           children: [
-            if (hasBrBefore) TextSpan(text: "\n", style: effectiveStyle),
+            if (hasBrBefore)
+              TextSpan(
+                text: preserveLineBreaks ? "\n" : " ",
+                style: effectiveStyle,
+              ),
             ..._applyVisualBaselineShiftToSpans(contentSpans, vAlign),
-            if (hasBrAfter) TextSpan(text: "\n", style: effectiveStyle),
+            if (hasBrAfter)
+              TextSpan(
+                text: preserveLineBreaks ? "\n" : " ",
+                style: effectiveStyle,
+              ),
           ],
         );
       }
@@ -294,9 +302,17 @@ class runT {
       // content remains selectable within SelectableRegion.
       return TextSpan(
         children: [
-          if (hasBrBefore) TextSpan(text: "\n", style: effectiveStyle),
+          if (hasBrBefore)
+            TextSpan(
+              text: preserveLineBreaks ? "\n" : " ",
+              style: effectiveStyle,
+            ),
           ...contentSpans,
-          if (hasBrAfter) TextSpan(text: "\n", style: effectiveStyle),
+          if (hasBrAfter)
+            TextSpan(
+              text: preserveLineBreaks ? "\n" : " ",
+              style: effectiveStyle,
+            ),
           tabSpan,
         ],
       );
@@ -304,9 +320,17 @@ class runT {
       // Reconstruct full span sequence with breaks
       return TextSpan(
         children: [
-          if (hasBrBefore) TextSpan(text: "\n", style: effectiveStyle),
+          if (hasBrBefore)
+            TextSpan(
+              text: preserveLineBreaks ? "\n" : " ",
+              style: effectiveStyle,
+            ),
           ...contentSpans,
-          if (hasBrAfter) TextSpan(text: "\n", style: effectiveStyle),
+          if (hasBrAfter)
+            TextSpan(
+              text: preserveLineBreaks ? "\n" : " ",
+              style: effectiveStyle,
+            ),
         ],
       );
     }

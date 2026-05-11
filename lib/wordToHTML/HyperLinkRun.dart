@@ -18,7 +18,7 @@ class HyperLinkRun extends runT {
   }
 
   @override
-  InlineSpan toWidget() {
+  InlineSpan toWidget({bool preserveLineBreaks = true}) {
     if (url != null) {
       // Rendering must follow XML/style hierarchy; hyperlink presence alone
       // does not imply forcing blue/underline.
@@ -46,7 +46,7 @@ class HyperLinkRun extends runT {
       );
     }
 
-    return super.toWidget();
+    return super.toWidget(preserveLineBreaks: preserveLineBreaks);
   }
 }
 
