@@ -213,6 +213,31 @@ class BookProcessingService {
     activeTasksNotifier.value = List.from(activeTasksNotifier.value);
   }
 
+  String _formatExternalToolError(List<String> lines) {
+    final cleaned = lines
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+    if (cleaned.isEmpty) return '';
+
+    // Tracebacks are long; keep the first context line and the concrete Python
+    // exception line visible so import failures no longer stop at "Traceback".
+    final exceptionLine = cleaned.lastWhere(
+      (line) =>
+          line.contains('Error:') ||
+          line.contains('Exception:') ||
+          line.contains('pywintypes.com_error') ||
+          line.contains('ModuleNotFoundError') ||
+          line.contains('ImportError') ||
+          line.contains('PermissionError') ||
+          line.contains('FileNotFoundError'),
+      orElse: () => cleaned.last,
+    );
+
+    if (cleaned.length == 1) return exceptionLine;
+    return '${cleaned.first}\n$exceptionLine\n\n${cleaned.join('\n')}';
+  }
+
   // Pipeline: انتظار دور Word (قابل للإلغاء)
   Future<bool> _acquireWordLock(ActiveTask task) async {
     if (!_isWordProcessing) {
@@ -354,6 +379,7 @@ class BookProcessingService {
       await _deleteIfExists(tempFilePath);
 
       String? wordError; // لالتقاط رسالة الخطأ من سكريبت Python
+      final wordErrorLines = <String>[];
       try {
         // المرحلة 1: Word Repaginate فقط
         await ExeRunner().runExe(
@@ -387,8 +413,10 @@ class BookProcessingService {
                   translated,
                 );
               } else if (line.startsWith('ERROR:')) {
+                final rawErrorLine = line.replaceFirst('ERROR:', '').trim();
+                wordErrorLines.add(rawErrorLine);
                 wordError = StatusTranslator.translate(
-                  line.replaceFirst('ERROR:', '').trim(),
+                  _formatExternalToolError(wordErrorLines),
                 );
                 debugPrint("WORD ERROR: $wordError");
               } else {
@@ -403,7 +431,12 @@ class BookProcessingService {
         );
       } catch (e) {
         _releaseWordLock();
-        emit(ProcessingState.failed, 0.0, "خطأ في Word: $e");
+        final details = _formatExternalToolError(wordErrorLines);
+        emit(
+          ProcessingState.failed,
+          0.0,
+          "خطأ في Word: ${details.isNotEmpty ? details : e.toString()}",
+        );
         return;
       }
 
@@ -423,13 +456,17 @@ class BookProcessingService {
       // 2. مرحلة XML (متوازية - دون قيود)
       emit(ProcessingState.rendering, 0.4, "معالجة XML...");
 
+      final xmlErrorLines = <String>[];
       try {
         await ExeRunner().runExe(
           BOOKS_FOLDER_PATH, // الناتج يجب أن يذهب لمجلد الكتب النهائي
           tempFilePath, // المدخل هو الملف المؤقت من مرحلة الوورد
           (output) {
             if (task.isCancelled) return;
-            if (output.startsWith('PROGRESS:')) {
+            if (output.startsWith('ERROR:')) {
+              xmlErrorLines.add(output.replaceFirst('ERROR:', '').trim());
+              debugPrint("XML ERROR: ${xmlErrorLines.last}");
+            } else if (output.startsWith('PROGRESS:')) {
               final pct =
                   int.tryParse(output.replaceFirst('PROGRESS:', '')) ?? 0;
               if (pct > 0 && pct < 100) {
@@ -449,7 +486,12 @@ class BookProcessingService {
           stage: 'xml', // Pipeline: XML فقط
         );
       } catch (e) {
-        emit(ProcessingState.failed, 0.0, "خطأ في XML: $e");
+        final details = _formatExternalToolError(xmlErrorLines);
+        emit(
+          ProcessingState.failed,
+          0.0,
+          "خطأ في XML: ${details.isNotEmpty ? details : e.toString()}",
+        );
         return;
       }
 

@@ -5940,3 +5940,88 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_الصواعق الإلهية في هتك أستار الديمقراطية.. قصائد شعرية ـ محمد ولد محمد الأمين الشنقيطي.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-05-11 22:55:43.115166 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_مواعظ_جهادية_كلمات_الشيخ_الحسينان_من_الثغور.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_مواعظ_جهادية_كلمات_الشيخ_الحسينان_من_الثغور.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_مواعظ_جهادية_كلمات_الشيخ_الحسينان_من_الثغور.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-11 23:03:32.450612 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\شذرات من تاريخ القاعدة ط2؛ مزيدة منقحة.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\شذرات من تاريخ القاعدة ط2؛ مزيدة منقحة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\شذرات من تاريخ القاعدة ط2؛ مزيدة منقحة.docx
+Version: 3.0 (File Log Mode)
+Found EMF image: image116.emf
+  -> Converting image116.emf to PNG...
+  -> Replaced image116.emf with PNG data.
+Saving changes...
+Done!
+
+
+--- Session Start: 2026-05-12 21:11:52.721962 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex15شذرات2.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-12 21:15:12.911358 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex14شذرات1.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex14شذرات1.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex14شذرات1.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-12 22:20:48.415755 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex15شذرات2.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-12 23:29:48.338804 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex15شذرات2.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-13 10:25:48.283463 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex15شذرات2.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-13 10:36:01.852143 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex15شذرات2.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-13 10:44:38.070637 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex15شذرات2.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.

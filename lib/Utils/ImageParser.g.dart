@@ -30,6 +30,10 @@ ImageData _$ImageDataFromJson(Map<String, dynamic> json) => ImageData()
   ..containsPageField = json['containsPageField'] as bool? ?? false
   ..hyperlinkUrl = json['hyperlinkUrl'] as String?
   ..isStretched = json['isStretched'] as bool? ?? false
+  ..cropLeft = (json['cropLeft'] as num?)?.toDouble() ?? 0
+  ..cropTop = (json['cropTop'] as num?)?.toDouble() ?? 0
+  ..cropRight = (json['cropRight'] as num?)?.toDouble() ?? 0
+  ..cropBottom = (json['cropBottom'] as num?)?.toDouble() ?? 0
   ..isGroup = json['isGroup'] as bool? ?? false
   ..isVectorShape = json['isVectorShape'] as bool? ?? false;
 
@@ -57,6 +61,10 @@ Map<String, dynamic> _$ImageDataToJson(ImageData instance) => <String, dynamic>{
   'containsPageField': instance.containsPageField,
   'hyperlinkUrl': instance.hyperlinkUrl,
   'isStretched': instance.isStretched,
+  'cropLeft': instance.cropLeft,
+  'cropTop': instance.cropTop,
+  'cropRight': instance.cropRight,
+  'cropBottom': instance.cropBottom,
   'isGroup': instance.isGroup,
   'isVectorShape': instance.isVectorShape,
 };

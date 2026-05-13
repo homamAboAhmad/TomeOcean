@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'VectorShapeWidget.dart';
 import 'GroupImageWidget.dart';
 import 'DrawingAnchorPositionResolver.dart';
+import 'CroppedImageWidget.dart';
 import 'package:golden_shamela/WordToWidget/VmlRendererWidget.dart';
 
 SectPr? _resolveImageSectPr(ImageData imageData) {
@@ -368,20 +369,7 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
       rawHeight = image.width;
     }
 
-    Widget imageWidget = Image.memory(
-      image.imageMemory!,
-      width: rawWidth,
-      height: rawHeight,
-      fit: image.isStretched ? BoxFit.fill : BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) {
-        return Container(
-          width: rawWidth,
-          height: rawHeight,
-          color: Colors.red.withOpacity(0.2),
-          child: Center(child: Icon(Icons.broken_image, color: Colors.red)),
-        );
-      },
-    );
+    Widget imageWidget = buildWordImageMemoryWidget(image, rawWidth, rawHeight);
 
     if (useRotatedBox) {
       imageWidget = RotatedBox(quarterTurns: quarterTurns, child: imageWidget);

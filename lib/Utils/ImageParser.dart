@@ -69,6 +69,10 @@ ImageData? parseImageData(runT run, {Map<String, RelId>? customRelIdList}) {
       if (blip != null) {
         childImage.rId = blip.getAttribute('r:embed') ?? "";
       }
+      var childBlipFill = pic.findAllElements('pic:blipFill').firstOrNull;
+      if (childBlipFill != null) {
+        _applySourceRect(childImage, childBlipFill);
+      }
 
       // 2. Load Image Memory
       // IMPORTANT: Only load if customRelIdList is provided.
@@ -260,6 +264,8 @@ void checkBlipFill() {
         );
 
     if (blipFill.name.local != 'null') {
+      _applySourceRect(_imageData, blipFill);
+
       var stretch = blipFill.descendants
           .whereType<xml.XmlElement>()
           .where((e) => e.name.local == 'stretch')
@@ -283,6 +289,25 @@ void checkBlipFill() {
   } catch (e) {
     // ignore
   }
+}
+
+void _applySourceRect(ImageData imageData, xml.XmlElement blipFill) {
+  final srcRect = blipFill.descendants
+      .whereType<xml.XmlElement>()
+      .where((e) => e.name.local == 'srcRect')
+      .firstOrNull;
+  if (srcRect == null) return;
+
+  imageData.cropLeft = _parseSourceRectPercent(srcRect.getAttribute('l'));
+  imageData.cropTop = _parseSourceRectPercent(srcRect.getAttribute('t'));
+  imageData.cropRight = _parseSourceRectPercent(srcRect.getAttribute('r'));
+  imageData.cropBottom = _parseSourceRectPercent(srcRect.getAttribute('b'));
+}
+
+double _parseSourceRectPercent(String? value) {
+  final rawValue = double.tryParse(value ?? '');
+  if (rawValue == null) return 0;
+  return (rawValue / 100000.0).clamp(0.0, 1.0).toDouble();
 }
 
 checkWrapMode() {
@@ -1448,6 +1473,18 @@ class ImageData {
   /// هل الصورة ممتدة (BoxFit.fill) بناءً على blipFill > stretch
   @JsonKey(defaultValue: false)
   bool isStretched = false;
+
+  @JsonKey(defaultValue: 0)
+  double cropLeft = 0;
+  @JsonKey(defaultValue: 0)
+  double cropTop = 0;
+  @JsonKey(defaultValue: 0)
+  double cropRight = 0;
+  @JsonKey(defaultValue: 0)
+  double cropBottom = 0;
+
+  bool get hasSourceCrop =>
+      cropLeft > 0 || cropTop > 0 || cropRight > 0 || cropBottom > 0;
 
   @JsonKey(ignore: true)
   Map<String, RelId>? customRelIdList;

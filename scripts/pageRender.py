@@ -143,10 +143,23 @@ def repaginate_and_save(docx_path):
     """
     فتح Word وعمل Repaginate ثم حفظ لتحديث lastRenderedPageBreak
     """
-    import win32com.client as win32
-    
-    # DispatchEx ينشئ مثيلاً معزولاً لا يتداخل مع جلسة المستخدم
-    word_app = win32.DispatchEx('Word.Application')
+    word_app = None
+    try:
+        import win32com.client as win32
+
+        # DispatchEx ينشئ مثيلاً معزولاً لا يتداخل مع جلسة المستخدم
+        word_app = win32.DispatchEx('Word.Application')
+    except Exception as e:
+        print(
+            f"ERROR: Failed to start Microsoft Word COM automation: {e}",
+            flush=True,
+        )
+        print(
+            "ERROR: Make sure Microsoft Word is installed, activated, and can be opened normally for this Windows user.",
+            flush=True,
+        )
+        raise
+
     try:
         word_app.Visible = False  # الإنتاج: مخفي
         word_app.DisplayAlerts = 0

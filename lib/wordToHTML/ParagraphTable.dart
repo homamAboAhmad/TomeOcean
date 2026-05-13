@@ -110,106 +110,98 @@ class WordTableWidget extends StatelessWidget {
   @override
 
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final mediaWidth = MediaQuery.of(context).size.width;
-        final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
-        final fallbackBodyWidth =
-            (sectPr.width ?? mediaWidth) - sectPr.leftMargin - sectPr.rightMargin;
-        final availableWidth =
-            constraints.maxWidth.isFinite && constraints.maxWidth > 0
-            ? constraints.maxWidth
-            : (fallbackBodyWidth > 0 ? fallbackBodyWidth : mediaWidth);
-        final bool bidi = isTableBidiVisual(tblXml);
-        final double tableIndentPx = getTableIndentPx(tblXml);
-        final double usableWidth = tableIndentPx >= availableWidth
-            ? availableWidth
-            : (availableWidth - tableIndentPx);
+    final mediaWidth = MediaQuery.of(context).size.width;
+    final sectPr = parent.parent.getSectPrForPage(parent.pageIndex);
+    final fallbackBodyWidth =
+        (sectPr.width ?? mediaWidth) - sectPr.leftMargin - sectPr.rightMargin;
+    final availableWidth = fallbackBodyWidth > 0 ? fallbackBodyWidth : mediaWidth;
+    final bool bidi = isTableBidiVisual(tblXml);
+    final double tableIndentPx = getTableIndentPx(tblXml);
+    final double usableWidth = tableIndentPx >= availableWidth
+        ? availableWidth
+        : (availableWidth - tableIndentPx);
 
-        // 1. Get Grid Column Widths
-        List<double> gridColWidths = _getGridColWidths();
+    // 1. Get Grid Column Widths
+    List<double> gridColWidths = _getGridColWidths();
 
-        // 2. Calculate Total Table Width in Twips
-        double totalGridTwips = 0;
-        if (gridColWidths.isNotEmpty) {
-          totalGridTwips = gridColWidths.fold(0, (sum, w) => sum + w);
-        } else {
-          // Fallback: Check first row if grid is missing
-          var firstRow = tblXml.findAllElements('w:tr').firstOrNull;
-          if (firstRow != null) {
-            for (var cell in firstRow.findAllElements('w:tc')) {
-              var w = cell
-                  .getElement('w:tcPr')
-                  ?.getElement('w:tcW')
-                  ?.getAttribute('w:w');
-              totalGridTwips += double.tryParse(w ?? '0') ?? 0;
-            }
-          }
+    // 2. Calculate Total Table Width in Twips
+    double totalGridTwips = 0;
+    if (gridColWidths.isNotEmpty) {
+      totalGridTwips = gridColWidths.fold(0, (sum, w) => sum + w);
+    } else {
+      // Fallback: Check first row if grid is missing
+      var firstRow = tblXml.findAllElements('w:tr').firstOrNull;
+      if (firstRow != null) {
+        for (var cell in firstRow.findAllElements('w:tc')) {
+          var w = cell
+              .getElement('w:tcPr')
+              ?.getElement('w:tcW')
+              ?.getAttribute('w:w');
+          totalGridTwips += double.tryParse(w ?? '0') ?? 0;
         }
+      }
+    }
 
-        if (totalGridTwips == 0) totalGridTwips = 1;
+    if (totalGridTwips == 0) totalGridTwips = 1;
 
-        // 3. Convert Twips to Pixels
-        double naturalWidthPx = totalGridTwips * 0.0667;
+    // 3. Convert Twips to Pixels
+    double naturalWidthPx = totalGridTwips * 0.0667;
 
-        // 4. Determine Scale Factor and Final Width
-        double scaleFactor;
-        double finalTableWidth;
-        double? targetWidthPx;
+    // 4. Determine Scale Factor and Final Width
+    double scaleFactor;
+    double finalTableWidth;
+    double? targetWidthPx;
 
-        var tblPr = tblXml.getElement('w:tblPr');
-        var tblW = tblPr?.getElement('w:tblW');
-        if (tblW != null) {
-          String type = tblW.getAttribute('w:type') ?? 'auto';
-          double val = double.tryParse(tblW.getAttribute('w:w') ?? '0') ?? 0;
+    var tblPr = tblXml.getElement('w:tblPr');
+    var tblW = tblPr?.getElement('w:tblW');
+    if (tblW != null) {
+      String type = tblW.getAttribute('w:type') ?? 'auto';
+      double val = double.tryParse(tblW.getAttribute('w:w') ?? '0') ?? 0;
 
-          if (val > 0) {
-            if (type == 'pct') {
-              targetWidthPx = usableWidth * (val / 5000.0);
-            } else if (type == 'dxa') {
-              targetWidthPx = val * 0.0667;
-            }
-          }
+      if (val > 0) {
+        if (type == 'pct') {
+          targetWidthPx = usableWidth * (val / 5000.0);
+        } else if (type == 'dxa') {
+          targetWidthPx = val * 0.0667;
         }
+      }
+    }
 
-        if (targetWidthPx != null && targetWidthPx > 0) {
-          finalTableWidth = targetWidthPx > usableWidth
-              ? usableWidth
-              : targetWidthPx;
-          scaleFactor = totalGridTwips > 1
-              ? finalTableWidth / totalGridTwips
-              : 0.0667;
-        } else {
-          if (naturalWidthPx <= usableWidth) {
-            scaleFactor = 0.0667;
-            finalTableWidth = naturalWidthPx;
-          } else {
-            finalTableWidth = usableWidth;
-            scaleFactor = usableWidth / totalGridTwips;
-          }
-        }
+    if (targetWidthPx != null && targetWidthPx > 0) {
+      finalTableWidth = targetWidthPx > usableWidth
+          ? usableWidth
+          : targetWidthPx;
+      scaleFactor = totalGridTwips > 1
+          ? finalTableWidth / totalGridTwips
+          : 0.0667;
+    } else {
+      if (naturalWidthPx <= usableWidth) {
+        scaleFactor = 0.0667;
+        finalTableWidth = naturalWidthPx;
+      } else {
+        finalTableWidth = usableWidth;
+        scaleFactor = usableWidth / totalGridTwips;
+      }
+    }
 
-        List<Widget> rowWidgets = getRowsWList(scaleFactor, gridColWidths, bidi);
-        Alignment tableAlign = getTableAlignment(tblXml);
+    List<Widget> rowWidgets = getRowsWList(scaleFactor, gridColWidths, bidi);
+    Alignment tableAlign = getTableAlignment(tblXml);
 
-        return SizedBox(
-          width: availableWidth,
-          child: Align(
-            alignment: tableAlign,
-            child: Padding(
-              padding: bidi
-                  ? EdgeInsets.only(right: tableIndentPx)
-                  : EdgeInsets.only(left: tableIndentPx),
-              child: SizedBox(
-                width: finalTableWidth,
-                child: Column(mainAxisSize: MainAxisSize.min, children: rowWidgets),
-              ),
-            ),
+    return SizedBox(
+      width: availableWidth,
+      child: Align(
+        alignment: tableAlign,
+        child: Padding(
+          padding: bidi
+              ? EdgeInsets.only(right: tableIndentPx)
+              : EdgeInsets.only(left: tableIndentPx),
+          child: SizedBox(
+            width: finalTableWidth,
+            child: Column(mainAxisSize: MainAxisSize.min, children: rowWidgets),
           ),
-        );
-      },
+        ),
+      ),
     );
-
   }
 
 

@@ -21,6 +21,42 @@ const Map<String, int> _vmlNamedColors = {
   'yellow': 0xFFFFFF00,
 };
 
+const Map<String, int> _vmlSystemColors = {
+  'activeborder': 0xFFB4B4B4,
+  'activecaption': 0xFF99B4D1,
+  'appworkspace': 0xFFABABAB,
+  'background': 0xFF000000,
+  'buttonface': 0xFFF0F0F0,
+  'buttonhighlight': 0xFFFFFFFF,
+  'buttonshadow': 0xFFA0A0A0,
+  'buttontext': 0xFF000000,
+  'captiontext': 0xFF000000,
+  'graytext': 0xFF6D6D6D,
+  'gradientactivecaption': 0xFFB9D1EA,
+  'gradientinactivecaption': 0xFFD7E4F2,
+  'highlight': 0xFF0078D7,
+  'highlighttext': 0xFFFFFFFF,
+  'hotlight': 0xFF0066CC,
+  'inactiveborder': 0xFFF4F7FC,
+  'inactivecaption': 0xFFBFCDDB,
+  'inactivecaptiontext': 0xFF000000,
+  'infobackground': 0xFFFFFFE1,
+  'infotext': 0xFF000000,
+  'menu': 0xFFF0F0F0,
+  'menubar': 0xFFF0F0F0,
+  'menuhighlight': 0xFF3399FF,
+  'menutext': 0xFF000000,
+  'scrollbar': 0xFFC8C8C8,
+  'threeddarkshadow': 0xFF696969,
+  'threedface': 0xFFF0F0F0,
+  'threedhighlight': 0xFFFFFFFF,
+  'threedlightshadow': 0xFFE3E3E3,
+  'threedshadow': 0xFFA0A0A0,
+  'window': 0xFFFFFFFF,
+  'windowframe': 0xFF646464,
+  'windowtext': 0xFF000000,
+};
+
 const Map<String, String> _vmlSchemeColorAliases = {
   // VML scheme colors are document-level logical colors. In OOXML-backed
   // Word documents we map them to the nearest active theme entry.
@@ -39,12 +75,17 @@ const Map<String, String> _vmlSchemeColorAliases = {
 Color? parseVmlColorValue(String? rawValue, {WordDocument? wordDocument}) {
   if (rawValue == null) return null;
 
-  final value = rawValue.trim().toLowerCase();
+  final value = _normalizeVmlColorToken(rawValue);
   if (value.isEmpty || value == 'none' || value == 'auto') return null;
 
   final namedColor = _vmlNamedColors[value];
   if (namedColor != null) {
     return Color(namedColor);
+  }
+
+  final systemColor = _vmlSystemColors[value];
+  if (systemColor != null) {
+    return Color(systemColor);
   }
 
   if (value.startsWith('#')) {
@@ -69,6 +110,18 @@ Color? parseVmlColorValue(String? rawValue, {WordDocument? wordDocument}) {
   }
 
   return _resolveVmlSchemeColor(value, wordDocument: wordDocument);
+}
+
+String _normalizeVmlColorToken(String rawValue) {
+  var value = rawValue.trim().toLowerCase();
+
+  // Word commonly persists VML colors with an Office color index suffix,
+  // e.g. `white [3212]`, `windowText [64]`, or `#f2f2f2 [3041]`.
+  // The suffix is metadata for Office, while the leading token is the
+  // effective color that controls rendering.
+  value = value.replaceFirst(RegExp(r'\s+\[[^\]]+\]$'), '');
+
+  return value.trim();
 }
 
 Color? _parseHexColor(String hex) {
