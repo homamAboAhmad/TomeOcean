@@ -40,12 +40,22 @@ class BookCardDialogController {
     required String? sectionId,
     required String? authorId,
     required String description,
+    required String? bookType,
+    required bool matchesPrinted,
+    required String publisher,
+    required String edition,
+    required String pageCount,
   }) {
     return originalBook.copyWith(
       title: title.trim(),
       sectionId: sectionId ?? '',
       authorId: authorId ?? '',
       description: description.trim(),
+      bookType: bookType ?? '',
+      matchesPrinted: matchesPrinted,
+      publisher: publisher.trim(),
+      edition: edition.trim(),
+      pageCount: pageCount.trim(),
     );
   }
 }

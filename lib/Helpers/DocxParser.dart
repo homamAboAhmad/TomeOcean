@@ -1,9 +1,9 @@
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/Utils/FileToArchive.dart';
 import 'package:golden_shamela/Utils/ArchiveToXml.dart';
 import 'package:golden_shamela/wordToHTML/AddDocData.dart';
-import 'package:path/path.dart' as p;
 import 'package:golden_shamela/core/app_state.dart';
 import 'package:xml/xml.dart';
 
@@ -14,7 +14,7 @@ class DocxParser {
     try {
       // Create a temporary WordDocument object to pass to the parser.
       WordDocument tempDocument = WordDocument();
-      tempDocument.title = p.basename(filePath);
+      tempDocument.title = AppStoragePaths.displayTitleFromPath(filePath);
 
       // Use the existing project functions to convert file to archive and parse data.
       final appState = AppState();

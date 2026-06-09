@@ -4,6 +4,7 @@ import 'package:golden_shamela/Helpers/SectionStorage.dart';
 import 'package:golden_shamela/Helpers/DocxParser.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Models/BookCard.dart';
+import 'package:golden_shamela/Models/BookMetadataOptions.dart';
 import 'package:golden_shamela/Models/Section.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
@@ -33,9 +34,14 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _authorController = TextEditingController();
   final TextEditingController _deathYearController = TextEditingController();
+  final TextEditingController _publisherController = TextEditingController();
+  final TextEditingController _editionController = TextEditingController();
+  final TextEditingController _pageCountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   String? _selectedSectionId;
+  String? _selectedBookType;
+  bool _matchesPrinted = false;
   List<Author> _allAuthors = [];
   List<Section> _allSections = [];
   bool _isLoading = true;
@@ -98,6 +104,9 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
     _titleController.dispose();
     _authorController.dispose();
     _deathYearController.dispose();
+    _publisherController.dispose();
+    _editionController.dispose();
+    _pageCountController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -170,6 +179,50 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
                   _buildSectionDropdown(),
                   const SizedBox(height: 16),
 
+                  _buildBookTypeDropdown(),
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CheckboxListTile(
+                          value: _matchesPrinted,
+                          onChanged: (v) =>
+                              setState(() => _matchesPrinted = v ?? false),
+                          title: Text('موافق للمطبوع', style: normalStyle()),
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  _buildTextField(
+                    controller: _publisherController,
+                    label: 'الناشر',
+                  ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildTextField(
+                          controller: _editionController,
+                          label: 'الطبعة',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildTextField(
+                          controller: _pageCountController,
+                          label: 'عدد الصفحات',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
                   // Notes
                   _buildTextField(
                     controller: _notesController,
@@ -221,6 +274,27 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildBookTypeDropdown() {
+    return DropdownButtonFormField<String>(
+      value: _selectedBookType,
+      decoration: InputDecoration(
+        labelText: 'نوع الكتاب',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      items: BookMetadataOptions.bookTypes
+          .map(
+            (type) => DropdownMenuItem(
+              value: type,
+              child: Text(BookMetadataOptions.typeLabel(type), style: normalStyle()),
+            ),
+          )
+          .toList(),
+      onChanged: (value) => setState(() => _selectedBookType = value),
+      validator: (value) =>
+          value == null || value.isEmpty ? 'يرجى اختيار نوع الكتاب' : null,
     );
   }
 
@@ -402,6 +476,11 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
         authorId: authorId,
         sectionId: _selectedSectionId ?? '',
         description: _notesController.text,
+        bookType: _selectedBookType ?? '',
+        matchesPrinted: _matchesPrinted,
+        publisher: _publisherController.text.trim(),
+        edition: _editionController.text.trim(),
+        pageCount: _pageCountController.text.trim(),
       );
 
       Section? newSection;

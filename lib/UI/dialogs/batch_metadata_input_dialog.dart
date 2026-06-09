@@ -3,6 +3,7 @@ import 'package:golden_shamela/Helpers/AuthorStorage.dart';
 import 'package:golden_shamela/Helpers/SectionStorage.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Models/BookCard.dart';
+import 'package:golden_shamela/Models/BookMetadataOptions.dart';
 import 'package:golden_shamela/Models/Section.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
@@ -24,6 +25,8 @@ class _BatchMetadataItem {
   final TextEditingController authorController;
   Author? selectedAuthor;
   String? sectionId;
+  String? bookType;
+  bool matchesPrinted = false;
 
   _BatchMetadataItem({
     required this.filePath,
@@ -31,6 +34,7 @@ class _BatchMetadataItem {
     String initialAuthor = '',
     this.selectedAuthor,
     this.sectionId,
+    this.bookType,
   }) : titleController = TextEditingController(text: initialTitle),
        authorController = TextEditingController(text: initialAuthor);
 
@@ -50,6 +54,7 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
   Author? _commonAuthor;
   final TextEditingController _commonAuthorController = TextEditingController();
   String? _commonSectionId;
+  String? _commonBookType;
 
   @override
   void initState() {
@@ -101,6 +106,14 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
     setState(() {
       for (var item in _items) {
         item.sectionId = _commonSectionId;
+      }
+    });
+  }
+
+  void _applyCommonBookType() {
+    setState(() {
+      for (var item in _items) {
+        item.bookType = _commonBookType;
       }
     });
   }
@@ -276,6 +289,21 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
                 ),
                 child: const Text('تطبيق التصنيف'),
               ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildBookTypeDropdown(
+                  value: _commonBookType,
+                  onChanged: (v) => setState(() => _commonBookType = v),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _applyCommonBookType,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: secondaryColor,
+                ),
+                child: const Text('تطبيق النوع'),
+              ),
             ],
           ),
         ],
@@ -324,6 +352,20 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
               onChanged: (v) => setState(() => item.sectionId = v),
             ),
           ),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: _buildBookTypeDropdown(
+              value: item.bookType,
+              onChanged: (v) => setState(() => item.bookType = v),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Checkbox(
+            value: item.matchesPrinted,
+            onChanged: (v) => setState(() => item.matchesPrinted = v ?? false),
+          ),
+          const Text('موافق'),
         ],
       ),
     );
@@ -399,7 +441,42 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
     );
   }
 
+  Widget _buildBookTypeDropdown({
+    String? value,
+    required Function(String?) onChanged,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        hintText: 'نوع الكتاب',
+      ),
+      items: BookMetadataOptions.bookTypes
+          .map(
+            (type) => DropdownMenuItem(
+              value: type,
+              child: Text(
+                BookMetadataOptions.typeLabel(type),
+                style: normalStyle(fontSize: 14),
+              ),
+            ),
+          )
+          .toList(),
+      onChanged: onChanged,
+    );
+  }
+
   void _submit() {
+    final missingType = _items.any((item) => item.bookType == null);
+    if (missingType) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يرجى اختيار نوع الكتاب لكل الكتب')),
+      );
+      return;
+    }
+
     final Map<String, BookCard> results = {};
     final Map<String, Author> consolidatedNewAuthors = {};
 
@@ -419,6 +496,8 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
         title: item.titleController.text,
         authorId: author?.id ?? '',
         sectionId: item.sectionId ?? '',
+        bookType: item.bookType ?? '',
+        matchesPrinted: item.matchesPrinted,
       );
     }
 

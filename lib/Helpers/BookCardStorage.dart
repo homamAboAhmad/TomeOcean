@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'package:collection/collection.dart';
 import '../Models/BookCard.dart';
+import '../Services/AppStoragePaths.dart';
 import 'BooksMetadataDatabase.dart';
 
 class BookCardStorage {
@@ -110,9 +111,9 @@ class BookCardStorage {
       if (existing != null) {
         // Get book_path from database (we need to add a method for this)
         final bookByName = await _db.getBookByName(book.title);
-        bookPath = book.title; // Placeholder - will be updated when book is indexed
+        bookPath = AppStoragePaths.bookSourcePath(bookByName?.title ?? book.title);
       } else {
-        bookPath = '${book.title}.docx'; // Placeholder
+        bookPath = AppStoragePaths.bookSourcePath(book.title);
       }
       booksWithPaths.add({
         'book': book,

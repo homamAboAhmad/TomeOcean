@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:golden_shamela/Helpers/FileHelper.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
+import 'package:golden_shamela/Services/BookLibraryRepository.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
-import '../Controllers/PathController.dart';
 import 'dialogs/file_processing_dialog.dart';
 import 'dialogs/batch_file_processing_dialog.dart';
 import 'dialogs/folder_import_preview_dialog.dart';
@@ -30,16 +30,8 @@ class _BooksDrawerState extends State<BooksDrawer> {
   }
 
   void loadBooks() async {
-    final dir = Directory(BOOKS_FOLDER_PATH);
-    if (await dir.exists()) {
-      final files = dir.listSync().whereType<File>().where((f) {
-        final name = f.path.split(Platform.pathSeparator).last;
-        return name.toLowerCase().endsWith('.docx') &&
-            !name.startsWith('~\$') &&
-            !name.startsWith('_temp_');
-      }).toList();
-      setState(() => bookFiles = files);
-    }
+    final files = await BookLibraryRepository().loadAvailableBookSources();
+    if (mounted) setState(() => bookFiles = files);
   }
 
   @override
@@ -122,7 +114,7 @@ class _BooksDrawerState extends State<BooksDrawer> {
       itemCount: bookFiles.length,
       itemBuilder: (context, index) {
         final file = bookFiles[index];
-        final bookName = getFileName(file.path);
+        final bookName = AppStoragePaths.displayTitleFromPath(file.path);
         return _buildBookTile(file, bookName);
       },
     );
@@ -334,8 +326,8 @@ class _BooksDrawerState extends State<BooksDrawer> {
           // Auto-select the last added book if success
           // Logic to find last added book:
           final lastPath = paths.last;
-          final fileName = lastPath.split('\\').last.split('/').last;
-          final bookFile = File('$BOOKS_FOLDER_PATH\\$fileName');
+          final bookId = AppStoragePaths.bookIdFromPath(lastPath);
+          final bookFile = File(AppStoragePaths.bookSourcePath(bookId));
           if (await bookFile.exists()) {
             if (mounted) {
               Navigator.pop(context);

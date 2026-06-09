@@ -8,14 +8,15 @@ import 'package:golden_shamela/UI/SettingsScreen.dart';
 import 'package:golden_shamela/UI/AuthorsManagement/authors_management_screen.dart';
 import 'package:golden_shamela/UI/Search/shamela_search_view.dart';
 import 'package:golden_shamela/UI/Search/models/search_results_tab.dart';
-import 'package:golden_shamela/Helpers/FileHelper.dart';
+import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/UI/Widgets/BackgroundTasksBar.dart';
+import 'package:golden_shamela/UI/LibraryPicker/library_picker_dialog.dart';
 import 'package:golden_shamela/core/app_state.dart';
 import 'home_page/home_page_window_communication.dart';
 import 'home_page/home_page_search_handlers.dart';
 import 'home_page/home_page_book_management.dart';
 import 'home_page/home_page_ui_helpers.dart';
-import 'BooksDrawer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -113,16 +114,14 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: primaryColor,
           elevation: 2,
           toolbarHeight: 70,
-          leading: Builder(
-            builder: (context) => IconButton(
-              icon: const Icon(
-                Icons.menu_rounded,
-                color: secondaryColor,
-                size: 28,
-              ),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-              tooltip: 'القائمة الرئيسية',
+          leading: IconButton(
+            icon: const Icon(
+              Icons.menu_book_rounded,
+              color: secondaryColor,
+              size: 28,
             ),
+            onPressed: _openLibraryPicker,
+            tooltip: 'تصفح الكتب',
           ),
           title: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -174,7 +173,6 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(width: 8),
           ],
         ),
-        drawer: BooksDrawer(onBookSelected: _onBookSelected),
         body: Column(
           children: [
             Expanded(
@@ -192,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'اختر كتاباً من القائمة الجانبية للبدء',
+                          'اختر كتاباً من زر تصفح الكتب للبدء',
                           style: bigStyle(
                             color: Colors.blueGrey.withOpacity(0.3),
                           ),
@@ -277,6 +275,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> _openLibraryPicker() async {
+    final selectedPath = await showLibraryPickerDialog(context);
+    if (selectedPath != null && mounted) {
+      await _onBookSelected(File(selectedPath));
+    }
+  }
+
   Widget _buildAppBarAction({
     required IconData icon,
     required String tooltip,
@@ -309,12 +314,20 @@ class _HomePageState extends State<HomePage> {
     bool fromSearchResults = false,
   }) async {
     filePath = book.path;
+    try {
+      await BooksMetadataDatabase().recordRecentBook(book.path);
+    } catch (e) {
+      debugPrint('Failed to record recent book: $e');
+    }
 
     if (!fromSearchResults) {
       AppState().clearSearchHighlight();
     }
 
-    final bookTitle = getFileName(book.path);
+    final storedBook = await BooksMetadataDatabase().getBookByPath(book.path);
+    final bookTitle = storedBook?.title.isNotEmpty == true
+        ? storedBook!.title
+        : AppStoragePaths.displayTitleFromPath(book.path);
 
     WordDocument tempDoc = WordDocument.empty();
     tempDoc.title = bookTitle;

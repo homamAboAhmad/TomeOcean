@@ -6025,3 +6025,57 @@ CWD: D:\ImportantProjects\golden_shamela
 Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex15شذرات2.docx
 Version: 3.0 (File Log Mode)
 No EMF images converted.
+
+
+--- Session Start: 2026-05-13 11:00:36.386852 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex13روضة.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex13روضة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex13روضة.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-13 11:02:00.548697 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\المكتبة\\ex13روضة.docx']
+Target (passed): C:\Users\HP\Documents\المكتبة\ex13روضة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\المكتبة\ex13روضة.docx
+Version: 3.0 (File Log Mode)
+
+
+--- Session Start: 2026-05-13 11:02:00.573758 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\Documents\\.temp_processing\\_temp_ex13روضة.docx']
+Target (passed): C:\Users\HP\Documents\.temp_processing\_temp_ex13روضة.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\Documents\.temp_processing\_temp_ex13روضة.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+No EMF images converted.
+
+
+--- Session Start: 2026-05-25 20:45:23.520028 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\AppData\\Local\\Temp\\the_library_ex3_tes2t_e36e9498\\ex3_tes2t.docx']
+Target (passed): C:\Users\HP\AppData\Local\Temp\the_library_ex3_tes2t_e36e9498\ex3_tes2t.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\AppData\Local\Temp\the_library_ex3_tes2t_e36e9498\ex3_tes2t.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-05-25 21:04:24.810456 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\AppData\\Local\\Temp\\the_library_ex3_tes2t_fbffd27d\\ex3_tes2t.docx']
+Target (passed): C:\Users\HP\AppData\Local\Temp\the_library_ex3_tes2t_fbffd27d\ex3_tes2t.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\AppData\Local\Temp\the_library_ex3_tes2t_fbffd27d\ex3_tes2t.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.
+
+
+--- Session Start: 2026-06-03 21:27:41.948163 ---
+Raw Args: ['D:\\ImportantProjects\\golden_shamela\\build\\windows\\x64\\runner\\Debug\\data\\flutter_assets\\assets\\exe\\fix_word_images.exe', 'C:\\Users\\HP\\AppData\\Local\\Temp\\the_library_ex3_tes2t_2de2f02b\\ex3_tes2t.docx']
+Target (passed): C:\Users\HP\AppData\Local\Temp\the_library_ex3_tes2t_2de2f02b\ex3_tes2t.docx
+CWD: D:\ImportantProjects\golden_shamela
+Processing: C:\Users\HP\AppData\Local\Temp\the_library_ex3_tes2t_2de2f02b\ex3_tes2t.docx
+Version: 3.0 (File Log Mode)
+No EMF images converted.

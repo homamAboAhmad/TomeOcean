@@ -1,6 +1,6 @@
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:golden_shamela/Models/Author.dart';
-import 'package:path/path.dart' as p;
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 
 /// Helper class to manage selected books and authors for search
 class SelectedBooksManager {
@@ -37,7 +37,7 @@ class SelectedBooksManager {
           'authorId': bookCard.authorId,
         });
       } else {
-        final bookName = p.basenameWithoutExtension(bookPath);
+        final bookName = AppStoragePaths.displayTitleFromPath(bookPath);
         newItems.add({
           'type': 'book',
           'name': bookName,
@@ -80,4 +80,3 @@ class SelectedBooksManager {
     };
   }
 }
-

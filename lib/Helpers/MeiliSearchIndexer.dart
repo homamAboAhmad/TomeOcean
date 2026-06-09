@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:golden_shamela/Helpers/DocxParser.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Models/indexing_progress.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as p;
 
 class MeiliSearchIndexer {
   final String _meiliUrl = 'http://127.0.0.1:7700';
@@ -66,7 +66,7 @@ class MeiliSearchIndexer {
       }
 
       currentBookNum++;
-      String bookName = p.basenameWithoutExtension(bookPath);
+      String bookName = AppStoragePaths.displayTitleFromPath(bookPath);
       onProgress(IndexingProgress(
         message: 'Processing book: $bookName',
         totalBooks: totalBooks,

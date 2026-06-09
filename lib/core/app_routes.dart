@@ -37,6 +37,10 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: appState.navigatorKey,
       initialRoute: widget.initialRoute ?? AppRoutes.home,
       routes: AppRoutes.getRoutes(),
+      builder: (context, child) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

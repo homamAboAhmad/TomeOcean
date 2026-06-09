@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:golden_shamela/Helpers/ShamelaSearchIndexer.dart';
+import 'package:golden_shamela/Services/BookLibraryRepository.dart';
 import 'package:golden_shamela/core/app_state.dart';
 
 /// مسؤول عن تحميل الكتب المفهرسة في الخلفية
@@ -19,7 +22,7 @@ class IndexedBooksLoader {
   Future<void> _loadBooks() async {
     try {
       final books = await ShamelaSearchIndexer().getIndexedBooks();
-      _appState.cachedIndexedBooks = _filterOutTemp(books);
+      _appState.cachedIndexedBooks = await _filterAvailable(books);
     } catch (e) {
       _appState.cachedIndexedBooks = [];
     } finally {
@@ -35,7 +38,7 @@ class IndexedBooksLoader {
 
     try {
       final books = await ShamelaSearchIndexer().getIndexedBooks();
-      final filtered = _filterOutTemp(books);
+      final filtered = await _filterAvailable(books);
       _appState.cachedIndexedBooks = filtered;
       return filtered;
     } catch (e) {
@@ -43,13 +46,26 @@ class IndexedBooksLoader {
     }
   }
 
-  List<Map<String, dynamic>> _filterOutTemp(List<Map<String, dynamic>> books) {
-    return books
-        .where((b) {
-          final path = b['book_path'] as String? ?? '';
-          final name = path.split(RegExp(r'[\\/]')).last;
-          return !name.startsWith('_temp_');
-        })
-        .toList();
+  Future<List<Map<String, dynamic>>> _filterAvailable(
+    List<Map<String, dynamic>> books,
+  ) async {
+    final repository = BookLibraryRepository();
+    final filtered = <Map<String, dynamic>>[];
+
+    for (final book in books) {
+      final path = book['book_path'] as String? ?? '';
+      if (path.isEmpty) continue;
+
+      final name = path.split(RegExp(r'[\\/]')).last;
+      if (name.startsWith('_temp_')) continue;
+
+      if (await File(path).exists()) {
+        filtered.add(book);
+      } else {
+        await repository.pruneMissingBookSource(path);
+      }
+    }
+
+    return filtered;
   }
 }

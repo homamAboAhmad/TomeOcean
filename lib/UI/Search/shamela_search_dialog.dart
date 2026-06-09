@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/UI/Search/widgets/results_view.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Models/Section.dart';
@@ -567,8 +567,8 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
         ? _filteredIndexedBooks
         : _filteredIndexedBooks
               .where(
-                (b) => p
-                    .basenameWithoutExtension(b['book_path'] as String)
+                (b) => AppStoragePaths
+                    .displayTitleFromPath(b['book_path'] as String)
                     .toLowerCase()
                     .contains(q),
               )

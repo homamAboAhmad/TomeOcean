@@ -3,7 +3,6 @@ import 'package:golden_shamela/Helpers/SectionStorage.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Models/Section.dart';
-import 'package:path/path.dart' as p;
 
 /// Manages filter data loading and book filtering logic
 class SearchStateManager {
@@ -157,18 +156,7 @@ class SearchStateManager {
         filtered = allIndexedBooks.where((book) {
           final bookPath = book['book_path'] as String;
           final normalizedPath = normalizePath(bookPath);
-          final matches = normalizedFilteredPaths.contains(normalizedPath);
-          if (!matches) {
-            // Try matching by filename only (without full path)
-            final fileName = p.basename(bookPath);
-            final matchesByFileName = normalizedFilteredPaths.any((filteredPath) => 
-              normalizePath(p.basename(filteredPath)) == normalizePath(fileName));
-            if (matchesByFileName) {
-              print("SearchStateManager: Matched by filename: $fileName");
-              return true;
-            }
-          }
-          return matches;
+          return normalizedFilteredPaths.contains(normalizedPath);
         }).toList();
         print("SearchStateManager: Filtered to ${filtered.length} books from ${allIndexedBooks.length} total");
       } else {
@@ -226,4 +214,3 @@ class FilteredBooksResult {
     required this.filteredBooks,
   });
 }
-

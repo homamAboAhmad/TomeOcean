@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
@@ -12,6 +11,7 @@ import 'package:golden_shamela/UI/Search/widgets/no_results_widget.dart';
 import 'package:golden_shamela/UI/WordPageScreen.dart';
 import 'package:golden_shamela/Utils/FileToArchive.dart';
 import 'package:golden_shamela/Services/BookProcessingService.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/Helpers/TextProcessor.dart';
 import 'package:golden_shamela/core/app_state.dart';
 
@@ -208,13 +208,17 @@ class _ShamelaSearchViewState extends State<ShamelaSearchView> {
   }
 
   Future<WordDocument> _loadDocument(String bookPath) async {
-    final title = p.basenameWithoutExtension(bookPath);
+    final title = AppStoragePaths.bookIdFromPath(bookPath);
     if (_docCache.containsKey(title)) return _docCache[title]!;
 
-    final appDocsDir = await getApplicationDocumentsDirectory();
-    final bookCacheDir = Directory('${appDocsDir.path}/tome_ocean/$title');
-    final metadataFile = File('${bookCacheDir.path}/metadata.json');
-    final pagesDir = Directory('${bookCacheDir.path}/pages');
+    final sourcePath = AppStoragePaths.bookSourcePath(title);
+    final archivePath = await File(sourcePath).exists() ? sourcePath : bookPath;
+    if (!await File(archivePath).exists()) {
+      throw Exception('مصدر الكتاب مفقود. يرجى إعادة استيراده.');
+    }
+    final bookCacheDir = Directory(AppStoragePaths.bookDirPath(title));
+    final metadataFile = File(AppStoragePaths.bookMetadataPath(title));
+    final pagesDir = Directory(AppStoragePaths.bookPagesDirPath(title));
 
     Future<WordDocument> _loadFromCache() async {
       final json =
@@ -233,8 +237,8 @@ class _ShamelaSearchViewState extends State<ShamelaSearchView> {
       doc.initLoadedPages();
 
       try {
-        if (await File(bookPath).exists()) {
-          doc.archive = await FileToArchive(bookPath);
+        if (await File(archivePath).exists()) {
+          doc.archive = await FileToArchive(archivePath);
         }
       } catch (_) {}
 
@@ -244,11 +248,15 @@ class _ShamelaSearchViewState extends State<ShamelaSearchView> {
 
     // 1. Try existing cache
     if (await bookCacheDir.exists() && await metadataFile.exists()) {
-      return _loadFromCache();
+      try {
+        return await _loadFromCache();
+      } catch (_) {
+        await AppStoragePaths.deleteRebuildableCache(title);
+      }
     }
 
     // 2. Cache missing → reprocess then load
-    await BookProcessingService().parseAndCacheForOpening(bookPath);
+    await BookProcessingService().parseAndCacheForOpening(archivePath);
     if (await metadataFile.exists()) {
       return _loadFromCache();
     }

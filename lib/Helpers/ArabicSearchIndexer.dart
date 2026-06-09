@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:golden_shamela/Helpers/DocxParser.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Models/indexing_progress.dart';
-import 'package:path/path.dart' as p;
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'ArabicSearchEngine.dart';
 import 'BooksMetadataDatabase.dart';
 
@@ -29,7 +29,7 @@ class ArabicSearchIndexer {
       }
 
       currentBookNum++;
-      String bookName = p.basenameWithoutExtension(bookPath);
+      String bookName = AppStoragePaths.displayTitleFromPath(bookPath);
       onProgress(IndexingProgress(
         message: 'Processing book: $bookName',
         totalBooks: totalBooks,

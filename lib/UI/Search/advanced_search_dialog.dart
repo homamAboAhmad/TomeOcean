@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as p;
 
 // Data model for a single search result from MeiliSearch
 class MeiliSearchHit {
@@ -308,7 +308,7 @@ class _AdvancedSearchDialogState extends State<AdvancedSearchDialog> {
               }
               final book = widget.indexedBooks[index - 2];
               final bookPath = book['book_path'] as String;
-              final bookTitle = p.basenameWithoutExtension(bookPath);
+              final bookTitle = AppStoragePaths.displayTitleFromPath(bookPath);
               return CheckboxListTile(
                 title: Text(bookTitle, style: normalStyle()),
                 value: _selectedBooks[bookPath] ?? false,

@@ -1,10 +1,11 @@
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../Models/BookCard.dart';
+import '../Models/BookMetadataOptions.dart';
 import '../Models/Author.dart';
 import '../Models/Section.dart';
+import '../Services/AppStoragePaths.dart';
 import 'StorageHelper.dart';
 
 /// High-performance SQLite database for books metadata
@@ -17,15 +18,14 @@ class BooksMetadataDatabase {
 
   Database? _database;
   bool _isInitialized = false;
-  static const int _version = 2;
+  static const int _version = 7;
 
   /// Initialize the database
   Future<void> initialize() async {
     if (_isInitialized && _database != null) return;
 
     try {
-      final appDocDir = await getApplicationDocumentsDirectory();
-      final dbPath = p.join(appDocDir.path, 'tome_ocean', 'books_metadata.db');
+      final dbPath = AppStoragePaths.booksMetadataDbPath;
       await Directory(p.dirname(dbPath)).create(recursive: true);
 
       _database = await openDatabase(
@@ -91,13 +91,38 @@ class BooksMetadataDatabase {
       CREATE TABLE IF NOT EXISTS books (
         id TEXT PRIMARY KEY,
         book_path TEXT NOT NULL,
+        book_id TEXT,
         book_name TEXT NOT NULL,
+        source_docx_path TEXT,
+        source_hash TEXT,
+        index_state TEXT DEFAULT 'pending',
+        index_version INTEGER DEFAULT 0,
         author_id TEXT,
         section_id TEXT,
         description TEXT DEFAULT '',
+        book_type TEXT,
+        matches_printed INTEGER NOT NULL DEFAULT 0,
+        publisher TEXT DEFAULT '',
+        edition TEXT DEFAULT '',
+        page_count TEXT DEFAULT '',
+        book_card_notes TEXT DEFAULT '',
         created_at INTEGER NOT NULL,
         FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL,
         FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE SET NULL
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS favorite_books (
+        book_path TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS recent_books (
+        book_path TEXT PRIMARY KEY,
+        opened_at INTEGER NOT NULL
       );
     ''');
 
@@ -140,7 +165,13 @@ class BooksMetadataDatabase {
   Future<void> _ensureTablesExist(Database db) async {
     try {
       // Check each table individually to avoid IN clause issues with sqflite_common_ffi
-      final requiredTables = ['authors', 'sections', 'books'];
+      final requiredTables = [
+        'authors',
+        'sections',
+        'books',
+        'favorite_books',
+        'recent_books',
+      ];
       final existingTables = <String>{};
 
       for (final tableName in requiredTables) {
@@ -171,6 +202,8 @@ class BooksMetadataDatabase {
       } else {
         print("BooksMetadataDatabase: All required tables exist");
       }
+
+      await _ensureBookStorageColumns(db);
     } catch (e, stackTrace) {
       print("BooksMetadataDatabase: Error ensuring tables exist: $e");
       print("Stack trace: $stackTrace");
@@ -224,6 +257,87 @@ class BooksMetadataDatabase {
         // Continue even if migration fails (column might already exist)
       }
     }
+
+    if (oldVersion < 3) {
+      await _ensureBookStorageColumns(db);
+    }
+
+    if (oldVersion < 4) {
+      await _ensureBookStorageColumns(db);
+      await _ensureLibraryStateTables(db);
+    }
+
+    if (oldVersion < 5) {
+      await db.update(
+        'books',
+        {'book_type': 'transcription'},
+        where: 'book_type = ?',
+        whereArgs: ['definition'],
+      );
+    }
+
+    if (oldVersion < 6) {
+      await db.update(
+        'books',
+        {'book_type': 'book'},
+        where: 'book_type IS NULL OR book_type = ?',
+        whereArgs: [''],
+      );
+    }
+
+    if (oldVersion < 7) {
+      await db.update(
+        'books',
+        {'matches_printed': 0},
+        where: 'matches_printed IS NULL',
+      );
+    }
+  }
+
+  Future<void> _ensureBookStorageColumns(Database db) async {
+    final tableInfo = await db.rawQuery("PRAGMA table_info(books)");
+    final columns = tableInfo.map((column) => column['name']).toSet();
+
+    final migrations = <String, String>{
+      'book_id': 'ALTER TABLE books ADD COLUMN book_id TEXT',
+      'source_docx_path': 'ALTER TABLE books ADD COLUMN source_docx_path TEXT',
+      'source_hash': 'ALTER TABLE books ADD COLUMN source_hash TEXT',
+      'index_state':
+          "ALTER TABLE books ADD COLUMN index_state TEXT DEFAULT 'pending'",
+      'index_version': 'ALTER TABLE books ADD COLUMN index_version INTEGER DEFAULT 0',
+      'book_type': 'ALTER TABLE books ADD COLUMN book_type TEXT',
+      'matches_printed': 'ALTER TABLE books ADD COLUMN matches_printed INTEGER',
+      'publisher': "ALTER TABLE books ADD COLUMN publisher TEXT DEFAULT ''",
+      'edition': "ALTER TABLE books ADD COLUMN edition TEXT DEFAULT ''",
+      'page_count': "ALTER TABLE books ADD COLUMN page_count TEXT DEFAULT ''",
+      'book_card_notes':
+          "ALTER TABLE books ADD COLUMN book_card_notes TEXT DEFAULT ''",
+    };
+
+    for (final entry in migrations.entries) {
+      if (columns.contains(entry.key)) continue;
+      try {
+        await db.execute(entry.value);
+      } catch (e) {
+        print("BooksMetadataDatabase: Could not add ${entry.key}: $e");
+      }
+    }
+  }
+
+  Future<void> _ensureLibraryStateTables(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS favorite_books (
+        book_path TEXT PRIMARY KEY,
+        created_at INTEGER NOT NULL
+      );
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS recent_books (
+        book_path TEXT PRIMARY KEY,
+        opened_at INTEGER NOT NULL
+      );
+    ''');
   }
 
   // ==================== Authors ====================
@@ -469,13 +583,7 @@ class BooksMetadataDatabase {
     );
     if (results.isEmpty) return null;
     final row = results.first;
-    return BookCard(
-      id: row['id'] as String,
-      title: row['book_name'] as String,
-      authorId: row['author_id'] as String? ?? '',
-      sectionId: row['section_id'] as String? ?? '',
-      description: row['description'] as String? ?? '',
-    );
+    return BookCard.fromDatabaseRow(row);
   }
 
   /// Get book by book_path
@@ -489,13 +597,7 @@ class BooksMetadataDatabase {
     );
     if (results.isEmpty) return null;
     final row = results.first;
-    return BookCard(
-      id: row['id'] as String,
-      title: row['book_name'] as String,
-      authorId: row['author_id'] as String? ?? '',
-      sectionId: row['section_id'] as String? ?? '',
-      description: row['description'] as String? ?? '',
-    );
+    return BookCard.fromDatabaseRow(row);
   }
 
   /// Get book by book_name (title)
@@ -513,13 +615,7 @@ class BooksMetadataDatabase {
 
       if (results.isEmpty) return null;
       final row = results.first;
-      return BookCard(
-        id: row['id'] as String,
-        title: row['book_name'] as String,
-        authorId: row['author_id'] as String? ?? '',
-        sectionId: row['section_id'] as String? ?? '',
-        description: row['description'] as String? ?? '',
-      );
+      return BookCard.fromDatabaseRow(row);
     } catch (e, stackTrace) {
       print("BooksMetadataDatabase: Error in getBookByName: $e");
       print("Stack trace: $stackTrace");
@@ -539,13 +635,7 @@ class BooksMetadataDatabase {
     );
     return results
         .map(
-          (row) => BookCard(
-            id: row['id'] as String,
-            title: row['book_name'] as String,
-            authorId: row['author_id'] as String? ?? '',
-            sectionId: row['section_id'] as String? ?? '',
-            description: row['description'] as String? ?? '',
-          ),
+          (row) => BookCard.fromDatabaseRow(row),
         )
         .toList();
   }
@@ -591,13 +681,7 @@ class BooksMetadataDatabase {
     final results = await db.rawQuery(query, args);
     return results
         .map(
-          (row) => BookCard(
-            id: row['id'] as String,
-            title: row['book_name'] as String,
-            authorId: row['author_id'] as String? ?? '',
-            sectionId: row['section_id'] as String? ?? '',
-            description: row['description'] as String? ?? '',
-          ),
+          (row) => BookCard.fromDatabaseRow(row),
         )
         .toList();
   }
@@ -655,11 +739,22 @@ class BooksMetadataDatabase {
     await db.insert('books', {
       'id': book.id,
       'book_path': bookPath,
+      'book_id': AppStoragePaths.bookIdFromPath(bookPath),
       'book_name': book.title,
+      'source_docx_path': bookPath,
+      'source_hash': await _sourceFingerprint(bookPath),
       'author_id': book.authorId.isNotEmpty ? book.authorId : null,
       'section_id': book.sectionId.isNotEmpty ? book.sectionId : null,
       'description': book.description,
+      'book_type': BookMetadataOptions.normalizeType(book.bookType),
+      'matches_printed': _boolToDb(book.matchesPrinted),
+      'publisher': book.publisher,
+      'edition': book.edition,
+      'page_count': book.pageCount,
+      'book_card_notes': book.bookCardNotes,
       'created_at': DateTime.now().millisecondsSinceEpoch,
+      'index_state': 'indexed',
+      'index_version': 1,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
@@ -676,11 +771,22 @@ class BooksMetadataDatabase {
       batch.insert('books', {
         'id': book.id,
         'book_path': bookPath,
+        'book_id': AppStoragePaths.bookIdFromPath(bookPath),
         'book_name': book.title,
+        'source_docx_path': bookPath,
+        'source_hash': await _sourceFingerprint(bookPath),
         'author_id': book.authorId.isNotEmpty ? book.authorId : null,
         'section_id': book.sectionId.isNotEmpty ? book.sectionId : null,
         'description': book.description,
+        'book_type': BookMetadataOptions.normalizeType(book.bookType),
+        'matches_printed': _boolToDb(book.matchesPrinted),
+        'publisher': book.publisher,
+        'edition': book.edition,
+        'page_count': book.pageCount,
+        'book_card_notes': book.bookCardNotes,
         'created_at': now,
+        'index_state': 'indexed',
+        'index_version': 1,
       }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
 
@@ -768,6 +874,69 @@ class BooksMetadataDatabase {
     return mapping;
   }
 
+  Future<void> setFavoriteBook(String bookPath, bool isFavorite) async {
+    final db = await database;
+    if (!isFavorite) {
+      await db.delete(
+        'favorite_books',
+        where: 'book_path = ?',
+        whereArgs: [bookPath],
+      );
+      return;
+    }
+    await db.insert('favorite_books', {
+      'book_path': bookPath,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<Set<String>> getFavoriteBookPaths() async {
+    final db = await database;
+    final rows = await db.query('favorite_books', orderBy: 'created_at DESC');
+    return rows.map((row) => row['book_path'] as String).toSet();
+  }
+
+  Future<void> recordRecentBook(String bookPath) async {
+    final db = await database;
+    await db.insert('recent_books', {
+      'book_path': bookPath,
+      'opened_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
+
+    final rows = await db.query(
+      'recent_books',
+      columns: ['book_path'],
+      orderBy: 'opened_at DESC',
+      limit: 1000,
+    );
+    final stale = rows.skip(50).map((row) => row['book_path'] as String);
+    for (final path in stale) {
+      await db.delete('recent_books', where: 'book_path = ?', whereArgs: [path]);
+    }
+  }
+
+  Future<List<String>> getRecentBookPaths() async {
+    final db = await database;
+    final rows = await db.query(
+      'recent_books',
+      columns: ['book_path'],
+      orderBy: 'opened_at DESC',
+      limit: 50,
+    );
+    return rows.map((row) => row['book_path'] as String).toList();
+  }
+
+  Future<void> removeRecentBook(String bookPath) async {
+    final db = await database;
+    await db.delete(
+      'recent_books',
+      where: 'book_path = ?',
+      whereArgs: [bookPath],
+    );
+  }
+
+  int _boolToDb(bool value) => value ? 1 : 0;
+
   /// Migrate data from SharedPreferences to SQLite
   /// This should be called once on first app launch after update
   Future<bool> migrateFromSharedPreferences() async {
@@ -847,8 +1016,7 @@ class BooksMetadataDatabase {
             // Try to find book_path by matching book_name
             String? bookPath = bookPaths[book.title];
             if (bookPath == null) {
-              // If not found, create a placeholder path (will be updated when book is indexed)
-              bookPath = '${book.title}.docx';
+              bookPath = AppStoragePaths.bookSourcePath(book.title);
             }
             booksWithPaths.add({'book': book, 'book_path': bookPath});
           }
@@ -929,12 +1097,7 @@ class BooksMetadataDatabase {
   ) async {
     try {
       // Try to access ArabicSearchEngine's books_metadata table
-      final appDocDir = await getApplicationDocumentsDirectory();
-      final searchDbPath = p.join(
-        appDocDir.path,
-        'tome_ocean',
-        'arabic_search.db',
-      );
+      final searchDbPath = AppStoragePaths.arabicSearchDbPath;
 
       if (!await File(searchDbPath).exists()) {
         return {};
@@ -970,5 +1133,12 @@ class BooksMetadataDatabase {
       _database = null;
       _isInitialized = false;
     }
+  }
+
+  Future<String?> _sourceFingerprint(String bookPath) async {
+    final file = File(bookPath);
+    if (!await file.exists()) return null;
+    final stat = await file.stat();
+    return '${stat.size}:${stat.modified.millisecondsSinceEpoch}';
   }
 }

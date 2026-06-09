@@ -5,18 +5,17 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 
 class ArabicMorphologicalAnalyzer {
   // ... existing fields ...
 
   /// Helper to get the canonical path (for main thread use)
   static Future<String> getDatabasePath() async {
-      final appDocDir = await getApplicationDocumentsDirectory();
-      final dbDir = Directory(p.join(appDocDir.path, 'tome_ocean', 'roots_db'));
+      final dbDir = Directory(AppStoragePaths.rootsDbPath);
       return p.join(dbDir.path, 'arabic_roots_database.db');
   }
   static Database? _rootsDatabase;
@@ -110,8 +109,7 @@ class ArabicMorphologicalAnalyzer {
         dbPath = _manualDbPath!;
       } else {
          // Main thread path: Use path_provider and verify asset
-        final appDocDir = await getApplicationDocumentsDirectory();
-        final dbDir = Directory(p.join(appDocDir.path, 'tome_ocean', 'roots_db'));
+        final dbDir = Directory(AppStoragePaths.rootsDbPath);
         await dbDir.create(recursive: true);
         
         dbPath = p.join(dbDir.path, 'arabic_roots_database.db');

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
-import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Models/Author.dart';
+import 'package:golden_shamela/Models/BookCard.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_book_item.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_books_table.dart';
 import 'package:path/path.dart' as p;
 
 /// Widget that displays a list of books with search and selection capabilities.
@@ -129,6 +131,11 @@ class _BooksListPanelState extends State<BooksListPanel> {
   Widget build(BuildContext context) {
     final searchQuery = widget.searchController.text.toLowerCase();
     final filteredBooks = _filterBooks(searchQuery);
+    final tableItems = _toLibraryItems(filteredBooks);
+    final selectedBookPaths = widget.selectedBooks.entries
+        .where((entry) => entry.value)
+        .map((entry) => entry.key)
+        .toSet();
 
     return GestureDetector(
       onTap: () => _booksFocusNode.requestFocus(),
@@ -210,91 +217,17 @@ class _BooksListPanelState extends State<BooksListPanel> {
                         style: normalStyle(color: Colors.grey),
                       ),
                     )
-                  : ListView.separated(
-                      itemCount: filteredBooks.length,
-                      separatorBuilder: (context, index) =>
-                          Divider(height: 1, color: Colors.grey.shade200),
-                      itemBuilder: (context, index) {
-                        final book = filteredBooks[index];
-                        final bookPath = book['book_path'] as String;
-                        final bookName = p.basenameWithoutExtension(bookPath);
-                        final isSelected =
-                            widget.selectedBooks[bookPath] ?? false;
-                        final isTemporarilySelected =
-                            _temporarilySelectedBookPaths.contains(bookPath);
-
-                        final authorInfo = _getAuthorInfo(bookPath, book);
-                        final authorName = authorInfo['name']!;
-                        final deathYear = authorInfo['deathYear']!;
-
-                        return Material(
-                          color: isSelected
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              setState(() {
-                                if (isTemporarilySelected) {
-                                  _temporarilySelectedBookPaths.remove(
-                                    bookPath,
-                                  );
-                                } else {
-                                  _temporarilySelectedBookPaths.add(bookPath);
-                                }
-                              });
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8.0,
-                                horizontal: 16.0,
-                              ),
-                              child: Row(
-                                children: [
-                                  Checkbox(
-                                    value: isTemporarilySelected,
-                                    onChanged: (val) {
-                                      setState(() {
-                                        if (val == true) {
-                                          _temporarilySelectedBookPaths.add(
-                                            bookPath,
-                                          );
-                                        } else {
-                                          _temporarilySelectedBookPaths.remove(
-                                            bookPath,
-                                          );
-                                        }
-                                      });
-                                    },
-                                  ),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          bookName,
-                                          style: normalStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        if (authorName.isNotEmpty)
-                                          Text(
-                                            '$authorName ${deathYear.isNotEmpty ? "($deathYear)" : ""}',
-                                            style: normalStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey.shade600,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+                  : LibraryBooksTable(
+                      books: tableItems,
+                      selectedPath: _temporarilySelectedBookPaths.isEmpty
+                          ? null
+                          : _temporarilySelectedBookPaths.first,
+                      favoritePaths: const {},
+                      checkedPaths: _temporarilySelectedBookPaths,
+                      highlightedPaths: selectedBookPaths,
+                      showCheckboxes: true,
+                      onSelected: (_) {},
+                      onCheckedChanged: _setTemporaryBookSelection,
                     ),
             ),
 
@@ -351,6 +284,32 @@ class _BooksListPanelState extends State<BooksListPanel> {
         ),
       ),
     );
+  }
+
+  List<LibraryBookItem> _toLibraryItems(List<Map<String, dynamic>> books) {
+    return books.map((book) {
+      final bookPath = book['book_path'] as String;
+      final authorInfo = _getAuthorInfo(bookPath, book);
+      return LibraryBookItem(
+        bookPath: bookPath,
+        book: BookCard(
+          title: p.basenameWithoutExtension(bookPath),
+          authorId: book['authorId'] as String? ?? '',
+        ),
+        authorName: authorInfo['name'] ?? '',
+        authorDeathYear: authorInfo['deathYear'] ?? '',
+      );
+    }).toList();
+  }
+
+  void _setTemporaryBookSelection(LibraryBookItem item, bool selected) {
+    setState(() {
+      if (selected) {
+        _temporarilySelectedBookPaths.add(item.bookPath);
+      } else {
+        _temporarilySelectedBookPaths.remove(item.bookPath);
+      }
+    });
   }
 
   /// Handles keyboard events for the books list.

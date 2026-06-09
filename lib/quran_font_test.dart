@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/FontsLoaderController.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:golden_shamela/core/app_routes.dart';
 
@@ -42,8 +42,7 @@ class _QuranFontTestScreenState extends State<QuranFontTestScreen> {
 
   Future<void> _loadFonts() async {
     try {
-      final docDir = await getApplicationDocumentsDirectory();
-      final fontsDir = Directory('${docDir.path}/tome_ocean/_shared_fonts');
+      final fontsDir = Directory(AppStoragePaths.sharedFontsPath);
       if (!await fontsDir.exists()) {
         setState(() => status = "Fonts directory not found.");
         return;

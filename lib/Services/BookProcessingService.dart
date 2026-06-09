@@ -11,16 +11,15 @@ import 'package:path_provider/path_provider.dart';
 import 'package:archive/archive.dart';
 
 import 'package:golden_shamela/Helpers/ExeRunner.dart';
-import 'package:golden_shamela/Helpers/FileHelper.dart';
 import 'package:golden_shamela/Helpers/ShamelaSearchIndexer.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Models/BookCard.dart';
 import 'package:golden_shamela/Services/EmbeddedFontExtractor.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/FontsLoaderController.dart';
 import 'package:golden_shamela/wordToHTML/AddDocData.dart';
-import 'package:golden_shamela/Controllers/PathController.dart';
 import 'package:golden_shamela/Utils/StatusTranslator.dart';
 
 enum ProcessingState {
@@ -300,6 +299,7 @@ class BookProcessingService {
     BookCard? bookCard,
   }) async {
     String tempFilePath = '';
+    Directory? processingSessionDir;
 
     void emit(ProcessingState state, double progress, String message) {
       if (controller.isClosed) return;
@@ -369,10 +369,16 @@ class BookProcessingService {
 
     emit(ProcessingState.rendering, 0.1, "تحديث تخطيط الصفحات (Word)...");
 
-    String fileName = p.basename(sourceFilePath);
-    String fileNameNoExt = p.basenameWithoutExtension(sourceFilePath);
-    tempFilePath = p.join(PROCESSING_TEMP_PATH, "_temp_$fileNameNoExt.docx");
-    String finalBookPath = p.join(BOOKS_FOLDER_PATH, fileName);
+    final String fileName = p.basename(sourceFilePath);
+    final String fileNameNoExt = p.basenameWithoutExtension(sourceFilePath);
+    final String bookId = AppStoragePaths.bookIdFromTitle(fileNameNoExt);
+    final String sourceDocxPath = AppStoragePaths.bookSourcePath(bookId);
+
+    await AppStoragePaths.ensureBaseDirectories();
+    processingSessionDir = await AppStoragePaths.createProcessingSessionDir(bookId);
+    final String sessionPath = processingSessionDir.path;
+    tempFilePath = p.join(sessionPath, "_temp_$fileNameNoExt.docx");
+    final String finalBookPath = p.join(sessionPath, fileName);
 
     try {
       // تنظيف أي ملف مؤقت متبقٍ قبل البدء لتجنب PathExistsException
@@ -383,7 +389,7 @@ class BookProcessingService {
       try {
         // المرحلة 1: Word Repaginate فقط
         await ExeRunner().runExe(
-          PROCESSING_TEMP_PATH,
+          sessionPath,
           sourceFilePath,
           (output) {
             if (task.isCancelled) return;
@@ -459,7 +465,7 @@ class BookProcessingService {
       final xmlErrorLines = <String>[];
       try {
         await ExeRunner().runExe(
-          BOOKS_FOLDER_PATH, // الناتج يجب أن يذهب لمجلد الكتب النهائي
+          sessionPath,
           tempFilePath, // المدخل هو الملف المؤقت من مرحلة الوورد
           (output) {
             if (task.isCancelled) return;
@@ -498,53 +504,45 @@ class BookProcessingService {
       // 3. إصلاح الصور + تحليل (على الملف المؤقت)
       emit(ProcessingState.fixingImages, 0.7, "فحص الصور...");
 
-      // Copy finalBookPath back to tempFilePath to ensure we have the XML markers
-      // This allows us to fix images and parse without modifying the persistent library file
-      try {
-        await _deleteIfExists(tempFilePath);
-        await _copyWithRetry(finalBookPath, tempFilePath);
-      } catch (e) {
-        debugPrint("Failed to copy final book to temp: $e");
-        emit(ProcessingState.failed, 0.0, "فشل في إعداد الملف المؤقت: $e");
+      if (!File(finalBookPath).existsSync()) {
+        emit(ProcessingState.failed, 0.0, "فشل في إنشاء نسخة XML النهائية");
         return;
       }
 
-      // تشغيل الإصلاح على الملف المؤقت
-      await _runImageFixer(tempFilePath);
+      await _runImageFixer(finalBookPath);
       emit(ProcessingState.fixingImages, 0.75, "تم فحص الصور");
 
       if (checkCancelled()) {
-        try {
-          if (File(tempFilePath).existsSync())
-            await File(tempFilePath).delete();
-        } catch (_) {}
         return;
       }
 
-      // 4. تحليل وكاش (من الملف المؤقت)
+      // 4. تحليل وكاش (من نسخة جلسة تحتوي markers وإصلاح الصور)
       emit(ProcessingState.parsing, 0.75, "تحليل المحتوى...");
 
       try {
         // نمرر دالة emit بدلاً من Controller لتحديث task أيضاً
         // ونستخدم الملف المؤقت كمصدر، لكن العنوان الأصلي للكاش
         await _parseAndCacheBookInternal(
-          tempFilePath,
+          finalBookPath,
           (s, p, m) => emit(s, p, m),
           isCancelled: () => task.isCancelled,
-          titleOverride:
-              fileNameNoExt, // مهم: الحفظ باسم الملف الأصلي (بدون لاحقة)
+          titleOverride: bookId,
         );
 
-        // الآن يمكننا حذف الملف المؤقت
-        try {
-          await _deleteIfExists(tempFilePath);
-        } catch (_) {}
+        if (checkCancelled()) {
+          final bookCacheDir = Directory(AppStoragePaths.bookDirPath(bookId));
+          if (await bookCacheDir.exists()) {
+            await bookCacheDir.delete(recursive: true);
+          }
+          return;
+        }
+
+        await Directory(AppStoragePaths.bookDirPath(bookId)).create(recursive: true);
+        await _copyWithRetry(finalBookPath, sourceDocxPath);
+        await _touchCacheMetadata(bookId);
 
         if (checkCancelled()) {
-          // Clean up cache on cancel
-          final bookCacheDir = Directory(
-            '${p.dirname(finalBookPath)}/tome_ocean/${p.basenameWithoutExtension(finalBookPath)}',
-          );
+          final bookCacheDir = Directory(AppStoragePaths.bookDirPath(bookId));
           if (await bookCacheDir.exists()) {
             await bookCacheDir.delete(recursive: true);
           }
@@ -554,10 +552,6 @@ class BookProcessingService {
         emit(ProcessingState.caching, 0.95, "تم الحفظ في الذاكرة");
       } catch (e) {
         debugPrint("Error parsing book: $e");
-        // محاولة تنظيف المؤقت عند الخطأ
-        try {
-          await _deleteIfExists(tempFilePath);
-        } catch (_) {}
 
         emit(ProcessingState.failed, 0.0, "فشل التحليل: $e");
         return;
@@ -569,15 +563,9 @@ class BookProcessingService {
       emit(ProcessingState.indexing, 0.95, "جاري تجهيز صفحات الفهرس...");
 
       // تحميل الصفحات من الكاش
-      // المسار يجب أن يطابق مسار الحفظ في _parseAndCacheBookInternal
-      // الذي يستخدم getApplicationDocumentsDirectory() وليس مجلد الكتب
       List<WordPage> pages = [];
       try {
-        final appDocsDir = await getApplicationDocumentsDirectory();
-        final bookCacheDir = Directory(
-          '${appDocsDir.path}/tome_ocean/$fileNameNoExt',
-        );
-        final pagesDir = Directory('${bookCacheDir.path}/pages');
+        final pagesDir = Directory(AppStoragePaths.bookPagesDirPath(bookId));
         if (await pagesDir.exists()) {
           final pageFiles = await pagesDir.list().toList();
           pageFiles.sort((a, b) {
@@ -611,7 +599,7 @@ class BookProcessingService {
       try {
         final indexer = ShamelaSearchIndexer();
         final indexResult = await indexer.indexBookFromPages(
-          finalBookPath,
+          sourceDocxPath,
           pages,
           onProgress: (progress, message) {
             if (!task.isCancelled) {
@@ -646,7 +634,7 @@ class BookProcessingService {
         emit(ProcessingState.completed, 0.95, "حفظ بيانات الكتاب...");
         try {
           final db = BooksMetadataDatabase();
-          await db.saveBook(bookCard, finalBookPath);
+          await db.saveBook(bookCard, sourceDocxPath);
           debugPrint("Book Metadata Saved: ${bookCard.title}");
         } catch (e) {
           debugPrint("Error saving book metadata: $e");
@@ -665,6 +653,14 @@ class BookProcessingService {
       } catch (e) {
         debugPrint("Failed to delete temp file in finally: $e");
       }
+      try {
+        if (processingSessionDir != null &&
+            await processingSessionDir.exists()) {
+          await processingSessionDir.delete(recursive: true);
+        }
+      } catch (e) {
+        debugPrint("Failed to delete processing session dir: $e");
+      }
     }
   }
 
@@ -673,11 +669,31 @@ class BookProcessingService {
     String filePath, {
     Function(ProcessingState, double, String)? emit,
   }) async {
-    // 1. إصلاح الصور
-    await _runImageFixer(filePath);
+    final bookId = AppStoragePaths.bookIdFromPath(filePath);
+    final sourceDocxPath = AppStoragePaths.bookSourcePath(bookId);
+    Directory? sessionDir;
 
-    // 2. تحليل وكاش
-    await _parseAndCacheBookInternal(filePath, emit);
+    try {
+      await AppStoragePaths.ensureBaseDirectories();
+      sessionDir = await AppStoragePaths.createProcessingSessionDir(bookId);
+      final workingPath = p.join(sessionDir.path, '$bookId.docx');
+      await _copyWithRetry(filePath, workingPath);
+
+      await _runImageFixer(workingPath);
+      await _parseAndCacheBookInternal(
+        workingPath,
+        emit,
+        titleOverride: bookId,
+      );
+
+      await Directory(AppStoragePaths.bookDirPath(bookId)).create(recursive: true);
+      await _copyWithRetry(workingPath, sourceDocxPath);
+      await _touchCacheMetadata(bookId);
+    } finally {
+      if (sessionDir != null && await sessionDir.exists()) {
+        await sessionDir.delete(recursive: true);
+      }
+    }
   }
 
   /// تشغيل أداة إصلاح الصور
@@ -750,12 +766,9 @@ class BookProcessingService {
     bool Function()? isCancelled,
     String? titleOverride, // Optional override for cache key
   }) async {
-    final title = titleOverride ?? getFileName(filePath);
-
-    final appDocsDir = await getApplicationDocumentsDirectory();
-    final tomeOceanDir = Directory('${appDocsDir.path}/tome_ocean');
-    final bookCacheDir = Directory('${tomeOceanDir.path}/$title');
-    final sharedFontsDirPath = '${tomeOceanDir.path}/_shared_fonts';
+    final title = titleOverride ?? AppStoragePaths.bookIdFromPath(filePath);
+    final bookCacheDir = Directory(AppStoragePaths.bookDirPath(title));
+    final sharedFontsDirPath = AppStoragePaths.sharedFontsPath;
 
     // التحقق من الإلغاء
     if (isCancelled != null && isCancelled()) return;
@@ -951,6 +964,13 @@ class BookProcessingService {
         await Future.delayed(const Duration(milliseconds: 150));
         await _deleteIfExists(destination);
       }
+    }
+  }
+
+  Future<void> _touchCacheMetadata(String bookId) async {
+    final metadataFile = File(AppStoragePaths.bookMetadataPath(bookId));
+    if (await metadataFile.exists()) {
+      await metadataFile.setLastModified(DateTime.now());
     }
   }
 

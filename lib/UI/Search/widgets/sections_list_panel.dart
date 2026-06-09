@@ -4,6 +4,7 @@ import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Models/Section.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:path/path.dart' as p;
 
 /// Widget that displays sections in a split view with their books.
@@ -89,10 +90,10 @@ class _SectionsListPanelState extends State<SectionsListPanel> {
       
       return widget.allIndexedBooks.where((book) {
         final bookPath = book['book_path'] as String;
-        final bookBasename = p.basename(bookPath);
+        final normalizedBookPath = p.normalize(bookPath).toLowerCase();
         
         return bookPaths.any((dbPath) {
-          return dbPath == bookPath || p.basename(dbPath) == bookBasename;
+          return p.normalize(dbPath).toLowerCase() == normalizedBookPath;
         });
       }).toList();
     } catch (e) {
@@ -327,7 +328,8 @@ class _SectionsListPanelState extends State<SectionsListPanel> {
                               itemBuilder: (context, index) {
                                 final book = booksToShow[index];
                                 final bookPath = book['book_path'] as String;
-                                final bookName = p.basenameWithoutExtension(bookPath);
+                                final bookName =
+                                    AppStoragePaths.displayTitleFromPath(bookPath);
                                 final isSelected = widget.selectedBooks[bookPath] ?? false;
                                 final isTemporarilySelected = _temporarilySelectedBookPaths.contains(bookPath);
                                 

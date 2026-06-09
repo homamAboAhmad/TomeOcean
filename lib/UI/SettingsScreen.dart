@@ -1,9 +1,7 @@
-import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
-import 'package:golden_shamela/core/preferences_helper.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -25,12 +23,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadSettings() async {
     setState(() => _isLoading = true);
     try {
-      final savedPath = PreferencesHelper.prefs.getString(
-        'books_directory_path',
-      );
-      if (savedPath != null && await Directory(savedPath).exists()) {
-        setState(() => _booksDirectoryPath = savedPath);
-      }
+      await AppStoragePaths.ensureBaseDirectories();
+      setState(() => _booksDirectoryPath = AppStoragePaths.booksStorePath);
     } catch (e) {
       debugPrint("Error loading settings: $e");
     } finally {
@@ -39,41 +33,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _selectBooksDirectory() async {
-    try {
-      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
-      if (selectedDirectory != null) {
-        await PreferencesHelper.prefs.setString(
-          'books_directory_path',
-          selectedDirectory,
-        );
-        setState(() => _booksDirectoryPath = selectedDirectory);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'تم حفظ مسار المجلد: $selectedDirectory',
-                style: normalStyle(color: Colors.white),
-              ),
-              backgroundColor: primaryColor,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'حدث خطأ أثناء اختيار المجلد: $e',
-              style: normalStyle(color: Colors.white),
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'مجلد الكتب ثابت بجانب ملف تشغيل التطبيق.',
+          style: normalStyle(color: Colors.white),
+        ),
+        backgroundColor: primaryColor,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   @override
@@ -166,7 +135,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'المسار الذي يحتوي على ملفات الكتب (.docx)',
+                        'المسار الداخلي الدائم للكتب والكاش',
                         style: smallStyle(
                           color: Colors.grey[600]!,
                           fontSize: 12,
@@ -231,7 +200,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'تغيير المجلد',
+                      'المسار ثابت بجانب التطبيق',
                       style: normalStyle(color: secondaryColor, fontSize: 14),
                     ),
                   ],

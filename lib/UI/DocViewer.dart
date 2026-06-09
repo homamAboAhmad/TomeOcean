@@ -12,7 +12,7 @@ import 'package:golden_shamela/core/app_state.dart';
 import '../Dialogs/BookCard/book_card_dialog.dart';
 import '../Helpers/BookCardStorage.dart';
 import '../Helpers/BookFilesHelper.dart';
-import '../Controllers/PathController.dart';
+import '../Services/AppStoragePaths.dart';
 import '../Styles/AppResourses.dart';
 import '../Utils/CopyPasteText.dart';
 import '../Utils/FileToArchive.dart';
@@ -326,7 +326,7 @@ class _DocViewerState extends State<DocViewer>
       }
 
       // If bookPath not found, use title as placeholder (will be updated when book is indexed)
-      bookPath ??= '${BOOKS_FOLDER_PATH}\\${widget.wordDocument.title}.docx';
+      bookPath ??= AppStoragePaths.bookSourcePath(widget.wordDocument.title);
 
       await bks.editBookCard(updated, bookPath);
     }

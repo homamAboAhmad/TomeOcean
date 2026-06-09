@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path_provider/path_provider.dart';
 
@@ -52,7 +51,7 @@ class ExeRunner {
 
   // ⚠️ للتطوير: true = تشغيل Python مباشرة، false = تشغيل exe
   // عند الانتهاء من التطوير، غيّرها إلى false وأعد بناء الـ exe
-  static const bool USE_PYTHON = kDebugMode;
+  static const bool USE_PYTHON = false;
   static const String PYTHON_SCRIPT =
       r'd:\ImportantProjects\golden_shamela\scripts\pageRender.py';
 
@@ -139,6 +138,11 @@ class ExeRunner {
         '--stage=$stage',
       ];
     }
+
+    final runnerKind = USE_PYTHON ? 'python' : 'exe';
+    final runnerPath = USE_PYTHON ? PYTHON_SCRIPT : executablePath;
+    print('pageRender runner: $runnerKind');
+    print('pageRender path: $runnerPath');
 
     try {
       process = await Process.start(

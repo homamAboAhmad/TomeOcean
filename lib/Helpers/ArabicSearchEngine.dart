@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import '../Helpers/TextProcessor.dart';
 import 'BooksMetadataDatabase.dart';
 
@@ -21,8 +21,7 @@ class ArabicSearchEngine {
     if (_isInitialized && _database != null) return;
 
     try {
-      final appDocDir = await getApplicationDocumentsDirectory();
-      final dbPath = p.join(appDocDir.path, 'tome_ocean', 'arabic_search.db');
+      final dbPath = AppStoragePaths.arabicSearchDbPath;
       await Directory(p.dirname(dbPath)).create(recursive: true);
 
       _database = await openDatabase(

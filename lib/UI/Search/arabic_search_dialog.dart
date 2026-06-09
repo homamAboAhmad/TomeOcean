@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
-import 'package:path/path.dart' as p;
 import 'package:golden_shamela/Helpers/ArabicSearchEngine.dart';
 import 'package:golden_shamela/Helpers/AuthorStorage.dart';
 import 'package:golden_shamela/Helpers/SectionStorage.dart';
@@ -10,6 +9,7 @@ import 'package:golden_shamela/Helpers/BookCardStorage.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Models/Section.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 
 // Data model for a single search result
 class ArabicSearchHit {
@@ -429,7 +429,8 @@ class _ArabicSearchDialogState extends State<ArabicSearchDialog> {
                     }
                     final book = _filteredIndexedBooks[index - 2];
                     final bookPath = book['book_path'] as String;
-                    final bookTitle = p.basenameWithoutExtension(bookPath);
+                    final bookTitle =
+                        AppStoragePaths.displayTitleFromPath(bookPath);
                     return CheckboxListTile(
                       title: Text(bookTitle, style: normalStyle()),
                       value: _selectedBooks[bookPath] ?? false,

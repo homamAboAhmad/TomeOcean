@@ -4,6 +4,7 @@ import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:path/path.dart' as p;
 
 /// Widget that displays authors in a split view with their books.
@@ -93,10 +94,10 @@ class _AuthorsTablePanelState extends State<AuthorsTablePanel> {
       
       return widget.allIndexedBooks.where((book) {
         final bookPath = book['book_path'] as String;
-        final bookBasename = p.basename(bookPath);
+        final normalizedBookPath = p.normalize(bookPath).toLowerCase();
         
         return bookPaths.any((dbPath) {
-          return dbPath == bookPath || p.basename(dbPath) == bookBasename;
+          return p.normalize(dbPath).toLowerCase() == normalizedBookPath;
         });
       }).toList();
     } catch (e) {
@@ -349,7 +350,8 @@ class _AuthorsTablePanelState extends State<AuthorsTablePanel> {
                               itemBuilder: (context, index) {
                                 final book = booksToShow[index];
                                 final bookPath = book['book_path'] as String;
-                                final bookName = p.basenameWithoutExtension(bookPath);
+                                final bookName =
+                                    AppStoragePaths.displayTitleFromPath(bookPath);
                                 final isSelected = widget.selectedBooks[bookPath] ?? false;
                                 final isTemporarilySelected = _temporarilySelectedBookPaths.contains(bookPath);
                                 

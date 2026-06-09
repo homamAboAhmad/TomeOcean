@@ -30,10 +30,15 @@ class _BookCardDialogState extends State<BookCardDialog> {
   final _formKey = GlobalKey<FormState>();
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+  final _publisherCtrl = TextEditingController();
+  final _editionCtrl = TextEditingController();
+  final _pageCountCtrl = TextEditingController();
   final _controller = BookCardDialogController();
 
   String? _selectedSectionId;
   String? _selectedAuthorId;
+  String? _selectedBookType;
+  bool _matchesPrinted = false;
   bool _isEditing = false;
 
   List<Section> _sections = [];
@@ -63,12 +68,20 @@ class _BookCardDialogState extends State<BookCardDialog> {
   void _initControllers() {
     _titleCtrl.text = widget.book.title;
     _descCtrl.text = widget.book.description;
+    _publisherCtrl.text = widget.book.publisher;
+    _editionCtrl.text = widget.book.edition;
+    _pageCountCtrl.text = widget.book.pageCount;
+    _selectedBookType = widget.book.bookType.isEmpty ? null : widget.book.bookType;
+    _matchesPrinted = widget.book.matchesPrinted;
   }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _descCtrl.dispose();
+    _publisherCtrl.dispose();
+    _editionCtrl.dispose();
+    _pageCountCtrl.dispose();
     super.dispose();
   }
 
@@ -84,6 +97,11 @@ class _BookCardDialogState extends State<BookCardDialog> {
       sectionId: _selectedSectionId,
       authorId: _selectedAuthorId,
       description: _descCtrl.text,
+      bookType: _selectedBookType,
+      matchesPrinted: _matchesPrinted,
+      publisher: _publisherCtrl.text,
+      edition: _editionCtrl.text,
+      pageCount: _pageCountCtrl.text,
     );
     Navigator.of(context).pop(updated);
   }
@@ -93,6 +111,8 @@ class _BookCardDialogState extends State<BookCardDialog> {
       _initControllers();
       _selectedSectionId = widget.book.sectionId;
       _selectedAuthorId = widget.book.authorId;
+      _selectedBookType = widget.book.bookType.isEmpty ? null : widget.book.bookType;
+      _matchesPrinted = widget.book.matchesPrinted;
       _isEditing = false;
     });
   }
@@ -139,10 +159,15 @@ class _BookCardDialogState extends State<BookCardDialog> {
                   formKey: _formKey,
                   titleCtrl: _titleCtrl,
                   descCtrl: _descCtrl,
+                  publisherCtrl: _publisherCtrl,
+                  editionCtrl: _editionCtrl,
+                  pageCountCtrl: _pageCountCtrl,
                   sections: _sections,
                   authors: _authors,
                   selectedSectionId: _selectedSectionId,
                   selectedAuthorId: _selectedAuthorId,
+                  selectedBookType: _selectedBookType,
+                  matchesPrinted: _matchesPrinted,
                   onSectionChanged: (newId) {
                     setState(() {
                       _selectedSectionId = newId;
@@ -151,6 +176,16 @@ class _BookCardDialogState extends State<BookCardDialog> {
                   onAuthorChanged: (newId) {
                     setState(() {
                       _selectedAuthorId = newId;
+                    });
+                  },
+                  onBookTypeChanged: (newType) {
+                    setState(() {
+                      _selectedBookType = newType;
+                    });
+                  },
+                  onMatchesPrintedChanged: (value) {
+                    setState(() {
+                      _matchesPrinted = value;
                     });
                   },
                   onAddNewAuthor: _addNewAuthor,

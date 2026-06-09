@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 
 class MeiliSearchManager {
   static final MeiliSearchManager _instance = MeiliSearchManager._internal();
@@ -24,8 +24,7 @@ class MeiliSearchManager {
     _lastError = null; // Clear previous error
 
     String exePath = p.join(Directory.current.path, 'assets', 'exe', 'meilisearch.exe');
-    Directory appDocDir = await getApplicationDocumentsDirectory();
-    String dataPath = p.join(appDocDir.path, 'tome_ocean', 'meili_data');
+    String dataPath = AppStoragePaths.meiliDataPath;
     await Directory(dataPath).create(recursive: true);
 
     print("MeiliSearchManager: Attempting to start MeiliSearch...");

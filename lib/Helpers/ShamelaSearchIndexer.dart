@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:golden_shamela/Helpers/DocxParser.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Models/indexing_progress.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:path/path.dart' as p;
 import 'ShamelaSearchEngine.dart';
 
@@ -36,7 +37,7 @@ class ShamelaSearchIndexer {
       }
 
       checkedBooks++;
-      String bookName = p.basenameWithoutExtension(bookPath);
+      String bookName = AppStoragePaths.displayTitleFromPath(bookPath);
 
       onProgress(
         IndexingProgress(
@@ -90,7 +91,7 @@ class ShamelaSearchIndexer {
       }
 
       currentBookNum++;
-      String bookName = p.basenameWithoutExtension(bookPath);
+      String bookName = AppStoragePaths.displayTitleFromPath(bookPath);
       onProgress(
         IndexingProgress(
           message:
@@ -171,15 +172,14 @@ class ShamelaSearchIndexer {
 
   Future<void> deleteBook(String bookPath) async {
     await _engine.initialize();
-    // Note: ShamelaSearchEngine doesn't have deleteBook yet, but we can add it
-    // For now, re-indexing will replace the book
+    await _engine.deleteBook(bookPath);
   }
 
   /// فهرسة كتاب واحد بسرعة (للكتب الجديدة)
   Future<bool> indexSingleBook(String bookPath) async {
     await _engine.initialize();
 
-    String bookName = p.basenameWithoutExtension(bookPath);
+    String bookName = AppStoragePaths.displayTitleFromPath(bookPath);
     print("[Indexing] Start indexing: $bookName");
 
     try {
@@ -209,7 +209,7 @@ class ShamelaSearchIndexer {
   }) async {
     await _engine.initialize();
 
-    String bookName = p.basenameWithoutExtension(bookPath);
+    String bookName = AppStoragePaths.displayTitleFromPath(bookPath);
 
     try {
       if (pages.isEmpty) {

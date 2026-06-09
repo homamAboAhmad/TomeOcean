@@ -1,15 +1,15 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
-import 'package:golden_shamela/Helpers/FileHelper.dart';
+import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:golden_shamela/Utils/FileToArchive.dart';
 import 'package:golden_shamela/Utils/SnackBar.dart';
 import 'package:golden_shamela/core/app_state.dart';
 import 'package:golden_shamela/Services/BookProcessingService.dart'
     show BookProcessingService, CACHE_VERSION;
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/Services/EmbeddedFontExtractor.dart';
 import 'package:golden_shamela/FontsLoaderController.dart';
 
@@ -24,21 +24,28 @@ class HomePageBookManagement {
     if (filePath == null) return null;
 
     WordDocument wordDocument = tempDoc ?? WordDocument();
-    wordDocument.title = getFileName(filePath);
+    final bookId = AppStoragePaths.bookIdFromPath(filePath);
+    final storedBook = await BooksMetadataDatabase().getBookByPath(filePath);
+    final displayTitle = storedBook?.title.isNotEmpty == true
+        ? storedBook!.title
+        : AppStoragePaths.displayTitleFromPath(filePath);
+    final sourcePath = AppStoragePaths.bookSourcePath(bookId);
+    final archivePath = await File(sourcePath).exists() ? sourcePath : filePath;
+    if (!await File(archivePath).exists()) {
+      ShowSnackBar(context, "مصدر الكتاب مفقود. يرجى إعادة استيراده.");
+      return null;
+    }
+    wordDocument.title = displayTitle;
 
-    final appDocsDir = await getApplicationDocumentsDirectory();
-    final tomeOceanDir = Directory('${appDocsDir.path}/tome_ocean');
-    final bookCacheDir = Directory(
-      '${tomeOceanDir.path}/${wordDocument.title}',
-    );
-    final metadataFile = File('${bookCacheDir.path}/metadata.json');
-    final pagesDir = Directory('${bookCacheDir.path}/pages');
+    final bookCacheDir = Directory(AppStoragePaths.bookDirPath(bookId));
+    final metadataFile = File(AppStoragePaths.bookMetadataPath(bookId));
+    final pagesDir = Directory(AppStoragePaths.bookPagesDirPath(bookId));
 
     bool loadedFromCache = false;
 
     try {
       if (await bookCacheDir.exists()) {
-        final docxFile = File(filePath);
+        final docxFile = File(archivePath);
         final docxLastModified = await docxFile.lastModified();
         final cacheLastModified = await metadataFile.lastModified();
 
@@ -49,14 +56,15 @@ class HomePageBookManagement {
           final cachedVersion = jsonMap['_cacheVersion'] as int? ?? 0;
           if (cachedVersion < CACHE_VERSION) {
             debugPrint('Cache outdated (v$cachedVersion < v$CACHE_VERSION), re-parsing...');
-            await bookCacheDir.delete(recursive: true);
+            await AppStoragePaths.deleteRebuildableCache(bookId);
             loadedFromCache = false;
           } else {
             wordDocument = WordDocument.fromCacheJson(jsonMap);
+            wordDocument.title = displayTitle;
 
             // تحميل الـ Archive لتمكين قراءة ملفات التذييل/الترويسة
             final appState = AppState();
-            appState.docArchive = await FileToArchive(filePath);
+            appState.docArchive = await FileToArchive(archivePath);
             wordDocument.archive = appState.docArchive;
 
             wordDocument.pagesDirectory = pagesDir.path;
@@ -94,13 +102,14 @@ class HomePageBookManagement {
             await loadKnownSystemFontsForDocument(wordDocument.fontsList);
 
             loadedFromCache = true;
+            debugPrint('Opened book from cache: $bookId');
           }
         }
       }
     } catch (e) {
       ShowSnackBar(context, "Error loading from cache, re-parsing: $e");
       if (await bookCacheDir.exists()) {
-        await bookCacheDir.delete(recursive: true);
+        await AppStoragePaths.deleteRebuildableCache(bookId);
       }
       loadedFromCache = false;
     }
@@ -110,7 +119,7 @@ class HomePageBookManagement {
       try {
         ShowSnackBar(context, "Cache missing or outdated, parsing...");
 
-        await BookProcessingService().parseAndCacheForOpening(filePath);
+        await BookProcessingService().parseAndCacheForOpening(archivePath);
 
         // بعد الانتهاء، نحاول التحميل مرة أخرى من الكاش
         // نعيد استدعاء الدالة لتنفيذ منطق التحميل (Recursion)
@@ -123,7 +132,6 @@ class HomePageBookManagement {
 
     // No longer calling onBookAdded here as it causes double addition in HomePage
     // onBookAdded(wordDocument);
-    await Future.delayed(Duration(milliseconds: 1500), () {});
     return wordDocument;
   }
 

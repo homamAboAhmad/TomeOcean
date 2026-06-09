@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:archive/archive.dart';
 import 'package:xml/xml.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:crypto/crypto.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import '../Utils/ArchiveToXml.dart';
 
 class EmbeddedFontExtractor {
@@ -45,8 +45,7 @@ class EmbeddedFontExtractor {
     if (sharedFontsDirPath != null && sharedFontsDirPath.isNotEmpty) {
       sharedFontsDir = Directory(sharedFontsDirPath);
     } else {
-      final appDocsDir = await getApplicationDocumentsDirectory();
-      sharedFontsDir = Directory(p.join(appDocsDir.path, 'tome_ocean', '_shared_fonts'));
+      sharedFontsDir = Directory(AppStoragePaths.sharedFontsPath);
     }
     if (!await sharedFontsDir.exists()) {
       await sharedFontsDir.create(recursive: true);
@@ -99,7 +98,7 @@ class EmbeddedFontExtractor {
     return extractedFonts;
   }
 
-  /// يستعيد خرائط الخطوط المضمّنة من مجلد _shared_fonts عندما تكون
+  /// يستعيد خرائط الخطوط المضمّنة من مجلد shared_fonts عندما تكون
   /// metadata القديمة لا تحتوي extractedFontPaths.
   static Future<Map<String, String>> recoverSharedFontPaths(
     Iterable<String> fontFamilies, [
@@ -109,10 +108,7 @@ class EmbeddedFontExtractor {
     if (sharedFontsDirPath != null && sharedFontsDirPath.isNotEmpty) {
       sharedFontsDir = Directory(sharedFontsDirPath);
     } else {
-      final appDocsDir = await getApplicationDocumentsDirectory();
-      sharedFontsDir = Directory(
-        p.join(appDocsDir.path, 'tome_ocean', '_shared_fonts'),
-      );
+      sharedFontsDir = Directory(AppStoragePaths.sharedFontsPath);
     }
     if (!await sharedFontsDir.exists()) {
       return {};

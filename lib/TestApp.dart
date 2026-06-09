@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Helpers/ExeRunner.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
-import 'Controllers/PathController.dart';
+import 'Services/AppStoragePaths.dart';
 
 /// عرض ديالوج معالجة الملف
 Future<Map<String, dynamic>?> showFileProcessDialog(
@@ -63,9 +63,17 @@ class _FileProcessingDialogState extends State<FileProcessingDialog> {
   }
 
   Future<void> _processFile(String filePath) async {
-    await ExeRunner().runExe(BOOKS_FOLDER_PATH, filePath, (output) {
-      _handleOutput(output.trim());
-    });
+    final bookId = AppStoragePaths.bookIdFromPath(filePath);
+    final sessionDir = await AppStoragePaths.createProcessingSessionDir(bookId);
+    try {
+      await ExeRunner().runExe(sessionDir.path, filePath, (output) {
+        _handleOutput(output.trim());
+      });
+    } finally {
+      if (await sessionDir.exists()) {
+        await sessionDir.delete(recursive: true);
+      }
+    }
 
     // إذا لم يحدث خطأ، أكمل
     if (errorMessage == null) {

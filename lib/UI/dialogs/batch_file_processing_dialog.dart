@@ -6,7 +6,7 @@ import 'package:golden_shamela/Services/BookProcessingService.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Helpers/FileHelper.dart';
-import 'package:golden_shamela/Controllers/PathController.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/UI/dialogs/duplicate_resolution_dialog.dart';
 import 'package:golden_shamela/Models/BookCard.dart';
 import 'package:golden_shamela/Models/Author.dart';
@@ -78,7 +78,8 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
     for (int i = 0; i < _items.length; i++) {
       if (_items[i].status == ProcessingStatus.failed) continue;
       final fileName = p.basename(_items[i].filePath);
-      final existingPath = '$BOOKS_FOLDER_PATH\\$fileName';
+      final bookId = AppStoragePaths.bookIdFromPath(_items[i].filePath);
+      final existingPath = AppStoragePaths.bookSourcePath(bookId);
       bool exists = await File(existingPath).exists();
       // debugPrint("Checking duplicate: $existingPath (Exists: $exists)");
 
@@ -96,7 +97,8 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
         final index = duplicatesIndices[k];
         final item = _items[index];
         final fileName = p.basename(item.filePath);
-        final existingPath = '$BOOKS_FOLDER_PATH\\$fileName';
+        final bookId = AppStoragePaths.bookIdFromPath(item.filePath);
+        final existingDir = Directory(AppStoragePaths.bookDirPath(bookId));
 
         DuplicateAction action;
 
@@ -140,9 +142,8 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
         } else if (action == DuplicateAction.replace) {
           // حذف الملف القديم لضمان نظافة العملية
           try {
-            final file = File(existingPath);
-            if (await file.exists()) {
-              await file.delete();
+            if (await existingDir.exists()) {
+              await existingDir.delete(recursive: true);
             }
           } catch (e) {
             debugPrint("فشل حذف الملف القديم: $e");

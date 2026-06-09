@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:isolate'; // Added
 import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'search_engine/text_normalization.dart';
 import 'search_engine/indexing_operations.dart';
 import 'search_engine/search_operations.dart';
@@ -50,8 +50,7 @@ class ShamelaSearchEngine {
         databaseFactory = databaseFactoryFfi;
       }
 
-      final appDocDir = await getApplicationDocumentsDirectory();
-      final dbPath = p.join(appDocDir.path, 'tome_ocean', 'shamela_search.db');
+      final dbPath = AppStoragePaths.shamelaSearchDbPath;
       await Directory(p.dirname(dbPath)).create(recursive: true);
 
       _database = await openDatabase(
@@ -393,6 +392,23 @@ class ShamelaSearchEngine {
   Future<List<Map<String, dynamic>>> getIndexedBooks() async {
     if (_database == null) await initialize();
     return await _dbQueries!.getIndexedBooks();
+  }
+
+  Future<void> deleteBook(String bookPath) async {
+    if (_database == null) await initialize();
+    final db = _database!;
+    await db.delete('books_fts', where: 'book_path = ?', whereArgs: [bookPath]);
+    await db.delete('pages_fts', where: 'book_path = ?', whereArgs: [bookPath]);
+    await db.delete(
+      'morphological_index',
+      where: 'book_path = ?',
+      whereArgs: [bookPath],
+    );
+    await db.delete(
+      'books_metadata',
+      where: 'book_path = ?',
+      whereArgs: [bookPath],
+    );
   }
 
   /// Search pages using page-level FTS index

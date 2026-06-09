@@ -24,13 +24,12 @@ class AppInitialization {
   Future<InitializationResult> initialize() async {
     final windowInfo = await _windowManagerHelper.parseWindowInfo();
 
-    // تهيئة قاعدة البيانات و SharedPreferences لجميع النوافذ
-    _databaseInitializer.initialize();
     await _initializePreferences();
 
     if (!windowInfo.isSubWindow) {
       await _windowManagerHelper.initializeMainWindow();
       await _initializePaths();
+      _databaseInitializer.initialize();
       _indexedBooksLoader.loadInBackground();
 
       // فهرسة الكتب الجديدة في الخلفية (لا تؤثر على بداية التطبيق)
@@ -38,6 +37,7 @@ class AppInitialization {
 
       await _initializeSearchEngine();
     } else {
+      _databaseInitializer.initialize();
       await windowManager.ensureInitialized();
       await windowManager.setSize(Size(1100, 900));
       await windowManager.center();

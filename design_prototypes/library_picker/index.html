@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>اختيار كتاب - نموذج التصميم</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="stage">
+    <section class="window" id="libraryWindow">
+      <header class="titlebar">
+        <div class="title">
+          <strong>اختيار كتاب</strong>
+          <span>المكتبة الشاملة</span>
+        </div>
+        <button class="icon-button close-button" aria-label="إغلاق">
+          <svg><use href="#close"></use></svg>
+        </button>
+      </header>
+
+      <div class="workspace">
+        <aside class="sidebar" id="sidebar"></aside>
+        <section class="main">
+          <div class="toolbar" id="toolbar"></div>
+          <div class="content" id="content"></div>
+        </section>
+      </div>
+
+      <div class="window-resizer" title="تغيير حجم النافذة"></div>
+    </section>
+  </main>
+
+  <svg class="svg-defs" aria-hidden="true">
+    <symbol id="books" viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5zm16 0A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5z"/></symbol>
+    <symbol id="categories" viewBox="0 0 24 24"><path d="M5 3h5v5H5zm9 0h5v5h-5zM5 12h5v5H5zm9 0h5v5h-5z"/></symbol>
+    <symbol id="authors" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0M4 5.5h3M17 5.5h3M3 9h4M17 9h4"/></symbol>
+    <symbol id="star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/></symbol>
+    <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+    <symbol id="search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></symbol>
+    <symbol id="book-card" viewBox="0 0 24 24"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M8 3v18M11 8h5M11 12h5"/></symbol>
+    <symbol id="add-book" viewBox="0 0 24 24"><path d="M4 4h10a2 2 0 0 1 2 2v15H6a2 2 0 0 1-2-2z"/><path d="M8 4v17M18 9v8m-4-4h8"/></symbol>
+    <symbol id="book-outline" viewBox="0 0 24 24"><path d="M5 4h12a2 2 0 0 1 2 2v15H7a2 2 0 0 1-2-2zM8 4v17"/></symbol>
+    <symbol id="magazine" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 4v16M11 8h6M11 12h6M11 16h4"/></symbol>
+    <symbol id="manuscript" viewBox="0 0 24 24"><path d="M7 4h12v15H7a3 3 0 0 1 0-6h10M7 4a3 3 0 0 0 0 6h10"/></symbol>
+    <symbol id="school" viewBox="0 0 24 24"><path d="m3 9 9-5 9 5-9 5zM7 12v5c3 2 7 2 10 0v-5M21 9v7"/></symbol>
+    <symbol id="storage" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+    <symbol id="album" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1A8 8 0 0 0 15 6l-.4-2.6h-4L10.2 6a8 8 0 0 0-1.7 1.1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1A8 8 0 0 0 10 18l.4 2.6h4L15 18a8 8 0 0 0 1.6-1.1l2.4 1 2-3.4-2-1.5a7 7 0 0 0 .1-1Z"/></symbol>
+    <symbol id="trash" viewBox="0 0 24 24"><path d="M5 7h14m-9-3h4l1 3H9zm-3 3 1 13h8l1-13M10 10v7m4-7v7"/></symbol>
+    <symbol id="close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  </svg>
+  <script src="app.js"></script>
+</body>
+</html>
