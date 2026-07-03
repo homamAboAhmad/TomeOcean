@@ -7,6 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   irondash_engine_context
   screen_retriever
   super_native_extensions
+  syncfusion_pdfviewer_linux
   url_launcher_linux
   window_manager
 )

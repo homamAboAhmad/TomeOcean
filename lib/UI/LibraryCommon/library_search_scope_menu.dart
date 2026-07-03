@@ -1,5 +1,17 @@
 import 'package:flutter/material.dart';
 import 'library_design_tokens.dart';
+import 'library_icon.dart';
+
+String libraryBookSearchHint(String scope, {String? context}) {
+  final target = switch (scope) {
+    'title' => 'اسم الكتاب',
+    'title_author' => 'اسم الكتاب أو المؤلف',
+    'full' => 'اسم الكتاب أو المؤلف أو بطاقة الكتاب',
+    _ => 'اسم الكتاب أو المؤلف',
+  };
+  final prefix = context?.trim() ?? '';
+  return prefix.isEmpty ? 'يمكن البحث بجزء من $target' : '$prefix: $target';
+}
 
 class LibrarySearchScopeMenu extends StatelessWidget {
   final String selectedScope;
@@ -18,7 +30,7 @@ class LibrarySearchScopeMenu extends StatelessWidget {
       child: PopupMenuButton<String>(
         tooltip: 'نطاق البحث',
         padding: EdgeInsets.zero,
-        icon: const Icon(Icons.settings, color: LibraryDesignTokens.icon),
+        icon: const LibraryIcon(LibraryIconType.settings),
         initialValue: selectedScope,
         onSelected: onSelected,
         itemBuilder: (_) => const [
@@ -29,7 +41,7 @@ class LibrarySearchScopeMenu extends StatelessWidget {
         ),
         PopupMenuItem(
           value: 'full',
-          child: Text('اسم الكتاب واسم المؤلف والبطاقة'),
+          child: Text('اسم الكتاب واسم المؤلف وبطاقة الكتاب'),
         ),
         ],
       ),

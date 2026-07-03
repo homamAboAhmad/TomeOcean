@@ -2,10 +2,12 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../Models/BookCard.dart';
+import '../Models/BookPart.dart';
 import '../Models/BookMetadataOptions.dart';
 import '../Models/Author.dart';
 import '../Models/Section.dart';
 import '../Services/AppStoragePaths.dart';
+import '../Services/BookSourceFingerprint.dart';
 import 'StorageHelper.dart';
 
 /// High-performance SQLite database for books metadata
@@ -18,7 +20,7 @@ class BooksMetadataDatabase {
 
   Database? _database;
   bool _isInitialized = false;
-  static const int _version = 7;
+  static const int _version = 9;
 
   /// Initialize the database
   Future<void> initialize() async {
@@ -105,7 +107,6 @@ class BooksMetadataDatabase {
         publisher TEXT DEFAULT '',
         edition TEXT DEFAULT '',
         page_count TEXT DEFAULT '',
-        book_card_notes TEXT DEFAULT '',
         created_at INTEGER NOT NULL,
         FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE SET NULL,
         FOREIGN KEY (section_id) REFERENCES sections(id) ON DELETE SET NULL
@@ -159,6 +160,8 @@ class BooksMetadataDatabase {
     await db.execute('''
       CREATE UNIQUE INDEX IF NOT EXISTS idx_books_path_unique ON books(book_path);
     ''');
+
+    await _ensureBookPartsTable(db);
   }
 
   /// Ensure all tables exist (check and create if missing)
@@ -171,6 +174,7 @@ class BooksMetadataDatabase {
         'books',
         'favorite_books',
         'recent_books',
+        'book_parts',
       ];
       final existingTables = <String>{};
 
@@ -204,6 +208,7 @@ class BooksMetadataDatabase {
       }
 
       await _ensureBookStorageColumns(db);
+      await _ensureBookPartsTable(db);
     } catch (e, stackTrace) {
       print("BooksMetadataDatabase: Error ensuring tables exist: $e");
       print("Stack trace: $stackTrace");
@@ -292,6 +297,14 @@ class BooksMetadataDatabase {
         where: 'matches_printed IS NULL',
       );
     }
+
+    if (oldVersion < 8) {
+      await _ensureBookPartsTable(db);
+    }
+
+    if (oldVersion < 9) {
+      await _dropLegacyBookCardNotesColumn(db);
+    }
   }
 
   Future<void> _ensureBookStorageColumns(Database db) async {
@@ -310,8 +323,6 @@ class BooksMetadataDatabase {
       'publisher': "ALTER TABLE books ADD COLUMN publisher TEXT DEFAULT ''",
       'edition': "ALTER TABLE books ADD COLUMN edition TEXT DEFAULT ''",
       'page_count': "ALTER TABLE books ADD COLUMN page_count TEXT DEFAULT ''",
-      'book_card_notes':
-          "ALTER TABLE books ADD COLUMN book_card_notes TEXT DEFAULT ''",
     };
 
     for (final entry in migrations.entries) {
@@ -321,6 +332,22 @@ class BooksMetadataDatabase {
       } catch (e) {
         print("BooksMetadataDatabase: Could not add ${entry.key}: $e");
       }
+    }
+
+    if (columns.contains('book_card_notes')) {
+      await _dropLegacyBookCardNotesColumn(db);
+    }
+  }
+
+  Future<void> _dropLegacyBookCardNotesColumn(Database db) async {
+    final tableInfo = await db.rawQuery("PRAGMA table_info(books)");
+    final columns = tableInfo.map((column) => column['name']).toSet();
+    if (!columns.contains('book_card_notes')) return;
+
+    try {
+      await db.execute('ALTER TABLE books DROP COLUMN book_card_notes');
+    } catch (e) {
+      print("BooksMetadataDatabase: Could not drop book_card_notes: $e");
     }
   }
 
@@ -337,6 +364,24 @@ class BooksMetadataDatabase {
         book_path TEXT PRIMARY KEY,
         opened_at INTEGER NOT NULL
       );
+    ''');
+  }
+
+  Future<void> _ensureBookPartsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS book_parts (
+        book_path TEXT NOT NULL,
+        part_number INTEGER NOT NULL,
+        part_title TEXT NOT NULL,
+        part_path TEXT NOT NULL,
+        page_offset INTEGER NOT NULL,
+        page_count INTEGER NOT NULL,
+        PRIMARY KEY(book_path, part_number)
+      );
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_book_parts_path
+      ON book_parts(book_path, part_number);
     ''');
   }
 
@@ -751,11 +796,35 @@ class BooksMetadataDatabase {
       'publisher': book.publisher,
       'edition': book.edition,
       'page_count': book.pageCount,
-      'book_card_notes': book.bookCardNotes,
       'created_at': DateTime.now().millisecondsSinceEpoch,
       'index_state': 'indexed',
       'index_version': 1,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> saveBookParts(String bookPath, List<BookPart> parts) async {
+    final db = await database;
+    final batch = db.batch();
+    batch.delete('book_parts', where: 'book_path = ?', whereArgs: [bookPath]);
+    for (final part in parts) {
+      batch.insert(
+        'book_parts',
+        part.toRow(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
+    await batch.commit(noResult: true);
+  }
+
+  Future<List<BookPart>> getBookParts(String bookPath) async {
+    final db = await database;
+    final rows = await db.query(
+      'book_parts',
+      where: 'book_path = ?',
+      whereArgs: [bookPath],
+      orderBy: 'part_number ASC',
+    );
+    return rows.map(BookPart.fromRow).toList();
   }
 
   /// Batch insert books
@@ -783,7 +852,6 @@ class BooksMetadataDatabase {
         'publisher': book.publisher,
         'edition': book.edition,
         'page_count': book.pageCount,
-        'book_card_notes': book.bookCardNotes,
         'created_at': now,
         'index_state': 'indexed',
         'index_version': 1,
@@ -796,13 +864,34 @@ class BooksMetadataDatabase {
   /// Delete book
   Future<void> deleteBook(String id) async {
     final db = await database;
-    await db.delete('books', where: 'id = ?', whereArgs: [id]);
+    final rows = await db.query(
+      'books',
+      columns: ['book_path'],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    final batch = db.batch();
+    for (final row in rows) {
+      final bookPath = row['book_path']?.toString();
+      if (bookPath != null) {
+        batch.delete(
+          'book_parts',
+          where: 'book_path = ?',
+          whereArgs: [bookPath],
+        );
+      }
+    }
+    batch.delete('books', where: 'id = ?', whereArgs: [id]);
+    await batch.commit(noResult: true);
   }
 
   /// Delete book by path
   Future<void> deleteBookByPath(String bookPath) async {
     final db = await database;
-    await db.delete('books', where: 'book_path = ?', whereArgs: [bookPath]);
+    final batch = db.batch();
+    batch.delete('book_parts', where: 'book_path = ?', whereArgs: [bookPath]);
+    batch.delete('books', where: 'book_path = ?', whereArgs: [bookPath]);
+    await batch.commit(noResult: true);
   }
 
   /// Count books
@@ -1136,9 +1225,6 @@ class BooksMetadataDatabase {
   }
 
   Future<String?> _sourceFingerprint(String bookPath) async {
-    final file = File(bookPath);
-    if (!await file.exists()) return null;
-    final stat = await file.stat();
-    return '${stat.size}:${stat.modified.millisecondsSinceEpoch}';
+    return BookSourceFingerprint.fromFile(bookPath);
   }
 }

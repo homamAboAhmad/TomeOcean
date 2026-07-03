@@ -25,6 +25,13 @@ class BookLibraryRepository {
     for (final bookPath in knownPaths) {
       final file = File(bookPath);
       if (!await file.exists()) {
+        final portablePath =
+            await AppStoragePaths.resolvePortableStoredSourcePath(bookPath);
+        if (portablePath != null) {
+          await relocateBookPath(bookPath, portablePath);
+          filesByPath[_pathKey(portablePath)] = File(portablePath);
+          continue;
+        }
         await pruneMissingBookSource(bookPath);
         continue;
       }
@@ -55,6 +62,32 @@ class BookLibraryRepository {
       await _metadataDb.saveBook(BookCard(title: title), source.path);
       filesByPath[key] = source;
     }
+  }
+
+  Future<void> relocateBookPath(String oldPath, String newPath) async {
+    final db = await _metadataDb.database;
+    final existing = await db.query(
+      'books',
+      columns: ['book_path'],
+      where: 'book_path = ?',
+      whereArgs: [newPath],
+      limit: 1,
+    );
+    if (existing.isEmpty) {
+      await db.update(
+        'books',
+        {
+          'book_path': newPath,
+          'source_docx_path': newPath,
+        },
+        where: 'book_path = ?',
+        whereArgs: [oldPath],
+      );
+    } else {
+      await _metadataDb.deleteBookByPath(oldPath);
+    }
+
+    await ShamelaSearchIndexer().relocateBookPath(oldPath, newPath);
   }
 
   Future<void> pruneMissingBookSource(String bookPath) async {

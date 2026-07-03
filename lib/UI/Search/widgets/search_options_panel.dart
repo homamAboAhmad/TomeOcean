@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
+import 'package:golden_shamela/UI/Search/widgets/search_phrase_options_panel.dart';
 
 /// Widget for the left panel containing search options
 class SearchOptionsPanel extends StatelessWidget {
@@ -72,25 +74,32 @@ class SearchOptionsPanel extends StatelessWidget {
           // Fixed height section for search scope and options
           _buildSearchScope(),
           SizedBox(height: 16),
-          _buildSearchTypeOptions(),
-          SizedBox(height: 4),
-          _buildAdvancedOptions(),
-          SizedBox(height: 16),
-          _buildSearchGrouping(),
-          // Scrollable section for search groups
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+            child: SearchPhraseOptionsPanel(
+              morphologicalSearch: morphologicalSearch,
+              affixSearch: affixSearch,
+              considerHamzas: considerHamzas,
+              considerDiacritics: considerDiacritics,
+              considerNumbers: considerNumbers,
+              onAdvancedOptionChanged: onAdvancedOptionChanged,
+              ordered: ordered,
+              proximity: proximity,
+              onPhraseOptionChanged: onPhraseOptionChanged,
+              groupControllers: groupControllers,
+              onAddQueryField: onAddQueryField,
+              onRemoveQueryField: onRemoveQueryField,
+              onSearch: onSearch,
+              onClear: onClear,
+              isLoading: isLoading,
+              errorMessage: errorMessage,
+              totalCount: totalCount,
+              searchGrouping: searchGrouping,
+              onSearchGroupingChanged: onSearchGroupingChanged,
+              trailingContent: Column(
                 children: [
-                  _buildSearchGroups(),
-                  SizedBox(height: 4),
                   _buildSelectedBooksSearchField(),
                   SizedBox(height: 4),
                   SizedBox(height: 120, child: _buildSelectedBooksList()),
-                  SizedBox(height: 6),
-                  _buildResultsSummary(),
                 ],
               ),
             ),
@@ -104,16 +113,16 @@ class SearchOptionsPanel extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: primaryColor.withOpacity(0.2)),
+        color: organicHighlightColor,
+        borderRadius: BorderRadius.circular(AppChrome.radius),
+        border: Border.all(color: borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.search, size: 16, color: primaryColor),
+              LibraryIcon.fromIcon(Icons.search, size: 16, color: primaryColor),
               SizedBox(width: 4),
               Text(
                 'نطاق البحث:',
@@ -123,7 +132,7 @@ class SearchOptionsPanel extends StatelessWidget {
           ),
           SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // المتن (Body Text) - Main content
               Tooltip(
@@ -135,16 +144,6 @@ class SearchOptionsPanel extends StatelessWidget {
                   (v) => onSearchSectionChanged('main', v),
                 ),
               ),
-              // العناوين (Headings) - Titles and sub-headings
-              Tooltip(
-                message: 'البحث في العناوين الرئيسية والفرعية',
-                child: _buildScopeCheckbox(
-                  'العناوين',
-                  Icons.title,
-                  searchSections['title'] ?? false,
-                  (v) => onSearchSectionChanged('title', v),
-                ),
-              ),
               // الحواشي (Footnotes) - References and marginal notes
               Tooltip(
                 message: 'البحث في الحواشي والمراجع الهامشية',
@@ -153,6 +152,25 @@ class SearchOptionsPanel extends StatelessWidget {
                   Icons.format_quote,
                   searchSections['footnote'] ?? true,
                   (v) => onSearchSectionChanged('footnote', v),
+                ),
+              ),
+              Tooltip(
+                message: 'البحث في تعليقات الصفحات',
+                child: _buildScopeCheckbox(
+                  'التعليقات',
+                  Icons.comment_outlined,
+                  searchSections['comment'] ?? false,
+                  (v) => onSearchSectionChanged('comment', v),
+                ),
+              ),
+              // العناوين (Headings) - Titles and sub-headings
+              Tooltip(
+                message: 'البحث في العناوين الرئيسية والفرعية',
+                child: _buildScopeCheckbox(
+                  'العناوين',
+                  Icons.title,
+                  searchSections['title'] ?? false,
+                  (v) => onSearchSectionChanged('title', v),
                 ),
               ),
             ],
@@ -171,38 +189,38 @@ class SearchOptionsPanel extends StatelessWidget {
   ) {
     return InkWell(
       onTap: () => onChanged(!value),
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         decoration: BoxDecoration(
-          color: value ? primaryColor.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(4),
+          color: value ? organicHighlightColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
           border: Border.all(
-            color: value ? primaryColor : Colors.grey.shade400,
+            color: value ? actionColor : accentColor.withOpacity(0.38),
             width: value ? 1.5 : 1,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            LibraryIcon.fromIcon(
               icon,
-              size: 14,
-              color: value ? primaryColor : Colors.grey.shade600,
+              size: 12,
+              color: value ? primaryColor : accentColor.withOpacity(0.70),
             ),
-            SizedBox(width: 4),
+            SizedBox(width: 3),
             Text(
               label,
               style: normalStyle(
-                fontSize: 11,
-                color: value ? primaryColor : Colors.grey.shade700,
+                fontSize: 10,
+                color: value ? primaryColor : accentColor,
               ),
             ),
-            SizedBox(width: 4),
-            Icon(
+            SizedBox(width: 3),
+            LibraryIcon.fromIcon(
               value ? Icons.check_circle : Icons.circle_outlined,
-              size: 14,
-              color: value ? primaryColor : Colors.grey.shade400,
+              size: 12,
+              color: value ? actionColor : accentColor.withOpacity(0.38),
             ),
           ],
         ),
@@ -349,8 +367,8 @@ class SearchOptionsPanel extends StatelessWidget {
                 Expanded(
                   child: TabBar(
                     labelColor: primaryColor,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: primaryColor,
+                    unselectedLabelColor: accentColor.withOpacity(0.62),
+                    indicatorColor: actionColor,
                     tabs: [
                       Tab(text: 'و'),
                       Tab(text: 'أو'),
@@ -359,10 +377,10 @@ class SearchOptionsPanel extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(
+                  icon: LibraryIcon.fromIcon(
                     Icons.clear_all,
                     size: 18,
-                    color: Colors.grey.shade600,
+                    color: accentColor.withOpacity(0.70),
                   ),
                   padding: EdgeInsets.all(4),
                   constraints: BoxConstraints(),
@@ -382,24 +400,25 @@ class SearchOptionsPanel extends StatelessWidget {
               ],
             ),
           ),
+          _buildInlineErrorMessage(),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              border: Border(top: BorderSide(color: Colors.grey.shade300)),
+              color: mutedColor,
+              border: Border(top: AppChrome.borderSide()),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton.icon(
                   onPressed: onSearch,
-                  icon: Icon(Icons.search, size: 16, color: Colors.white),
+                  icon: const LibraryIcon(LibraryIconType.search, size: 16, color: Colors.white),
                   label: Text(
                     'بحث',
                     style: normalStyle(color: Colors.white, fontSize: 12),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
+                    backgroundColor: actionColor,
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     minimumSize: Size(0, 32),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -409,6 +428,20 @@ class SearchOptionsPanel extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInlineErrorMessage() {
+    if (errorMessage == null) return SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsets.only(top: 4, bottom: 2),
+      child: Center(
+        child: Text(
+          errorMessage!,
+          style: normalStyle(color: Colors.red, fontSize: 11),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -479,7 +512,7 @@ class SearchOptionsPanel extends StatelessWidget {
           if (controllers.length > 1) ...[
             SizedBox(width: 4),
             IconButton(
-              icon: Icon(Icons.remove_circle, size: 20, color: Colors.red),
+              icon: const LibraryIcon(LibraryIconType.zoomOut, size: 20, color: Colors.red),
               padding: EdgeInsets.all(4),
               constraints: BoxConstraints(),
               onPressed: () => onRemoveQueryField(groupKey, index),
@@ -499,19 +532,19 @@ class SearchOptionsPanel extends StatelessWidget {
     return Container(
       height: 24,
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(4),
+        color: surfaceColor,
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
       ),
       child: TextField(
         controller: selectedBooksSearchController,
         decoration: InputDecoration(
           hintText: 'ابحث في الكتب المحددة',
-          hintStyle: normalStyle(fontSize: 11, color: Colors.grey.shade600),
+          hintStyle: normalStyle(fontSize: 11, color: accentColor.withOpacity(0.64)),
           border: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           isDense: true,
-          prefixIcon: Icon(Icons.search, size: 16, color: Colors.grey.shade600),
+          prefixIcon: LibraryIcon.fromIcon(Icons.search, size: 16, color: accentColor.withOpacity(0.64)),
         ),
         style: normalStyle(fontSize: 11),
       ),
@@ -558,15 +591,15 @@ class SearchOptionsPanel extends StatelessWidget {
     if (filteredList.isEmpty && searchLower.isNotEmpty) {
       return Container(
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: borderColor),
+          borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
         ),
         child: Center(
           child: Padding(
             padding: EdgeInsets.all(16),
             child: Text(
               'لا توجد نتائج',
-              style: normalStyle(fontSize: 11, color: Colors.grey.shade600),
+              style: normalStyle(fontSize: 11, color: accentColor.withOpacity(0.64)),
             ),
           ),
         ),
@@ -582,12 +615,6 @@ class SearchOptionsPanel extends StatelessWidget {
   Widget _buildResultsSummary() {
     if (isLoading) {
       return Center(child: CircularProgressIndicator(strokeWidth: 2));
-    }
-    if (errorMessage != null) {
-      return Text(
-        'خطأ: $errorMessage',
-        style: normalStyle(color: Colors.red, fontSize: 11),
-      );
     }
     if (totalCount > 0) {
       return Text(
@@ -666,7 +693,7 @@ class _GroupTabContentState extends State<_GroupTabContent> {
                   widget.buildGroupDescription(widget.groupKey),
                 ],
                 IconButton(
-                  icon: Icon(Icons.add_circle, size: 20, color: primaryColor),
+                  icon: const LibraryIcon(LibraryIconType.zoomIn, size: 20, color: primaryColor),
                   padding: EdgeInsets.all(4),
                   constraints: BoxConstraints(),
                   onPressed: () => widget.onAddQueryField(
@@ -724,17 +751,41 @@ class _SelectedBooksScrollableList extends StatefulWidget {
 class _SelectedBooksScrollableListState
     extends State<_SelectedBooksScrollableList> {
   late ScrollController _scrollController;
+  late int _lastItemCount;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _lastItemCount = widget.filteredList.length;
+    if (_lastItemCount > 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _SelectedBooksScrollableList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final nextCount = widget.filteredList.length;
+    if (nextCount > _lastItemCount) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToEnd());
+    }
+    _lastItemCount = nextCount;
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToEnd() {
+    if (!_scrollController.hasClients) return;
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
@@ -767,12 +818,14 @@ class _SelectedBooksScrollableListState
                     padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     child: Row(
                       children: [
-                        Icon(
+                        LibraryIcon.fromIcon(
                           type == 'author'
                               ? Icons.edit
                               : type == 'section'
-                              ? Icons.category
-                              : Icons.book,
+                                  ? Icons.category
+                                  : type == 'period'
+                                      ? Icons.calendar_today
+                                      : Icons.book,
                           size: 12,
                           color: Colors.grey.shade700,
                         ),
@@ -782,10 +835,12 @@ class _SelectedBooksScrollableListState
                             type == 'author'
                                 ? 'مؤلف: $name'
                                 : type == 'section'
-                                ? 'تصنيف: $name'
-                                : deathYear != null
-                                ? '$name (ت $deathYear)'
-                                : name,
+                                    ? 'تصنيف: $name'
+                                    : type == 'period'
+                                        ? 'فترة: $name'
+                                        : deathYear != null
+                                            ? '$name (ت $deathYear)'
+                                            : name,
                             style: smallStyle(fontSize: 10),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

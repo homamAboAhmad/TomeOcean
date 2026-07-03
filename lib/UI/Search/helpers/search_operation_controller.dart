@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_executor.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
+import 'package:golden_shamela/UI/Search/helpers/fts_query_builder.dart';
 
 /// Controller responsible for managing search operations.
 ///
@@ -20,11 +21,15 @@ class SearchOperationController {
     Map<String, List<TextEditingController>> groupControllers,
   ) {
     for (var group in groupControllers.values) {
-      if (group.any((c) => c.text.trim().isNotEmpty)) {
+      if (group.any((c) => FtsQueryBuilder.clean(c.text).isNotEmpty)) {
         return true;
       }
     }
     return false;
+  }
+
+  bool hasSelectedSections(Map<String, bool> searchSections) {
+    return getSelectedSections(searchSections).isNotEmpty;
   }
 
   /// Executes the search with given parameters.
@@ -50,6 +55,7 @@ class SearchOperationController {
       sectionTypes: selectedSections.length < searchSections.length
           ? selectedSections
           : null,
+      includeComments: searchSections['comment'] == true,
       morphologicalSearch: morphologicalSearch,
       affixSearch: affixSearch,
       considerHamzas: considerHamzas,
@@ -63,11 +69,8 @@ class SearchOperationController {
 
   /// Gets the list of selected section types.
   ///
-  /// **QA Note**: Explicitly excludes 'comment' section type as it's under development.
-  /// This is a safety measure to prevent accidental queries to the comments field.
   List<String> getSelectedSections(Map<String, bool> searchSections) {
-    // Define valid section types (excludes 'comment' which is under development)
-    const validSectionTypes = {'main', 'footnote', 'title'};
+    const validSectionTypes = {'main', 'footnote', 'title', 'comment'};
 
     return searchSections.entries
         .where((e) => e.value && validSectionTypes.contains(e.key))

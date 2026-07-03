@@ -1,5 +1,6 @@
 // lib/storage/author_storage.dart
 import '../Models/Author.dart';
+import '../Utils/AuthorDeathDateParser.dart';
 import 'BooksMetadataDatabase.dart';
 
 class AuthorStorage {
@@ -23,11 +24,12 @@ class AuthorStorage {
     String? searchQuery,
   }) async {
     await _db.initialize();
-    return await _db.getAuthors(
-      limit: limit,
-      offset: offset,
+    final authors = await _db.getAuthors(
       searchQuery: searchQuery,
     );
+    authors.sort(_compareAuthorsByDeathYear);
+    final skipped = authors.skip(offset ?? 0);
+    return limit == null ? skipped.toList() : skipped.take(limit).toList();
   }
 
   // دالة للحصول على جميع المؤلفين (للتوافق مع الكود القديم)
@@ -103,5 +105,11 @@ class AuthorStorage {
       "addDefaultAuthors: Reloaded ${savedAuthors.length} authors from database",
     );
     return savedAuthors;
+  }
+
+  int _compareAuthorsByDeathYear(Author a, Author b) {
+    final death = AuthorDeathDateParser.compare(a.deathYear, b.deathYear);
+    if (death != 0) return death;
+    return a.name.compareTo(b.name);
   }
 }

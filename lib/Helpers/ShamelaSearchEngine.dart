@@ -10,6 +10,7 @@ import 'search_engine/text_normalization.dart';
 import 'search_engine/indexing_operations.dart';
 import 'search_engine/search_operations.dart';
 import 'search_engine/database_queries.dart';
+import 'search_engine/search_index_version.dart';
 import 'ArabicMorphologicalAnalyzer.dart'; // Added
 
 /// Advanced Arabic Search Engine - Shamela Library Style
@@ -55,14 +56,17 @@ class ShamelaSearchEngine {
 
       _database = await openDatabase(
         dbPath,
-        version: 10,
+        version: shamelaSearchDatabaseVersion,
         singleInstance: false,
         onCreate: (db, version) async {
           await db.execute('''
             CREATE VIRTUAL TABLE books_fts USING fts5(
               id UNINDEXED, book_path UNINDEXED, book_name UNINDEXED, page_number UNINDEXED, section_type UNINDEXED,
               content, normalized_content, hamza_preserved_content, diacritics_preserved_content,
-              no_diacritics_content, morphological_content, normalized_no_numbers_content, raw_content UNINDEXED,
+              fully_preserved_content, no_diacritics_content, morphological_content,
+              normalized_no_numbers_content, hamza_preserved_no_numbers_content,
+              diacritics_preserved_no_numbers_content, fully_preserved_no_numbers_content,
+              raw_content UNINDEXED,
               tokenize = 'unicode61 remove_diacritics 0'
             );
           ''');
@@ -70,7 +74,9 @@ class ShamelaSearchEngine {
             CREATE VIRTUAL TABLE pages_fts USING fts5(
               book_path UNINDEXED, book_name UNINDEXED, page_number UNINDEXED,
               content, normalized_content, hamza_preserved_content, diacritics_preserved_content,
-              no_diacritics_content, morphological_content, normalized_no_numbers_content,
+              fully_preserved_content, no_diacritics_content, morphological_content,
+              normalized_no_numbers_content, hamza_preserved_no_numbers_content,
+              diacritics_preserved_no_numbers_content, fully_preserved_no_numbers_content,
               tokenize = 'unicode61 remove_diacritics 0'
             );
           ''');
@@ -112,9 +118,9 @@ class ShamelaSearchEngine {
             await db.execute('DROP TABLE IF EXISTS morphological_index');
             await db.execute('''
               CREATE TABLE IF NOT EXISTS morphological_index (
-                id INTEGER PRIMARY KEY AUTOINCREMENT, 
-                word TEXT, root TEXT, 
-                book_path TEXT, page_number INTEGER, section_type TEXT, 
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                word TEXT, root TEXT,
+                book_path TEXT, page_number INTEGER, section_type TEXT,
                 paragraph_id TEXT, is_root_match INTEGER
               );
             ''');
@@ -146,6 +152,47 @@ class ShamelaSearchEngine {
           }
           if (oldVersion < 9) {
              // ...
+          }
+          if (oldVersion < shamelaSearchDatabaseVersion) {
+            await db.execute('DROP TABLE IF EXISTS books_fts');
+            await db.execute('DROP TABLE IF EXISTS pages_fts');
+            await db.execute('DROP TABLE IF EXISTS morphological_index');
+            await db.execute('''
+              CREATE VIRTUAL TABLE books_fts USING fts5(
+                id UNINDEXED, book_path UNINDEXED, book_name UNINDEXED, page_number UNINDEXED, section_type UNINDEXED,
+                content, normalized_content, hamza_preserved_content, diacritics_preserved_content,
+                fully_preserved_content, no_diacritics_content, morphological_content,
+                normalized_no_numbers_content, hamza_preserved_no_numbers_content,
+                diacritics_preserved_no_numbers_content, fully_preserved_no_numbers_content,
+                raw_content UNINDEXED,
+                tokenize = 'unicode61 remove_diacritics 0'
+              );
+            ''');
+            await db.execute('''
+              CREATE VIRTUAL TABLE pages_fts USING fts5(
+                book_path UNINDEXED, book_name UNINDEXED, page_number UNINDEXED,
+                content, normalized_content, hamza_preserved_content, diacritics_preserved_content,
+                fully_preserved_content, no_diacritics_content, morphological_content,
+                normalized_no_numbers_content, hamza_preserved_no_numbers_content,
+                diacritics_preserved_no_numbers_content, fully_preserved_no_numbers_content,
+                tokenize = 'unicode61 remove_diacritics 0'
+              );
+            ''');
+            await db.execute('''
+              CREATE TABLE IF NOT EXISTS morphological_index (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                word TEXT, root TEXT,
+                book_path TEXT, page_number INTEGER, section_type TEXT,
+                paragraph_id TEXT, is_root_match INTEGER
+              );
+            ''');
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_morph_root ON morphological_index(root);',
+            );
+            await db.execute(
+              'CREATE INDEX IF NOT EXISTS idx_morph_word ON morphological_index(word);',
+            );
+            await db.delete('books_metadata');
           }
         },
 
@@ -232,9 +279,13 @@ class ShamelaSearchEngine {
           'normalized_content': processedItem['normalized_content'],
           'hamza_preserved_content': processedItem['hamza_preserved_content'],
           'diacritics_preserved_content': processedItem['diacritics_preserved_content'],
+          'fully_preserved_content': processedItem['fully_preserved_content'],
           'no_diacritics_content': processedItem['no_diacritics_content'],
           'morphological_content': processedItem['morphological_content'],
           'normalized_no_numbers_content': processedItem['normalized_no_numbers_content'],
+          'hamza_preserved_no_numbers_content': processedItem['hamza_preserved_no_numbers_content'],
+          'diacritics_preserved_no_numbers_content': processedItem['diacritics_preserved_no_numbers_content'],
+          'fully_preserved_no_numbers_content': processedItem['fully_preserved_no_numbers_content'],
           'raw_content': processedItem['raw_content'] ?? content,
         });
 
@@ -271,7 +322,6 @@ class ShamelaSearchEngine {
       }
     }
 
-    final currentDbVersion = 9;
     await _database!.insert('books_metadata', {
       'id': base64Encode(
         utf8.encode(bookPath),
@@ -279,7 +329,7 @@ class ShamelaSearchEngine {
       'book_path': bookPath,
       'book_name': bookName,
       'indexed_at': DateTime.now().millisecondsSinceEpoch,
-      'indexing_version': currentDbVersion,
+      'indexing_version': shamelaSearchIndexVersion,
     }, conflictAlgorithm: ConflictAlgorithm.replace);
 
     await _indexingOps!.indexPages(bookPath, bookName, paragraphs);
@@ -323,6 +373,7 @@ class ShamelaSearchEngine {
               query,
               removeDiacritics: false,
               unifyHamzas: !considerHamzas,
+              removeNumbers: !considerNumbers,
             );
             terms = [exactQuery];
           } else {
@@ -330,6 +381,7 @@ class ShamelaSearchEngine {
               query,
               removeDiacritics: true,
               unifyHamzas: !considerHamzas,
+              removeNumbers: !considerNumbers,
             );
             terms = [normalized];
           }
@@ -392,6 +444,50 @@ class ShamelaSearchEngine {
   Future<List<Map<String, dynamic>>> getIndexedBooks() async {
     if (_database == null) await initialize();
     return await _dbQueries!.getIndexedBooks();
+  }
+
+  Future<void> relocateBookPath(String oldPath, String newPath) async {
+    if (_database == null) await initialize();
+    if (p.normalize(oldPath).toLowerCase() ==
+        p.normalize(newPath).toLowerCase()) {
+      return;
+    }
+
+    final db = _database!;
+    final existing = await db.query(
+      'books_metadata',
+      columns: ['book_path'],
+      where: 'book_path = ?',
+      whereArgs: [newPath],
+      limit: 1,
+    );
+    await db.transaction((txn) async {
+      if (existing.isNotEmpty) {
+        for (final table in [
+          'books_metadata',
+          'books_fts',
+          'pages_fts',
+          'morphological_index',
+        ]) {
+          await txn.delete(table, where: 'book_path = ?', whereArgs: [oldPath]);
+        }
+        return;
+      }
+
+      for (final table in [
+        'books_metadata',
+        'books_fts',
+        'pages_fts',
+        'morphological_index',
+      ]) {
+        await txn.update(
+          table,
+          {'book_path': newPath},
+          where: 'book_path = ?',
+          whereArgs: [oldPath],
+        );
+      }
+    });
   }
 
   Future<void> deleteBook(String bookPath) async {
@@ -463,6 +559,38 @@ class ShamelaSearchEngine {
     );
   }
 
+  Future<List<Map<String, dynamic>>> listPages({
+    List<String>? bookPaths,
+    List<String>? sectionTypes,
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    if (_database == null) await initialize();
+
+    return await _dbQueries!.listPages(
+      bookPaths: bookPaths,
+      sectionTypes: sectionTypes,
+      limit: limit,
+      offset: offset,
+    );
+  }
+
+  Stream<List<Map<String, dynamic>>> listPagesStream({
+    List<String>? bookPaths,
+    List<String>? sectionTypes,
+    int batchSize = 10,
+    int? maxResults,
+  }) async* {
+    if (_database == null) await initialize();
+
+    yield* _dbQueries!.listPagesStream(
+      bookPaths: bookPaths,
+      sectionTypes: sectionTypes,
+      batchSize: batchSize,
+      maxResults: maxResults,
+    );
+  }
+
   /// Get all paragraphs from a specific page
   Future<List<Map<String, dynamic>>> getParagraphsByPage(
     String bookPath,
@@ -472,6 +600,13 @@ class ShamelaSearchEngine {
     return await _dbQueries!.getParagraphsByPage(bookPath, pageNumber);
   }
 
+  Future<String?> getNearestTitleBeforePage(
+    String bookPath,
+    int pageNumber,
+  ) async {
+    if (_database == null) await initialize();
+    return _dbQueries!.getNearestTitleBeforePage(bookPath, pageNumber);
+  }
 
 
   /// Close database
@@ -519,10 +654,33 @@ Future<List<Map<String, dynamic>>> _processChunkInternal(
       removeDiacritics: false,
       unifyHamzas: true,
     );
+    final fullyPreserved = TextNormalization.normalizeText(
+      content,
+      removeDiacritics: false,
+      unifyHamzas: false,
+    );
     final normalizedNoNumbers = TextNormalization.normalizeText(
       content,
       removeDiacritics: true,
       unifyHamzas: true,
+      removeNumbers: true,
+    );
+    final hamzaPreservedNoNumbers = TextNormalization.normalizeText(
+      content,
+      removeDiacritics: true,
+      unifyHamzas: false,
+      removeNumbers: true,
+    );
+    final diacriticsPreservedNoNumbers = TextNormalization.normalizeText(
+      content,
+      removeDiacritics: false,
+      unifyHamzas: true,
+      removeNumbers: true,
+    );
+    final fullyPreservedNoNumbers = TextNormalization.normalizeText(
+      content,
+      removeDiacritics: false,
+      unifyHamzas: false,
       removeNumbers: true,
     );
 
@@ -591,8 +749,12 @@ Future<List<Map<String, dynamic>>> _processChunkInternal(
       'normalized_content': normalized,
       'hamza_preserved_content': hamzaPreserved,
       'diacritics_preserved_content': diacriticsPreserved,
+      'fully_preserved_content': fullyPreserved,
       'no_diacritics_content': noDiacriticsContent ?? '',
       'normalized_no_numbers_content': normalizedNoNumbers,
+      'hamza_preserved_no_numbers_content': hamzaPreservedNoNumbers,
+      'diacritics_preserved_no_numbers_content': diacriticsPreservedNoNumbers,
+      'fully_preserved_no_numbers_content': fullyPreservedNoNumbers,
       'morphological_content': morphologicalContent,
       'morph_words': morphWords,
     });

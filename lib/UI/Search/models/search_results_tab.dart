@@ -1,3 +1,5 @@
+import 'package:golden_shamela/UI/Search/models/search_state_snapshot.dart';
+
 /// Class to represent a single search results tab
 class SearchResultsTab {
   final String id;
@@ -5,6 +7,7 @@ class SearchResultsTab {
   int totalCount;
   List<String> searchQueries;
   bool morphologicalSearch;
+  SearchStateSnapshot searchSnapshot;
   bool isSearching;
   bool cancelled;
 
@@ -14,6 +17,7 @@ class SearchResultsTab {
     required this.totalCount,
     required this.searchQueries,
     required this.morphologicalSearch,
+    this.searchSnapshot = const SearchStateSnapshot(),
     this.isSearching = true,
     this.cancelled = false,
   });

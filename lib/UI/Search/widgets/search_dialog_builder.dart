@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 import 'package:golden_shamela/UI/Search/widgets/search_options_panel.dart';
 import 'package:golden_shamela/UI/Search/widgets/sidebar_navigation.dart';
 import 'package:golden_shamela/UI/Search/widgets/bottom_bar.dart';
@@ -14,18 +15,18 @@ class SearchDialogBuilder {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: primaryColor,
+        gradient: AppChrome.headerGradient,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(8),
-          topRight: Radius.circular(8),
+          topLeft: Radius.circular(AppChrome.radius),
+          topRight: Radius.circular(AppChrome.radius),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('البحث', style: bigStyle(color: secondaryColor, fontSize: 18)),
+          Text('البحث', style: bigStyle(color: Colors.white, fontSize: 18)),
           IconButton(
-            icon: Icon(Icons.close, color: secondaryColor, size: 20),
+            icon: const LibraryIcon(LibraryIconType.close, color: Colors.white, size: 20),
             padding: EdgeInsets.all(4),
             constraints: BoxConstraints(),
             onPressed: onClose,
@@ -50,7 +51,7 @@ class SearchDialogBuilder {
           Container(
             width: 200,
             decoration: BoxDecoration(
-              border: Border(right: BorderSide(color: Colors.grey.shade300)),
+              border: Border(right: AppChrome.borderSide()),
             ),
             child: SidebarNavigation(
               selectedTab: selectedTab,
@@ -62,7 +63,7 @@ class SearchDialogBuilder {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                border: Border(right: BorderSide(color: Colors.grey.shade300)),
+                border: Border(right: AppChrome.borderSide()),
               ),
               child: middlePanelContent,
             ),
@@ -72,7 +73,7 @@ class SearchDialogBuilder {
           Container(
             width: 350,
             decoration: BoxDecoration(
-              border: Border(right: BorderSide(color: Colors.grey.shade300)),
+              border: Border(right: AppChrome.borderSide()),
             ),
             child: searchOptionsPanel,
           ),
@@ -97,7 +98,7 @@ class SearchDialogBuilder {
     return Container(
       height: 300,
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+        border: Border(top: AppChrome.borderSide()),
       ),
       child: SearchResultsView(
         results: results,
@@ -120,8 +121,8 @@ class SearchDialogBuilder {
     return Container(
       height: 300,
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+        color: bgColor,
+        border: Border(top: AppChrome.borderSide()),
       ),
       child: Column(
         children: [
@@ -129,18 +130,18 @@ class SearchDialogBuilder {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
+              color: mutedColor,
+              border: Border(bottom: AppChrome.borderSide(opacity: 0.65)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   'النتائج: 0',
-                  style: mediumStyle(color: Colors.grey.shade700),
+                  style: mediumStyle(color: accentColor),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close, size: 20),
+                  icon: const LibraryIcon(LibraryIconType.close, size: 20),
                   padding: EdgeInsets.zero,
                   constraints: BoxConstraints(),
                   onPressed: onClose,
@@ -158,10 +159,10 @@ class SearchDialogBuilder {
                   Container(
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: primaryColor.withOpacity(0.08),
+                      color: organicHighlightColor,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: LibraryIcon.fromIcon(
                       Icons.search_off_rounded,
                       size: 40,
                       color: primaryColor.withOpacity(0.6),
@@ -176,12 +177,12 @@ class SearchDialogBuilder {
                   if (searchQueries.isNotEmpty)
                     Text(
                       '« ${searchQueries.join(' | ')} »',
-                      style: smallStyle(color: Colors.grey.shade600),
+                      style: smallStyle(color: accentColor.withOpacity(0.70)),
                     ),
                   SizedBox(height: 12),
                   Text(
                     'جرّب كلمات بحث مختلفة أو تحقق من الإملاء',
-                    style: smallStyle(color: Colors.grey.shade500),
+                    style: smallStyle(color: accentColor.withOpacity(0.58)),
                   ),
                 ],
               ),

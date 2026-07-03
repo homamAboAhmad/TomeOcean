@@ -16,6 +16,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:xml/xml.dart';
 import 'package:golden_shamela/wordToHTML/DocRelations.dart';
 import 'package:golden_shamela/core/app_state.dart';
+import 'package:golden_shamela/UI/Settings/app_color_settings.dart';
 import 'package:flutter/gestures.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:golden_shamela/Helpers/TextProcessor.dart'; // Add TextProcessor
@@ -226,7 +227,8 @@ class runT {
             TextSpan(
               text: fixedText.substring(match.start, match.end),
               style: (rpr?.getTextStyle() ?? effectiveStyle).copyWith(
-                backgroundColor: const Color(0xFFFFE082),
+                color: AppUiColors.color(AppColorRole.searchWords),
+                backgroundColor: AppUiColors.color(AppColorRole.searchHighlight),
               ),
             ),
           );
@@ -837,7 +839,8 @@ class runT {
         TextSpan(
           text: text.substring(match.start, match.end),
           style: (rpr?.getTextStyle() ?? style).copyWith(
-            backgroundColor: const Color(0xFFFFE082),
+            color: AppUiColors.color(AppColorRole.searchWords),
+            backgroundColor: AppUiColors.color(AppColorRole.searchHighlight),
           ),
         ),
       );

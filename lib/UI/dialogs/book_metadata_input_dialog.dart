@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Helpers/AuthorStorage.dart';
 import 'package:golden_shamela/Helpers/SectionStorage.dart';
 import 'package:golden_shamela/Helpers/DocxParser.dart';
+import 'package:golden_shamela/Dialogs/Author/author_death_date_field.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Models/BookCard.dart';
 import 'package:golden_shamela/Models/BookMetadataOptions.dart';
 import 'package:golden_shamela/Models/Section.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 import 'package:path/path.dart' as p;
 
 class BookMetadataResult {
@@ -40,7 +42,7 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
   final TextEditingController _notesController = TextEditingController();
 
   String? _selectedSectionId;
-  String? _selectedBookType;
+  String? _selectedBookType = BookMetadataOptions.book;
   bool _matchesPrinted = false;
   List<Author> _allAuthors = [];
   List<Section> _allSections = [];
@@ -166,10 +168,11 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
 
                   // Death Year (visible if new author or existing author without death year)
                   if (_isNewAuthor || (_selectedAuthor != null))
-                    _buildTextField(
+                    AuthorDeathDateField(
+                      key: ValueKey(
+                        _selectedAuthor?.id ?? (_isNewAuthor ? 'new' : 'none'),
+                      ),
                       controller: _deathYearController,
-                      label: 'تاريخ وفاة المؤلف (هـ)',
-                      hint: 'مثال: 545',
                       enabled:
                           _isNewAuthor || _selectedAuthor?.deathYear == null,
                     ),
@@ -351,18 +354,20 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
           decoration: InputDecoration(
             labelText: 'اسم المؤلف',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            suffixIcon: const Icon(Icons.person_search),
+            suffixIcon: const LibraryIcon(LibraryIconType.authors),
           ),
           style: normalStyle(),
           onChanged: (v) {
             _authorController.text = v;
             setState(() {
+              final previous = _selectedAuthor;
               _selectedAuthor = _allAuthors.firstWhere(
                 (a) => a.name == v,
                 orElse: () => Author(name: ''),
               );
               if (_selectedAuthor!.name.isEmpty) {
                 _selectedAuthor = null;
+                if (previous != null) _deathYearController.clear();
                 _isNewAuthor = v.isNotEmpty;
               } else {
                 _deathYearController.text = _selectedAuthor!.deathYear ?? '';
@@ -453,20 +458,20 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
     if (_formKey.currentState!.validate()) {
       Author? newAuthor;
       String authorId;
+      final deathYear = _deathYearController.text.trim();
 
       if (_selectedAuthor != null) {
         // فحص إذا تم تغيير سنة الوفاة لمؤلف موجود
-        if (_deathYearController.text != (_selectedAuthor!.deathYear ?? '')) {
+        if (deathYear != (_selectedAuthor!.deathYear ?? '')) {
           final confirm = await _showConfirmUpdateAuthorDialog();
           if (confirm != true) return;
+          newAuthor = _selectedAuthor!.copyWith(deathYear: deathYear);
         }
         authorId = _selectedAuthor!.id;
       } else {
         newAuthor = Author(
-          name: _authorController.text,
-          deathYear: _deathYearController.text.isNotEmpty
-              ? _deathYearController.text
-              : null,
+          name: _authorController.text.trim(),
+          deathYear: deathYear,
         );
         authorId = newAuthor.id;
       }
@@ -476,7 +481,7 @@ class _BookMetadataInputDialogState extends State<BookMetadataInputDialog> {
         authorId: authorId,
         sectionId: _selectedSectionId ?? '',
         description: _notesController.text,
-        bookType: _selectedBookType ?? '',
+        bookType: _selectedBookType ?? BookMetadataOptions.book,
         matchesPrinted: _matchesPrinted,
         publisher: _publisherController.text.trim(),
         edition: _editionController.text.trim(),

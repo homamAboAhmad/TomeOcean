@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Helpers/ArabicMorphologicalAnalyzer.dart';
 import 'package:golden_shamela/Helpers/search_engine/text_normalization.dart';
+import 'search_highlight_span_builder.dart';
 
 /// Helper class for text highlighting in search results
 ///
@@ -326,87 +327,11 @@ class SearchHighlightingHelper {
     Map<String, int> range,
     int totalLen,
   ) {
-    final spans = <InlineSpan>[];
-
-    // Add ellipsis if needed
-    if (range['start']! > 0) {
-      spans.add(
-        TextSpan(
-          text: '... ',
-          style: smallStyle(color: Colors.grey),
-        ),
-      );
-    }
-
-    if (snippet.isEmpty) {
-      return RichText(text: TextSpan(children: spans));
-    }
-
-    // Sort matches
-    matches.sort((a, b) => (a['index'] as int).compareTo(b['index'] as int));
-
-    // Create highlight mask
-    final highlightMask = List<bool>.filled(snippet.length, false);
-    for (final m in matches) {
-      final s = m['index'] as int;
-      final len = m['length'] as int;
-      for (int i = s; i < s + len && i < snippet.length; i++) {
-        highlightMask[i] = true;
-      }
-    }
-
-    int currentStart = 0;
-    bool currentHighlight = highlightMask.isNotEmpty ? highlightMask[0] : false;
-
-    // Iterate through mask to build spans
-    for (int i = 1; i <= snippet.length; i++) {
-      final bool isHighlight = (i < snippet.length)
-          ? highlightMask[i]
-          : !currentHighlight;
-
-      if (i == snippet.length || isHighlight != currentHighlight) {
-        // Segment ended
-        final textPart = snippet.substring(currentStart, i);
-        if (currentHighlight) {
-          spans.add(
-            TextSpan(
-              text: textPart,
-              style: TextStyle(
-                backgroundColor: const Color(0xFFFFF9C4), // Soft Gold/Cream
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-                fontFamily: 'jreg',
-              ),
-            ),
-          );
-        } else {
-          spans.add(
-            TextSpan(
-              text: textPart,
-              style: smallStyle(fontSize: 14, color: Colors.grey.shade800),
-            ),
-          );
-        }
-        currentStart = i;
-        if (i < snippet.length) currentHighlight = highlightMask[i];
-      }
-    }
-
-    if (range['end']! < totalLen) {
-      spans.add(
-        TextSpan(
-          text: ' ...',
-          style: smallStyle(color: Colors.grey),
-        ),
-      );
-    }
-
-    return RichText(
-      text: TextSpan(children: spans),
-      textDirection: TextDirection.rtl,
-      maxLines: 3,
-      overflow: TextOverflow.ellipsis,
+    return SearchHighlightSpanBuilder.build(
+      snippet: snippet,
+      matches: matches,
+      range: range,
+      totalLen: totalLen,
     );
   }
 

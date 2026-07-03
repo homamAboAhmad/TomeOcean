@@ -9,7 +9,6 @@ import 'author_details_books_list.dart';
 import 'author_details_actions.dart';
 import 'author_dialog.dart';
 import 'author_books_manager_dialog.dart';
-import '../BookCard/book_card_dialog.dart';
 
 /// Shows a professional author details dialog
 Future<void> showAuthorDetailsDialog(
@@ -136,9 +135,7 @@ class _AuthorDetailsDialogState extends State<AuthorDetailsDialog> {
   }
 
   void _handleBookTap(BookCard book) {
-    // TODO: Open book card dialog
     Navigator.of(context).pop();
-    // showBookCardDialog will be called from parent
   }
 
   void _showErrorSnackBar(String message) {

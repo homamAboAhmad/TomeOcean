@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +11,14 @@ import 'package:golden_shamela/core/startup_indexer.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:golden_shamela/Helpers/BookFilesHelper.dart'
     as book_files_helper;
+import 'package:golden_shamela/Services/WindowsStartupActions.dart';
+import 'package:golden_shamela/Services/WindowsFontCatalog.dart';
+import 'package:golden_shamela/Services/BookSourceChangeMonitor.dart';
+import 'package:golden_shamela/UI/Settings/app_citation_settings.dart';
+import 'package:golden_shamela/UI/Settings/app_color_settings.dart';
+import 'package:golden_shamela/UI/Settings/app_font_settings.dart';
+import 'package:golden_shamela/UI/Settings/app_other_settings.dart';
+import 'package:golden_shamela/UI/Settings/app_recited_text_copy_settings.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// مسؤول عن تهيئة التطبيق بالكامل
@@ -29,6 +38,7 @@ class AppInitialization {
     if (!windowInfo.isSubWindow) {
       await _windowManagerHelper.initializeMainWindow();
       await _initializePaths();
+      unawaited(WindowsFontCatalog.refreshCacheInBackground());
       _databaseInitializer.initialize();
       _indexedBooksLoader.loadInBackground();
 
@@ -36,6 +46,8 @@ class AppInitialization {
       Future.microtask(() => StartupIndexer.runBackgroundCheck());
 
       await _initializeSearchEngine();
+      unawaited(BookSourceChangeMonitor.runBackgroundCheck());
+      await WindowsStartupActions.applyAtStartup();
     } else {
       _databaseInitializer.initialize();
       await windowManager.ensureInitialized();
@@ -45,12 +57,21 @@ class AppInitialization {
       await _initializeSearchEngine();
     }
 
-    return InitializationResult(route: windowInfo.route, prefs: _prefs!);
+    return InitializationResult(
+      route: windowInfo.route,
+      prefs: _prefs!,
+      shouldPreloadFonts: !windowInfo.isSubWindow,
+    );
   }
 
   Future<void> _initializePreferences() async {
     _prefs = await SharedPreferences.getInstance();
     PreferencesHelper.initialize(_prefs!);
+    await AppFontSettings.instance.load();
+    await AppColorSettings.instance.load();
+    await AppCitationSettings.instance.load();
+    await RecitedTextCopySettings.instance.load();
+    await AppOtherSettings.instance.load();
   }
 
   Future<void> _initializePaths() async {
@@ -74,6 +95,11 @@ class AppInitialization {
 class InitializationResult {
   final String? route;
   final SharedPreferences prefs;
+  final bool shouldPreloadFonts;
 
-  InitializationResult({required this.route, required this.prefs});
+  InitializationResult({
+    required this.route,
+    required this.prefs,
+    required this.shouldPreloadFonts,
+  });
 }

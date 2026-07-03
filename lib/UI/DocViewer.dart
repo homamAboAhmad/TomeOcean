@@ -1,18 +1,20 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 
 import 'package:flutter/services.dart';
 import 'package:golden_shamela/Helpers/FileHelper.dart';
+import 'package:golden_shamela/Helpers/PageCommentsRepository.dart';
 import 'package:golden_shamela/Models/BookCard.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
+import 'package:golden_shamela/Services/BookPositionStore.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Utils/SnackBar.dart';
 import 'package:golden_shamela/core/app_state.dart';
 
-import '../Dialogs/BookCard/book_card_dialog.dart';
 import '../Helpers/BookCardStorage.dart';
 import '../Helpers/BookFilesHelper.dart';
-import '../Services/AppStoragePaths.dart';
 import '../Styles/AppResourses.dart';
 import '../Utils/CopyPasteText.dart';
 import '../Utils/FileToArchive.dart';
@@ -29,8 +31,11 @@ import 'BookSideBar/BooksSideBarIcons.dart';
 import 'BookSideBar/SectionBookSideBar.dart';
 import 'BooksDrawer.dart';
 import 'DocViewer/doc_viewer_bottom_toolbar.dart';
+import 'DocViewer/page_comment_panel.dart';
 import 'DocViewer/page_viewport_tracker.dart';
 import 'DocViewer/doc_viewer_top_toolbar.dart';
+import 'LibraryCommon/library_book_card_dialog.dart';
+import 'Settings/app_citation_settings.dart';
 import 'WordPageScreen.dart';
 import 'clipboard_post_processor.dart';
 import 'custom_context_menu.dart';
@@ -40,11 +45,13 @@ class DocViewer extends StatefulWidget {
   final WordDocument wordDocument;
   final Function(File book) onBookSelected;
   final VoidCallback? onCloseBook;
+  final VoidCallback? onPageChanged;
 
   const DocViewer(
     this.wordDocument, {
     required this.onBookSelected,
     this.onCloseBook,
+    this.onPageChanged,
     super.key,
   });
 
@@ -61,13 +68,26 @@ class _DocViewerState extends State<DocViewer>
   // New state variables for numerically sorted history
   final Set<int> _visitedPagesSet = {};
   late final TextEditingController _pageNumberController;
+  late final TextEditingController _commentController;
   late final ScrollController _scrollController;
   late final ValueNotifier<int> _currentPageNotifier;
   late final DocZoomController _zoomController;
   late final PageViewportTracker _pageViewportTracker;
+  final PageCommentsRepository _commentsRepository =
+      PageCommentsRepository.instance;
   final FocusNode _searchFocusNode = FocusNode();
   final Map<int, GlobalKey> _pageItemKeys = {};
   final Map<String, GlobalKey> _paragraphItemKeys = {};
+  bool _commentPanelOpen = false;
+  bool _commentPinned = false;
+  bool _commentDirty = false;
+  bool _commentSaving = false;
+  bool _handlingScrolledPage = false;
+  double _commentPanelFraction = 0.25;
+  int _commentPageIndex = 0;
+  String _savedCommentText = '';
+  final List<String> _commentUndoStack = [];
+  final List<String> _commentRedoStack = [];
 
   @override
   bool get wantKeepAlive => true;
@@ -76,6 +96,10 @@ class _DocViewerState extends State<DocViewer>
   void initState() {
     super.initState();
     _pageNumberController = TextEditingController();
+    _pageNumberController.text = widget.wordDocument
+        .displayPageNumberForPage(widget.wordDocument.currentPage)
+        .toString();
+    _commentController = TextEditingController();
     _scrollController = ScrollController(); // Initialize ScrollController
     _currentPageNotifier = ValueNotifier(widget.wordDocument.currentPage);
     _zoomController = DocZoomController();
@@ -91,13 +115,17 @@ class _DocViewerState extends State<DocViewer>
 
     // Register TOC navigation callback
     AppState().onTocNavigate = (pageIndex) {
-      _jumpToPage(pageIndex);
+      unawaited(_jumpToPage(pageIndex));
     };
 
     // Initial jump if needed (but usually start at 0)
     if (widget.wordDocument.currentPage > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _jumpToPage(widget.wordDocument.currentPage);
+        unawaited(_jumpToPage(widget.wordDocument.currentPage));
+      });
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadCommentForPage(widget.wordDocument.currentPage);
       });
     }
   }
@@ -105,6 +133,7 @@ class _DocViewerState extends State<DocViewer>
   @override
   void dispose() {
     _pageNumberController.dispose();
+    _commentController.dispose();
     _scrollController.dispose(); // Dispose ScrollController
     _currentPageNotifier.dispose();
     _zoomController.removeListener(_handleZoomChanged);
@@ -131,7 +160,8 @@ class _DocViewerState extends State<DocViewer>
       _initControllerAndSidebar();
       _visitedPagesSet.clear();
       _pageViewportTracker.clearMeasurements();
-      _jumpToPage(widget.wordDocument.currentPage);
+      _resetCommentState();
+      unawaited(_jumpToPage(widget.wordDocument.currentPage));
     }
   }
 
@@ -147,7 +177,7 @@ class _DocViewerState extends State<DocViewer>
       BookIndexUI(widget.wordDocument, goTo: _goTo),
       BookSearchUI(
         wordDocument: widget.wordDocument,
-        onNavigateToPage: _jumpToPage,
+        onNavigateToPage: (page) => unawaited(_jumpToPage(page)),
         searchFocusNode: _searchFocusNode,
       ),
       SectionBookSideBar(
@@ -161,7 +191,7 @@ class _DocViewerState extends State<DocViewer>
     ];
   }
 
-  void _jumpToPage(int pageIndex) {
+  Future<void> _jumpToPage(int pageIndex) async {
     final int totalPages = widget.wordDocument.pageFilePaths.length;
 
     if (pageIndex < 0) {
@@ -170,12 +200,9 @@ class _DocViewerState extends State<DocViewer>
       pageIndex = totalPages - 1; // Clamp to last page
     }
 
-    widget.wordDocument.currentPage = pageIndex;
-    widget.wordDocument.prefetchPages(pageIndex);
-    _pageNumberController.text = (pageIndex + 1).toString();
-    _visitedPagesSet.add(pageIndex);
-    _currentPageNotifier.value = pageIndex; // Ensure UI updates immediately
-    _pageViewportTracker.beginProgrammaticJump();
+    if (!await _canLeaveComment()) return;
+    _applyPageChange(pageIndex);
+    await _loadCommentForPage(pageIndex);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _pageViewportTracker.jumpToPage(
@@ -184,6 +211,24 @@ class _DocViewerState extends State<DocViewer>
         onSettled: () => _scrollToSearchTargetWithinPage(pageIndex),
       );
     });
+  }
+
+  void _applyPageChange(int pageIndex, {bool programmatic = true}) {
+    widget.wordDocument.currentPage = pageIndex;
+    widget.wordDocument.prefetchPages(pageIndex);
+    _pageNumberController.text =
+        widget.wordDocument.displayPageNumberForPage(pageIndex).toString();
+    _visitedPagesSet.add(pageIndex);
+    _currentPageNotifier.value = pageIndex; // Ensure UI updates immediately
+    unawaited(BookPositionStore.instance.save(
+      _commentBookPath,
+      widget.wordDocument.openSource,
+      pageIndex,
+    ));
+    widget.onPageChanged?.call();
+    if (programmatic) {
+      _pageViewportTracker.beginProgrammaticJump();
+    }
   }
 
   GlobalKey _getPageItemKey(int pageIndex) {
@@ -245,40 +290,51 @@ class _DocViewerState extends State<DocViewer>
   void _goToPreviousVisitedPage() {
     final page = _findPreviousVisited();
     if (page != null && page != -1) {
-      _jumpToPage(page);
+      unawaited(_jumpToPage(page));
     }
   }
 
   void _goToNextVisitedPage() {
     final page = _findNextVisited();
     if (page != null) {
-      _jumpToPage(page);
+      unawaited(_jumpToPage(page));
     }
   }
 
   void _goTo(int page) {
-    _jumpToPage(page - 1);
+    unawaited(_jumpToPage(page - 1));
   }
 
   void _goNext() {
     if (widget.wordDocument.currentPage <
         widget.wordDocument.pageFilePaths.length - 1) {
-      _jumpToPage(widget.wordDocument.currentPage + 1);
+      unawaited(_jumpToPage(widget.wordDocument.currentPage + 1));
     }
   }
 
   void _goPrevious() {
     if (widget.wordDocument.currentPage > 0) {
-      _jumpToPage(widget.wordDocument.currentPage - 1);
+      unawaited(_jumpToPage(widget.wordDocument.currentPage - 1));
     }
   }
 
   void _goStart() {
-    _jumpToPage(0);
+    unawaited(_jumpToPage(0));
   }
 
   void _goEnd() {
-    _jumpToPage(widget.wordDocument.pageFilePaths.length - 1);
+    unawaited(_jumpToPage(widget.wordDocument.pageFilePaths.length - 1));
+  }
+
+  void _goToCurrentPageEdge(double alignment) {
+    final context = _pageItemKeys[widget.wordDocument.currentPage]?.currentContext;
+    if (context == null) return;
+    Scrollable.ensureVisible(
+      context,
+      alignment: alignment,
+      duration: Duration.zero,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+    );
   }
 
   Future<void> _copyPage() async {
@@ -286,9 +342,14 @@ class _DocViewerState extends State<DocViewer>
       widget.wordDocument.currentPage,
     );
     final text = page.text().trim();
-    final int pageNum = widget.wordDocument.currentPage + 1;
-    final String formatted =
-        '«$text» [${widget.wordDocument.title} (ص $pageNum)]';
+    final int pageNum = widget.wordDocument.displayPageNumberForPage(
+      widget.wordDocument.currentPage,
+    );
+    final String formatted = CitationFormatter.format(
+      text: text,
+      bookTitle: widget.wordDocument.title,
+      pageNumber: pageNum,
+    );
     await copyText(formatted);
     if (mounted) {
       ShowSnackBar(context, "تم النسخ");
@@ -309,27 +370,10 @@ class _DocViewerState extends State<DocViewer>
   }
 
   void _onShowBookCard() async {
-    final bks = BookCardStorage();
-    final bookCard =
-        await bks.getBookCardByTitle(widget.wordDocument.title) ??
-        BookCard(title: widget.wordDocument.title);
-
-    final updated = await showBookCardDialog(context, bookCard);
-    if (updated != null) {
-      // Get book path from title (try to find the actual file)
-      String? bookPath;
-      try {
-        final bookFile = await loadBookByName(widget.wordDocument.title);
-        bookPath = bookFile?.path;
-      } catch (e) {
-        print("Error getting book path: $e");
-      }
-
-      // If bookPath not found, use title as placeholder (will be updated when book is indexed)
-      bookPath ??= AppStoragePaths.bookSourcePath(widget.wordDocument.title);
-
-      await bks.editBookCard(updated, bookPath);
-    }
+    await showLibraryBookCardDialog(
+      context,
+      title: widget.wordDocument.title,
+    );
   }
 
   void _openInBookSearch() {
@@ -346,11 +390,177 @@ class _DocViewerState extends State<DocViewer>
     widget.onCloseBook?.call();
   }
 
-  void _closeSearchPanel() {
-    if (showBookSideBar && _bookSideBarController.selecteSideBarP == 1) {
-      setState(() => showBookSideBar = false);
-      AppState().clearSearchHighlight();
+  String get _commentBookPath {
+    return widget.wordDocument.sourcePath ??
+        AppStoragePaths.bookSourcePath(
+          AppStoragePaths.bookIdFromTitle(widget.wordDocument.title),
+        );
+  }
+
+  Future<void> _loadCommentForPage(int pageIndex) async {
+    final forceOpen = _consumeCommentSearchTarget(pageIndex);
+    final comment = await _commentsRepository.load(_commentBookPath, pageIndex);
+    if (!mounted || pageIndex != widget.wordDocument.currentPage) return;
+    final text = comment?.content ?? '';
+    setState(() {
+      _commentPageIndex = pageIndex;
+      _savedCommentText = text;
+      _commentController.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+      _commentDirty = false;
+      _commentUndoStack
+        ..clear()
+        ..add(text);
+      _commentRedoStack.clear();
+      _commentPanelOpen = forceOpen || _commentPinned || text.trim().isNotEmpty;
+    });
+  }
+
+  bool _consumeCommentSearchTarget(int pageIndex) {
+    final appState = AppState();
+    final open = appState.openCommentPanelForSearchTarget &&
+        appState.searchTargetPageIndex == pageIndex;
+    if (open) appState.openCommentPanelForSearchTarget = false;
+    return open;
+  }
+
+  void _resetCommentState() {
+    _commentPanelOpen = false;
+    _commentPinned = false;
+    _commentDirty = false;
+    _commentSaving = false;
+    _commentPageIndex = widget.wordDocument.currentPage;
+    _savedCommentText = '';
+    _commentController.clear();
+    _commentUndoStack.clear();
+    _commentRedoStack.clear();
+  }
+
+  Future<bool> _canLeaveComment() async {
+    if (!_commentDirty) return true;
+    final action = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تعليق غير محفوظ'),
+        content: const Text('احفظ التعليق قبل الانتقال؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'cancel'),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, 'discard'),
+            child: const Text('تجاهل'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, 'save'),
+            child: const Text('حفظ'),
+          ),
+        ],
+      ),
+    );
+    if (action == 'save') {
+      await _saveComment();
+      return !_commentDirty;
     }
+    return action == 'discard';
+  }
+
+  Future<void> _saveComment() async {
+    if (_commentSaving) return;
+    setState(() => _commentSaving = true);
+    final text = _commentController.text;
+    try {
+      await _commentsRepository.save(
+        bookPath: _commentBookPath,
+        bookName: widget.wordDocument.title,
+        pageIndex: _commentPageIndex,
+        content: text,
+      );
+      if (!mounted) return;
+      setState(() {
+        _savedCommentText = text.trimRight();
+        _commentDirty = false;
+        if (!_commentPinned && _savedCommentText.trim().isEmpty) {
+          _commentPanelOpen = false;
+        }
+      });
+    } catch (e) {
+      if (mounted) ShowSnackBar(context, 'تعذر حفظ التعليق: $e');
+    } finally {
+      if (mounted) setState(() => _commentSaving = false);
+    }
+  }
+
+  Future<void> _toggleCommentPanel() async {
+    if (_commentPanelOpen) {
+      if (!await _canLeaveComment()) return;
+      setState(() {
+        _commentPinned = false;
+        _commentPanelOpen = false;
+      });
+      return;
+    }
+    setState(() => _commentPanelOpen = true);
+  }
+
+  void _onCommentChanged(String value) {
+    if (_commentUndoStack.isEmpty || _commentUndoStack.last != value) {
+      _commentUndoStack.add(value);
+      _commentRedoStack.clear();
+    }
+    setState(() => _commentDirty = value.trimRight() != _savedCommentText);
+  }
+
+  void _undoComment() {
+    if (_commentUndoStack.length < 2) return;
+    _commentRedoStack.add(_commentUndoStack.removeLast());
+    _setCommentTextFromHistory(_commentUndoStack.last);
+  }
+
+  void _redoComment() {
+    if (_commentRedoStack.isEmpty) return;
+    final text = _commentRedoStack.removeLast();
+    _commentUndoStack.add(text);
+    _setCommentTextFromHistory(text);
+  }
+
+  void _setCommentTextFromHistory(String text) {
+    setState(() {
+      _commentController.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
+      _commentDirty = text.trimRight() != _savedCommentText;
+    });
+  }
+
+  void _resizeCommentPanel(DragUpdateDetails details) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    setState(() {
+      _commentPanelFraction =
+          (_commentPanelFraction - details.delta.dy / screenHeight)
+              .clamp(0.15, 0.50)
+              .toDouble();
+    });
+  }
+
+  void _handleScrolledToPage(int newPageIndex) {
+    if (_handlingScrolledPage) return;
+    _handlingScrolledPage = true;
+    final oldPageIndex = widget.wordDocument.currentPage;
+    () async {
+      if (!await _canLeaveComment()) {
+        await _jumpToPage(oldPageIndex);
+        _handlingScrolledPage = false;
+        return;
+      }
+      _applyPageChange(newPageIndex, programmatic: false);
+      await _loadCommentForPage(newPageIndex);
+      _handlingScrolledPage = false;
+    }();
   }
 
   @override
@@ -441,7 +651,11 @@ class _DocViewerState extends State<DocViewer>
               _openInBookSearch,
           const SingleActivator(LogicalKeyboardKey.keyW, control: true):
               _closeCurrentBook,
-          const SingleActivator(LogicalKeyboardKey.escape): _closeSearchPanel,
+          const SingleActivator(LogicalKeyboardKey.home, control: true):
+              () => _goToCurrentPageEdge(0),
+          const SingleActivator(LogicalKeyboardKey.end, control: true):
+              () => _goToCurrentPageEdge(1),
+          const SingleActivator(LogicalKeyboardKey.escape): _closeCurrentBook,
         },
         child: Focus(
           autofocus: true,
@@ -465,17 +679,18 @@ class _DocViewerState extends State<DocViewer>
               ValueListenableBuilder<double>(
                 valueListenable: _zoomController,
                 builder: (context, currentZoom, child) {
+                  final commentHeight = _commentPanelOpen
+                      ? MediaQuery.of(context).size.height *
+                          _commentPanelFraction
+                      : 0.0;
                   return Padding(
-                    padding: const EdgeInsets.only(top: 48.0, bottom: 52.0),
+                    padding: EdgeInsets.only(
+                      top: 48.0,
+                      bottom: 52.0 + commentHeight,
+                    ),
                     child: Row(
-                      textDirection: TextDirection.rtl,
+                      textDirection: TextDirection.ltr,
                       children: [
-                        if (showBookSideBar &&
-                            _bookSideBarList.isNotEmpty &&
-                            _bookSideBarController.selecteSideBarP <
-                                _bookSideBarList.length)
-                          _bookSideBarList[_bookSideBarController
-                              .selecteSideBarP],
                         Expanded(
                           child: Listener(
                             onPointerPanZoomStart:
@@ -505,16 +720,7 @@ class _DocViewerState extends State<DocViewer>
                                               .wordDocument
                                               .pageFilePaths
                                               .length) {
-                                    widget.wordDocument.currentPage =
-                                        newPageIndex;
-                                    widget.wordDocument.prefetchPages(
-                                      newPageIndex,
-                                    );
-                                    _pageNumberController.text =
-                                        (newPageIndex + 1).toString();
-                                    _visitedPagesSet.add(newPageIndex);
-                                    _currentPageNotifier.value =
-                                        newPageIndex; // Notify toolbar to update
+                                    _handleScrolledToPage(newPageIndex);
                                   }
                                 }
                                 return false;
@@ -602,11 +808,61 @@ class _DocViewerState extends State<DocViewer>
                             ),
                           ),
                         ),
+                        if (showBookSideBar &&
+                            _bookSideBarList.isNotEmpty &&
+                            _bookSideBarController.selecteSideBarP <
+                                _bookSideBarList.length)
+                          _bookSideBarList[_bookSideBarController
+                              .selecteSideBarP],
                       ],
                     ),
                   );
                 },
               ),
+              if (_commentPanelOpen)
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 52),
+                    child: SizedBox(
+                      height: MediaQuery.of(context).size.height *
+                          _commentPanelFraction,
+                      width: double.infinity,
+                      child: Column(
+                        children: [
+                          GestureDetector(
+                            onVerticalDragUpdate: _resizeCommentPanel,
+                            child: MouseRegion(
+                              cursor: SystemMouseCursors.resizeUpDown,
+                              child: Container(
+                                height: 6,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: PageCommentPanel(
+                              controller: _commentController,
+                              pinned: _commentPinned,
+                              dirty: _commentDirty,
+                              canUndo: _commentUndoStack.length > 1,
+                              canRedo: _commentRedoStack.isNotEmpty,
+                              isSaving: _commentSaving,
+                              onUndo: _undoComment,
+                              onRedo: _redoComment,
+                              onTogglePinned: () => setState(
+                                () => _commentPinned = !_commentPinned,
+                              ),
+                              onSave: _saveComment,
+                              onClose: () => unawaited(_toggleCommentPanel()),
+                              onChanged: _onCommentChanged,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ValueListenableBuilder<int>(
                 valueListenable: _currentPageNotifier,
                 builder: (context, value, child) {
@@ -617,9 +873,13 @@ class _DocViewerState extends State<DocViewer>
                     findNextVisited: _findNextVisited,
                     goToPreviousVisitedPage: _goToPreviousVisitedPage,
                     goToNextVisitedPage: _goToNextVisitedPage,
-                    jumpToPage: _jumpToPage,
+                    jumpToPage: (page) => unawaited(_jumpToPage(page)),
                     // Force UI update on slider change as we now rely on scroll offset
-                    onSliderChanged: (value) => _jumpToPage(value.round() - 1),
+                    onSliderChanged: (value) =>
+                        unawaited(_jumpToPage(value.round() - 1)),
+                    commentPanelOpen: _commentPanelOpen,
+                    onToggleCommentPanel: () =>
+                        unawaited(_toggleCommentPanel()),
                   );
                 },
               ),
@@ -683,7 +943,11 @@ class _PageItemLoaderState extends State<PageItemLoader>
     super.build(context); // for KeepAlive
 
     // Determine if horizontal scrolling is needed
-    var sectPr = widget.wordDocument.getSectPrForPage(widget.pageIndex);
+    final renderDocument = widget.wordDocument.documentForPage(widget.pageIndex);
+    final localPageIndex = widget.wordDocument.localPageIndexForPage(
+      widget.pageIndex,
+    );
+    var sectPr = renderDocument.getSectPrForPage(localPageIndex);
     double width = sectPr.width ?? 800;
     double contentWidth = width * widget.zoomScale;
     double screenWidth = MediaQuery.of(context).size.width;
@@ -741,7 +1005,17 @@ class _PageItemLoaderState extends State<PageItemLoader>
                           final wp = snapshot.data!;
                           Future.delayed(
                             const Duration(milliseconds: 100),
-                            () => ClipboardPostProcessor.postProcessClipboard(wp),
+                            () async {
+                              final text = await ClipboardPostProcessor
+                                  .postProcessClipboard(wp);
+                              if (text.isNotEmpty) {
+                                await Clipboard.setData(
+                                  ClipboardData(
+                                    text: CitationFormatter.formatCopiedText(text),
+                                  ),
+                                );
+                              }
+                            },
                           );
                         }
                         return KeyEventResult.ignored;
@@ -755,7 +1029,8 @@ class _PageItemLoaderState extends State<PageItemLoader>
                               return CustomContextMenu(
                                 state: selectableRegionState,
                                 bookTitle: widget.wordDocument.title,
-                                pageNumber: widget.pageIndex + 1,
+                                pageNumber: widget.wordDocument
+                                    .displayPageNumberForPage(widget.pageIndex),
                                 contextMenuAnchors:
                                     selectableRegionState.contextMenuAnchors,
                                 wordPage: snapshot.data!,
@@ -763,7 +1038,7 @@ class _PageItemLoaderState extends State<PageItemLoader>
                             },
                         child: WordPageScreen(
                           snapshot.data!,
-                          wordDocument: widget.wordDocument,
+                          wordDocument: renderDocument,
                           paragraphKeyBuilder: widget.paragraphKeyBuilder,
                         ),
                       ),

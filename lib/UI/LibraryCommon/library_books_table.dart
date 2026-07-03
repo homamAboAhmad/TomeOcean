@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/Settings/app_font_settings.dart';
 import 'library_book_item.dart';
 import 'library_column_resize_divider.dart';
 import 'library_design_tokens.dart';
@@ -110,6 +112,7 @@ class _LibraryBooksTableState extends State<LibraryBooksTable> {
       );
 
   Widget _row(LibraryBookItem item, bool alternate) {
+    final checked = widget.checkedPaths.contains(item.bookPath);
     final highlighted = widget.highlightedPaths.contains(item.bookPath);
     return GestureDetector(
       onDoubleTap: widget.onDoubleTap == null
@@ -133,11 +136,15 @@ class _LibraryBooksTableState extends State<LibraryBooksTable> {
           builder: (_, selectedPath, __) {
             final selected = item.bookPath == selectedPath;
             return Container(
-              decoration: _rowDecoration(selected, highlighted, alternate),
+              decoration: _rowDecoration(
+                selected: selected,
+                checked: checked,
+                alternate: alternate,
+              ),
               child: LayoutBuilder(
                 builder: (_, constraints) => _columns(
                   constraints.maxWidth - _actionsWidth,
-                  _bookCell(item),
+                  _bookCell(item, highlighted: highlighted),
                   _authorCell(item),
                   trailing: _trailing(item),
                 ),
@@ -149,29 +156,34 @@ class _LibraryBooksTableState extends State<LibraryBooksTable> {
     );
   }
 
-  BoxDecoration _rowDecoration(
-    bool selected,
-    bool highlighted,
-    bool alternate,
-  ) {
+  BoxDecoration _rowDecoration({
+    required bool selected,
+    required bool checked,
+    required bool alternate,
+  }) {
     return BoxDecoration(
       color: selected
           ? LibraryDesignTokens.selected
-          : highlighted
-              ? Colors.green.withOpacity(0.1)
+          : checked
+              ? LibraryDesignTokens.chipSelected
               : alternate
                   ? LibraryDesignTokens.alternateRow
                   : Colors.white,
       border: Border.all(
         color: selected
             ? LibraryDesignTokens.selectedBorder
-            : LibraryDesignTokens.rowDivider,
+            : checked
+                ? LibraryDesignTokens.chipBorder
+                : LibraryDesignTokens.rowDivider,
         width: selected ? 1 : 0.5,
       ),
     );
   }
 
-  Widget _bookCell(LibraryBookItem item) {
+  Widget _bookCell(
+    LibraryBookItem item, {
+    required bool highlighted,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: Row(
@@ -188,6 +200,16 @@ class _LibraryBooksTableState extends State<LibraryBooksTable> {
               item.title,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.right,
+              style: highlighted
+                  ? AppUiFonts.style(
+                      AppFontRole.bookLists,
+                      normalStyle(fontWeight: FontWeight.w600),
+                      fontWeight: FontWeight.w600,
+                    )
+                  : AppUiFonts.style(
+                      AppFontRole.bookLists,
+                      normalStyle(fontWeight: FontWeight.normal),
+                    ),
             ),
           ),
         ],
@@ -202,6 +224,10 @@ class _LibraryBooksTableState extends State<LibraryBooksTable> {
         item.authorDisplay,
         overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
+        style: AppUiFonts.style(
+          AppFontRole.bookLists,
+          normalStyle(fontWeight: FontWeight.normal),
+        ),
       ),
     );
   }
@@ -267,7 +293,7 @@ class _LibraryBooksTableState extends State<LibraryBooksTable> {
       constraints: const BoxConstraints.tightFor(width: 34, height: 32),
       iconSize: 18,
       tooltip: favorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة',
-      icon: Icon(
+      icon: LibraryIcon.fromIcon(
         favorite ? Icons.star : Icons.star_border,
         color: favorite ? Colors.amber : Colors.grey.shade300,
       ),

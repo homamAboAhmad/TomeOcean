@@ -233,4 +233,22 @@ class MeiliSearchIndexer {
       return [];
     }
   }
+
+  Future<void> deleteBook(String bookPath) async {
+    final url = Uri.parse('$_meiliUrl/indexes/$_indexName/documents/delete');
+    final headers = {'Content-Type': 'application/json'};
+    final body = jsonEncode({'filter': 'book_path = ${jsonEncode(bookPath)}'});
+
+    try {
+      final response = await _client
+          .post(url, headers: headers, body: body)
+          .timeout(const Duration(seconds: 3));
+      if (response.statusCode == 202) {
+        final taskUid = jsonDecode(response.body)['taskUid'];
+        if (taskUid is int) await _waitForTaskCompletion(taskUid);
+      }
+    } catch (e) {
+      print("MeiliSearchIndexer: could not delete book: $e");
+    }
+  }
 }

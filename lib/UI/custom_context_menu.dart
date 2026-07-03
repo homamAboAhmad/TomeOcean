@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/Settings/app_citation_settings.dart';
 import 'package:golden_shamela/UI/clipboard_post_processor.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -35,7 +36,12 @@ class CustomContextMenu extends StatelessWidget {
   }
 
   void _handleCopy() async {
-    await _copyPlain();
+    final text = await _copyPlain();
+    if (text.isNotEmpty) {
+      await Clipboard.setData(
+        ClipboardData(text: CitationFormatter.formatCopiedText(text)),
+      );
+    }
     state.hideToolbar();
   }
 
@@ -47,7 +53,11 @@ class CustomContextMenu extends StatelessWidget {
   void _handleCopyReference() async {
     final text = await _copyPlain();
     if (text.isNotEmpty) {
-      final formatted = '«$text» [$bookTitle (ص $pageNumber)]';
+      final formatted = CitationFormatter.format(
+        text: text,
+        bookTitle: bookTitle,
+        pageNumber: pageNumber,
+      );
       await Clipboard.setData(ClipboardData(text: formatted));
     }
     state.hideToolbar();
@@ -122,7 +132,7 @@ class CustomContextMenu extends StatelessWidget {
                   //   onPressed: _handleCopyRich,
                   // ),
                   _buildMenuItem(
-                    label: 'نسخ مع المرجع',
+                    label: 'نسخ مع العزو',
                     onPressed: _handleCopyReference,
                   ),
                   _buildMenuItem(

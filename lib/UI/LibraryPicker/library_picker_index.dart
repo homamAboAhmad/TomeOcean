@@ -1,6 +1,7 @@
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_book_item.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_text_normalizer.dart';
+import 'package:golden_shamela/Utils/AuthorDeathDateParser.dart';
 
 class LibraryPickerIndex {
   final List<LibraryBookItem> books;
@@ -46,17 +47,11 @@ class LibraryPickerIndex {
       left.name.compareTo(right.name);
 
   static int _compareByDeathYear(Author left, Author right) {
-    final leftValue = _deathSortValue(left.deathYear);
-    final rightValue = _deathSortValue(right.deathYear);
-    if (leftValue != rightValue) return leftValue.compareTo(rightValue);
+    final death = AuthorDeathDateParser.compare(
+      left.deathYear,
+      right.deathYear,
+    );
+    if (death != 0) return death;
     return left.name.compareTo(right.name);
-  }
-
-  static int _deathSortValue(String? deathYear) {
-    final value = deathYear?.trim() ?? '';
-    if (value.isEmpty || value.contains('غير')) return 999999;
-    if (value.contains('معاصر')) return 999998;
-    final match = RegExp(r'\d+').firstMatch(value);
-    return int.tryParse(match?.group(0) ?? '') ?? 999999;
   }
 }

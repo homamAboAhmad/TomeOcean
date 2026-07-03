@@ -60,7 +60,7 @@ class LibraryBooksFragment extends StatelessWidget {
               Expanded(
                 child: LibrarySearchField(
                   controller: searchController,
-                  hint: searchHint,
+                  hint: libraryBookSearchHint(searchScope, context: searchHint),
                   onChanged: onSearchChanged,
                 ),
               ),

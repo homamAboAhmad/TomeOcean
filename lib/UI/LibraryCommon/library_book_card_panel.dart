@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/BookMetadataOptions.dart';
+import 'package:golden_shamela/UI/Settings/app_font_settings.dart';
 import 'library_book_item.dart';
 import 'library_design_tokens.dart';
+import 'library_icon.dart';
 
 class LibraryBookCardPanel extends StatefulWidget {
   final LibraryBookItem? item;
@@ -80,7 +82,7 @@ class _LibraryBookCardPanelState extends State<LibraryBookCardPanel> {
         ),
         child: Row(
           children: [
-            Icon(icon, size: 17),
+            LibraryIcon.fromIcon(icon, size: 17),
             const SizedBox(width: 5),
             Text(label),
           ],
@@ -108,7 +110,7 @@ class _LibraryBookCardPanelState extends State<LibraryBookCardPanel> {
         if (book.publisher.isNotEmpty) _line('الناشر', book.publisher),
         if (book.edition.isNotEmpty) _line('الطبعة', book.edition),
         if (book.pageCount.isNotEmpty) _line('عدد الصفحات', book.pageCount),
-        if (book.description.isNotEmpty) _line('البطاقة', book.description),
+        if (book.description.isNotEmpty) _line('نبذة عن الكتاب', book.description),
       ],
     );
   }
@@ -132,10 +134,15 @@ class _LibraryBookCardPanelState extends State<LibraryBookCardPanel> {
         textAlign: TextAlign.right,
         textDirection: TextDirection.rtl,
         text: TextSpan(
-          style: TextStyle(
+          style: AppUiFonts.style(
+            AppFontRole.bookCard,
+            TextStyle(
             color: Colors.black,
             fontSize: strong ? 17 : 15,
             fontWeight: strong ? FontWeight.bold : FontWeight.normal,
+            ),
+            sizeOffset: strong ? 2 : 0,
+            fontWeight: strong ? FontWeight.bold : null,
           ),
           children: [
             TextSpan(

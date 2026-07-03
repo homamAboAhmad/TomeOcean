@@ -2,7 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
+import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_design_tokens.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 class LibraryResizableDialogFrame extends StatefulWidget {
   final double minWidth;
@@ -48,38 +51,44 @@ class _LibraryResizableDialogFrameState
     return Dialog(
       insetPadding: EdgeInsets.zero,
       backgroundColor: Colors.transparent,
-      child: SizedBox.expand(
-        child: ValueListenableBuilder<Rect?>(
-          valueListenable: _rectNotifier,
-          child: RepaintBoundary(child: widget.child),
-          builder: (context, value, content) {
-            final rect = _normalizedRect(bounds, value);
-            return Stack(
-              children: [
-                Positioned.fromRect(
-                  rect: rect,
-                  child: Material(
-                    elevation: 14,
-                    color: Colors.white,
-                    clipBehavior: Clip.antiAlias,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: const BorderSide(
-                        color: LibraryDesignTokens.divider,
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.escape): () =>
+              Navigator.of(context).pop(),
+        },
+        child: SizedBox.expand(
+          child: ValueListenableBuilder<Rect?>(
+            valueListenable: _rectNotifier,
+            child: RepaintBoundary(child: widget.child),
+            builder: (context, value, content) {
+              final rect = _normalizedRect(bounds, value);
+              return Stack(
+                children: [
+                  Positioned.fromRect(
+                    rect: rect,
+                    child: Material(
+                      elevation: 14,
+                      color: surfaceColor,
+                      clipBehavior: Clip.antiAlias,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppChrome.radius),
+                        side: const BorderSide(
+                          color: LibraryDesignTokens.divider,
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          _titleBar(rect, bounds),
+                          Expanded(child: content!),
+                        ],
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        _titleBar(rect, bounds),
-                        Expanded(child: content!),
-                      ],
-                    ),
                   ),
-                ),
-                ..._resizeHandles(rect, bounds),
-              ],
-            );
-          },
+                  ..._resizeHandles(rect, bounds),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -120,7 +129,7 @@ class _LibraryResizableDialogFrameState
         child: Row(
           textDirection: TextDirection.rtl,
           children: [
-            const Icon(
+            LibraryIcon.fromIcon(
               Icons.menu_book_outlined,
               size: 18,
               color: LibraryDesignTokens.primary,
@@ -129,13 +138,12 @@ class _LibraryResizableDialogFrameState
             const Expanded(
               child: Text(
                 'اختيار كتاب',
-                style: TextStyle(fontFamily: LibraryDesignTokens.fontFamily),
               ),
             ),
             IconButton(
               tooltip: 'إغلاق',
               visualDensity: VisualDensity.compact,
-              icon: const Icon(Icons.close, size: 18),
+              icon: const LibraryIcon(LibraryIconType.close, size: 18),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],

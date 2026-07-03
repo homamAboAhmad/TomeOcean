@@ -51,7 +51,6 @@ class ShamelaSearchIndexer {
         bool needsIndexing = await _engine.needsIndexing(bookPath);
         if (needsIndexing) {
           booksToIndex.add(bookPath);
-          // print("ShamelaSearchIndexer: Book needs indexing: $bookName");
         }
         // else: Book is up to date, skip silently
       } catch (e, stackTrace) {
@@ -170,6 +169,11 @@ class ShamelaSearchIndexer {
     return await _engine.getIndexedBooks();
   }
 
+  Future<void> relocateBookPath(String oldPath, String newPath) async {
+    await _engine.initialize();
+    await _engine.relocateBookPath(oldPath, newPath);
+  }
+
   Future<void> deleteBook(String bookPath) async {
     await _engine.initialize();
     await _engine.deleteBook(bookPath);
@@ -180,13 +184,11 @@ class ShamelaSearchIndexer {
     await _engine.initialize();
 
     String bookName = AppStoragePaths.displayTitleFromPath(bookPath);
-    print("[Indexing] Start indexing: $bookName");
 
     try {
       // تحقق إذا كان الكتاب مفهرس ولا يحتاج تحديث
       bool needsIndexing = await _engine.needsIndexing(bookPath);
       if (!needsIndexing) {
-        print("[Indexing] $bookName is up to date - No need to index");
         return true;
       }
 
@@ -213,7 +215,6 @@ class ShamelaSearchIndexer {
 
     try {
       if (pages.isEmpty) {
-        print("[Indexing] $bookName is empty - Skipping");
         return false;
       }
 
@@ -272,7 +273,6 @@ class ShamelaSearchIndexer {
       );
 
       onProgress?.call(1.0, "اكتملت الفهرسة!");
-      print("[Indexing] ✓ Indexed $bookName (${documents.length} paragraphs)");
       return true;
     } catch (e) {
       print("[Indexing] ✗ Error indexing $bookName: $e");

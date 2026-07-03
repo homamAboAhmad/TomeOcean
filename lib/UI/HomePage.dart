@@ -1,22 +1,54 @@
 import 'dart:io';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:golden_shamela/Models/WordDocument.dart';
-import 'package:golden_shamela/Styles/AppResourses.dart';
-import 'package:golden_shamela/UI/DocViewer.dart';
-import 'package:golden_shamela/Styles/TextSyles.dart';
-import 'package:golden_shamela/UI/SettingsScreen.dart';
-import 'package:golden_shamela/UI/AuthorsManagement/authors_management_screen.dart';
-import 'package:golden_shamela/UI/Search/shamela_search_view.dart';
-import 'package:golden_shamela/UI/Search/models/search_results_tab.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
+import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Services/AppStoragePaths.dart';
-import 'package:golden_shamela/UI/Widgets/BackgroundTasksBar.dart';
+import 'package:golden_shamela/Services/BookPositionStore.dart';
+import 'package:golden_shamela/Services/BookSourceChangeMonitor.dart';
+import 'package:golden_shamela/Services/OpenTabsStore.dart';
+import 'package:golden_shamela/Styles/AppResourses.dart';
+import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/DocViewer.dart';
+import 'package:golden_shamela/UI/BookSideBar/BooksSideBarIcons.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_split_pane.dart';
+import 'package:golden_shamela/UI/LibraryControl/library_control_dialog.dart';
+import 'package:golden_shamela/UI/LibraryData/library_data_tab_view.dart';
+import 'package:golden_shamela/UI/LibraryData/library_data_tab.dart';
+import 'package:golden_shamela/UI/LibraryPicker/library_import_actions.dart';
 import 'package:golden_shamela/UI/LibraryPicker/library_picker_dialog.dart';
+import 'package:golden_shamela/UI/RecitedText/recited_text_tab.dart';
+import 'package:golden_shamela/UI/RecitedText/recited_text_tab_view.dart';
+import 'package:golden_shamela/UI/SavedItems/saved_items_dialog.dart';
+import 'package:golden_shamela/UI/SavedItems/helpers/work_session_store.dart';
+import 'package:golden_shamela/UI/SavedItems/models/saved_search_results_record.dart';
+import 'package:golden_shamela/UI/SavedItems/models/work_session_record.dart';
+import 'package:golden_shamela/UI/Search/models/search_results_tab.dart';
+import 'package:golden_shamela/UI/Search/models/search_state_snapshot.dart';
+import 'package:golden_shamela/UI/Search/shamela_search_view.dart';
+import 'package:golden_shamela/UI/SettingsScreen.dart';
+import 'package:golden_shamela/UI/Settings/app_other_settings.dart';
+import 'package:golden_shamela/UI/Widgets/BackgroundTasksBar.dart';
+import 'package:golden_shamela/Utils/SnackBar.dart';
 import 'package:golden_shamela/core/app_state.dart';
-import 'home_page/home_page_window_communication.dart';
-import 'home_page/home_page_search_handlers.dart';
+import 'package:golden_shamela/core/indexed_books_loader.dart';
 import 'home_page/home_page_book_management.dart';
-import 'home_page/home_page_ui_helpers.dart';
+import 'home_page/home_page_search_handlers.dart';
+import 'home_page/home_page_tab_shortcuts.dart';
+import 'home_page/home_page_tab_space.dart';
+import 'home_page/home_page_tab_space_view.dart';
+import 'home_page/home_page_window_communication.dart';
+
+part 'home_page/home_page_actions.dart';
+part 'home_page/home_page_detached_tab_resize.dart';
+part 'home_page/home_page_detached_tabs.dart';
+part 'home_page/home_page_open_tabs.dart';
+part 'home_page/home_page_saved_items.dart';
+part 'home_page/home_page_search_tabs.dart';
+part 'home_page/home_page_tab_close_actions.dart';
+part 'home_page/home_page_app_bar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -26,73 +58,184 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<WordDocument> openedBooks = [];
-  String? filePath;
-  int selectedBookP = 0;
-
-  List<SearchResultsTab> _searchResultsTabs = [];
+  final List<HomePageTabSpace> _spaces = [
+    HomePageTabSpace(),
+    HomePageTabSpace(),
+  ];
+  int _activeSpaceIndex = 0;
+  HomePageSplitMode _splitMode = HomePageSplitMode.single;
+  final List<_DetachedHomeTabRecord> _detachedTabs = [];
 
   HomePageWindowCommunication? _windowCommunication;
   HomePageSearchHandlers? _searchHandlers;
   HomePageBookManagement? _bookManagement;
 
+  HomePageTabSpace get _activeSpace => _spaces[_activeSpaceIndex];
+
   @override
   void initState() {
     super.initState();
     _initializeHelpers();
+    unawaited(_restoreOpenTabs());
   }
 
-
   void _initializeHelpers() {
-    _bookManagement = HomePageBookManagement(
-      context: context,
-    );
+    _bookManagement = HomePageBookManagement(context: context);
 
     _searchHandlers = HomePageSearchHandlers(
       context: context,
-      onResultTapped: _handleSearchResultNavigation,
-      onPerformSearch: _performSearchInMainWindow,
+      onResultTapped: (bookPath, pageNumber) =>
+          this._handleSearchResultNavigation(bookPath, pageNumber),
+      onPerformSearch: this._performSearchInMainWindow,
       isMounted: () => mounted,
       setState: () => setState(() {}),
-      onSearchCompleted: _addSearchResultsTab,
+      onSearchCompleted: this._addSearchResultsTab,
     );
 
     _windowCommunication = HomePageWindowCommunication(
       onBookSelected: (bookPath, pageNumber) {
-        _onBookSelected(File(bookPath), pageNumber: pageNumber);
+        this._onBookSelected(File(bookPath), pageNumber: pageNumber);
       },
-      onPerformSearch: _performSearchInMainWindow,
-      onSearchResults: _addSearchResultsTab,
+      onPerformSearch: this._performSearchInMainWindow,
+      onSearchResults: this._addSearchResultsTab,
       isMounted: () => mounted,
     );
 
     _windowCommunication!.setup();
   }
 
-  Widget _buildSearchResultsTabViewer() {
-    final tabIndex = selectedBookP - openedBooks.length;
-    if (tabIndex < 0 || tabIndex >= _searchResultsTabs.length) {
-      return Center(child: Text('خطأ في عرض النتائج', style: normalStyle()));
+  @override
+  Widget build(BuildContext context) {
+    return HomePageTabShortcuts(
+      currentIndex: _activeSpace.selectedBookP,
+      totalTabs: _activeSpace.totalTabs,
+      onSwitchToIndex: (index) => this._switchToBook(_activeSpace, index),
+      onSwitchDetachedTab: this._switchDetachedTab,
+      onCloseCurrentTab: this._closeCurrentTabCommand,
+      onCloseAllTabs: this._closeAllTabsCommand,
+      onOpenLibraryPicker: () => unawaited(this._openLibraryPicker()),
+      onAddBook: () => unawaited(this._addBookFromHome()),
+      onOpenRecitedText: () => this._openRecitedTextTab(),
+      onOpenSearch: () => unawaited(_searchHandlers!.openSearchWindow()),
+      onOpenLibraryControl: () => unawaited(this._openLibraryControlPanel()),
+      onOpenSavedItems: this._openSavedItemsDialog,
+      onOpenSettings: this._openSettings,
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          backgroundColor: bgColor,
+          body: Stack(
+            children: [
+              Column(
+                children: [
+                  _buildStackedAppBar(),
+                  Expanded(child: _buildTabSpaces()),
+                  const BackgroundTasksBar(),
+                ],
+              ),
+              this._buildDetachedTabsLayer(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabSpaces() {
+    if (_splitMode == HomePageSplitMode.single) {
+      return _buildTabSpace(_spaces.first);
     }
 
-    final tab = _searchResultsTabs[tabIndex];
+    return LibrarySplitPane(
+      axis: _splitMode == HomePageSplitMode.vertical
+          ? Axis.horizontal
+          : Axis.vertical,
+      initialRatio: 0.5,
+      minRatio: 0.2,
+      maxRatio: 0.8,
+      first: _buildTabSpace(_spaces[0]),
+      second: _buildTabSpace(_spaces[1]),
+    );
+  }
+
+  Widget _buildTabSpace(HomePageTabSpace space) {
+    return HomePageTabSpaceView(
+      space: space,
+      active: identical(space, _activeSpace),
+      onActivate: () => this._activateSpace(space),
+      onBookSelected: (
+        book, {
+        pageNumber,
+        fromSearchResults = false,
+      }) =>
+          this._onBookSelected(
+        book,
+        space: space,
+        pageNumber: pageNumber,
+        fromSearchResults: fromSearchResults,
+      ),
+      onCloseBook: (index) => this._closeBook(space, index),
+      onSwitchToBook: (index) => this._switchToBook(space, index),
+      onCloseSearchResultsTab: (tabId) =>
+          this._closeSearchResultsTab(space, tabId),
+      onCloseLibraryDataTab: () => this._closeLibraryDataTab(space),
+      onCloseRecitedTextTab: () => this._closeRecitedTextTab(space),
+      onCloseCurrentTab: () => this._closeCurrentTab(space),
+      onOpenBooks: () => unawaited(this._openLibraryPicker(space: space)),
+      onOpenRecitedText: () => this._openRecitedTextTab(space: space),
+      onOpenAuthors: () => this._openLibraryDataTab(space: space),
+      onOpenSearch: () => unawaited(_searchHandlers!.openSearchWindow()),
+      onSearch: (query, sectionId, sectionTitle) =>
+          this._performHomeStartSearch(space, query, sectionId, sectionTitle),
+      onOpenSection: (sectionId) =>
+          unawaited(this._openLibraryPicker(space: space, sectionId: sectionId)),
+      onOpenRecentBook: (path) => unawaited(this._onBookSelected(
+        File(path),
+        space: space,
+        openSource: BookOpenSource.recent,
+      )),
+      onReorderBooks: (oldIndex, newIndex) {
+        setState(() {
+          final draggedBook = space.openedBooks.removeAt(oldIndex);
+          space.openedBooks.insert(newIndex, draggedBook);
+        });
+        this._saveOpenTabs();
+      },
+      buildSearchResultsTab: (tab) => _buildSearchResultsTab(space, tab),
+      onTabsChanged: this._saveOpenTabs,
+    );
+  }
+
+  Widget _buildSearchResultsTab(
+    HomePageTabSpace space,
+    SearchResultsTab tab,
+  ) {
     return ShamelaSearchView(
       key: ValueKey(tab.id),
       results: tab.results,
       totalCount: tab.totalCount,
       searchQueries: tab.searchQueries,
       morphologicalSearch: tab.morphologicalSearch,
+      searchSnapshot: tab.searchSnapshot,
       isSearching: tab.isSearching,
-      onOpenBookFull: (bookPath, pageNumber) async {
+      onLoadBook: (bookPath, pageNumber) async {
+        final openComment = AppState().openCommentPanelForSearchTarget;
         AppState().setSearchHighlight(tab.searchQueries);
-        await _onBookSelected(
-          File(bookPath),
-          pageNumber: pageNumber,
-          fromSearchResults: true,
+        AppState().setSearchTarget(
+          pageNumber,
+          null,
+          openCommentPanel: openComment,
         );
+        return this._loadBookInsideSearchTab(bookPath, pageNumber);
       },
+      onOpenBookFull: (bookPath, pageNumber) =>
+          this._handleSearchResultNavigation(
+        bookPath,
+        pageNumber,
+        space: space,
+      ),
       onNewSearch: (query, morphological) {
-        _performQuickSearchForTab(tab.id, query, morphological);
+        this._performQuickSearchForTab(space, tab.id, query, morphological);
       },
       onNewSearchDialog: () => _searchHandlers!.openSearchWindow(),
       onStopSearch: () {
@@ -104,508 +247,4 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: const Color(0xFFF3F3F3), // Neutral premium background
-        appBar: AppBar(
-          backgroundColor: primaryColor,
-          elevation: 2,
-          toolbarHeight: 70,
-          leading: IconButton(
-            icon: const Icon(
-              Icons.menu_book_rounded,
-              color: secondaryColor,
-              size: 28,
-            ),
-            onPressed: _openLibraryPicker,
-            tooltip: 'تصفح الكتب',
-          ),
-          title: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.menu_book_rounded,
-                  color: secondaryColor,
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  "المكتبة",
-                  style: bigStyle(fontSize: 22, color: secondaryColor),
-                ),
-              ],
-            ),
-          ),
-          centerTitle: true,
-          actions: [
-            _buildAppBarAction(
-              icon: Icons.search_rounded,
-              tooltip: 'بحث',
-              onPressed: () => _searchHandlers!.openSearchWindow(),
-            ),
-            _buildAppBarAction(
-              icon: Icons.people_outline_rounded,
-              tooltip: 'إدارة المؤلفين',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AuthorsManagementScreen(),
-                ),
-              ),
-            ),
-            _buildAppBarAction(
-              icon: Icons.settings_rounded,
-              tooltip: 'الإعدادات',
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  // Base Empty State
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.auto_stories_rounded,
-                          size: 80,
-                          color: Colors.blueGrey.withOpacity(0.1),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'اختر كتاباً من زر تصفح الكتب للبدء',
-                          style: bigStyle(
-                            color: Colors.blueGrey.withOpacity(0.3),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Content Layer
-                  if (openedBooks.isNotEmpty &&
-                      selectedBookP < openedBooks.length)
-                    Padding(
-                      padding: const EdgeInsets.only(
-                        top: 48.0,
-                      ), // Space for tabs bar
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, -2),
-                            ),
-                          ],
-                        ),
-                        child: DocViewer(
-                          openedBooks[selectedBookP],
-                          key: ObjectKey(openedBooks[selectedBookP]),
-                          onBookSelected: _onBookSelected,
-                          onCloseBook: () => _closeBook(selectedBookP),
-                        ),
-                      ),
-                    ),
-
-                  if (_searchResultsTabs.isNotEmpty &&
-                      selectedBookP >= openedBooks.length)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 48.0),
-                      child: Container(
-                        decoration: const BoxDecoration(color: Colors.white),
-                        child: _buildSearchResultsTabViewer(),
-                      ),
-                    ),
-
-                  // Tabs Layer (Top)
-                  if (openedBooks.isNotEmpty || _searchResultsTabs.isNotEmpty)
-                    Container(
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            offset: const Offset(0, 2),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                      child: HomePageUIHelpers.openedBooksTitlesList(
-                        openedBooks: openedBooks,
-                        searchResultsTabs: _searchResultsTabs,
-                        selectedBookP: selectedBookP,
-                        onSwitchToBook: _switchToBook,
-                        onCloseBook: _closeBook,
-                        onCloseSearchResultsTab: _closeSearchResultsTab,
-                        onReorderBooks: (oldIndex, newIndex) {
-                          setState(() {
-                            final draggedBook = openedBooks.removeAt(oldIndex);
-                            openedBooks.insert(newIndex, draggedBook);
-                          });
-                        },
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const BackgroundTasksBar(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _openLibraryPicker() async {
-    final selectedPath = await showLibraryPickerDialog(context);
-    if (selectedPath != null && mounted) {
-      await _onBookSelected(File(selectedPath));
-    }
-  }
-
-  Widget _buildAppBarAction({
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onPressed,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4.0),
-      child: Tooltip(
-        message: tooltip,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onPressed,
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: secondaryColor, size: 22),
-          ),
-        ),
-      ),
-    );
-  }
-
-
-  Future<void> _onBookSelected(
-    File book, {
-    int? pageNumber,
-    bool fromSearchResults = false,
-  }) async {
-    filePath = book.path;
-    try {
-      await BooksMetadataDatabase().recordRecentBook(book.path);
-    } catch (e) {
-      debugPrint('Failed to record recent book: $e');
-    }
-
-    if (!fromSearchResults) {
-      AppState().clearSearchHighlight();
-    }
-
-    final storedBook = await BooksMetadataDatabase().getBookByPath(book.path);
-    final bookTitle = storedBook?.title.isNotEmpty == true
-        ? storedBook!.title
-        : AppStoragePaths.displayTitleFromPath(book.path);
-
-    WordDocument tempDoc = WordDocument.empty();
-    tempDoc.title = bookTitle;
-    tempDoc.isLoading.value = true;
-    tempDoc.loadingMessage.value = "جاري التحضير...";
-
-    setState(() {
-      openedBooks.add(tempDoc);
-      selectedBookP = openedBooks.length - 1;
-    });
-
-    WordDocument? loadedDoc = await _bookManagement!.readDocxFile(
-      filePath,
-      tempDoc,
-    );
-
-    if (loadedDoc != null && mounted) {
-      setState(() {
-        int idx = openedBooks.indexOf(tempDoc);
-        if (idx != -1) {
-          openedBooks[idx] = loadedDoc;
-          if (pageNumber != null) {
-            openedBooks[idx].currentPage = pageNumber;
-          }
-        }
-      });
-    } else if (mounted) {
-      setState(() {
-        openedBooks.remove(tempDoc);
-        if (selectedBookP >= openedBooks.length) {
-          selectedBookP = openedBooks.length - 1;
-        }
-        if (selectedBookP < 0 && openedBooks.isNotEmpty) {
-          selectedBookP = 0;
-        }
-      });
-    }
-  }
-
-  void _handleSearchResultNavigation(String bookPath, int pageNumber) async {
-    await _onBookSelected(
-      File(bookPath),
-      pageNumber: pageNumber,
-      fromSearchResults: true,
-    );
-  }
-
-  void _closeBook(int i) {
-    if (i >= openedBooks.length && _searchResultsTabs.isNotEmpty) {
-      final tabIndex = i - openedBooks.length;
-      if (tabIndex >= 0 && tabIndex < _searchResultsTabs.length) {
-        setState(() {
-          _searchResultsTabs.removeAt(tabIndex);
-          if (selectedBookP >= openedBooks.length + _searchResultsTabs.length) {
-            selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
-          }
-          if (selectedBookP < 0 && openedBooks.isNotEmpty) {
-            selectedBookP = 0;
-          }
-        });
-      }
-      return;
-    }
-
-    openedBooks.removeAt(i);
-    if (selectedBookP >= openedBooks.length) {
-      selectedBookP = openedBooks.length - 1;
-    }
-    if (selectedBookP < 0 && openedBooks.isNotEmpty) {
-      selectedBookP = 0;
-    }
-    setState(() {});
-  }
-
-  void _closeSearchResultsTab(String tabId) {
-    setState(() {
-      _searchResultsTabs.removeWhere((tab) => tab.id == tabId);
-      if (selectedBookP >= openedBooks.length + _searchResultsTabs.length) {
-        selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
-      }
-      if (selectedBookP < 0 && openedBooks.isNotEmpty) {
-        selectedBookP = 0;
-      }
-    });
-  }
-
-  void _switchToBook(int i) {
-    selectedBookP = i;
-    setState(() {});
-  }
-
-  void _addSearchResultsTab(
-    List<Map<String, dynamic>> results,
-    int totalCount,
-    List<String> searchQueries,
-    bool morphologicalSearch,
-  ) {
-    setState(() {
-      final tabId = DateTime.now().millisecondsSinceEpoch.toString();
-      final newTab = SearchResultsTab(
-        id: tabId,
-        results: results,
-        totalCount: totalCount,
-        searchQueries: searchQueries,
-        morphologicalSearch: morphologicalSearch,
-      );
-      _searchResultsTabs.add(newTab);
-      selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
-    });
-  }
-
-  void _performQuickSearchForTab(
-    String tabId,
-    String query,
-    bool morphological,
-  ) {
-    final tabIndex = _searchResultsTabs.indexWhere((t) => t.id == tabId);
-    if (tabIndex != -1) {
-      setState(() {
-        _searchResultsTabs[tabIndex].results = [];
-        _searchResultsTabs[tabIndex].totalCount = 0;
-        _searchResultsTabs[tabIndex].searchQueries = [query];
-        _searchResultsTabs[tabIndex].morphologicalSearch = morphological;
-      });
-    }
-
-    _searchHandlers!.performSearchInMainWindow(
-      groupControllersMap: <String, dynamic>{
-        'and': [query],
-        'or': <String>[],
-        'not': <String>[],
-      },
-      searchGrouping: 'all',
-      selectedBooksForSearch: [],
-      searchSections: {
-        'main': true,
-        'footnote': true,
-        'comment': true,
-        'title': false,
-      },
-      morphologicalSearch: morphological,
-      affixSearch: false,
-      considerHamzas: false,
-      considerDiacritics: false,
-      considerNumbers: true,
-      allPhrasesRequired: false,
-      ordered: false,
-      proximity: false,
-      indexedBooks: AppState().cachedIndexedBooks ?? [],
-      onSearchResultsUpdate: (results, totalCount, queries, morph) {
-        if (mounted) {
-          _updateSearchResultsTab(tabId, results, totalCount, queries, [
-            query,
-          ], morph);
-        }
-      },
-    );
-  }
-
-  void _performSearchInMainWindow(
-    Map<String, dynamic> groupControllersMap,
-    String searchGrouping,
-    List<Map<String, dynamic>> selectedBooksForSearch,
-    Map<String, bool> searchSections,
-    bool morphologicalSearch,
-    bool affixSearch,
-    bool considerHamzas,
-    bool considerDiacritics,
-    bool considerNumbers,
-    bool allPhrasesRequired,
-    bool ordered,
-    bool proximity,
-    List<Map<String, dynamic>> indexedBooks,
-  ) {
-    final searchQueries = _extractSearchQueries(groupControllersMap);
-    final tabId = DateTime.now().millisecondsSinceEpoch.toString();
-
-    // Create the tab immediately so the user sees it right away
-    setState(() {
-      _searchResultsTabs.add(
-        SearchResultsTab(
-          id: tabId,
-          results: [],
-          totalCount: 0,
-          searchQueries: searchQueries,
-          morphologicalSearch: morphologicalSearch,
-          isSearching: true,
-        ),
-      );
-      selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
-    });
-
-    _searchHandlers!.performSearchInMainWindow(
-      groupControllersMap: groupControllersMap,
-      searchGrouping: searchGrouping,
-      selectedBooksForSearch: selectedBooksForSearch,
-      searchSections: searchSections,
-      morphologicalSearch: morphologicalSearch,
-      affixSearch: affixSearch,
-      considerHamzas: considerHamzas,
-      considerDiacritics: considerDiacritics,
-      considerNumbers: considerNumbers,
-      allPhrasesRequired: allPhrasesRequired,
-      ordered: ordered,
-      proximity: proximity,
-      indexedBooks: indexedBooks,
-      isCancelled: () {
-        final idx = _searchResultsTabs.indexWhere((t) => t.id == tabId);
-        return idx == -1 || _searchResultsTabs[idx].cancelled;
-      },
-      onSearchResultsUpdate: (results, totalCount, queries, morphological) {
-        if (mounted) {
-          _updateSearchResultsTab(
-            tabId,
-            results,
-            totalCount,
-            queries,
-            searchQueries,
-            morphological,
-          );
-        }
-      },
-      onSearchComplete: () {
-        if (mounted) {
-          final idx = _searchResultsTabs.indexWhere((t) => t.id == tabId);
-          if (idx != -1) {
-            setState(() => _searchResultsTabs[idx].isSearching = false);
-          }
-        }
-      },
-    );
-  }
-
-  List<String> _extractSearchQueries(Map<String, dynamic> groupControllersMap) {
-    final searchQueries = <String>[];
-    groupControllersMap.forEach((key, value) {
-      if (value is List) {
-        for (var text in value) {
-          final trimmedText = text.toString().trim();
-          if (trimmedText.isNotEmpty) {
-            searchQueries.add(trimmedText);
-          }
-        }
-      }
-    });
-    return searchQueries;
-  }
-
-  void _updateSearchResultsTab(
-    String tabId,
-    List<Map<String, dynamic>> results,
-    int? totalCount,
-    List<String> queries,
-    List<String> fallbackQueries,
-    bool morphological,
-  ) {
-    setState(() {
-      final tabIndex = _searchResultsTabs.indexWhere((tab) => tab.id == tabId);
-      final searchQueries = queries.isNotEmpty ? queries : fallbackQueries;
-
-      if (tabIndex == -1) {
-        _searchResultsTabs.add(
-          SearchResultsTab(
-            id: tabId,
-            results: List.from(results),
-            totalCount: totalCount ?? 0,
-            searchQueries: searchQueries,
-            morphologicalSearch: morphological,
-          ),
-        );
-      } else {
-        _searchResultsTabs[tabIndex].results = List.from(results);
-        _searchResultsTabs[tabIndex].totalCount = totalCount ?? 0;
-        _searchResultsTabs[tabIndex].searchQueries = searchQueries;
-        _searchResultsTabs[tabIndex].morphologicalSearch = morphological;
-      }
-
-      selectedBookP = openedBooks.length + _searchResultsTabs.length - 1;
-    });
-  }
 }

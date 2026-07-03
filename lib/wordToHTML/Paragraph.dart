@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:golden_shamela/TestApp2.dart';
 import 'package:golden_shamela/Utils/ImageParser.dart';
 import 'package:golden_shamela/wordToHTML/HeaderFooterDotLeader.dart';
 import 'package:golden_shamela/wordToHTML/FooterFloatingPositionResolver.dart';
@@ -12,6 +11,7 @@ import 'package:golden_shamela/wordToHTML/HyperLinkRun.dart';
 import 'package:golden_shamela/wordToHTML/ParagraphStrutResolver.dart';
 import 'package:golden_shamela/wordToHTML/PageFieldDisplayNumeralResolver.dart';
 import 'package:golden_shamela/wordToHTML/PositionalTabLayout.dart';
+import 'package:golden_shamela/wordToHTML/RtlWidgetSpanFixer.dart';
 import 'package:golden_shamela/wordToHTML/StyleRefResolver.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/wordToHTML/HyperlinkDisplayContextResolver.dart';

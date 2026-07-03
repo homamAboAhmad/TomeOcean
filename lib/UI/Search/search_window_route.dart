@@ -55,6 +55,9 @@ class _SearchWindowRouteState extends State<SearchWindowRoute> {
       body: ShamelaSearchWindow(
         onSearchRequested: _handleSearchRequest,
         indexedBooks: _indexedBooks,
+        onClose: () {
+          _closeWindow();
+        },
       ),
     );
   }

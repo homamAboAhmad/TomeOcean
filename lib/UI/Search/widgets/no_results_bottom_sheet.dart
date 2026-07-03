@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 /// Widget for displaying a professional bottom sheet when no search results are found.
 class NoResultsBottomSheet {
@@ -47,7 +48,7 @@ class NoResultsBottomSheet {
     return Container(
       padding: EdgeInsets.all(_bottomSheetPadding),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: surfaceColor,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(_bottomSheetBorderRadius),
         ),
@@ -78,7 +79,7 @@ class NoResultsBottomSheet {
       height: _dragHandleHeight,
       margin: EdgeInsets.only(bottom: _dragHandleMarginBottom),
       decoration: BoxDecoration(
-        color: Colors.grey.shade300,
+        color: borderColor,
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -102,7 +103,7 @@ class NoResultsBottomSheet {
           ),
         ),
         IconButton(
-          icon: Icon(Icons.close, color: Colors.grey.shade600),
+          icon: LibraryIcon.fromIcon(Icons.close, color: accentColor.withOpacity(0.68)),
           onPressed: () => Navigator.of(context).pop(),
           tooltip: 'إغلاق',
         ),
@@ -112,10 +113,10 @@ class NoResultsBottomSheet {
 
   /// Builds the no results icon.
   static Widget _buildIcon() {
-    return Icon(
+    return LibraryIcon.fromIcon(
       Icons.search_off,
       size: _iconSize,
-      color: Colors.grey.shade400,
+      color: borderColor,
     );
   }
 
@@ -125,7 +126,7 @@ class NoResultsBottomSheet {
       'لا توجد نتائج للبحث',
       style: mediumStyle(
         fontSize: _subtitleFontSize,
-        color: Colors.grey.shade800,
+        color: accentColor,
       ),
       textAlign: TextAlign.center,
     );
@@ -137,7 +138,7 @@ class NoResultsBottomSheet {
       'جرب تغيير كلمات البحث أو معايير البحث',
       style: smallStyle(
         fontSize: _descriptionFontSize,
-        color: Colors.grey.shade600,
+        color: accentColor.withOpacity(0.68),
       ),
       textAlign: TextAlign.center,
     );
@@ -150,10 +151,10 @@ class NoResultsBottomSheet {
       child: ElevatedButton(
         onPressed: () => Navigator.of(context).pop(),
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryColor,
+          backgroundColor: actionColor,
           padding: EdgeInsets.symmetric(vertical: _buttonVerticalPadding),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_buttonBorderRadius),
+            borderRadius: BorderRadius.circular(AppChrome.radius),
           ),
         ),
         child: Text(

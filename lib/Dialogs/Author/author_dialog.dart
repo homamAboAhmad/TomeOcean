@@ -1,5 +1,6 @@
 // lib/Dialogs/Author/author_dialog.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../Models/Author.dart';
 import '../../Styles/TextSyles.dart';
 import '../../Styles/AppResourses.dart';
@@ -101,43 +102,54 @@ class _AuthorDialogState extends State<AuthorDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.author != null;
     
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 8,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 550),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                textDirection: TextDirection.rtl,
-                children: [
-                  AuthorDialogHeader(
-                    isEditing: isEditing,
-                    onClose: _handleCancel,
-                  ),
-                  const SizedBox(height: 24),
-                  AuthorDialogForm(
-                    nameController: _nameCtrl,
-                    deathYearController: _deathYearCtrl,
-                    descriptionController: _descriptionCtrl,
-                  ),
-                  const SizedBox(height: 24),
-                  AuthorDialogActions(
-                    isEditing: isEditing,
-                    isSaving: _isSaving,
-                    onCancel: _handleCancel,
-                    onSave: _save,
-                  ),
-                ],
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (_, event) {
+        if (event is KeyDownEvent &&
+            event.logicalKey == LogicalKeyboardKey.escape) {
+          _handleCancel();
+          return KeyEventResult.handled;
+        }
+        return KeyEventResult.ignored;
+      },
+      child: Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 8,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 550),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  textDirection: TextDirection.rtl,
+                  children: [
+                    AuthorDialogHeader(
+                      isEditing: isEditing,
+                      onClose: _handleCancel,
+                    ),
+                    const SizedBox(height: 24),
+                    AuthorDialogForm(
+                      nameController: _nameCtrl,
+                      deathYearController: _deathYearCtrl,
+                      descriptionController: _descriptionCtrl,
+                    ),
+                    const SizedBox(height: 24),
+                    AuthorDialogActions(
+                      isEditing: isEditing,
+                      isSaving: _isSaving,
+                      onCancel: _handleCancel,
+                      onSave: _save,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
+import 'package:golden_shamela/Styles/AppResourses.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 bool showBookSideBar = false;
 
@@ -40,11 +42,14 @@ class BookSideBarController {
         child: InkWell(
           onTap: () => setState(() => showBookSideBar = !showBookSideBar),
           child: Container(
-            color: showBookSideBar ? Colors.grey : Colors.transparent,
+            decoration: BoxDecoration(
+              color: showBookSideBar ? organicHighlightColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
+            ),
             width: 24,
             height: 24,
             child: Center(
-              child: Icon(Icons.view_sidebar, size: showBookSideBar ? 20 : 24),
+              child: LibraryIcon.fromIcon(Icons.view_sidebar, size: showBookSideBar ? 20 : 24),
             ),
           ),
         ),
@@ -61,11 +66,14 @@ class BookSideBarController {
         child: InkWell(
           onTap: () => setState(() => selecteSideBarP = 0),
           child: Container(
-            color: isSelected ? Colors.grey : Colors.transparent,
+            decoration: BoxDecoration(
+              color: isSelected ? organicHighlightColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
+            ),
             width: 24,
             height: 24,
             child: Center(
-              child: Icon(
+              child: LibraryIcon.fromIcon(
                 Icons.collections_bookmark,
                 size: isSelected ? 20 : 24,
               ),
@@ -85,11 +93,14 @@ class BookSideBarController {
         child: InkWell(
           onTap: () => setState(() => selecteSideBarP = 1),
           child: Container(
-            color: isSelected ? Colors.grey : Colors.transparent,
+            decoration: BoxDecoration(
+              color: isSelected ? organicHighlightColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
+            ),
             width: 24,
             height: 24,
             child: Center(
-              child: Icon(Icons.search, size: isSelected ? 20 : 24),
+              child: LibraryIcon.fromIcon(Icons.search, size: isSelected ? 20 : 24),
             ),
           ),
         ),
@@ -106,11 +117,14 @@ class BookSideBarController {
         child: InkWell(
           onTap: () => setState(() => selecteSideBarP = 2),
           child: Container(
-            color: isSelected ? Colors.grey : Colors.transparent,
+            decoration: BoxDecoration(
+              color: isSelected ? organicHighlightColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
+            ),
             width: 24,
             height: 24,
             child: Center(
-              child: Icon(Icons.category, size: isSelected ? 20 : 24),
+              child: LibraryIcon.fromIcon(Icons.category, size: isSelected ? 20 : 24),
             ),
           ),
         ),
@@ -127,11 +141,14 @@ class BookSideBarController {
         child: InkWell(
           onTap: () => setState(() => selecteSideBarP = 3),
           child: Container(
-            color: isSelected ? Colors.grey : Colors.transparent,
+            decoration: BoxDecoration(
+              color: isSelected ? organicHighlightColor : Colors.transparent,
+              borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
+            ),
             width: 24,
             height: 24,
             child: Center(
-              child: Icon(Icons.edit_note_rounded, size: isSelected ? 20 : 24),
+              child: LibraryIcon.fromIcon(Icons.edit_note_rounded, size: isSelected ? 20 : 24),
             ),
           ),
         ),

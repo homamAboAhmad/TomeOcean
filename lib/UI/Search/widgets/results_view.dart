@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
-import 'package:golden_shamela/UI/Search/helpers/search_highlighting_helper.dart';
+import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
+import 'package:golden_shamela/UI/Search/widgets/search_results_table.dart';
+import 'package:golden_shamela/core/app_state.dart';
 
-/// Results view widget for search dialog — with optional preview callback
-class SearchResultsView extends StatefulWidget {
+/// Lightweight results list for search dialog.
+///
+/// Tapping a result opens the book directly; page previews are intentionally not
+/// loaded here because building book pages from search rows can freeze large
+/// result sets.
+class SearchResultsView extends StatelessWidget {
   final List<Map<String, dynamic>> results;
   final int totalCount;
   final Function(String, int) onResultTapped;
@@ -15,7 +21,7 @@ class SearchResultsView extends StatefulWidget {
   final int? selectedIndex;
 
   const SearchResultsView({
-    Key? key,
+    super.key,
     required this.results,
     required this.totalCount,
     required this.onResultTapped,
@@ -24,149 +30,77 @@ class SearchResultsView extends StatefulWidget {
     required this.morphologicalSearch,
     this.onResultPreviewed,
     this.selectedIndex,
-  }) : super(key: key);
-
-  @override
-  State<SearchResultsView> createState() => _SearchResultsViewState();
-}
-
-class _SearchResultsViewState extends State<SearchResultsView> {
-  late SearchHighlightingHelper _highlightingHelper;
-  final Map<int, Widget> _snippetCache = {};
-
-  @override
-  void initState() {
-    super.initState();
-    _highlightingHelper = SearchHighlightingHelper(
-      morphologicalSearch: widget.morphologicalSearch,
-    );
-  }
-
-  @override
-  void didUpdateWidget(SearchResultsView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.searchQueries != widget.searchQueries ||
-        oldWidget.morphologicalSearch != widget.morphologicalSearch) {
-      _snippetCache.clear();
-      _highlightingHelper = SearchHighlightingHelper(
-        morphologicalSearch: widget.morphologicalSearch,
-      );
-    }
-  }
+  });
 
   static final RegExp _pgMarkerRegex = RegExp(r'\{\{PG:\d+\}\}');
-
-  Widget _buildSnippet(int index, String content) {
-    if (_snippetCache.containsKey(index)) return _snippetCache[index]!;
-    final cleaned = content.replaceAll(_pgMarkerRegex, '');
-    final fallback = Text(
-      cleaned.length > 100 ? '${cleaned.substring(0, 100)}...' : cleaned,
-      style: smallStyle(),
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-    );
-    return FutureBuilder<Widget>(
-      future: _highlightingHelper.extractSnippetWithHighlight(
-        cleaned,
-        widget.searchQueries,
-      ),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          _snippetCache[index] = snapshot.data!;
-          return snapshot.data!;
-        }
-        return fallback;
-      },
-    );
-  }
+  static const double _rowExtent = 32;
 
   @override
   Widget build(BuildContext context) {
+    final visibleTotal = totalCount > results.length ? totalCount : results.length;
+
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            color: mutedColor,
+            border: Border(bottom: AppChrome.borderSide()),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('النتائج: ${widget.results.length}', style: mediumStyle()),
+              Text('النتائج: $visibleTotal', style: mediumStyle()),
               IconButton(
-                icon: Icon(Icons.close, size: 18),
+                icon: const LibraryIcon(LibraryIconType.close, size: 18),
                 padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
-                onPressed: widget.onClose,
+                constraints: const BoxConstraints(),
+                onPressed: onClose,
                 tooltip: 'إغلاق',
               ),
             ],
           ),
         ),
         Expanded(
-          child: ListView.builder(
-            itemCount: widget.results.length,
-            itemBuilder: (context, index) {
-              final result = widget.results[index];
-              final content = result['content'] as String? ?? '';
-              final bookName = result['book_name'] as String? ?? '';
-              final bookPath = result['book_path'] as String? ?? '';
-              final pageNumber = (result['page_number'] as num?)?.toInt() ?? 0;
-              final isSelected = widget.selectedIndex == index;
-
-              return Card(
-                elevation: isSelected ? 2 : 1,
-                color: isSelected ? primaryColor.withOpacity(0.08) : null,
-                margin: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                child: ListTile(
-                  dense: true,
-                  title: Text(
-                    bookName,
-                    style: normalStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Padding(
-                    padding: EdgeInsets.only(top: 2),
-                    child: _buildSnippet(index, content),
-                  ),
-                  leading: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'ص ${pageNumber + 1}',
-                        style: smallStyle(color: primaryColor),
-                      ),
-                    ],
-                  ),
-                  trailing: widget.onResultPreviewed != null
-                      ? IconButton(
-                          icon: Icon(
-                            Icons.open_in_new,
-                            size: 16,
-                            color: primaryColor,
-                          ),
-                          tooltip: 'فتح في تبويب',
-                          padding: EdgeInsets.zero,
-                          constraints: BoxConstraints(),
-                          onPressed: () => widget.onResultTapped(
-                            bookPath,
-                            pageNumber,
-                          ),
-                        )
-                      : null,
-                  onTap: () {
-                    if (widget.onResultPreviewed != null) {
-                      widget.onResultPreviewed!(result);
-                    } else {
-                      widget.onResultTapped(bookPath, pageNumber);
-                    }
+          child: Column(
+            children: [
+              const ShamelaResultsTableHeader(),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: results.length,
+                  itemExtent: _rowExtent,
+                  cacheExtent: _rowExtent * 18,
+                  itemBuilder: (context, index) {
+                    final result = results[index];
+                    final bookPath = result['book_path'] as String? ?? '';
+                    final pageNumber =
+                        (result['page_number'] as num?)?.toInt() ?? 0;
+                    return ShamelaResultsTableRow(
+                      serial: index + 1,
+                      result: result,
+                      snippetBuilder: _plainSnippet,
+                      searchQueries: searchQueries,
+                      onOpen: () {
+                        AppState().openCommentPanelForSearchTarget =
+                            result['section_type']?.toString() == 'comment';
+                        onResultTapped(bookPath, pageNumber);
+                      },
+                    );
                   },
                 ),
-              );
-            },
+              ),
+            ],
           ),
         ),
       ],
     );
+  }
+
+  String _plainSnippet(String content) {
+    final cleaned = content
+        .replaceAll(_pgMarkerRegex, '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    return cleaned.length > 220 ? '${cleaned.substring(0, 220)}...' : cleaned;
   }
 }

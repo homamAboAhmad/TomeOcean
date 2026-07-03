@@ -8,14 +8,9 @@ Future<Archive> FileToArchive(String? filePath) async {
     return Archive();
   }
 
-  print("FileToArchive: Processing file '$filePath'");
-
   try {
     return await Isolate.run(() async {
       final bytes = await File(filePath).readAsBytes();
-      print(
-        "FileToArchive: Successfully read ${bytes.length} bytes from '$filePath'",
-      );
       return ZipDecoder().decodeBytes(bytes);
     });
   } catch (e) {

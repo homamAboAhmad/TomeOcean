@@ -2,12 +2,40 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
+import 'search_index_version.dart';
 
 /// Database query operations for the search engine
 class DatabaseQueries {
   final Database database;
 
   DatabaseQueries(this.database);
+
+  String _contentColumn({
+    required bool considerDiacritics,
+    required bool considerHamzas,
+    required bool considerNumbers,
+    required bool morphologicalSearch,
+  }) {
+    if (morphologicalSearch) return 'morphological_content';
+    if (considerDiacritics && considerHamzas) {
+      return considerNumbers
+          ? 'fully_preserved_content'
+          : 'fully_preserved_no_numbers_content';
+    }
+    if (considerDiacritics) {
+      return considerNumbers
+          ? 'diacritics_preserved_content'
+          : 'diacritics_preserved_no_numbers_content';
+    }
+    if (considerHamzas) {
+      return considerNumbers
+          ? 'hamza_preserved_content'
+          : 'hamza_preserved_no_numbers_content';
+    }
+    return considerNumbers
+        ? 'normalized_content'
+        : 'normalized_no_numbers_content';
+  }
 
   /// Check if a book needs to be indexed
   Future<bool> needsIndexing(String bookPath) async {
@@ -19,7 +47,6 @@ class DatabaseQueries {
 
       final fileModified = await file.stat();
       final fileModifiedTime = fileModified.modified.millisecondsSinceEpoch;
-      final currentDbVersion = 9;
       final normalizedPath = p.normalize(bookPath);
 
       List<Map<String, dynamic>> result = [];
@@ -93,7 +120,7 @@ class DatabaseQueries {
         return true;
       }
 
-      if (indexingVersion != currentDbVersion) {
+      if (indexingVersion != shamelaSearchIndexVersion) {
         return true;
       }
 
@@ -141,20 +168,12 @@ class DatabaseQueries {
     int limit = 100,
     int offset = 0,
   }) async {
-    String contentColumn;
-    if (morphologicalSearch) {
-      contentColumn = 'morphological_content';
-    } else if (considerDiacritics && considerHamzas) {
-      contentColumn = 'diacritics_preserved_content';
-    } else if (considerDiacritics) {
-      contentColumn = 'diacritics_preserved_content';
-    } else if (considerHamzas) {
-      contentColumn = 'hamza_preserved_content';
-    } else if (!considerNumbers) {
-      contentColumn = 'normalized_no_numbers_content';
-    } else {
-      contentColumn = 'normalized_content';
-    }
+    final contentColumn = _contentColumn(
+      considerDiacritics: considerDiacritics,
+      considerHamzas: considerHamzas,
+      considerNumbers: considerNumbers,
+      morphologicalSearch: morphologicalSearch,
+    );
 
     // Determine target table: pages_fts (default) or books_fts (if filtered by section)
     // Note: books_fts has section_type column, pages_fts does not (it's aggregated)
@@ -220,10 +239,10 @@ class DatabaseQueries {
       // Step 1: Identify the exact pages for this pagination window
       final pagesSql =
           '''
-        SELECT DISTINCT book_path, page_number
+        SELECT DISTINCT book_path, book_name, page_number
         FROM $targetTable
         $whereClause
-        ORDER BY page_number ASC
+        ORDER BY book_name ASC, book_path ASC, page_number ASC
         LIMIT ? OFFSET ?
       ''';
 
@@ -260,7 +279,7 @@ class DatabaseQueries {
           section_type
         FROM $targetTable
         $whereClause AND $specificPagesCondition
-        ORDER BY page_number ASC, rowid ASC
+        ORDER BY book_name ASC, book_path ASC, page_number ASC, rowid ASC
       ''';
 
       final contentArgs = [...queryArgs, ...pageArgs];
@@ -308,7 +327,7 @@ class DatabaseQueries {
           rank
         FROM $targetTable
         $whereClause
-        ORDER BY rank, page_number ASC
+        ORDER BY book_name ASC, book_path ASC, page_number ASC, rank
         LIMIT ? OFFSET ?
       ''';
       results = await database.rawQuery(sql, [...queryArgs, limit, offset]);
@@ -331,20 +350,12 @@ class DatabaseQueries {
     int batchSize = 10,
     int? maxResults,
   }) async* {
-    String contentColumn;
-    if (morphologicalSearch) {
-      contentColumn = 'morphological_content';
-    } else if (considerDiacritics && considerHamzas) {
-      contentColumn = 'diacritics_preserved_content';
-    } else if (considerDiacritics) {
-      contentColumn = 'diacritics_preserved_content';
-    } else if (considerHamzas) {
-      contentColumn = 'hamza_preserved_content';
-    } else if (!considerNumbers) {
-      contentColumn = 'normalized_no_numbers_content';
-    } else {
-      contentColumn = 'normalized_content';
-    }
+    final contentColumn = _contentColumn(
+      considerDiacritics: considerDiacritics,
+      considerHamzas: considerHamzas,
+      considerNumbers: considerNumbers,
+      morphologicalSearch: morphologicalSearch,
+    );
 
     // Determine target table and clause
     final bool useSectionFiltering =
@@ -413,8 +424,8 @@ class DatabaseQueries {
                 GROUP_CONCAT(DISTINCT section_type) as section_type
               FROM $targetTable
               $whereClause
-              GROUP BY book_path, page_number
-              ORDER BY page_number ASC
+              GROUP BY book_path, book_name, page_number
+              ORDER BY book_name ASC, book_path ASC, page_number ASC
               LIMIT $currentLimit OFFSET $currentOffset
             ''';
       } else {
@@ -429,7 +440,7 @@ class DatabaseQueries {
                 rank
               FROM $targetTable
               $whereClause
-              ORDER BY rank, page_number ASC
+              ORDER BY book_name ASC, book_path ASC, page_number ASC, rank
               LIMIT $currentLimit OFFSET $currentOffset
             ''';
       }
@@ -459,6 +470,132 @@ class DatabaseQueries {
         print('Error streaming results: $e');
         break;
       }
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> listPages({
+    List<String>? bookPaths,
+    List<String>? sectionTypes,
+    int limit = 100,
+    int offset = 0,
+  }) async {
+    final useSectionFiltering =
+        sectionTypes != null &&
+        sectionTypes.isNotEmpty &&
+        !sectionTypes.contains('all');
+    final targetTable = useSectionFiltering ? 'books_fts' : 'pages_fts';
+
+    final whereClauses = <String>[];
+    final whereArgs = <dynamic>[];
+
+    if (bookPaths != null && bookPaths.isNotEmpty) {
+      final placeholders = List.filled(bookPaths.length, '?').join(',');
+      whereClauses.add('book_path IN ($placeholders)');
+      whereArgs.addAll(bookPaths);
+    }
+
+    if (useSectionFiltering) {
+      final placeholders = List.filled(sectionTypes.length, '?').join(',');
+      whereClauses.add('section_type IN ($placeholders)');
+      whereArgs.addAll(sectionTypes);
+    }
+
+    final whereClause = whereClauses.isEmpty
+        ? ''
+        : 'WHERE ${whereClauses.join(' AND ')}';
+    final countSql = useSectionFiltering
+        ? 'SELECT COUNT(*) as total FROM (SELECT DISTINCT book_path, page_number FROM $targetTable $whereClause)'
+        : 'SELECT COUNT(*) as total FROM $targetTable $whereClause';
+    final countResult = await database.rawQuery(countSql, whereArgs);
+    final total = Sqflite.firstIntValue(countResult) ?? 0;
+    if (total == 0) return [];
+
+    if (!useSectionFiltering) {
+      final sql = '''
+        SELECT book_path, book_name, page_number, content
+        FROM $targetTable
+        $whereClause
+        ORDER BY book_name ASC, book_path ASC, page_number ASC
+        LIMIT ? OFFSET ?
+      ''';
+      final rows = await database.rawQuery(sql, [...whereArgs, limit, offset]);
+      return rows
+          .map((row) => {...Map<String, dynamic>.from(row), 'estimatedTotalHits': total})
+          .toList();
+    }
+
+    final pagesSql = '''
+      SELECT DISTINCT book_path, book_name, page_number
+      FROM $targetTable
+      $whereClause
+      ORDER BY book_name ASC, book_path ASC, page_number ASC
+      LIMIT ? OFFSET ?
+    ''';
+    final pageRows = await database.rawQuery(pagesSql, [
+      ...whereArgs,
+      limit,
+      offset,
+    ]);
+    if (pageRows.isEmpty) return [];
+
+    final pageFilters = <String>[];
+    final pageArgs = <Object?>[];
+    for (final row in pageRows) {
+      pageFilters.add('(book_path = ? AND page_number = ?)');
+      pageArgs.add(row['book_path']);
+      pageArgs.add(row['page_number']);
+    }
+    final specificPagesCondition = '(${pageFilters.join(' OR ')})';
+    final contentWhere = whereClause.isEmpty
+        ? 'WHERE $specificPagesCondition'
+        : '$whereClause AND $specificPagesCondition';
+    final contentSql = '''
+      SELECT
+        book_path,
+        book_name,
+        page_number,
+        GROUP_CONCAT(content, ' ... ') as content,
+        GROUP_CONCAT(DISTINCT section_type) as section_type
+      FROM $targetTable
+      $contentWhere
+      GROUP BY book_path, book_name, page_number
+      ORDER BY book_name ASC, book_path ASC, page_number ASC
+    ''';
+    final rows = await database.rawQuery(contentSql, [
+      ...whereArgs,
+      ...pageArgs,
+    ]);
+    return rows
+        .map((row) => {...Map<String, dynamic>.from(row), 'estimatedTotalHits': total})
+        .toList();
+  }
+
+  Stream<List<Map<String, dynamic>>> listPagesStream({
+    List<String>? bookPaths,
+    List<String>? sectionTypes,
+    int batchSize = 10,
+    int? maxResults,
+  }) async* {
+    var offset = 0;
+    var processed = 0;
+    final effectiveMax = maxResults ?? 999999;
+
+    while (processed < effectiveMax) {
+      final currentLimit = batchSize < (effectiveMax - processed)
+          ? batchSize
+          : (effectiveMax - processed);
+      final batch = await listPages(
+        bookPaths: bookPaths,
+        sectionTypes: sectionTypes,
+        limit: currentLimit,
+        offset: offset,
+      );
+      if (batch.isEmpty) break;
+
+      yield batch;
+      processed += batch.length;
+      offset += currentLimit;
+      if (batch.length < currentLimit) break;
     }
   }
 
@@ -496,5 +633,22 @@ class DatabaseQueries {
           }),
         )
         .toList();
+  }
+
+  Future<String?> getNearestTitleBeforePage(String bookPath, int pageNumber) async {
+    final rows = await database.rawQuery(
+      '''
+      SELECT content, raw_content
+      FROM books_fts
+      WHERE book_path = ? AND section_type = ? AND page_number <= ?
+      ORDER BY page_number DESC, rowid DESC
+      LIMIT 1
+      ''',
+      [bookPath, 'title', pageNumber],
+    );
+    if (rows.isEmpty) return null;
+    final raw = rows.first['raw_content'] ?? rows.first['content'];
+    final title = raw?.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
+    return title == null || title.isEmpty ? null : title;
   }
 }

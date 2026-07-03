@@ -16,8 +16,10 @@ import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Models/BookCard.dart';
+import 'package:golden_shamela/Models/BookPart.dart';
 import 'package:golden_shamela/Services/EmbeddedFontExtractor.dart';
 import 'package:golden_shamela/Services/AppStoragePaths.dart';
+import 'package:golden_shamela/core/app_state.dart';
 import 'package:golden_shamela/FontsLoaderController.dart';
 import 'package:golden_shamela/wordToHTML/AddDocData.dart';
 import 'package:golden_shamela/Utils/StatusTranslator.dart';
@@ -371,7 +373,7 @@ class BookProcessingService {
 
     final String fileName = p.basename(sourceFilePath);
     final String fileNameNoExt = p.basenameWithoutExtension(sourceFilePath);
-    final String bookId = AppStoragePaths.bookIdFromTitle(fileNameNoExt);
+    final String bookId = AppStoragePaths.bookIdFromPath(sourceFilePath);
     final String sourceDocxPath = AppStoragePaths.bookSourcePath(bookId);
 
     await AppStoragePaths.ensureBaseDirectories();
@@ -616,6 +618,7 @@ class BookProcessingService {
         if (checkCancelled()) return;
 
         if (indexResult) {
+          AppState().cachedIndexedBooks = null;
           emit(ProcessingState.indexing, 1.0, "تمت الفهرسة");
         } else {
           emit(ProcessingState.indexing, 1.0, "تخطي الفهرسة (خطأ أو فارغ)");
@@ -697,6 +700,123 @@ class BookProcessingService {
   }
 
   /// تشغيل أداة إصلاح الصور
+  Future<List<BookPart>> processMultipartBook({
+    required List<String> partPaths,
+    required BookCard bookCard,
+    Function(ProcessingState, double, String)? emit,
+    bool Function()? isCancelled,
+  }) async {
+    if (partPaths.isEmpty) {
+      throw ArgumentError('partPaths must not be empty');
+    }
+    void checkCancelled() {
+      if (isCancelled?.call() == true) {
+        emit?.call(ProcessingState.cancelled, 0, 'تم إلغاء العملية');
+        throw StateError('تم إلغاء العملية');
+      }
+    }
+
+    final bookId = AppStoragePaths.bookIdFromTitle(bookCard.title);
+    final bookPath = AppStoragePaths.bookSourcePath(bookId);
+    final parts = <BookPart>[];
+    var pageOffset = 0;
+
+    await AppStoragePaths.ensureBaseDirectories();
+    await Directory(AppStoragePaths.bookDirPath(bookId)).create(recursive: true);
+
+    for (var i = 0; i < partPaths.length; i++) {
+      checkCancelled();
+      final partNumber = i + 1;
+      final sourcePath = partPaths[i];
+      final partTitle = 'الجزء $partNumber';
+      final partDir = AppStoragePaths.bookPartDirPath(bookId, partNumber);
+      final stagingPartDir =
+          '${partDir}_staging_${DateTime.now().microsecondsSinceEpoch}';
+      final partSourcePath = AppStoragePaths.bookPartSourcePath(
+        bookId,
+        partNumber,
+      );
+
+      emit?.call(
+        ProcessingState.parsing,
+        i / partPaths.length,
+        'معالجة $partTitle...',
+      );
+
+      Directory? sessionDir;
+      Directory? stagingDir;
+      try {
+        sessionDir = await AppStoragePaths.createProcessingSessionDir(
+          '${bookId}_part_$partNumber',
+        );
+        final workingPath = p.join(sessionDir.path, 'part_$partNumber.docx');
+        await _copyWithRetry(sourcePath, workingPath);
+        checkCancelled();
+        await _runImageFixer(workingPath);
+        checkCancelled();
+        stagingDir = Directory(stagingPartDir);
+        if (await stagingDir.exists()) {
+          await stagingDir.delete(recursive: true);
+        }
+        await _parseAndCacheBookInternal(
+          workingPath,
+          (state, progress, message) {
+            final globalProgress =
+                (i + progress.clamp(0, 1).toDouble()) / partPaths.length;
+            emit?.call(state, globalProgress, message);
+          },
+          titleOverride: partTitle,
+          cacheDirPathOverride: stagingPartDir,
+          isCancelled: isCancelled,
+        );
+        checkCancelled();
+        await Directory(stagingPartDir).create(recursive: true);
+        await _copyWithRetry(
+          workingPath,
+          p.join(stagingPartDir, AppStoragePaths.sourceDocxFileName),
+        );
+        final oldPartDir = Directory(partDir);
+        if (await oldPartDir.exists()) {
+          await oldPartDir.delete(recursive: true);
+        }
+        await stagingDir!.rename(partDir);
+        stagingDir = null;
+      } finally {
+        if (sessionDir != null && await sessionDir.exists()) {
+          await sessionDir.delete(recursive: true);
+        }
+        if (stagingDir != null && await stagingDir.exists()) {
+          await stagingDir.delete(recursive: true);
+        }
+      }
+
+      final pageCount = await _countCachedPages(
+        AppStoragePaths.bookPartPagesDirPath(bookId, partNumber),
+      );
+      parts.add(
+        BookPart(
+          bookPath: bookPath,
+          partNumber: partNumber,
+          partTitle: partTitle,
+          partPath: partSourcePath,
+          pageOffset: pageOffset,
+          pageCount: pageCount,
+        ),
+      );
+      pageOffset += pageCount;
+    }
+
+    checkCancelled();
+    await _copyWithRetry(partPaths.first, bookPath);
+    await BooksMetadataDatabase().saveBook(
+      bookCard.copyWith(pageCount: pageOffset.toString()),
+      bookPath,
+    );
+    await BooksMetadataDatabase().saveBookParts(bookPath, parts);
+    emit?.call(ProcessingState.completed, 1, 'اكتملت إضافة الأجزاء');
+    return parts;
+  }
+
   Future<void> _runImageFixer(String filePath) async {
     try {
       String exeName = "fix_word_images.exe";
@@ -765,9 +885,11 @@ class BookProcessingService {
     Function(ProcessingState, double, String)? emit, {
     bool Function()? isCancelled,
     String? titleOverride, // Optional override for cache key
+    String? cacheDirPathOverride,
   }) async {
     final title = titleOverride ?? AppStoragePaths.bookIdFromPath(filePath);
-    final bookCacheDir = Directory(AppStoragePaths.bookDirPath(title));
+    final bookCacheDir =
+        Directory(cacheDirPathOverride ?? AppStoragePaths.bookDirPath(title));
     final sharedFontsDirPath = AppStoragePaths.sharedFontsPath;
 
     // التحقق من الإلغاء
@@ -925,6 +1047,16 @@ class BookProcessingService {
       'extractedFontPaths': extractedFontPaths,
       'fontsList': wordDocument.fontsList,
     };
+  }
+
+  Future<int> _countCachedPages(String pagesDirPath) async {
+    final dir = Directory(pagesDirPath);
+    if (!await dir.exists()) return 0;
+    final files = await dir
+        .list()
+        .where((entity) => entity is File && entity.path.endsWith('.json.gz'))
+        .toList();
+    return files.length;
   }
 
   Future<void> _deleteIfExists(String path, {int maxRetries = 3}) async {

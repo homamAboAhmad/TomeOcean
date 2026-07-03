@@ -4,6 +4,7 @@ import 'package:golden_shamela/Helpers/InBookSearchHelper.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 import 'package:golden_shamela/core/app_state.dart';
 
 class BookSearchUI extends StatefulWidget {
@@ -193,7 +194,7 @@ class _BookSearchUIState extends State<BookSearchUI> {
                 ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close, size: 16),
+                        icon: const LibraryIcon(LibraryIconType.close, size: 16),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {
@@ -312,7 +313,7 @@ class _BookSearchUIState extends State<BookSearchUI> {
           ),
           if (_searchCompleted && _results.isNotEmpty) ...[
             const SizedBox(width: 4),
-            Icon(Icons.check_circle, size: 14, color: Colors.green.shade600),
+            LibraryIcon.fromIcon(Icons.check_circle, size: 14, color: Colors.green.shade600),
           ],
           const Spacer(),
           if (_results.isNotEmpty) ...[
@@ -337,7 +338,7 @@ class _BookSearchUIState extends State<BookSearchUI> {
             borderRadius: BorderRadius.circular(4),
             border: Border.all(color: Colors.grey.shade300),
           ),
-          child: Icon(icon, size: 16, color: primaryColor),
+          child: LibraryIcon.fromIcon(icon, size: 16, color: primaryColor),
         ),
       ),
     );
@@ -352,7 +353,7 @@ class _BookSearchUIState extends State<BookSearchUI> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.search_off, size: 48, color: Colors.grey.shade300),
+                LibraryIcon.fromIcon(Icons.search_off, size: 48, color: Colors.grey.shade300),
                 const SizedBox(height: 8),
                 Text(
                   'لا توجد نتائج',
@@ -369,7 +370,7 @@ class _BookSearchUIState extends State<BookSearchUI> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search, size: 48, color: Colors.grey.shade300),
+              LibraryIcon.fromIcon(Icons.search, size: 48, color: Colors.grey.shade300),
               const SizedBox(height: 8),
               Text(
                 'ابحث في الكتاب',

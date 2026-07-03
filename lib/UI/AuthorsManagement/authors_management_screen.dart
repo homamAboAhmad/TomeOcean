@@ -5,6 +5,7 @@ import '../../Dialogs/Author/author_dialog.dart';
 import '../../Dialogs/Author/author_details_dialog.dart';
 import '../../Styles/TextSyles.dart';
 import '../../Styles/AppResourses.dart';
+import '../LibraryCommon/library_icon.dart';
 import 'authors_management_view_model.dart';
 import 'widgets/author_stat_card.dart';
 import 'widgets/author_card.dart';
@@ -190,14 +191,14 @@ class _AuthorsManagementScreenState extends State<AuthorsManagementScreen> {
                           color: Colors.grey.shade600,
                           fontWeight: FontWeight.w400,
                         ),
-                        prefixIcon: Icon(
+                        prefixIcon: LibraryIcon.fromIcon(
                           Icons.search,
                           color: Colors.grey.shade400,
                           size: 20,
                         ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
-                                icon: Icon(
+                                icon: LibraryIcon.fromIcon(
                                   Icons.clear,
                                   color: Colors.grey.shade400,
                                   size: 20,
@@ -257,7 +258,7 @@ class _AuthorsManagementScreenState extends State<AuthorsManagementScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
+                        LibraryIcon.fromIcon(
                           Icons.people_outline,
                           size: 64,
                           color: Colors.grey.shade300,
@@ -335,7 +336,7 @@ class _AuthorsManagementScreenState extends State<AuthorsManagementScreen> {
           ),
           child: ElevatedButton.icon(
             onPressed: _handleAddAuthor,
-            icon: Icon(Icons.add_rounded, size: 22, color: Colors.white),
+            icon: const LibraryIcon(LibraryIconType.zoomIn, size: 22, color: Colors.white),
             label: Text(
               'إضافة مؤلف',
               style: normalStyle(

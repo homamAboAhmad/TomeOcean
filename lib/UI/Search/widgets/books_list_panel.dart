@@ -1,59 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Models/Author.dart';
-import 'package:golden_shamela/Models/BookCard.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_book_item.dart';
-import 'package:golden_shamela/UI/LibraryCommon/library_books_table.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_selectable_books_panel.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_text_normalizer.dart';
+import 'package:golden_shamela/UI/Search/helpers/indexed_book_library_adapter.dart';
+import 'package:golden_shamela/UI/Search/helpers/indexed_book_title_resolver.dart';
+import 'package:golden_shamela/UI/Search/widgets/search_book_selection_toolbar_state.dart';
 import 'package:path/path.dart' as p;
 
-/// Widget that displays a list of books with search and selection capabilities.
-///
-/// This panel allows users to:
-/// - Search books by title or author name
-/// - Select/deselect books individually or all at once (Ctrl+A)
-/// - Add or remove selected books from the search list
 class BooksListPanel extends StatefulWidget {
   final List<Map<String, dynamic>> filteredIndexedBooks;
-  final List<Map<String, dynamic>> allIndexedBooks;
   final Map<String, bool> selectedBooks;
-  final Function(String, bool) onBookSelectionChanged;
   final TextEditingController searchController;
-  final Set<String> selectedAuthorIds;
-  final Set<String> selectedSectionIds;
   final List<Author>? authors;
-  final Map<String, int>? authorBookCounts;
   final Map<String, String>? authorDeathYears;
-  final Function(String)? onAuthorToggled;
   final Map<String, String> bookAuthorMap;
+  final String searchScope;
+  final Set<String> fullSearchPaths;
+  final String? focusedBookPath;
+  final ValueChanged<LibraryBookItem> onBookFocused;
+  final SearchBookSelectionStateChanged? onSelectionStateChanged;
   final Function(List<String>) onBooksAdded;
   final Function(List<String>) onBooksRemoved;
+  final int selectAllRequest;
 
   const BooksListPanel({
-    Key? key,
+    super.key,
     required this.filteredIndexedBooks,
-    required this.allIndexedBooks,
     required this.selectedBooks,
-    required this.onBookSelectionChanged,
     required this.searchController,
-    required this.selectedAuthorIds,
-    required this.selectedSectionIds,
     this.authors,
-    this.authorBookCounts,
     this.authorDeathYears,
-    this.onAuthorToggled,
     this.bookAuthorMap = const {},
+    required this.searchScope,
+    required this.fullSearchPaths,
+    required this.focusedBookPath,
+    required this.onBookFocused,
+    this.onSelectionStateChanged,
     required this.onBooksAdded,
     required this.onBooksRemoved,
-  }) : super(key: key);
+    this.selectAllRequest = 0,
+  });
 
   @override
-  _BooksListPanelState createState() => _BooksListPanelState();
+  State<BooksListPanel> createState() => _BooksListPanelState();
 }
 
 class _BooksListPanelState extends State<BooksListPanel> {
   Set<String> _temporarilySelectedBookPaths = {};
   final FocusNode _booksFocusNode = FocusNode();
+  int _handledSelectAllRequest = 0;
 
   @override
   void dispose() {
@@ -61,295 +58,141 @@ class _BooksListPanelState extends State<BooksListPanel> {
     super.dispose();
   }
 
-  /// Filters books based on the search query.
-  ///
-  /// Searches in both book titles and author names.
-  /// Returns a list of books matching the search criteria.
   List<Map<String, dynamic>> _filterBooks(String searchQuery) {
-    if (searchQuery.isEmpty) {
-      return widget.filteredIndexedBooks;
-    }
-
+    final query = LibraryTextNormalizer.normalize(searchQuery);
+    if (query.isEmpty) return widget.filteredIndexedBooks;
     return widget.filteredIndexedBooks.where((book) {
       final bookPath = book['book_path'] as String;
-      final bookTitle = p.basenameWithoutExtension(bookPath).toLowerCase();
-
-      String authorName = '';
-      if (widget.authors != null) {
-        final String? authorId =
-            widget.bookAuthorMap[bookPath] ?? book['authorId'] as String?;
-
-        if (authorId != null) {
-          final author = widget.authors!.firstWhere(
-            (a) => a.id == authorId,
-            orElse: () => Author(id: '', name: '', description: ''),
-          );
-          authorName = author.name.toLowerCase();
-        }
+      final bookTitle = LibraryTextNormalizer.normalize(
+        IndexedBookTitleResolver.resolve(book),
+      );
+      final authorId = IndexedBookLibraryAdapter.resolveAuthorId(
+        book,
+        bookAuthorMap: widget.bookAuthorMap,
+      );
+      final authorName = LibraryTextNormalizer.normalize(_authorName(authorId));
+      if (widget.searchScope == 'title') {
+        return bookTitle.contains(query);
       }
-
-      return bookTitle.contains(searchQuery) ||
-          authorName.contains(searchQuery);
+      if (widget.searchScope == 'full') {
+        return widget.fullSearchPaths.contains(_normalizePath(bookPath));
+      }
+      return bookTitle.contains(query) || authorName.contains(query);
     }).toList();
   }
 
-  /// Gets the author information for a book.
-  ///
-  /// Returns a map with 'name' and 'deathYear' keys.
-  Map<String, String> _getAuthorInfo(
-    String bookPath,
-    Map<String, dynamic> book,
-  ) {
-    if (widget.authors == null) {
-      return {'name': '', 'deathYear': ''};
+  String _authorName(String? authorId) {
+    if (authorId == null || authorId.isEmpty || widget.authors == null) {
+      return '';
     }
-
-    final String? authorId =
-        widget.bookAuthorMap[bookPath] ?? book['authorId'] as String?;
-
-    if (authorId == null) {
-      return {'name': '', 'deathYear': ''};
-    }
-
-    final author = widget.authors!.firstWhere(
-      (a) => a.id == authorId,
-      orElse: () => Author(id: '', name: '', description: ''),
-    );
-
-    if (author.id.isEmpty) {
-      return {'name': '', 'deathYear': ''};
-    }
-
-    return {
-      'name': author.name,
-      'deathYear':
-          author.deathYear ?? widget.authorDeathYears?[author.id] ?? '',
-    };
+    return widget.authors!
+        .firstWhere(
+          (author) => author.id == authorId,
+          orElse: () => Author(id: '', name: '', description: ''),
+        )
+        .name;
   }
+
+  String _normalizePath(String path) => p.normalize(path).toLowerCase();
 
   @override
   Widget build(BuildContext context) {
-    final searchQuery = widget.searchController.text.toLowerCase();
-    final filteredBooks = _filterBooks(searchQuery);
-    final tableItems = _toLibraryItems(filteredBooks);
-    final selectedBookPaths = widget.selectedBooks.entries
-        .where((entry) => entry.value)
-        .map((entry) => entry.key)
-        .toSet();
-
+    final filteredBooks =
+        _filterBooks(widget.searchController.text.toLowerCase());
+    final items = IndexedBookLibraryAdapter.toItems(
+      filteredBooks,
+      authors: widget.authors ?? const [],
+      bookAuthorMap: widget.bookAuthorMap,
+      authorDeathYears: widget.authorDeathYears ?? const {},
+    );
+    _handleSelectAllRequest(filteredBooks);
+    _notifySelectionState(filteredBooks);
     return GestureDetector(
-      onTap: () => _booksFocusNode.requestFocus(),
+      onTap: _booksFocusNode.requestFocus,
       child: Focus(
         focusNode: _booksFocusNode,
         autofocus: true,
-        onKeyEvent: (node, event) => _handleKeyEvent(event, filteredBooks),
-        child: Column(
-          children: [
-            // Search bar with icons and Select All checkbox
-            Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-              ),
-              child: Row(
-                children: [
-                  // Select All Checkbox
-                  SizedBox(
-                    width: 40,
-                    child: Checkbox(
-                      value:
-                          filteredBooks.isNotEmpty &&
-                          _temporarilySelectedBookPaths.length ==
-                              filteredBooks.length,
-                      tristate: true,
-                      onChanged: (val) => _toggleSelectAllBooks(filteredBooks),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.folder, color: Colors.amber, size: 28),
-                    onPressed: () {
-                      // TODO: Folder action
-                    },
-                    tooltip: 'المجلدات',
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.settings, color: Colors.brown, size: 24),
-                    onPressed: () {
-                      // TODO: Settings
-                    },
-                    tooltip: 'الإعدادات',
-                  ),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      controller: widget.searchController,
-                      decoration: InputDecoration(
-                        hintText: 'بحث في أسماء الكتب...',
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        setState(() {}); // Rebuild to filter
-                      },
-                    ),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    '${filteredBooks.length} كتاب',
-                    style: normalStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-            ),
-
-            // Books List
-            Expanded(
-              child: filteredBooks.isEmpty
-                  ? Center(
-                      child: Text(
-                        'لا توجد كتب مطابقة',
-                        style: normalStyle(color: Colors.grey),
-                      ),
-                    )
-                  : LibraryBooksTable(
-                      books: tableItems,
-                      selectedPath: _temporarilySelectedBookPaths.isEmpty
-                          ? null
-                          : _temporarilySelectedBookPaths.first,
-                      favoritePaths: const {},
-                      checkedPaths: _temporarilySelectedBookPaths,
-                      highlightedPaths: selectedBookPaths,
-                      showCheckboxes: true,
-                      onSelected: (_) {},
-                      onCheckedChanged: _setTemporaryBookSelection,
-                    ),
-            ),
-
-            // Bottom Selection Bar
-            Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade50,
-                border: Border(top: BorderSide(color: Colors.grey.shade300)),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      if (_temporarilySelectedBookPaths.isNotEmpty) {
-                        widget.onBooksAdded(
-                          _temporarilySelectedBookPaths.toList(),
-                        );
-                        setState(() => _temporarilySelectedBookPaths.clear());
-                      }
-                    },
-                    icon: Icon(Icons.check_circle_outline, size: 18),
-                    label: Text('اختيار'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.green.shade700,
-                      elevation: 0,
-                      side: BorderSide(color: Colors.green.shade200),
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      if (_temporarilySelectedBookPaths.isNotEmpty) {
-                        widget.onBooksRemoved(
-                          _temporarilySelectedBookPaths.toList(),
-                        );
-                        setState(() => _temporarilySelectedBookPaths.clear());
-                      }
-                    },
-                    icon: Icon(Icons.remove_circle_outline, size: 18),
-                    label: Text('إزالة'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.red.shade700,
-                      elevation: 0,
-                      side: BorderSide(color: Colors.red.shade200),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        onKeyEvent: (_, event) => _handleKeyEvent(event, filteredBooks),
+        child: LibrarySelectableBooksPanel(
+          books: items,
+          checkedPaths: _temporarilySelectedBookPaths,
+          highlightedPaths: _selectedBookPaths,
+          selectedPath: widget.focusedBookPath,
+          onSelected: widget.onBookFocused,
+          onCheckedChanged: _setTemporaryBookSelection,
+          onAdd: _addBooks,
+          onRemove: _removeBooks,
         ),
       ),
     );
   }
 
-  List<LibraryBookItem> _toLibraryItems(List<Map<String, dynamic>> books) {
-    return books.map((book) {
-      final bookPath = book['book_path'] as String;
-      final authorInfo = _getAuthorInfo(bookPath, book);
-      return LibraryBookItem(
-        bookPath: bookPath,
-        book: BookCard(
-          title: p.basenameWithoutExtension(bookPath),
-          authorId: book['authorId'] as String? ?? '',
-        ),
-        authorName: authorInfo['name'] ?? '',
-        authorDeathYear: authorInfo['deathYear'] ?? '',
-      );
-    }).toList();
-  }
+  Set<String> get _selectedBookPaths => widget.selectedBooks.entries
+      .where((entry) => entry.value)
+      .map((entry) => entry.key)
+      .toSet();
 
-  void _setTemporaryBookSelection(LibraryBookItem item, bool selected) {
-    setState(() {
-      if (selected) {
-        _temporarilySelectedBookPaths.add(item.bookPath);
-      } else {
-        _temporarilySelectedBookPaths.remove(item.bookPath);
-      }
+  void _notifySelectionState(List<Map<String, dynamic>> books) {
+    final callback = widget.onSelectionStateChanged;
+    if (callback == null) return;
+    final paths = books.map((book) => book['book_path'] as String).toList();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      callback(
+        visibleBookPaths: paths,
+        checkedBookPaths: Set.of(_temporarilySelectedBookPaths),
+        onToggleAll: () => _toggleSelectAllBooks(books),
+      );
     });
   }
 
-  /// Handles keyboard events for the books list.
-  ///
-  /// Supports:
-  /// - Ctrl+A: Toggle select all visible books
-  /// - Escape: Clear all temporary selections
-  ///
-  /// Returns [KeyEventResult.handled] if the event was processed,
-  /// [KeyEventResult.ignored] otherwise.
+  void _handleSelectAllRequest(List<Map<String, dynamic>> books) {
+    if (_handledSelectAllRequest == widget.selectAllRequest) return;
+    _handledSelectAllRequest = widget.selectAllRequest;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _toggleSelectAllBooks(books);
+    });
+  }
+
+  void _setTemporaryBookSelection(LibraryBookItem item, bool selected) {
+    setState(() => selected
+        ? _temporarilySelectedBookPaths.add(item.bookPath)
+        : _temporarilySelectedBookPaths.remove(item.bookPath));
+  }
+
+  void _addBooks() => _applyAndClear(widget.onBooksAdded);
+
+  void _removeBooks() => _applyAndClear(widget.onBooksRemoved);
+
+  void _applyAndClear(Function(List<String>) action) {
+    if (_temporarilySelectedBookPaths.isEmpty) return;
+    action(_temporarilySelectedBookPaths.toList());
+    setState(_temporarilySelectedBookPaths.clear);
+  }
+
   KeyEventResult _handleKeyEvent(
     KeyEvent event,
     List<Map<String, dynamic>> filteredBooks,
   ) {
-    if (event is KeyDownEvent) {
-      if (HardwareKeyboard.instance.isControlPressed &&
-          event.logicalKey == LogicalKeyboardKey.keyA) {
-        _toggleSelectAllBooks(filteredBooks);
-        return KeyEventResult.handled;
-      }
-      if (event.logicalKey == LogicalKeyboardKey.escape) {
-        setState(() => _temporarilySelectedBookPaths.clear());
-        return KeyEventResult.handled;
-      }
+    if (event is! KeyDownEvent) return KeyEventResult.ignored;
+    if (HardwareKeyboard.instance.isControlPressed &&
+        event.logicalKey == LogicalKeyboardKey.keyA) {
+      _toggleSelectAllBooks(filteredBooks);
+      return KeyEventResult.handled;
     }
     return KeyEventResult.ignored;
   }
 
-  /// Toggles selection of all filtered books.
-  ///
-  /// If all books are selected, deselects them all.
-  /// Otherwise, selects all filtered books.
-  void _toggleSelectAllBooks(List<Map<String, dynamic>> filteredBooks) {
+  void _toggleSelectAllBooks(List<Map<String, dynamic>> books) {
     setState(() {
-      if (_temporarilySelectedBookPaths.length == filteredBooks.length) {
-        _temporarilySelectedBookPaths.clear();
+      final visiblePaths =
+          books.map((book) => book['book_path'] as String).toSet();
+      final allVisibleSelected = visiblePaths.isNotEmpty &&
+          visiblePaths.every(_temporarilySelectedBookPaths.contains);
+      if (allVisibleSelected) {
+        _temporarilySelectedBookPaths.removeAll(visiblePaths);
       } else {
-        _temporarilySelectedBookPaths = filteredBooks
-            .map((book) => book['book_path'] as String)
-            .toSet();
+        _temporarilySelectedBookPaths.addAll(visiblePaths);
       }
     });
   }

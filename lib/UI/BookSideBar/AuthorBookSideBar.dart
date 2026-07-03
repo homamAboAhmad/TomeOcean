@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 import '../../Helpers/AuthorStorage.dart';
 import '../../Helpers/BookCardStorage.dart';
 import '../../Helpers/BookFilesHelper.dart';
@@ -113,7 +114,7 @@ class _AuthorBooksSidebarState extends State<AuthorBooksSidebar> {
                   Row(
                     textDirection: TextDirection.rtl,
                     children: [
-                      Icon(Icons.calendar_today, size: 14, color: Colors.grey.shade600),
+                      LibraryIcon.fromIcon(Icons.calendar_today, size: 14, color: Colors.grey.shade600),
                       const SizedBox(width: 4),
                       Text(
                         _author!.deathYear!,
@@ -179,7 +180,7 @@ class _AuthorBooksSidebarState extends State<AuthorBooksSidebar> {
               decoration: InputDecoration(
                 hintTextDirection: TextDirection.rtl,
                 hintText: 'بحث...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const LibraryIcon(LibraryIconType.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
@@ -210,7 +211,7 @@ class _AuthorBooksSidebarState extends State<AuthorBooksSidebar> {
                 return Directionality(
                   textDirection: TextDirection.rtl,
                   child: ListTile(
-                    leading: const Icon(Icons.menu_book),
+                    leading: const LibraryIcon(LibraryIconType.books),
                     title: Text(
                       bookCard.title,
                       style: normalStyle(),

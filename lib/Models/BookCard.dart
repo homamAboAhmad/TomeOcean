@@ -12,7 +12,6 @@ class BookCard {
   String publisher;
   String edition;
   String pageCount;
-  String bookCardNotes;
 
   BookCard({
     String? id,
@@ -25,7 +24,6 @@ class BookCard {
     this.publisher = '',
     this.edition = '',
     this.pageCount = '',
-    this.bookCardNotes = '',
   }) : id = id ?? generateRandomKey();
 
   factory BookCard.fromJson(Map<String, dynamic> json) {
@@ -40,7 +38,6 @@ class BookCard {
       publisher: json['publisher'] ?? '',
       edition: json['edition'] ?? '',
       pageCount: json['pageCount']?.toString() ?? '',
-      bookCardNotes: json['bookCardNotes'] ?? '',
     );
   }
 
@@ -56,7 +53,6 @@ class BookCard {
       publisher: row['publisher'] as String? ?? '',
       edition: row['edition'] as String? ?? '',
       pageCount: row['page_count']?.toString() ?? '',
-      bookCardNotes: row['book_card_notes'] as String? ?? '',
     );
   }
 
@@ -72,7 +68,6 @@ class BookCard {
       'publisher': publisher,
       'edition': edition,
       'pageCount': pageCount,
-      'bookCardNotes': bookCardNotes,
     };
   }
 
@@ -87,7 +82,6 @@ class BookCard {
     String? publisher,
     String? edition,
     String? pageCount,
-    String? bookCardNotes,
   }) {
     return BookCard(
       id: id ?? this.id,
@@ -100,7 +94,6 @@ class BookCard {
       publisher: publisher ?? this.publisher,
       edition: edition ?? this.edition,
       pageCount: pageCount ?? this.pageCount,
-      bookCardNotes: bookCardNotes ?? this.bookCardNotes,
     );
   }
 

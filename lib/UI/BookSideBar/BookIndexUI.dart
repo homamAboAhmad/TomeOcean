@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/IndexItem.dart';
-import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
+import 'package:golden_shamela/UI/Settings/app_color_settings.dart';
+import 'package:golden_shamela/UI/Settings/app_font_settings.dart';
 
 class BookIndexUI extends StatefulWidget {
   final Function(int) goTo;
@@ -19,6 +21,7 @@ class _BookIndexUIState extends State<BookIndexUI> {
 
   Map<IndexItem, List<IndexItem>> subItems = {};
   final Set<String> _expandedIds = {};
+  int _rootLevel = 1;
 
   int _getLevel(IndexItem item) {
     final match = _headingLevelRegex.firstMatch(item.type);
@@ -38,7 +41,7 @@ class _BookIndexUIState extends State<BookIndexUI> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.collections_bookmark,
+                LibraryIcon.fromIcon(Icons.collections_bookmark,
                     size: 48, color: Colors.grey.shade300),
                 const SizedBox(height: 8),
                 Text('لا يوجد فهرس في هذا الكتاب',
@@ -69,14 +72,22 @@ class _BookIndexUIState extends State<BookIndexUI> {
     final children = subItems[item] ?? [];
     final isExpanded = _expandedIds.contains(item.id);
     final canExpand = children.isNotEmpty;
+    final baseLevel = _rootLevel;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildIndexRow(item, canExpand: canExpand, isExpanded: isExpanded),
+        _buildIndexRow(
+          item,
+          canExpand: canExpand,
+          isExpanded: isExpanded,
+          baseLevel: baseLevel,
+        ),
         if (isExpanded && canExpand)
-          ...children.map((child) => _buildIndexRow(child)),
+          ...children.map(
+            (child) => _buildIndexRow(child, baseLevel: baseLevel),
+          ),
       ],
     );
   }
@@ -85,10 +96,13 @@ class _BookIndexUIState extends State<BookIndexUI> {
     IndexItem item, {
     bool canExpand = false,
     bool isExpanded = false,
+    int? baseLevel,
   }) {
     final isSelected = widget.wordDocument.selectedIndexItem == item.id;
-    final level = _getLevel(item);
+    final rawLevel = _getLevel(item);
+    final level = (rawLevel - (baseLevel ?? 1) + 1).clamp(1, 9).toInt();
     final indent = (level - 1) * 18.0;
+    final titleColor = AppUiColors.color(AppColorRole.titles);
 
     return InkWell(
       onTap: () {
@@ -97,7 +111,7 @@ class _BookIndexUIState extends State<BookIndexUI> {
       },
       child: Container(
         color: isSelected
-            ? primaryColor.withValues(alpha: 0.12)
+            ? titleColor.withValues(alpha: 0.12)
             : Colors.transparent,
         padding: EdgeInsets.only(
           right: 8.0 + indent,
@@ -117,7 +131,7 @@ class _BookIndexUIState extends State<BookIndexUI> {
                 }),
                 child: Padding(
                   padding: const EdgeInsets.only(left: 4),
-                  child: Icon(
+                  child: LibraryIcon.fromIcon(
                     isExpanded ? Icons.expand_more : Icons.chevron_left,
                     size: 18,
                     color: Colors.grey.shade600,
@@ -126,13 +140,13 @@ class _BookIndexUIState extends State<BookIndexUI> {
               )
             else
               const SizedBox(width: 22),
-            Icon(
+            LibraryIcon.fromIcon(
               canExpand ? Icons.folder_outlined : Icons.article_outlined,
               size: 16,
               color: isSelected
-                  ? primaryColor
+                  ? titleColor
                   : (level == 1
-                      ? Colors.teal.shade700
+                      ? titleColor
                       : Colors.grey.shade600),
             ),
             const SizedBox(width: 6),
@@ -141,10 +155,15 @@ class _BookIndexUIState extends State<BookIndexUI> {
                 item.title,
                 textDirection: TextDirection.rtl,
                 textAlign: TextAlign.start,
-                style: normalStyle(
+                style: AppUiFonts.style(
+                  AppFontRole.headingTree,
+                  normalStyle(
                   fontSize: level == 1 ? 13 : 12,
                   fontWeight: level == 1 ? FontWeight.bold : FontWeight.normal,
-                  color: isSelected ? primaryColor : Colors.black87,
+                  color: isSelected || level == 1 ? titleColor : Colors.black87,
+                  ),
+                  sizeOffset: level == 1 ? 0 : -1,
+                  fontWeight: level == 1 ? FontWeight.bold : FontWeight.normal,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -159,18 +178,23 @@ class _BookIndexUIState extends State<BookIndexUI> {
   void _buildIndexMap() {
     final index = widget.wordDocument.index;
     subItems.clear();
+    if (index.isEmpty) {
+      _rootLevel = 1;
+      return;
+    }
 
-    IndexItem? lastH1;
+    _rootLevel = index
+        .map(_getLevel)
+        .reduce((left, right) => left < right ? left : right);
+    IndexItem? lastRoot;
 
     for (final item in index) {
       final level = _getLevel(item);
-      if (level == 1) {
-        lastH1 = item;
-        subItems[lastH1] = [];
-      } else if (lastH1 != null) {
-        subItems[lastH1]!.add(item);
+      if (level <= _rootLevel || lastRoot == null) {
+        lastRoot = item;
+        subItems[lastRoot] = [];
       } else {
-        subItems[item] = [];
+        subItems[lastRoot]!.add(item);
       }
     }
   }

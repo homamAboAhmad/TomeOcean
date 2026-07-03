@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Models/BookMetadataOptions.dart';
 import 'package:golden_shamela/Models/Section.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_book_item.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_books_toolbar.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_books_table.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_lazy_book_card_panel.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_split_pane.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_text_normalizer.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_design_tokens.dart';
@@ -13,18 +17,30 @@ import 'package:golden_shamela/UI/LibraryPicker/library_picker_tab_toolbars.dart
 import 'package:golden_shamela/UI/LibraryPicker/library_picker_views.dart';
 import 'package:golden_shamela/UI/LibraryPicker/library_picker_sidebar_tabs.dart';
 import 'package:golden_shamela/UI/LibraryPicker/library_resizable_dialog_frame.dart';
-import 'package:golden_shamela/UI/LibraryPicker/library_lazy_book_card_panel.dart';
 import 'package:golden_shamela/UI/LibraryPicker/library_picker_index.dart';
 import 'package:golden_shamela/UI/LibraryPicker/library_search_debouncer.dart';
+import 'package:golden_shamela/Services/BookPositionStore.dart';
 import 'library_picker_repository.dart';
 
-Future<String?> showLibraryPickerDialog(BuildContext context) =>
-    showDialog<String>(
+class LibraryPickerResult {
+  final String bookPath;
+  final String source;
+
+  const LibraryPickerResult(this.bookPath, this.source);
+}
+
+Future<LibraryPickerResult?> showLibraryPickerDialog(
+  BuildContext context, {
+  String? initialSectionId,
+}) =>
+    showDialog<LibraryPickerResult>(
       context: context,
-      builder: (_) => const LibraryPickerDialog(),
+      builder: (_) => LibraryPickerDialog(initialSectionId: initialSectionId),
     );
 class LibraryPickerDialog extends StatefulWidget {
-  const LibraryPickerDialog({super.key});
+  final String? initialSectionId;
+
+  const LibraryPickerDialog({super.key, this.initialSectionId});
   @override
   State<LibraryPickerDialog> createState() => _LibraryPickerDialogState();
 }
@@ -99,26 +115,33 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
       _recentPaths = results[4] as List<String>;
       _selectedPath = _books.isEmpty ? null : _books.first.bookPath;
       _selectedPathNotifier.value = _selectedPath;
-      _selectedSectionId = _sections.isEmpty ? null : _sections.first.id;
+      final hasInitialSection = widget.initialSectionId?.isNotEmpty == true &&
+          _sections.any((section) => section.id == widget.initialSectionId);
+      _selectedSectionId = hasInitialSection
+          ? widget.initialSectionId
+          : (_sections.isEmpty ? null : _sections.first.id);
+      if (hasInitialSection) {
+        for (final book in _books) {
+          if (book.book.sectionId == _selectedSectionId) {
+            _selectedPath = book.bookPath;
+            _selectedPathNotifier.value = _selectedPath;
+            break;
+          }
+        }
+      }
       _selectedAuthorId = _authors.isEmpty ? null : _authors.first.id;
+      if (hasInitialSection) _tab = _sectionsTab;
       _loading = false;
     });
   }
   @override Widget build(BuildContext context) {
-    final content = Theme(
-      data: Theme.of(context).copyWith(
-        textTheme: Theme.of(context).textTheme.apply(
-          fontFamily: LibraryDesignTokens.fontFamily,
-        ),
-      ),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Material(
-          color: Colors.white,
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : _body(),
-        ),
+    final content = Directionality(
+      textDirection: TextDirection.rtl,
+      child: Material(
+        color: surfaceColor,
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _body(),
       ),
     );
     return LibraryResizableDialogFrame(
@@ -126,7 +149,9 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
       minHeight: 560,
       child: content,
     );
-  } Widget _body() {
+  }
+
+  Widget _body() {
     return Row(
       textDirection: TextDirection.ltr,
       children: [
@@ -163,7 +188,9 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
         ),
       ],
     );
-  } Widget _toolbarForTab() {
+  }
+
+  Widget _toolbarForTab() {
     if (_tab == _sectionsTab) {
       return LibrarySectionsToolbar(
             selectedTypes: _selectedTypes,
@@ -189,10 +216,13 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
       onToggleCard: _toggleCard,
       onPickFiles: _pickDocxFiles,
       onPickFolder: _pickFolder,
+      onPickParts: _pickMultipartBook,
       onSearchScopeChanged: _setSearchScope,
       onSearchChanged: (_) => _debounceRebuild(),
     );
-  } Widget _content() {
+  }
+
+  Widget _content() {
     switch (_tab) {
       case _sectionsTab:
         return _sectionsView();
@@ -214,7 +244,9 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
       default:
         return _booksTable(_booksForGeneralSearch());
     }
-  } Widget _sectionsView() {
+  }
+
+  Widget _sectionsView() {
     final visibleSections = _sections.where((section) {
       return LibraryTextNormalizer.contains(section.title, _sectionsSearch.text);
     }).toList();
@@ -243,7 +275,9 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
       booksSearchScope: _searchScope,
       onBooksSearchScopeChanged: _setSearchScope,
     );
-  } Widget _authorsView() {
+  }
+
+  Widget _authorsView() {
     final orderedAuthors =
         _sortAuthorsByName ? _authorsByName : _authorsByDeath;
     final visibleAuthors = orderedAuthors.where((author) {
@@ -275,7 +309,9 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
       booksSearchScope: _searchScope,
       onBooksSearchScopeChanged: _setSearchScope,
     );
-  } Widget _booksTable(
+  }
+
+  Widget _booksTable(
     List<LibraryBookItem> books, {
     Widget Function(LibraryBookItem)? additionalActionBuilder,
   }) {
@@ -321,6 +357,7 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
         onToggleCard: _toggleCard,
         onPickFiles: _pickDocxFiles,
         onPickFolder: _pickFolder,
+        onPickParts: _pickMultipartBook,
       );
   void _selectBook(LibraryBookItem book) {
     _selectedPath = book.bookPath;
@@ -343,7 +380,14 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
   String get _activeSearchQuery => _tab == _sectionsTab
       ? _sectionBooksSearch.text
       : _tab == _authorsTab ? _authorBooksSearch.text : _booksSearch.text;
-  void _openBook(LibraryBookItem book) => Navigator.of(context).pop(book.bookPath);
+  void _openBook(LibraryBookItem book) {
+    final source = switch (_tab) {
+      _recentTab => BookOpenSource.recent,
+      _favoritesTab => BookOpenSource.favorite,
+      _ => BookOpenSource.other,
+    };
+    Navigator.of(context).pop(LibraryPickerResult(book.bookPath, source));
+  }
   void _toggleType(String type) {
     setState(() {
       _selectedTypes.contains(type)
@@ -372,13 +416,15 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
         _favorites.remove(book.bookPath);
       }
     });
-  } Widget _recentDeleteButton(LibraryBookItem book) {
+  }
+
+  Widget _recentDeleteButton(LibraryBookItem book) {
     return IconButton(
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints.tightFor(width: 34, height: 32),
       iconSize: 18,
       tooltip: 'حذف من مؤخرًا',
-      icon: Icon(Icons.delete_outline, color: Colors.red.shade400),
+      icon: const LibraryIcon(LibraryIconType.delete, color: destructiveColor),
       onPressed: () => _removeRecent(book.bookPath),
     );
   }
@@ -393,6 +439,11 @@ class _LibraryPickerDialogState extends State<LibraryPickerDialog> {
   }
   Future<void> _pickFolder() async {
     if (await LibraryImportActions.pickFolder(context) && mounted) {
+      await _load();
+    }
+  }
+  Future<void> _pickMultipartBook() async {
+    if (await LibraryImportActions.pickMultipartBook(context) && mounted) {
       await _load();
     }
   }

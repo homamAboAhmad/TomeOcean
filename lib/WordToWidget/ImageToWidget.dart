@@ -24,13 +24,6 @@ SectPr? _resolveImageSectPr(ImageData imageData) {
 Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
   if (imageData == null) return Container(child: Text("Empty Pic"));
   ImageData image = imageData;
-  final bool isSpecialDebugRid = RegExp(r'^rId(1[3-9])$').hasMatch(image.rId);
-
-  if (isSpecialDebugRid) {
-    print(
-      'VML_DEBUG_WIDGET_ENTER: rId=${image.rId} wrapMode=${image.wrapMode} innerOnly=$innerOnly isVml=${image.isVml} width=${image.width} height=${image.height} relH=${image.relativeFromH} relV=${image.relativeFromV} posX=${image.posX} posY=${image.posY}',
-    );
-  }
 
   // NEW: Handle Vector Shapes (wps:wsp with a:custGeom)
   // هذا لعرض الأشكال المخصصة مثل الخط الزخرفي في الهيدر
@@ -228,12 +221,6 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
   double transX = posX;
   double transY = posY;
 
-  // if (isSpecialDebugRid) {
-  //   print(
-  //     'VML_DEBUG_WIDGET_POS: rId=${image.rId} computedPosX=$posX computedPosY=$posY transX=$transX transY=$transY alignment=$alignment pageW=$pageWidth pageH=$pageHeight marginW=$marginAreaWidth marginH=$marginAreaHeight',
-  //   );
-  // }
-
   // Create the interactive image widget (or use group content)
   Widget content;
   Widget innerContent;
@@ -391,12 +378,6 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
     }
 
     innerContent = imageWidget;
-
-    if (isSpecialDebugRid) {
-      print(
-        'VML_DEBUG_WIDGET_IMAGE: rId=${image.rId} rawWidth=$rawWidth rawHeight=$rawHeight isValid=$isValid isStretched=${image.isStretched} rotation=${image.rotation} flipH=${image.flipH} flipV=${image.flipV}',
-      );
-    }
   }
 
   // Create the interactive image widget (GestureDetector wrapper)
@@ -422,17 +403,6 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
         } catch (e) {
           print("Error launching image hyperlink: $e");
         }
-      } else {
-        // Debug print for images without hyperlinks
-        print("═══════════════════════════════════════════════════════════");
-        print("IMAGE TAPPED: ${image.rId}");
-        print("  Original posX=${image.posX}, posY=${image.posY}");
-        print("  Computed posX=$posX, posY=$posY");
-        print(
-          "  relativeFromH=${image.relativeFromH}, relativeFromV=${image.relativeFromV}",
-        );
-        print("  Size: width=${image.width}, height=${image.height}");
-        print("═══════════════════════════════════════════════════════════");
       }
     },
     child: MouseRegion(
@@ -451,9 +421,6 @@ Widget getImageWidget(ImageData? imageData, {bool innerOnly = false}) {
   // If wrapMode is null, it indicates an inline image (wp:inline).
   // We return the content directly so it flows with the text and respects Paragraph alignment (e.g. Center).
   if (image.wrapMode == null || innerOnly) {
-    if (isSpecialDebugRid) {
-      print('VML_DEBUG_WIDGET_BRANCH: rId=${image.rId} -> inline-return');
-    }
     return content;
   }
 

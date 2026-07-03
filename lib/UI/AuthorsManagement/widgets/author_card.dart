@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../../Models/Author.dart';
 import '../../../Styles/TextSyles.dart';
+import '../../LibraryCommon/library_icon.dart';
 
 /// Widget for displaying author card
 class AuthorCard extends StatelessWidget {
@@ -137,7 +138,7 @@ class AuthorCard extends StatelessWidget {
                 const SizedBox(width: 16),
                 // Actions Menu
                 PopupMenuButton<String>(
-                  icon: Icon(
+                  icon: LibraryIcon.fromIcon(
                     Icons.more_vert,
                     color: Colors.grey.shade400,
                     size: 20,
@@ -164,7 +165,7 @@ class AuthorCard extends StatelessWidget {
                       child: Row(
                         textDirection: TextDirection.rtl,
                         children: [
-                          Icon(
+                          LibraryIcon.fromIcon(
                             Icons.info_outline,
                             size: 18,
                             color: Colors.grey.shade700,
@@ -186,7 +187,7 @@ class AuthorCard extends StatelessWidget {
                       child: Row(
                         textDirection: TextDirection.rtl,
                         children: [
-                          Icon(
+                          LibraryIcon.fromIcon(
                             Icons.edit,
                             size: 18,
                             color: Colors.grey.shade700,
@@ -209,7 +210,7 @@ class AuthorCard extends StatelessWidget {
                       child: Row(
                         textDirection: TextDirection.rtl,
                         children: [
-                          Icon(
+                          LibraryIcon.fromIcon(
                             Icons.delete,
                             size: 18,
                             color: Colors.grey.shade700,

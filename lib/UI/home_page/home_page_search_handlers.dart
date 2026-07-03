@@ -6,6 +6,8 @@ import 'package:desktop_multi_window/desktop_multi_window.dart';
 import 'package:golden_shamela/UI/Search/shamela_search_dialog.dart';
 import 'package:golden_shamela/Helpers/ShamelaSearchIndexer.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_executor.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_results_author_sorter.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_scope_selection.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:golden_shamela/Utils/SnackBar.dart';
 import 'package:golden_shamela/core/app_state.dart';
@@ -53,8 +55,10 @@ class HomePageSearchHandlers {
       final appState = AppState();
       final booksLoader = IndexedBooksLoader();
 
-      List<Map<String, dynamic>> indexedBooks =
-          appState.cachedIndexedBooks ?? await booksLoader.getIndexedBooks();
+      final cachedBooks = appState.cachedIndexedBooks;
+      final indexedBooks = cachedBooks != null && cachedBooks.isNotEmpty
+          ? cachedBooks
+          : await booksLoader.getIndexedBooks();
 
       if (indexedBooks.isEmpty) {
         ShowSnackBar(
@@ -64,9 +68,7 @@ class HomePageSearchHandlers {
         return;
       }
 
-      if (appState.cachedIndexedBooks == null) {
-        appState.cachedIndexedBooks = indexedBooks;
-      }
+      appState.cachedIndexedBooks = indexedBooks;
 
       final searchMode =
           PreferencesHelper.prefs.getString('search_window_mode') ?? 'separate';
@@ -165,6 +167,13 @@ class HomePageSearchHandlers {
       final searchExecutor = SearchExecutor();
       final metadataDb = BooksMetadataDatabase();
       await metadataDb.initialize();
+      final bookAuthorMap = await metadataDb.getAllBookAuthorMappings();
+      final authors = await metadataDb.getAuthors();
+      final authorDeathYears = {
+        for (final author in authors)
+          if (author.deathYear?.isNotEmpty == true)
+            author.id: author.deathYear!,
+      };
 
       final Map<String, List<TextEditingController>> groupControllers = {};
       groupControllersMap.forEach((key, value) {
@@ -178,82 +187,15 @@ class HomePageSearchHandlers {
       });
 
       List<String>? booksToSearch;
-
-      final sectionIdsFromSearch = selectedBooksForSearch
-          .where(
-            (item) => item['type'] == 'section' && item['sectionId'] != null,
-          )
-          .map((item) {
-            final sectionId = item['sectionId'];
-            return sectionId is String ? sectionId : sectionId.toString();
-          })
-          .where((id) => id.isNotEmpty)
-          .toList();
-
-      List<String>? booksFromSections;
-      if (sectionIdsFromSearch.isNotEmpty) {
-        final allBookPaths = <String>[];
-        for (var sectionId in sectionIdsFromSearch) {
-          try {
-            final bookPaths = await metadataDb.getBookPaths(
-              sectionId: sectionId.toString(),
-            );
-            allBookPaths.addAll(bookPaths);
-          } catch (e, stackTrace) {
-            // Continue with next section
-          }
-        }
-        booksFromSections = allBookPaths
-            .where(
-              (bookPath) =>
-                  indexedBooks.any((book) => book['book_path'] == bookPath),
-            )
-            .toList();
-      }
-
-      final bookPathsFromSearch = selectedBooksForSearch
-          .where((item) => item['type'] == 'book' && item['bookPath'] != null)
-          .map((item) => item['bookPath'] as String)
-          .toList();
-
-      final authorIdsFromSearch = selectedBooksForSearch
-          .where((item) => item['type'] == 'author' && item['authorId'] != null)
-          .map((item) {
-            final authorId = item['authorId'];
-            return authorId is String ? authorId : authorId.toString();
-          })
-          .where((id) => id.isNotEmpty)
-          .toSet();
-
-      List<String>? booksFromAuthors;
-      if (authorIdsFromSearch.isNotEmpty) {
-        final allBookPaths = <String>[];
-        for (var authorId in authorIdsFromSearch) {
-          try {
-            final bookPaths = await metadataDb.getBookPaths(
-              authorId: authorId.toString(),
-            );
-            allBookPaths.addAll(bookPaths);
-          } catch (e, stackTrace) {
-            // Continue with next author
-          }
-        }
-        booksFromAuthors = allBookPaths
-            .where(
-              (bookPath) =>
-                  indexedBooks.any((book) => book['book_path'] == bookPath),
-            )
-            .toList();
-      }
-
-      Set<String> allBooksToSearch = {};
-      if (booksFromSections != null) allBooksToSearch.addAll(booksFromSections);
-      if (bookPathsFromSearch.isNotEmpty)
-        allBooksToSearch.addAll(bookPathsFromSearch);
-      if (booksFromAuthors != null) allBooksToSearch.addAll(booksFromAuthors);
-
-      if (allBooksToSearch.isNotEmpty) {
-        booksToSearch = allBooksToSearch.toList();
+      final selection = SearchScopeSelection.fromItems(selectedBooksForSearch);
+      if (!selection.isEmpty) {
+        final resolvedBooks = await SearchScopeBookResolver(
+          metadataDb,
+        ).resolveBookPaths(
+          selection: selection,
+          filteredIndexedBooks: indexedBooks,
+        );
+        booksToSearch = resolvedBooks.toList();
       }
 
       final selectedSections = searchSections.entries
@@ -261,9 +203,23 @@ class HomePageSearchHandlers {
           .map((e) => e.key)
           .toList();
 
-      List<Map<String, dynamic>> allResults = [];
+      final allResults = <Map<String, dynamic>>[];
       int? totalCount;
-      List<String> searchQueries = [];
+      final searchQueries = <String>[];
+      var lastEmittedCount = 0;
+      var lastEmitTime = DateTime.fromMillisecondsSinceEpoch(0);
+      var wasCancelled = false;
+
+      void emitResults() {
+        lastEmittedCount = allResults.length;
+        lastEmitTime = DateTime.now();
+        onSearchResultsUpdate(
+          List<Map<String, dynamic>>.of(allResults, growable: false),
+          totalCount,
+          searchQueries,
+          morphologicalSearch,
+        );
+      }
 
       groupControllers.values.forEach((controllers) {
         controllers.forEach((controller) {
@@ -280,6 +236,7 @@ class HomePageSearchHandlers {
         sectionTypes: selectedSections.length < searchSections.length
             ? selectedSections
             : null,
+        includeComments: searchSections['comment'] == true,
         morphologicalSearch: morphologicalSearch,
         affixSearch: affixSearch,
         considerHamzas: considerHamzas,
@@ -288,29 +245,43 @@ class HomePageSearchHandlers {
         allPhrasesRequired: allPhrasesRequired,
         ordered: ordered,
         proximity: proximity,
-        batchSize: 10,
+        batchSize: 50,
       )) {
         if (!isMounted() || (isCancelled != null && isCancelled())) {
+          wasCancelled = true;
           break;
         }
 
-        if (totalCount == null) {
+        if (totalCount == null || searchResult.totalCount > totalCount!) {
           totalCount = searchResult.totalCount;
         }
 
-        // Filter out results for non-existent book files
+        // Avoid synchronous disk checks here; the index already carries the book
+        // path, and per-row File.existsSync freezes large streamed result sets.
         final validResults = searchResult.results.where((r) {
           final bookPath = r['book_path'] as String?;
-          return bookPath != null && File(bookPath).existsSync();
+          return bookPath != null && bookPath.isNotEmpty;
         }).toList();
 
         allResults.addAll(validResults);
-        onSearchResultsUpdate(
+        SearchResultsAuthorSorter.sort(
           allResults,
-          totalCount,
-          searchQueries,
-          morphologicalSearch,
+          bookAuthorMap: bookAuthorMap,
+          authorDeathYears: authorDeathYears,
         );
+        final now = DateTime.now();
+        final enoughNewRows = allResults.length - lastEmittedCount >= 50;
+        final enoughTimePassed =
+            now.difference(lastEmitTime).inMilliseconds >= 150;
+        if (enoughNewRows || enoughTimePassed) {
+          emitResults();
+        }
+      }
+
+      if (!wasCancelled &&
+          isMounted() &&
+          (allResults.length != lastEmittedCount || totalCount != null)) {
+        emitResults();
       }
     } catch (e, stackTrace) {
       if (isMounted()) {

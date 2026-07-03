@@ -1,630 +1,347 @@
-import 'dart:io';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
+import 'package:flutter/services.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
-import 'package:golden_shamela/Models/WordPage.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
-import 'package:golden_shamela/Styles/TextSyles.dart';
-import 'package:golden_shamela/UI/Search/helpers/search_highlighting_helper.dart';
-import 'package:golden_shamela/UI/Search/widgets/no_results_widget.dart';
-import 'package:golden_shamela/UI/WordPageScreen.dart';
-import 'package:golden_shamela/Utils/FileToArchive.dart';
-import 'package:golden_shamela/Services/BookProcessingService.dart';
-import 'package:golden_shamela/Services/AppStoragePaths.dart';
-import 'package:golden_shamela/Helpers/TextProcessor.dart';
+import 'package:golden_shamela/UI/BookSideBar/BooksSideBarIcons.dart';
+import 'package:golden_shamela/UI/DocViewer.dart';
+import 'package:golden_shamela/UI/Settings/app_other_settings.dart';
+import 'package:golden_shamela/UI/Search/models/search_state_snapshot.dart';
 import 'package:golden_shamela/core/app_state.dart';
+import 'helpers/search_result_row_helpers.dart';
+import 'widgets/no_results_widget.dart';
+import 'widgets/save_search_results_bar.dart';
+import 'widgets/search_results_table.dart';
+import 'widgets/search_results_split_pane.dart';
 
-/// Shamela-style search results view:
-/// top = page preview, bottom = results list, draggable divider.
+part 'shamela_search_view_results.dart';
+
 class ShamelaSearchView extends StatefulWidget {
   final List<Map<String, dynamic>> results;
   final int totalCount;
+  final String searchQuery;
   final List<String> searchQueries;
   final bool morphologicalSearch;
+  final Function(String bookPath, int pageNumber)? onResultTapped;
+  final Function(String query, bool morphologicalSearch) onNewSearch;
+  final Function(String bookPath, int pageNumber)? onOpenBookFull;
+  final Future<WordDocument?> Function(String bookPath, int pageNumber)?
+      onLoadBook;
   final bool isSearching;
-  final Function(String bookPath, int pageIndex) onOpenBookFull;
-  final Function(String query, bool morphological)? onNewSearch;
-  final VoidCallback? onNewSearchDialog;
+  final SearchStateSnapshot searchSnapshot;
   final VoidCallback? onStopSearch;
-
+  final VoidCallback? onNewSearchDialog;
   const ShamelaSearchView({
-    Key? key,
+    super.key,
     required this.results,
-    required this.totalCount,
-    required this.searchQueries,
-    required this.morphologicalSearch,
+    this.totalCount = 0,
+    this.searchQuery = '',
+    this.searchQueries = const [],
+    this.morphologicalSearch = false,
+    this.onResultTapped,
+    required this.onNewSearch,
+    this.onOpenBookFull,
+    this.onLoadBook,
     this.isSearching = false,
-    required this.onOpenBookFull,
-    this.onNewSearch,
-    this.onNewSearchDialog,
+    this.searchSnapshot = const SearchStateSnapshot(),
     this.onStopSearch,
-  }) : super(key: key);
+    this.onNewSearchDialog,
+  });
 
   @override
   State<ShamelaSearchView> createState() => _ShamelaSearchViewState();
 }
 
 class _ShamelaSearchViewState extends State<ShamelaSearchView> {
-  // ── Preview ──
-  WordDocument? _previewDoc;
-  WordPage? _previewPage;
-  bool _isLoadingPreview = false;
-  String? _previewError;
-  int _selectedResultIndex = -1;
-
-  // ── Draggable splitter fraction (top / total) ──
-  double _splitFraction = 0.55;
-
-
-  // ── Snippet highlighting ──
-  late SearchHighlightingHelper _highlightingHelper;
-  final Map<int, Widget> _snippetCache = {};
-
-  // ── Document cache keyed by book title ──
-  final Map<String, WordDocument> _docCache = {};
-
-  // ── Scroll controllers ──
-  final ScrollController _resultsScrollCtrl = ScrollController();
-  final ScrollController _previewScrollCtrl = ScrollController();
-
-  // ── Paragraph key infrastructure for scroll-to-match ──
-  final Map<int, GlobalKey> _paragraphKeys = {};
-  int? _targetParagraphIndex;
-
+  static const double _rowExtent = 32;
+  final FocusNode _focusNode = FocusNode();
+  final ScrollController _resultsController = ScrollController();
+  WordDocument? _currentDocument;
+  String? _currentBookPath;
+  int? _selectedIndex;
+  bool _isLoadingBook = false;
+  bool _resultsHidden = false;
+  String? _autoOpenedResultKey;
+  String? _loadError;
   @override
   void initState() {
     super.initState();
-    _highlightingHelper = SearchHighlightingHelper(
-      morphologicalSearch: widget.morphologicalSearch,
-    );
-    if (widget.results.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _selectResult(0));
-    }
-  }
-
-  @override
-  void didUpdateWidget(ShamelaSearchView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    final queriesChanged = oldWidget.searchQueries != widget.searchQueries ||
-        oldWidget.morphologicalSearch != widget.morphologicalSearch;
-
-    if (queriesChanged) {
-      _snippetCache.clear();
-      _highlightingHelper = SearchHighlightingHelper(
-        morphologicalSearch: widget.morphologicalSearch,
-      );
-    }
-
-    if (oldWidget.results != widget.results) {
-      if (widget.results.isEmpty) {
-        // New search started with empty results
-        setState(() {
-          _previewDoc = null;
-          _previewPage = null;
-          _selectedResultIndex = -1;
-        });
-      } else if (_selectedResultIndex == -1 && widget.results.isNotEmpty) {
-        // First batch arrived, auto-select first result
-        WidgetsBinding.instance.addPostFrameCallback((_) => _selectResult(0));
-      }
-      // If results just grew (streaming), don't touch selection
-    }
+    _openFirstResultAfterBuild();
   }
 
   @override
   void dispose() {
-    _resultsScrollCtrl.dispose();
-    _previewScrollCtrl.dispose();
+    _focusNode.dispose();
+    _resultsController.dispose();
     super.dispose();
   }
 
-  // ─────────────────── Preview loading ───────────────────
-
-  Future<void> _selectResult(int index) async {
-    if (index < 0 || index >= widget.results.length) return;
-    if (index == _selectedResultIndex && _previewPage != null) return;
-
-    final result = widget.results[index];
-    final bookPath = result['book_path'] as String? ?? '';
-    final pageNumber = (result['page_number'] as num?)?.toInt() ?? 0;
-    if (bookPath.isEmpty) return;
-
-    setState(() {
-      _selectedResultIndex = index;
-      _isLoadingPreview = true;
-      _previewError = null;
-      _paragraphKeys.clear();
-      _targetParagraphIndex = null;
-    });
-
-    try {
-      AppState().setSearchHighlight(widget.searchQueries);
-
-      final doc = await _loadDocument(bookPath);
-      final targetPage = pageNumber.clamp(0, doc.pageFilePaths.length - 1);
-      doc.currentPage = targetPage;
-      final page = await doc.getPage(targetPage);
-
-      // ابحث عن أول فقرة تحتوي على إحدى كلمات البحث (مع تطبيع عربي)
-      int? foundParagraphIndex;
-      if (widget.searchQueries.isNotEmpty) {
-        final normalizedQueries = widget.searchQueries
-            .map((q) => TextProcessor.normalizeArabic(q.trim()))
-            .where((q) => q.isNotEmpty)
-            .toList();
-        for (int pIdx = 0; pIdx < page.ps.length; pIdx++) {
-          final pText = TextProcessor.normalizeArabic(page.ps[pIdx].text);
-          final found = normalizedQueries.any((q) => pText.contains(q));
-          if (found) {
-            foundParagraphIndex = pIdx;
-            break;
-          }
-        }
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _previewDoc = doc;
-        _previewPage = page;
-        _isLoadingPreview = false;
-        _targetParagraphIndex = foundParagraphIndex;
-      });
-
-      if (_targetParagraphIndex != null) {
-        // نحتاج إطارين: الأول ليُبنى الـ widget, الثاني ليتوفر الـ context
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _scrollToTargetParagraph();
-          });
-        });
-      } else if (_previewScrollCtrl.hasClients) {
-        _previewScrollCtrl.jumpTo(0);
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isLoadingPreview = false;
-        _previewError = '$e';
-      });
+  @override
+  void didUpdateWidget(covariant ShamelaSearchView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.results != widget.results && widget.results.isEmpty) {
+      _selectedIndex = null;
+      _currentDocument = null;
+      _currentBookPath = null;
+      _isLoadingBook = false;
+      _resultsHidden = false;
+      _autoOpenedResultKey = null;
+      _loadError = null;
+    } else if (_selectedIndex != null &&
+        _selectedIndex! >= widget.results.length) {
+      _selectedIndex = null;
     }
+    _openFirstResultAfterBuild();
   }
 
-  void _scrollToTargetParagraph() {
-    final target = _targetParagraphIndex;
-    if (target == null) return;
-    final ctx = _paragraphKeys[target]?.currentContext;
-    if (ctx == null) {
-      // لم يُبنَ بعد، حاول مرة أخرى
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToTargetParagraph());
+  void _openFirstResultAfterBuild() {
+    if (!AppOtherSettings.instance.draft().openSearchResultOnKeyboardSelection) return;
+    final firstKey = _firstResultKey;
+    if (widget.results.isEmpty ||
+        _selectedIndex != null ||
+        _currentDocument != null ||
+        firstKey == null ||
+        _autoOpenedResultKey == firstKey ||
+        _isLoadingBook) {
       return;
     }
-    Scrollable.ensureVisible(
-      ctx,
-      alignment: 0.18,
-      duration: Duration.zero,
-    );
-  }
 
-  Future<WordDocument> _loadDocument(String bookPath) async {
-    final title = AppStoragePaths.bookIdFromPath(bookPath);
-    if (_docCache.containsKey(title)) return _docCache[title]!;
-
-    final sourcePath = AppStoragePaths.bookSourcePath(title);
-    final archivePath = await File(sourcePath).exists() ? sourcePath : bookPath;
-    if (!await File(archivePath).exists()) {
-      throw Exception('مصدر الكتاب مفقود. يرجى إعادة استيراده.');
-    }
-    final bookCacheDir = Directory(AppStoragePaths.bookDirPath(title));
-    final metadataFile = File(AppStoragePaths.bookMetadataPath(title));
-    final pagesDir = Directory(AppStoragePaths.bookPagesDirPath(title));
-
-    Future<WordDocument> _loadFromCache() async {
-      final json =
-          jsonDecode(await metadataFile.readAsString()) as Map<String, dynamic>;
-      final doc = WordDocument.fromCacheJson(json);
-      doc.pagesDirectory = pagesDir.path;
-
-      final pageFiles = await pagesDir.list().toList();
-      pageFiles.sort((a, b) {
-        final aNum = int.tryParse(p.basename(a.path).split('.').first) ?? 0;
-        final bNum = int.tryParse(p.basename(b.path).split('.').first) ?? 0;
-        return aNum.compareTo(bNum);
-      });
-      doc.pageFilePaths =
-          pageFiles.map((f) => p.basename(f.path)).toList();
-      doc.initLoadedPages();
-
-      try {
-        if (await File(archivePath).exists()) {
-          doc.archive = await FileToArchive(archivePath);
-        }
-      } catch (_) {}
-
-      _docCache[title] = doc;
-      return doc;
-    }
-
-    // 1. Try existing cache
-    if (await bookCacheDir.exists() && await metadataFile.exists()) {
-      try {
-        return await _loadFromCache();
-      } catch (_) {
-        await AppStoragePaths.deleteRebuildableCache(title);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final scheduledKey = _firstResultKey;
+      if (!mounted ||
+          widget.results.isEmpty ||
+          _selectedIndex != null ||
+          _currentDocument != null ||
+          scheduledKey == null ||
+          _autoOpenedResultKey == scheduledKey ||
+          _isLoadingBook) {
+        return;
       }
-    }
-
-    // 2. Cache missing → reprocess then load
-    await BookProcessingService().parseAndCacheForOpening(archivePath);
-    if (await metadataFile.exists()) {
-      return _loadFromCache();
-    }
-
-    throw Exception('الكتاب غير مفهرس والكاش مفقود');
+      _autoOpenedResultKey = scheduledKey;
+      _showResult(0);
+    });
   }
-
-  // ─────────────────── Snippet builder ───────────────────
-
-  static final RegExp _pgMarkerRegex = RegExp(r'\{\{PG:\d+\}\}');
-
-  Widget _buildSnippet(int index, String content) {
-    if (_snippetCache.containsKey(index)) return _snippetCache[index]!;
-
-    final cleaned = content.replaceAll(_pgMarkerRegex, '');
-    final fallback = Text(
-      cleaned.length > 120 ? '${cleaned.substring(0, 120)}...' : cleaned,
-      style: smallStyle(),
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-    );
-
-    return FutureBuilder<Widget>(
-      future: _highlightingHelper.extractSnippetWithHighlight(
-        cleaned,
-        widget.searchQueries,
-      ),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          _snippetCache[index] = snapshot.data!;
-          return snapshot.data!;
-        }
-        return fallback;
-      },
-    );
-  }
-
-  // ─────────────────── Build ───────────────────
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: Colors.grey.shade200,
-        body: Column(
-          children: [
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final totalH = constraints.maxHeight;
-                  const dividerH = 8.0;
-                  final topH =
-                      (totalH * _splitFraction).clamp(80.0, totalH - 120.0);
-                  final bottomH = totalH - topH - dividerH;
-
-                  return Column(
-                    children: [
-                      SizedBox(height: topH, child: _buildPreviewArea()),
-                      _buildDraggableDivider(totalH),
-                      SizedBox(height: bottomH, child: _buildResultsList()),
-                    ],
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ─────────────────── Preview area ───────────────────
-
-  Widget _buildPreviewArea() {
-    if (_isLoadingPreview) {
-      return Container(
-        color: Colors.white,
-        child: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_previewError != null) {
-      return Container(
-        color: Colors.white,
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.error_outline, size: 40, color: Colors.red.shade300),
-                const SizedBox(height: 12),
-                Text(_previewError!, style: normalStyle(), textAlign: TextAlign.center),
-              ],
-            ),
-          ),
-        ),
-      );
-    }
-
-    if (_previewPage == null || _previewDoc == null) {
-      return Container(
-        color: Colors.white,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      child: Focus(
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: _handleKeyEvent,
+        child: Scaffold(
+          backgroundColor: bgColor,
+          body: Column(
             children: [
-              Icon(Icons.touch_app_outlined, size: 56, color: Colors.grey.shade300),
-              const SizedBox(height: 12),
-              Text('اختر نتيجة لعرضها', style: bigStyle(color: Colors.grey.shade400)),
+              ShamelaResultsTopBar(
+                count: widget.results.length,
+                totalCount: widget.totalCount,
+                isSearching: widget.isSearching,
+                resultsHidden: _resultsHidden,
+                onStopSearch: widget.onStopSearch,
+                onNewSearchDialog: widget.onNewSearchDialog,
+                onToggleResults: widget.results.isEmpty
+                    ? null
+                    : () => setState(() => _resultsHidden = !_resultsHidden),
+              ),
+              Expanded(
+                child: SearchResultsSplitPane(
+                  bookPane: _buildBookPane(),
+                  resultsPanel: this._buildResultsPanel(),
+                  resultsHidden: _resultsHidden,
+                ),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBookPane() {
+    const paneBackground = Colors.white;
+    if (_isLoadingBook) {
+      return const ColoredBox(
+        color: paneBackground,
+        child: Center(
+          child: CircularProgressIndicator(color: primaryColor),
+        ),
       );
     }
 
-    final selectedResult =
-        (_selectedResultIndex >= 0 && _selectedResultIndex < widget.results.length)
-            ? widget.results[_selectedResultIndex]
-            : null;
-    final bookName = selectedResult?['book_name'] as String? ?? '';
-    final pageNum = (selectedResult?['page_number'] as num?)?.toInt() ?? 0;
-
-    return Container(
-      color: Colors.grey.shade100,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            color: primaryColor.withOpacity(0.08),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '$bookName — ص ${pageNum + 1}',
-                    style: normalStyle(fontWeight: FontWeight.bold, color: primaryColor),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                TextButton.icon(
-                  icon: const Icon(Icons.open_in_new, size: 16),
-                  label: Text('فتح الكتاب', style: smallStyle(color: primaryColor)),
-                  style: TextButton.styleFrom(
-                    foregroundColor: primaryColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                  onPressed: () {
-                    if (selectedResult != null) {
-                      widget.onOpenBookFull(
-                        selectedResult['book_path'] ?? '',
-                        pageNum,
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Scrollbar(
-              controller: _previewScrollCtrl,
-              thumbVisibility: true,
-              child: SingleChildScrollView(
-                controller: _previewScrollCtrl,
-                padding: const EdgeInsets.all(8),
-                child: Center(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.topCenter,
-                    child: WordPageScreen(
-                      _previewPage!,
-                      wordDocument: _previewDoc!,
-                      paragraphKeyBuilder: (pIdx) =>
-                          _paragraphKeys.putIfAbsent(pIdx, () => GlobalKey()),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────── Draggable divider ───────────────────
-
-  Widget _buildDraggableDivider(double totalHeight) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onVerticalDragUpdate: (details) {
-        setState(() {
-          _splitFraction += details.delta.dy / totalHeight;
-          _splitFraction = _splitFraction.clamp(0.15, 0.80);
-        });
-      },
-      child: MouseRegion(
-        cursor: SystemMouseCursors.resizeRow,
-        child: Container(
-          height: 8,
-          color: Colors.grey.shade300,
-          child: Center(
-            child: Container(
-              width: 40,
-              height: 3,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade500,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+    if (_loadError != null) {
+      return ColoredBox(
+        color: paneBackground,
+        child: Center(
+          child: Text(
+            _loadError!,
+            style: const TextStyle(color: Colors.red),
+            textAlign: TextAlign.center,
           ),
         ),
-      ),
+      );
+    }
+
+    if (_currentDocument != null) {
+      return ColoredBox(
+        color: paneBackground,
+        child: DocViewer(
+          _currentDocument!,
+          key: ValueKey('${_currentBookPath ?? ''}:${_currentDocument!.currentPage}'),
+          onBookSelected: (file) => _showBook(file.path, 0),
+        ),
+      );
+    }
+
+    return ShamelaResultPreviewPane(
+      queryLabel: _queryLabel,
+      previewResult: _selectedIndex == null || _selectedIndex! >= widget.results.length
+          ? (widget.results.isEmpty ? null : widget.results.first)
+          : widget.results[_selectedIndex!],
+      snippetBuilder: SearchResultRowHelpers.cleanSnippet,
+      isSearching: widget.isSearching,
+      hasResults: widget.results.isNotEmpty,
     );
   }
 
-  // ─────────────────── Results list ───────────────────
+  Future<void> _showResult(int index, {bool hideResults = false}) async {
+    if (index < 0 || index >= widget.results.length) return;
+    final result = widget.results[index];
+    final bookPath = (result['bookPath'] ?? result['book_path'])?.toString() ?? '';
+    if (bookPath.isEmpty) return;
 
-  Widget _buildResultsList() {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'نتائج البحث: ${widget.results.length}',
-                  style: mediumStyle(fontWeight: FontWeight.bold, color: primaryColor),
-                ),
-                if (widget.isSearching) ...[
-                  const SizedBox(width: 8),
-                  const SizedBox(
-                    width: 14, height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                  const SizedBox(width: 6),
-                  InkWell(
-                    onTap: widget.onStopSearch,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: Colors.red.shade200),
-                      ),
-                      child: Text('إيقاف', style: smallStyle(color: Colors.red.shade700)),
-                    ),
-                  ),
-                ] else if (widget.results.isNotEmpty) ...[
-                  const SizedBox(width: 8),
-                  Icon(Icons.check_circle, size: 16, color: Colors.green.shade600),
-                  const SizedBox(width: 4),
-                  Text('اكتمل', style: smallStyle(color: Colors.green.shade700)),
-                ],
-                const Spacer(),
-                if (widget.searchQueries.isNotEmpty)
-                  Text(
-                    widget.searchQueries.join(' | '),
-                    style: smallStyle(color: Colors.grey.shade600),
-                  ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: widget.results.isEmpty
-                ? NoResultsWidget(
-                    searchQueries: widget.searchQueries,
-                    onNewSearch: widget.onNewSearchDialog,
-                  )
-                : Scrollbar(
-                    controller: _resultsScrollCtrl,
-                    thumbVisibility: true,
-                    child: ListView.separated(
-                      controller: _resultsScrollCtrl,
-                      itemCount: widget.results.length,
-                      separatorBuilder: (_, __) =>
-                          Divider(height: 1, indent: 16, endIndent: 16),
-                      itemBuilder: (context, index) {
-                        final r = widget.results[index];
-                        final isSelected = index == _selectedResultIndex;
-                        final bookName = r['book_name'] as String? ?? '';
-                        final pageNum =
-                            (r['page_number'] as num?)?.toInt() ?? 0;
-                        final content = r['content'] as String? ?? '';
-
-                        return Material(
-                          color: isSelected
-                              ? primaryColor.withOpacity(0.1)
-                              : Colors.white,
-                          child: InkWell(
-                            onTap: () => _selectResult(index),
-                            onDoubleTap: () {
-                              widget.onOpenBookFull(
-                                r['book_path'] ?? '',
-                                pageNum,
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? primaryColor
-                                          : Colors.grey.shade200,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      '${pageNum + 1}',
-                                      style: smallStyle(
-                                        color: isSelected
-                                            ? Colors.white
-                                            : Colors.black87,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          bookName,
-                                          style: mediumStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: isSelected
-                                                ? primaryColor
-                                                : Colors.black87,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 4),
-                                        _buildSnippet(index, content),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-          ),
-        ],
-      ),
+    final pageNumber =
+        SearchResultRowHelpers.asInt(result['pageNumber'] ?? result['page_number']);
+    await _showBook(
+      bookPath,
+      pageNumber,
+      selectedIndex: index,
+      hideResults: hideResults,
+      openCommentPanel: SearchResultRowHelpers.isComment(result),
     );
   }
 
+  void _openResultInFullTab(int index) {
+    if (index < 0 || index >= widget.results.length) return;
+    final result = widget.results[index];
+    final bookPath = (result['bookPath'] ?? result['book_path'])?.toString() ?? '';
+    if (bookPath.isEmpty) return;
+    final pageNumber =
+        SearchResultRowHelpers.asInt(result['pageNumber'] ?? result['page_number']);
+    widget.onOpenBookFull?.call(bookPath, pageNumber);
+    if (SearchResultRowHelpers.isComment(result)) {
+      AppState().openCommentPanelForSearchTarget = true;
+    }
+  }
+
+  Future<void> _showBook(
+    String bookPath,
+    int pageNumber, {
+    int? selectedIndex,
+    bool hideResults = false,
+    bool openCommentPanel = false,
+  }) async {
+    _focusNode.requestFocus();
+    if (AppOtherSettings.instance.draft().showSearchBookIndexByDefault) {
+      showBookSideBar = true;
+    }
+    AppState().setSearchHighlight(widget.searchQueries);
+    AppState().setSearchTarget(
+      pageNumber,
+      null,
+      openCommentPanel: openCommentPanel,
+    );
+
+    if (_currentDocument != null && _currentBookPath == bookPath) {
+      setState(() {
+        _selectedIndex = selectedIndex;
+        _currentDocument!.currentPage = pageNumber;
+        _resultsHidden = _resultsHidden || hideResults;
+        _loadError = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _selectedIndex = selectedIndex;
+      _isLoadingBook = true;
+      _resultsHidden = _resultsHidden || hideResults;
+      _loadError = null;
+    });
+
+    final loader = widget.onLoadBook;
+    if (loader == null) {
+      final open = widget.onOpenBookFull ?? widget.onResultTapped;
+      open?.call(bookPath, pageNumber);
+      setState(() => _isLoadingBook = false);
+      return;
+    }
+
+    try {
+      final document = await loader(bookPath, pageNumber);
+      if (!mounted) return;
+      if (document == null) {
+        setState(() {
+          _isLoadingBook = false;
+          _loadError = 'تعذر فتح الكتاب من الكاش.';
+        });
+        return;
+      }
+      document.currentPage = pageNumber;
+      setState(() {
+        _currentDocument = document;
+        _currentBookPath = bookPath;
+        _isLoadingBook = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingBook = false;
+        _loadError = 'تعذر فتح الكتاب: $e';
+      });
+    }
+  }
+
+  KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent || widget.results.isEmpty) {
+      return KeyEventResult.ignored;
+    }
+
+    final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.arrowDown ||
+        key == LogicalKeyboardKey.arrowRight) {
+      _selectResultByKeyboard(_nextIndex());
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.arrowUp ||
+        key == LogicalKeyboardKey.arrowLeft) {
+      _selectResultByKeyboard(_previousIndex());
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.enter && _selectedIndex != null) {
+      _showResult(_selectedIndex!, hideResults: true);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  void _selectResultByKeyboard(int index) {
+    if (_resultsController.hasClients) { final p = _resultsController.position; final top = index * _rowExtent; final bottom = top + _rowExtent; if (top < p.pixels) _resultsController.jumpTo(top); else if (bottom > p.pixels + p.viewportDimension) _resultsController.jumpTo((bottom - p.viewportDimension).clamp(0.0, p.maxScrollExtent)); }
+    AppOtherSettings.instance.draft().openSearchResultOnKeyboardSelection
+        ? _showResult(index)
+        : setState(() => _selectedIndex = index);
+  }
+
+  int _nextIndex() => ((_selectedIndex ?? -1) + 1).clamp(0, widget.results.length - 1).toInt();
+  int _previousIndex() => ((_selectedIndex ?? widget.results.length) - 1).clamp(0, widget.results.length - 1).toInt();
+
+  void _newSearchFromNoResults() {
+    final query = widget.searchQueries.isNotEmpty
+        ? widget.searchQueries.first
+        : widget.searchQuery;
+    widget.onNewSearch(query, widget.morphologicalSearch);
+  }
+
+  String get _queryLabel => widget.searchQueries.isNotEmpty ? widget.searchQueries.join(' - ') : widget.searchQuery.trim();
+  String? get _firstResultKey => SearchResultRowHelpers.firstKey(widget.results).isEmpty ? null : SearchResultRowHelpers.firstKey(widget.results);
 }

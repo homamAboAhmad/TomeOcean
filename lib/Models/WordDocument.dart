@@ -7,6 +7,7 @@ import 'package:archive/archive.dart';
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:golden_shamela/Models/BookPart.dart';
 import 'package:golden_shamela/Models/IndexItem.dart';
 
 import 'package:golden_shamela/wordToHTML/PPr.dart';
@@ -44,6 +45,14 @@ class WordDocument {
   List<String> pageFilePaths = []; // Paths to page JSON files
   @JsonKey(ignore: true)
   String? pagesDirectory; // Directory where page JSONs are stored
+  @JsonKey(ignore: true)
+  String? sourcePath;
+  @JsonKey(ignore: true)
+  String openSource = 'other';
+  @JsonKey(ignore: true)
+  List<BookPart> parts = [];
+  @JsonKey(ignore: true)
+  Map<int, WordDocument> partDocuments = {};
 
   RPr? defaultRPr;
   PPr? defaultPPr;
@@ -112,6 +121,12 @@ class WordDocument {
   }
 
   WordPage? getLoadedPageIfAvailable(int index) {
+    if (hasParts) {
+      final document = documentForPage(index);
+      if (document == this) return null;
+      return document.getLoadedPageIfAvailable(localPageIndexForPage(index));
+    }
+
     if (index < 0 || index >= _loadedPages.length) return null;
     final page = _loadedPages[index];
     if (page.ps.isEmpty) return null;
@@ -130,6 +145,47 @@ class WordDocument {
     : _loadedPages = [],
       pageFilePaths = [],
       pagesDirectory = null;
+
+  bool get hasParts => parts.length > 1;
+
+  BookPart? partForPage(int pageIndex) {
+    if (!hasParts) return null;
+    if (parts.isEmpty) return null;
+    if (pageIndex < parts.first.pageOffset) return parts.first;
+    for (final part in parts) {
+      final start = part.pageOffset;
+      final end = start + part.pageCount;
+      if (pageIndex >= start && pageIndex < end) return part;
+    }
+    return parts.last;
+  }
+
+  BookPart? partByNumber(int partNumber) {
+    for (final part in parts) {
+      if (part.partNumber == partNumber) return part;
+    }
+    return null;
+  }
+
+  int localPageIndexForPage(int pageIndex) {
+    final part = partForPage(pageIndex);
+    if (part == null) return pageIndex;
+    if (part.pageCount < 1) return 0;
+    return (pageIndex - part.pageOffset).clamp(0, part.pageCount - 1).toInt();
+  }
+
+  int displayPageNumberForPage(int pageIndex) =>
+      localPageIndexForPage(pageIndex) + 1;
+
+  int firstPageOfPart(int partNumber) {
+    return partByNumber(partNumber)?.pageOffset ?? 0;
+  }
+
+  WordDocument documentForPage(int pageIndex) {
+    final part = partForPage(pageIndex);
+    if (part == null) return this;
+    return partDocuments[part.partNumber] ?? this;
+  }
 
   factory WordDocument.fromJson(Map<String, dynamic> json) =>
       _$WordDocumentFromJson(json);
@@ -259,6 +315,14 @@ class WordDocument {
   }
 
   Future<WordPage> getPage(int index) async {
+    if (hasParts) {
+      final document = documentForPage(index);
+      if (document == this) {
+        throw RangeError.index(index, pageFilePaths, "Page index out of bounds");
+      }
+      return document.getPage(localPageIndexForPage(index));
+    }
+
     if (index < 0 || index >= pageFilePaths.length) {
       throw RangeError.index(index, pageFilePaths, "Page index out of bounds");
     }
@@ -305,6 +369,19 @@ class WordDocument {
   static const int MAX_CACHED_PAGES = 50;
 
   void prefetchPages(int currentPage) {
+    if (hasParts) {
+      for (int i = currentPage - 2; i <= currentPage + 3; i++) {
+        final part = partForPage(i);
+        final document = documentForPage(i);
+        if (part != null && part.pageCount > 0 && document != this) {
+          final localPage =
+              (i - part.pageOffset).clamp(0, part.pageCount - 1).toInt();
+          document.prefetchPages(localPage);
+        }
+      }
+      return;
+    }
+
     if (_loadedPages.isEmpty) return;
 
     // Evict old pages to free memory
@@ -411,6 +488,13 @@ class WordDocument {
   }
 
   SectPr getSectPrForPage(int pageIndex) {
+    if (hasParts) {
+      final document = documentForPage(pageIndex);
+      if (document != this) {
+        return document.getSectPrForPage(localPageIndexForPage(pageIndex));
+      }
+    }
+
     if (sectPrList.isEmpty) {
       return SectPr.empty(this);
     } else {

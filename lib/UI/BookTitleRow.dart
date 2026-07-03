@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/Settings/app_color_settings.dart';
+import 'package:golden_shamela/UI/Settings/app_font_settings.dart';
+import 'package:golden_shamela/UI/Settings/app_other_settings.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 import '../Utils/TxtUtils.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class BookTitleRow extends StatefulWidget {
   final String title;
@@ -27,30 +30,35 @@ class _BookTitleRowState extends State<BookTitleRow> {
 
   @override
   Widget build(BuildContext context) {
+    final titleColor = AppUiColors.color(AppColorRole.titles);
+    final maxWords = AppOtherSettings.instance.draft().maxTabTitleWords;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        constraints: const BoxConstraints(minWidth: 120, maxWidth: 220),
+        constraints: BoxConstraints(
+          minWidth: 120,
+          maxWidth: (maxWords * 58.0).clamp(220.0, 420.0).toDouble(),
+        ),
         margin: const EdgeInsetsDirectional.only(end: 4),
         decoration: BoxDecoration(
-          color: widget.isChoosed ? Colors.white : Colors.grey[200],
+          color: widget.isChoosed ? surfaceColor : mutedColor,
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(8),
-            topRight: Radius.circular(8),
+            topLeft: Radius.circular(AppChrome.radius),
+            topRight: Radius.circular(AppChrome.radius),
           ),
           border: Border(
             top: BorderSide(
-              color: widget.isChoosed ? primaryColor : Colors.transparent,
+              color: widget.isChoosed ? actionColor : Colors.transparent,
               width: 3,
             ),
           ),
           boxShadow: widget.isChoosed
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
+                    color: primaryColor.withOpacity(0.08),
+                    blurRadius: 10,
                   ),
                 ]
               : null,
@@ -60,8 +68,8 @@ class _BookTitleRowState extends State<BookTitleRow> {
           child: InkWell(
             onTap: widget.onTab,
             borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(8),
-              topRight: Radius.circular(8),
+              topLeft: Radius.circular(AppChrome.radius),
+              topRight: Radius.circular(AppChrome.radius),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -83,10 +91,12 @@ class _BookTitleRowState extends State<BookTitleRow> {
   }
 
   Widget _buildBookIcon() {
-    return Icon(
+    return LibraryIcon.fromIcon(
       Icons.book_outlined,
       size: 16,
-      color: widget.isChoosed ? primaryColor : Colors.grey[600],
+      color: widget.isChoosed
+          ? AppUiColors.color(AppColorRole.titles)
+          : accentColor.withOpacity(0.62),
     );
   }
 
@@ -100,22 +110,35 @@ class _BookTitleRowState extends State<BookTitleRow> {
           padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.red.withOpacity(0.1),
+            color: destructiveColor.withOpacity(0.10),
           ),
-          child: const Icon(Icons.close_rounded, size: 14, color: Colors.red),
+          child: const LibraryIcon(
+            LibraryIconType.close,
+            size: 14,
+            color: destructiveColor,
+          ),
         ),
       ),
     );
   }
 
   Widget _buildBookTitle() {
-    String title = shortenTitle(widget.title);
+    String title = shortenTitle(
+      widget.title,
+      maxWords: AppOtherSettings.instance.draft().maxTabTitleWords,
+    );
+    final titleColor = AppUiColors.color(AppColorRole.titles);
     return Text(
       title,
       textAlign: TextAlign.center,
-      style: GoogleFonts.amiri(
-        color: widget.isChoosed ? primaryColor : Colors.black87,
+      style: AppUiFonts.style(
+        AppFontRole.bookLists,
+        normalStyle(
+        color: widget.isChoosed ? titleColor : accentColor,
         fontSize: 13,
+        fontWeight: widget.isChoosed ? FontWeight.bold : FontWeight.normal,
+        ),
+        sizeOffset: -1,
         fontWeight: widget.isChoosed ? FontWeight.bold : FontWeight.normal,
       ),
       overflow: TextOverflow.ellipsis,

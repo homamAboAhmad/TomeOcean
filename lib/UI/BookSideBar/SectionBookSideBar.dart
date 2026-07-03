@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 import '../../Helpers/BookCardStorage.dart';
 import '../../Helpers/BookFilesHelper.dart';
@@ -97,7 +98,7 @@ class _SectionBookSideBarState extends State<SectionBookSideBar> {
               decoration: InputDecoration(
                 hintTextDirection: TextDirection.rtl,
                 hintText: 'بحث...',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const LibraryIcon(LibraryIconType.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide.none,
@@ -128,7 +129,7 @@ class _SectionBookSideBarState extends State<SectionBookSideBar> {
                       return Directionality(
                         textDirection: TextDirection.rtl,
                         child: ListTile(
-                          leading: const Icon(Icons.menu_book),
+                          leading: const LibraryIcon(LibraryIconType.books),
                           title: Text(
                             bookCard.title,
                             style: normalStyle(),

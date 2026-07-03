@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:golden_shamela/Helpers/ShamelaSearchIndexer.dart';
 import 'package:golden_shamela/Services/BookLibraryRepository.dart';
+import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/core/app_state.dart';
 
 /// مسؤول عن تحميل الكتب المفهرسة في الخلفية
@@ -10,8 +11,9 @@ class IndexedBooksLoader {
 
   /// تحميل الكتب المفهرسة في الخلفية
   void loadInBackground() {
+    final cached = _appState.cachedIndexedBooks;
     if (_appState.isLoadingIndexedBooks ||
-        _appState.cachedIndexedBooks != null) {
+        (cached != null && cached.isNotEmpty)) {
       return;
     }
 
@@ -32,8 +34,9 @@ class IndexedBooksLoader {
 
   /// الحصول على الكتب المفهرسة (من الكاش أو التحميل)
   Future<List<Map<String, dynamic>>> getIndexedBooks() async {
-    if (_appState.cachedIndexedBooks != null) {
-      return _appState.cachedIndexedBooks!;
+    final cached = _appState.cachedIndexedBooks;
+    if (cached != null && cached.isNotEmpty) {
+      return cached;
     }
 
     try {
@@ -59,7 +62,15 @@ class IndexedBooksLoader {
       final name = path.split(RegExp(r'[\\/]')).last;
       if (name.startsWith('_temp_')) continue;
 
-      if (await File(path).exists()) {
+      final portablePath = await AppStoragePaths.resolvePortableStoredSourcePath(
+        path,
+        bookName: book['book_name'] as String?,
+      );
+      if (portablePath != null) {
+        if (portablePath != path) {
+          await repository.relocateBookPath(path, portablePath);
+          book['book_path'] = portablePath;
+        }
         filtered.add(book);
       } else {
         await repository.pruneMissingBookSource(path);

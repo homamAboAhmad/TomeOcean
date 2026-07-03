@@ -8,6 +8,31 @@ class SearchOperations {
 
   SearchOperations(this.database);
 
+  String _contentColumn({
+    required bool considerDiacritics,
+    required bool considerHamzas,
+    required bool considerNumbers,
+  }) {
+    if (considerDiacritics && considerHamzas) {
+      return considerNumbers
+          ? 'fully_preserved_content'
+          : 'fully_preserved_no_numbers_content';
+    }
+    if (considerDiacritics) {
+      return considerNumbers
+          ? 'diacritics_preserved_content'
+          : 'diacritics_preserved_no_numbers_content';
+    }
+    if (considerHamzas) {
+      return considerNumbers
+          ? 'hamza_preserved_content'
+          : 'hamza_preserved_no_numbers_content';
+    }
+    return considerNumbers
+        ? 'normalized_content'
+        : 'normalized_no_numbers_content';
+  }
+
   /// Regular FTS5 search
   Future<List<Map<String, dynamic>>> regularSearch(
     List<List<String>> searchTermGroups,
@@ -24,33 +49,11 @@ class SearchOperations {
     int limit,
     int offset,
   ) async {
-    String contentColumn;
-
-    final anyQueryHasDiacritics = searchTermGroups.any(
-      (group) => group.any((term) => TextNormalization.hasDiacritics(term)),
+    final contentColumn = _contentColumn(
+      considerDiacritics: considerDiacritics,
+      considerHamzas: considerHamzas,
+      considerNumbers: considerNumbers,
     );
-
-    if (considerDiacritics && considerHamzas) {
-      contentColumn = 'diacritics_preserved_content';
-    } else if (considerDiacritics) {
-      if (anyQueryHasDiacritics) {
-        contentColumn = 'diacritics_preserved_content';
-      } else {
-        contentColumn = 'no_diacritics_content';
-      }
-    } else if (considerHamzas) {
-      contentColumn = 'hamza_preserved_content';
-    } else {
-      // Default case: simple search
-      if (!considerNumbers) {
-        // Use no-numbers column ONLY if we are in this standard mode.
-        // For other modes (like Hamzas preserved), we fallback to standard handling
-        // (which includes numbers) because we don't have combinatorial columns.
-        contentColumn = 'normalized_no_numbers_content';
-      } else {
-        contentColumn = 'normalized_content';
-      }
-    }
 
     final List<String> ftsQueries = [];
     for (var group in searchTermGroups) {
@@ -100,8 +103,8 @@ class SearchOperations {
     }
 
     final whereClause = whereClauses.isNotEmpty
-        ? 'WHERE ${whereClauses.join(' AND ')}'
-        : '';
+        ? 'WHERE ${whereClauses.join(' AND ')} AND books_fts MATCH ?'
+        : 'WHERE books_fts MATCH ?';
 
     final sql =
         '''
@@ -116,8 +119,7 @@ class SearchOperations {
         bm25(books_fts) as rank
       FROM books_fts
       $whereClause
-      AND books_fts MATCH ?
-      ORDER BY rank DESC, page_number ASC
+      ORDER BY book_name ASC, book_path ASC, page_number ASC, rank DESC
       LIMIT ? OFFSET ?
     ''';
 
@@ -133,7 +135,6 @@ class SearchOperations {
       SELECT COUNT(*) as total
       FROM books_fts
       $whereClause
-      AND books_fts MATCH ?
     ''';
     final countResult = await database.rawQuery(countSql, [
       ...whereArgs,
@@ -285,7 +286,7 @@ class SearchOperations {
         1.0 as rank
       FROM books_fts
       WHERE id IN ($idsPlaceholders)
-      ORDER BY page_number ASC
+      ORDER BY book_name ASC, book_path ASC, page_number ASC
       LIMIT ? OFFSET ?
     ''';
 

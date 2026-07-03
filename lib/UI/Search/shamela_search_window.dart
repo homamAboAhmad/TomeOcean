@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Services/AppStoragePaths.dart';
@@ -12,13 +13,29 @@ import 'package:golden_shamela/UI/Search/widgets/middle_panel_content.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_state_manager.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_executor.dart';
 import 'package:golden_shamela/UI/Search/helpers/selected_books_manager.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_period_range.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_history_store.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_scope_selection.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_scope_item_ids.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_scope_items_merger.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_sections_selection_rules.dart';
+import 'package:golden_shamela/UI/Search/models/search_history_record.dart';
+import 'package:golden_shamela/UI/Search/models/search_state_snapshot.dart';
 import 'package:golden_shamela/UI/Search/widgets/search_dialog_builder.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_callbacks_helper.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_operation_controller.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_results_author_sorter.dart';
 import 'package:golden_shamela/UI/Search/helpers/book_selection_logic.dart';
 import 'package:golden_shamela/UI/Search/widgets/no_results_bottom_sheet.dart';
+import 'package:golden_shamela/UI/Settings/app_other_settings.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
-import 'package:flutter/services.dart';
+
+List<TextEditingController> _newQueryControllers() {
+  return List.generate(
+    AppOtherSettings.instance.draft().searchFieldCount,
+    (_) => TextEditingController(),
+  );
+}
 
 /// Main search window widget for Shamela search functionality.
 ///
@@ -37,10 +54,14 @@ class ShamelaSearchWindow extends StatefulWidget {
   /// List of all indexed books available for search.
   final List<Map<String, dynamic>> indexedBooks;
 
+  /// Callback invoked when the search window should close.
+  final VoidCallback? onClose;
+
   const ShamelaSearchWindow({
     Key? key,
     this.onResultTapped,
     this.onSearchRequested,
+    this.onClose,
     required this.indexedBooks,
   }) : super(key: key);
 
@@ -50,19 +71,19 @@ class ShamelaSearchWindow extends StatefulWidget {
 
 class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
   final Map<String, List<TextEditingController>> _groupControllers = {
-    'and': List.generate(5, (_) => TextEditingController()),
-    'or': List.generate(5, (_) => TextEditingController()),
-    'not': List.generate(5, (_) => TextEditingController()),
+    'and': _newQueryControllers(),
+    'or': _newQueryControllers(),
+    'not': _newQueryControllers(),
   };
   bool _morphologicalSearch = false, _affixSearch = false;
   bool _considerHamzas = false,
       _considerDiacritics = false,
       _considerNumbers = true;
   bool _allPhrasesRequired = false, _ordered = false, _proximity = false;
-  // Note: 'comment' is excluded as the feature is under development
   final Map<String, bool> _searchSections = {
     'main': true,
     'footnote': true,
+    'comment': false,
     'title': false,
   };
   String _searchGrouping = 'all';
@@ -77,8 +98,10 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
   final SearchExecutor _searchExecutor = SearchExecutor();
   final SelectedBooksManager _selectedBooksManager = SelectedBooksManager();
   final BooksMetadataDatabase _metadataDb = BooksMetadataDatabase();
+  final SearchHistoryStore _historyStore = SearchHistoryStore();
   late final SearchOperationController _searchOperationController;
   late final BookSelectionLogic _bookSelectionLogic;
+  late final SearchScopeBookResolver _scopeBookResolver;
   List<Author> _allAuthors = [];
   List<Section> _allSections = [];
   Set<String> _selectedAuthorIds = {}, _selectedSectionIds = {};
@@ -93,6 +116,7 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
   final TextEditingController _selectedBooksSearchController =
       TextEditingController();
   List<Map<String, dynamic>> _selectedBooksForSearch = [];
+  int _scopeSyncRevision = 0;
 
   @override
   void initState() {
@@ -109,6 +133,7 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
       searchExecutor: _searchExecutor,
       metadataDb: _metadataDb,
     );
+    _scopeBookResolver = SearchScopeBookResolver(_metadataDb);
     _loadFilterData();
   }
 
@@ -167,7 +192,7 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
       setState(() {
         _filteredIndexedBooks = result.filteredBooks;
         final newSelectedBooks = <String, bool>{};
-        for (var b in _filteredIndexedBooks) {
+        for (var b in widget.indexedBooks) {
           final bookPath = b['book_path'] as String;
           newSelectedBooks[bookPath] = _selectedBooks[bookPath] ?? false;
         }
@@ -191,6 +216,7 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
         bookPaths,
         _allAuthors,
         _authorDeathYears,
+        widget.indexedBooks,
       );
 
       final filtered = newItems
@@ -229,15 +255,9 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
       authorId,
       author,
       _authorDeathYears[authorId],
-      _filteredIndexedBooks,
     );
     setState(() => _selectedBooksForSearch.add(result['authorItem']));
-    final paths = result['bookPaths'] as List;
-    if (paths.isNotEmpty) {
-      _addBooksToSelectedList(paths.cast<String>());
-    } else {
-      _syncSelectedBooksWithSearchList();
-    }
+    _syncSelectedBooksWithSearchList();
   }
 
   /// Adds sections to the selected list for search.
@@ -270,6 +290,7 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
         }
       }
     });
+    _syncSelectedBooksWithSearchList();
   }
 
   /// Adds multiple authors to the selected list.
@@ -314,6 +335,45 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
     _syncSelectedBooksWithSearchList();
   }
 
+  void _addPeriodsToSelectedList(List<SearchPeriodRange> periods) {
+    if (periods.isEmpty) return;
+    setState(() {
+      for (final period in periods) {
+        if (_selectedBooksForSearch.any(
+          (item) => item['type'] == 'period' && item['periodId'] == period.id,
+        )) {
+          continue;
+        }
+        _selectedBooksForSearch.add(period.toSearchItem());
+      }
+    });
+    _syncSelectedBooksWithSearchList();
+  }
+
+  void _removePeriodsFromSelectedList(List<SearchPeriodRange> periods) {
+    final ids = periods.map((period) => period.id).toSet();
+    setState(() {
+      _selectedBooksForSearch.removeWhere(
+        (item) => item['type'] == 'period' && ids.contains(item['periodId']),
+      );
+    });
+    _syncSelectedBooksWithSearchList();
+  }
+
+  void _addScopeItemsToSelectedList(List<Map<String, dynamic>> items) {
+    if (items.isEmpty) return;
+    final merged = SearchScopeItemsMerger.merge(
+      currentItems: _selectedBooksForSearch,
+      incomingItems: items,
+    );
+    setState(() {
+      _selectedBooksForSearch = merged.items;
+      _selectedAuthorIds = merged.authorIds;
+      _selectedSectionIds = merged.sectionIds;
+    });
+    _syncSelectedBooksWithSearchList();
+  }
+
   /// Removes items from the selected list by their indices.
   ///
   /// Sorts indices in descending order to avoid index shifting issues.
@@ -338,36 +398,22 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
   ///
   /// Updates [_selectedBooks] based on books in [_selectedBooksForSearch]
   /// and books from selected authors.
-  void _syncSelectedBooksWithSearchList() {
+  Future<void> _syncSelectedBooksWithSearchList() async {
+    final revision = ++_scopeSyncRevision;
+    final selection = SearchScopeSelection.fromItems(_selectedBooksForSearch);
+    final allBookPathsInSearch =
+        await _scopeBookResolver.selectedBookPathsForDisplay(
+      selection: selection,
+      filteredIndexedBooks: widget.indexedBooks,
+      bookAuthorMap: _bookAuthorMap,
+    );
+    if (!mounted || revision != _scopeSyncRevision) return;
     setState(() {
-      final bookPathsInSearch = _selectedBooksForSearch
-          .where((item) => item['type'] == 'book' && item['bookPath'] != null)
-          .map((item) => item['bookPath'] as String)
-          .toSet();
-
-      final authorIdsInSearch = _selectedBooksForSearch
-          .where((item) => item['type'] == 'author' && item['authorId'] != null)
-          .map((item) => item['authorId'] as String)
-          .toSet();
-
-      final bookPathsFromAuthors = <String>{};
-      for (var book in _filteredIndexedBooks) {
-        final bookPath = book['book_path'] as String;
-        final authorId = book['authorId'] as String?;
-        if (authorId != null && authorIdsInSearch.contains(authorId)) {
-          bookPathsFromAuthors.add(bookPath);
-        }
-      }
-
-      final allBookPathsInSearch = bookPathsInSearch.union(
-        bookPathsFromAuthors,
-      );
-
       for (var bookPath in _selectedBooks.keys) {
         _selectedBooks[bookPath] = allBookPathsInSearch.contains(bookPath);
       }
 
-      for (var book in _filteredIndexedBooks) {
+      for (var book in widget.indexedBooks) {
         final bookPath = book['book_path'] as String;
         if (!_selectedBooks.containsKey(bookPath)) {
           _selectedBooks[bookPath] = allBookPathsInSearch.contains(bookPath);
@@ -382,7 +428,13 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
   /// via [onSearchRequested] callback if provided. Returns early if no queries are provided.
   /// Sets [_errorMessage] if an error occurs during the process.
   Future<void> _performSearch() async {
-    if (!_searchOperationController.hasSearchQueries(_groupControllers)) {
+    final validationMessage = _searchInputValidationMessage();
+    if (validationMessage != null) {
+      setState(() {
+        _errorMessage = validationMessage;
+        _results = [];
+        _totalCount = 0;
+      });
       return;
     }
 
@@ -394,6 +446,7 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
         filteredIndexedBooks: _filteredIndexedBooks,
         allIndexedBooks: widget.indexedBooks,
         selectedBooks: _selectedBooks,
+        bookAuthorMap: _bookAuthorMap,
       );
       final selectedSections = _searchOperationController.getSelectedSections(
         _searchSections,
@@ -415,6 +468,7 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
       );
 
       _updateSearchResults(result);
+      await _saveCurrentSearchHistory();
       _handleNoResults(result);
       _sendSearchParamsIfNeeded();
     } catch (e) {
@@ -422,6 +476,16 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
     } finally {
       _finalizeSearchState();
     }
+  }
+
+  String? _searchInputValidationMessage() {
+    if (!_searchOperationController.hasSearchQueries(_groupControllers)) {
+      return 'أدخل عبارة بحث واحدة على الأقل';
+    }
+    if (!_searchOperationController.hasSelectedSections(_searchSections)) {
+      return 'اختر نطاق بحث واحدًا على الأقل';
+    }
+    return null;
   }
 
   /// Initializes the search state before performing search.
@@ -437,6 +501,11 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
 
   /// Updates the search results state.
   void _updateSearchResults(SearchResult result) {
+    SearchResultsAuthorSorter.sort(
+      result.results,
+      bookAuthorMap: _bookAuthorMap,
+      authorDeathYears: _authorDeathYears,
+    );
     setState(() {
       _results = result.results;
       _totalCount = result.totalCount;
@@ -474,6 +543,99 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
       indexedBooks: widget.indexedBooks,
     );
     widget.onSearchRequested!(searchParams);
+  }
+
+  Future<void> _saveCurrentSearchHistory() {
+    return _historyStore.saveRecord(_currentHistoryRecord());
+  }
+
+  SearchHistoryRecord _currentHistoryRecord() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final snapshot = _currentSearchSnapshot();
+    return SearchHistoryRecord(
+      id: now.toString(),
+      createdAt: now,
+      groupQueries: snapshot.groupQueries,
+      searchGrouping: snapshot.searchGrouping,
+      scopeItems: _copyScopeItems(_selectedBooksForSearch),
+      searchSections: snapshot.searchSections,
+      options: snapshot.options,
+    );
+  }
+
+  SearchStateSnapshot _currentSearchSnapshot() {
+    return SearchStateSnapshot(
+      groupQueries: _searchOperationController.buildGroupControllersMap(
+        _groupControllers,
+      ),
+      searchGrouping: _searchGrouping,
+      searchSections: Map<String, bool>.from(_searchSections),
+      options: {
+        'morphologicalSearch': _morphologicalSearch,
+        'affixSearch': _affixSearch,
+        'considerHamzas': _considerHamzas,
+        'considerDiacritics': _considerDiacritics,
+        'considerNumbers': _considerNumbers,
+        'allPhrasesRequired': _allPhrasesRequired,
+        'ordered': _ordered,
+        'proximity': _proximity,
+      },
+    );
+  }
+
+  Future<void> _applyHistoryRecord(
+    SearchHistoryRecord record, {
+    required bool runSearch,
+  }) async {
+    setState(() {
+      _replaceGroupControllers(record.groupQueries);
+      _searchGrouping = record.searchGrouping;
+      _selectedBooksForSearch = _copyScopeItems(record.scopeItems);
+      _selectedAuthorIds = searchScopeItemIds(
+        record.scopeItems,
+        type: 'author',
+        key: 'authorId',
+      );
+      _selectedSectionIds = searchScopeItemIds(
+        record.scopeItems,
+        type: 'section',
+        key: 'sectionId',
+      );
+      for (final key in _searchSections.keys.toList()) {
+        _searchSections[key] = record.searchSections[key] ?? false;
+      }
+      _morphologicalSearch = record.options['morphologicalSearch'] ?? false;
+      _affixSearch = record.options['affixSearch'] ?? false;
+      _considerHamzas = record.options['considerHamzas'] ?? false;
+      _considerDiacritics = record.options['considerDiacritics'] ?? false;
+      _considerNumbers = record.options['considerNumbers'] ?? true;
+      _allPhrasesRequired = record.options['allPhrasesRequired'] ?? false;
+      _ordered = record.options['ordered'] ?? false;
+      _proximity = record.options['proximity'] ?? false;
+    });
+    await _syncSelectedBooksWithSearchList();
+    if (runSearch) await _performSearch();
+  }
+
+  void _replaceGroupControllers(Map<String, List<String>> groupQueries) {
+    for (final controllers in _groupControllers.values) {
+      for (final controller in controllers) {
+        controller.dispose();
+      }
+    }
+    for (final key in _groupControllers.keys.toList()) {
+      final queries = groupQueries[key] ?? const [];
+      final effectiveQueries = queries.isEmpty ? [''] : queries;
+      _groupControllers[key] = effectiveQueries
+          .map((query) => TextEditingController(text: query))
+          .toList();
+    }
+  }
+
+  List<Map<String, dynamic>> _copyScopeItems(
+    List<Map<String, dynamic>> items,
+  ) {
+    return items.map((item) => Map<String, dynamic>.from(item)).toList();
   }
 
   /// Handles search errors.
@@ -518,7 +680,11 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
     return SearchOptionsPanel(
       searchSections: _searchSections,
       onSearchSectionChanged: (key, value) =>
-          setState(() => _searchSections[key] = value),
+          setState(() => SearchSectionsSelectionRules.apply(
+                _searchSections,
+                key,
+                value,
+              )),
       morphologicalSearch: _morphologicalSearch,
       affixSearch: _affixSearch,
       considerHamzas: _considerHamzas,
@@ -573,8 +739,8 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
   List<Map<String, dynamic>> _getFilteredBooks() {
     final q = _booksSearchController.text.toLowerCase();
     return q.isEmpty
-        ? _filteredIndexedBooks
-        : _filteredIndexedBooks
+        ? widget.indexedBooks
+        : widget.indexedBooks
               .where(
                 (b) => AppStoragePaths
                     .displayTitleFromPath(b['book_path'] as String)
@@ -607,10 +773,15 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
       booksSearchController: _booksSearchController,
       selectedAuthorIds: _selectedAuthorIds,
       selectedSectionIds: _selectedSectionIds,
+      selectedPeriods: SearchPeriodRange.fromSearchItems(
+        _selectedBooksForSearch,
+      ),
       authors: _allAuthors,
       sections: _allSections,
       authorBookCounts: _authorBookCounts,
       authorDeathYears: _authorDeathYears,
+      selectedBooksForSearch: _selectedBooksForSearch,
+      searchSnapshot: _currentSearchSnapshot(),
       isLoadingFilters: _isLoadingFilters,
       onAuthorToggled: (id) {
         setState(() {
@@ -652,16 +823,13 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
       onBooksRemoved: _removeBooksFromSelectedList,
       onSectionsAdded: _addSectionsToSelectedList,
       onSectionsRemoved: _removeSectionsFromSelectedList,
+      onPeriodsAdded: _addPeriodsToSelectedList,
+      onPeriodsRemoved: _removePeriodsFromSelectedList,
+      onScopeItemsAdded: _addScopeItemsToSelectedList,
+      onHistoryRecordSelected: _applyHistoryRecord,
       viewedAuthorId: _viewedAuthorId,
       viewedSectionId: _viewedSectionId,
       bookAuthorMap: _bookAuthorMap,
-      onSelectAll: _handleSelectAll,
-      onSelectAllAuthors: _handleSelectAllAuthors,
-      onSelectAllBooks: () {
-        // This callback will be handled by AuthorsTablePanel/SectionsListPanel
-        // They know which books are visible
-      },
-      onSelectAllSections: _handleSelectAllSections,
     );
   }
 
@@ -693,13 +861,10 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
         final ids = _selectedAuthorIds.toList();
         setState(() {
           _selectedAuthorIds.clear();
-          for (var id in ids) {
-            _selectedBooksForSearch.removeWhere(
-              (item) =>
-                  (item['type'] == 'author' || item['type'] == 'book') &&
-                  item['authorId'] == id,
-            );
-          }
+          _selectedBooksForSearch.removeWhere(
+            (item) =>
+                item['type'] == 'author' && ids.contains(item['authorId']),
+          );
         });
         _updateFilteredBooks();
       },
@@ -719,78 +884,20 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
     );
   }
 
-  /// Handles select all action based on the current sidebar tab.
-  ///
-  /// Selects all items in the active tab (books, authors, or sections).
-  void _handleSelectAll() {
-    switch (_selectedSidebarTab) {
-      case 'الكتب':
-        setState(() {
-          for (var book in _getFilteredBooks()) {
-            _selectedBooks[book['book_path'] as String] = true;
-          }
-        });
-        break;
-      case 'المؤلفون':
-        setState(() {
-          _selectedAuthorIds = _allAuthors.map((a) => a.id).toSet();
-        });
-        _updateFilteredBooks();
-        break;
-      case 'التصنيف':
-        setState(() {
-          _selectedSectionIds = _allSections.map((s) => s.id).toSet();
-        });
-        _updateFilteredBooks();
-        break;
-    }
-  }
-
-  /// Selects all authors and updates the filtered books list.
-  void _handleSelectAllAuthors() {
-    setState(() {
-      _selectedAuthorIds = _allAuthors.map((a) => a.id).toSet();
-    });
-    _updateFilteredBooks();
-  }
-
-  /// Selects all sections and updates the filtered books list.
-  void _handleSelectAllSections() {
-    setState(() {
-      _selectedSectionIds = _allSections.map((s) => s.id).toSet();
-    });
-    _updateFilteredBooks();
-  }
-
-  /// Fallback handler for selecting all books in author panel.
-  ///
-  /// Note: This is typically handled by [AuthorsTablePanel] which knows
-  /// which books are visible. This is a fallback that selects all filtered books.
-  void _handleSelectAllBooksInAuthorPanel() {
-    setState(() {
-      for (var book in _getFilteredBooks()) {
-        _selectedBooks[book['book_path'] as String] = true;
-      }
-    });
-  }
-
-  /// Fallback handler for selecting all books in section panel.
-  ///
-  /// Note: This is typically handled by [SectionsListPanel] which knows
-  /// which books are visible. This is a fallback that selects all filtered books.
-  void _handleSelectAllBooksInSectionPanel() {
-    setState(() {
-      for (var book in _getFilteredBooks()) {
-        _selectedBooks[book['book_path'] as String] = true;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: _buildScaffold(),
+    return CallbackShortcuts(
+      bindings: {
+        if (widget.onClose != null)
+          const SingleActivator(LogicalKeyboardKey.escape): widget.onClose!,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: _buildScaffold(),
+        ),
+      ),
     );
   }
 
@@ -832,8 +939,4 @@ class _ShamelaSearchWindowState extends State<ShamelaSearchWindow> {
       ),
     );
   }
-}
-
-class SelectAllIntent extends Intent {
-  const SelectAllIntent();
 }

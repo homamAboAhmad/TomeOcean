@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';  // Add this for primaryColor
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 /// Bottom bar widget for search dialog.
 /// 
@@ -42,8 +43,8 @@ class SearchBottomBar extends StatelessWidget {
 
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+        color: mutedColor,
+        border: Border(top: AppChrome.borderSide()),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -68,10 +69,10 @@ class SearchBottomBar extends StatelessWidget {
           buttons.add(
             ElevatedButton.icon(
               onPressed: onDeselectAllBooks,
-              icon: Icon(Icons.close, size: 16, color: Colors.red),
-              label: Text('إلغاء الكتب المحددة', style: smallStyle(color: Colors.red)),
+              icon: const LibraryIcon(LibraryIconType.close, size: 16, color: destructiveColor),
+              label: Text('إلغاء الكتب المحددة', style: smallStyle(color: destructiveColor)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade50,
+                backgroundColor: destructiveColor.withOpacity(0.08),
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
@@ -85,10 +86,10 @@ class SearchBottomBar extends StatelessWidget {
           buttons.add(
             ElevatedButton.icon(
               onPressed: onDeselectAllAuthors,
-              icon: Icon(Icons.close, size: 16, color: Colors.red),
-              label: Text('إلغاء المؤلفين المحددين', style: smallStyle(color: Colors.red)),
+              icon: const LibraryIcon(LibraryIconType.close, size: 16, color: destructiveColor),
+              label: Text('إلغاء المؤلفين المحددين', style: smallStyle(color: destructiveColor)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade50,
+                backgroundColor: destructiveColor.withOpacity(0.08),
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
@@ -102,10 +103,10 @@ class SearchBottomBar extends StatelessWidget {
           buttons.add(
             ElevatedButton.icon(
               onPressed: onDeselectAllSections,
-              icon: Icon(Icons.close, size: 16, color: Colors.red),
-              label: Text('إلغاء الأقسام المحددة', style: smallStyle(color: Colors.red)),
+              icon: const LibraryIcon(LibraryIconType.close, size: 16, color: destructiveColor),
+              label: Text('إلغاء الأقسام المحددة', style: smallStyle(color: destructiveColor)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade50,
+                backgroundColor: destructiveColor.withOpacity(0.08),
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               ),
             ),
@@ -120,10 +121,10 @@ class SearchBottomBar extends StatelessWidget {
       buttons.add(
         ElevatedButton.icon(
           onPressed: onIgnore,
-          icon: Icon(Icons.remove, size: 16, color: Colors.blue),
-          label: Text('تجاهل', style: smallStyle(color: Colors.blue)),
+          icon: const LibraryIcon(LibraryIconType.zoomOut, size: 16, color: primaryColor),
+          label: Text('تجاهل', style: smallStyle(color: primaryColor)),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue.shade50,
+            backgroundColor: organicHighlightColor,
             padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           ),
         ),

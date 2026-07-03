@@ -7,6 +7,7 @@ import 'package:golden_shamela/Models/BookCard.dart';
 import 'package:golden_shamela/Models/Section.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 import 'package:golden_shamela/database/search_database_helper.dart';
 
 class SearchDialog extends StatefulWidget {
@@ -185,7 +186,10 @@ class _SearchDialogState extends State<SearchDialog> {
                 automaticallyImplyLeading: false, // No back button
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.black),
+                    icon: const LibraryIcon(
+                      LibraryIconType.close,
+                      color: Colors.black,
+                    ),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -318,7 +322,7 @@ class _SearchDialogState extends State<SearchDialog> {
           ),
           const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const LibraryIcon(LibraryIconType.search),
             onPressed: _performSearch,
             tooltip: 'بحث',
           ),

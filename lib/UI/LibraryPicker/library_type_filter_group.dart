@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/BookMetadataOptions.dart';
 import 'package:golden_shamela/UI/LibraryCommon/library_design_tokens.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 class LibraryTypeFilterGroup extends StatelessWidget {
   final String label;
@@ -33,7 +34,8 @@ class LibraryTypeFilterGroup extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
       decoration: BoxDecoration(
         border: Border.all(color: LibraryDesignTokens.handle),
-        color: const Color(0xFFFAFAFA),
+        color: LibraryDesignTokens.surface,
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -129,7 +131,7 @@ class _TypeChip extends StatelessWidget {
         height: 30,
         padding: const EdgeInsets.symmetric(horizontal: 9),
         decoration: BoxDecoration(
-          color: selected ? LibraryDesignTokens.chipSelected : Colors.white,
+          color: selected ? LibraryDesignTokens.chipSelected : LibraryDesignTokens.surface,
           border: Border.all(
             color: selected
                 ? LibraryDesignTokens.chipBorder
@@ -140,7 +142,7 @@ class _TypeChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 17, color: LibraryDesignTokens.icon),
+            LibraryIcon.fromIcon(icon, size: 17, color: LibraryDesignTokens.icon),
             const SizedBox(width: 4),
             Text(label),
           ],

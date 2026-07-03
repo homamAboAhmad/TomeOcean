@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:golden_shamela/UI/Settings/app_font_settings.dart';
 import 'library_column_resize_divider.dart';
 import 'library_design_tokens.dart';
 
@@ -22,6 +23,12 @@ class LibraryEntitiesTable extends StatefulWidget {
   final String titleHeader;
   final String secondaryHeader;
   final ValueChanged<String> onSelected;
+  final Set<String> checkedIds;
+  final Set<String> highlightedIds;
+  final bool showCheckboxes;
+  final bool showCountColumn;
+  final void Function(String, bool)? onCheckedChanged;
+  final VoidCallback? onToggleAll;
   final VoidCallback? onTitleHeaderTap;
   final VoidCallback? onSecondaryHeaderTap;
 
@@ -32,6 +39,12 @@ class LibraryEntitiesTable extends StatefulWidget {
     required this.titleHeader,
     required this.secondaryHeader,
     required this.onSelected,
+    this.checkedIds = const {},
+    this.highlightedIds = const {},
+    this.showCheckboxes = false,
+    this.showCountColumn = true,
+    this.onCheckedChanged,
+    this.onToggleAll,
     this.onTitleHeaderTap,
     this.onSecondaryHeaderTap,
   });
@@ -62,18 +75,18 @@ class _LibraryEntitiesTableState extends State<LibraryEntitiesTable> {
                   child: ListView.builder(
                     itemCount: widget.rows.length,
                     itemExtent: LibraryDesignTokens.rowHeight,
-                    itemBuilder: (context, index) =>
-                        _row(widget.rows[index]),
+                    itemBuilder: (context, index) => _row(widget.rows[index]),
                   ),
                 ),
               ],
             ),
-            Positioned(
-              top: 0,
-              bottom: 0,
-              right: _countDividerOffset,
-              child: _countResizeDivider(),
-            ),
+            if (widget.showCountColumn)
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: _countDividerOffset,
+                child: _countResizeDivider(),
+              ),
             if (widget.secondaryHeader.isNotEmpty)
               Positioned(
                 top: 0,
@@ -88,9 +101,15 @@ class _LibraryEntitiesTableState extends State<LibraryEntitiesTable> {
   }
 
   double get _secondaryDividerOffset {
-    final columnsWidth =
-        _availableWidth - _countWidth - (LibraryDesignTokens.dividerExtent * 2);
-    return columnsWidth * _titleRatio;
+    final checkboxWidth = widget.showCheckboxes ? 40.0 : 0.0;
+    final countWidth = widget.showCountColumn
+        ? _countWidth + LibraryDesignTokens.dividerExtent
+        : 0;
+    final columnsWidth = _availableWidth -
+        checkboxWidth -
+        countWidth -
+        LibraryDesignTokens.dividerExtent;
+    return checkboxWidth + (columnsWidth * _titleRatio);
   }
 
   double get _countDividerOffset =>
@@ -100,15 +119,16 @@ class _LibraryEntitiesTableState extends State<LibraryEntitiesTable> {
     final showSecondary = widget.secondaryHeader.isNotEmpty;
     return Container(
       height: LibraryDesignTokens.headerHeight,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: LibraryDesignTokens.header,
-        border: const Border(
+        border: Border(
           bottom: BorderSide(color: LibraryDesignTokens.divider),
         ),
       ),
       child: Row(
         textDirection: TextDirection.rtl,
         children: [
+          if (widget.showCheckboxes) _headerCheckbox(),
           Expanded(
             flex: (_titleRatio * 100).round(),
             child: InkWell(
@@ -126,24 +146,49 @@ class _LibraryEntitiesTableState extends State<LibraryEntitiesTable> {
               ),
             ),
           ],
-          const SizedBox(width: LibraryDesignTokens.dividerExtent),
-          SizedBox(width: _countWidth, child: const Center(child: Text('الكتب'))),
+          if (widget.showCountColumn) ...[
+            const SizedBox(width: LibraryDesignTokens.dividerExtent),
+            SizedBox(
+              width: _countWidth,
+              child: const Center(child: Text('الكتب')),
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _headerCheckbox() {
+    return SizedBox(
+      width: 40,
+      child: Checkbox(
+        value: widget.rows.isNotEmpty &&
+            widget.checkedIds.length == widget.rows.length,
+        tristate: true,
+        onChanged: (_) => widget.onToggleAll?.call(),
       ),
     );
   }
 
   Widget _row(LibraryEntityRow row) {
     final selected = row.id == widget.selectedId;
+    final checked = widget.checkedIds.contains(row.id);
+    final highlighted = widget.highlightedIds.contains(row.id);
     final showSecondary = widget.secondaryHeader.isNotEmpty;
     return InkWell(
       onTap: () => widget.onSelected(row.id),
       child: Container(
         decoration: BoxDecoration(
-          color: selected ? LibraryDesignTokens.selected : Colors.transparent,
+          color: selected
+              ? LibraryDesignTokens.selected
+              : checked
+                  ? LibraryDesignTokens.chipSelected
+                  : Colors.transparent,
           border: Border.all(
             color: selected
                 ? LibraryDesignTokens.selectedBorder
+                : checked
+                    ? LibraryDesignTokens.chipBorder
                 : LibraryDesignTokens.rowDivider,
             width: selected ? 1 : 0.5,
           ),
@@ -151,43 +196,69 @@ class _LibraryEntitiesTableState extends State<LibraryEntitiesTable> {
         child: Row(
           textDirection: TextDirection.rtl,
           children: [
+            if (widget.showCheckboxes) _rowCheckbox(row.id),
             Expanded(
               flex: (_titleRatio * 100).round(),
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(start: 10, end: 8),
-                child: Text(
-                  row.title,
-                  textAlign: TextAlign.right,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.black),
-                ),
+              child: _textCell(
+                row.title,
+                TextAlign.right,
+                highlighted: highlighted,
               ),
             ),
             if (showSecondary) ...[
               const SizedBox(width: LibraryDesignTokens.dividerExtent),
               Expanded(
                 flex: ((1 - _titleRatio) * 100).round(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    row.secondary ?? '',
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.black),
-                  ),
+                child: _textCell(
+                  row.secondary ?? '',
+                  TextAlign.center,
+                  highlighted: highlighted,
                 ),
               ),
             ],
-            const SizedBox(width: LibraryDesignTokens.dividerExtent),
-            SizedBox(
-              width: _countWidth,
-              child: Text(
-                '${row.count}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.black),
+            if (widget.showCountColumn) ...[
+              const SizedBox(width: LibraryDesignTokens.dividerExtent),
+              SizedBox(
+                width: _countWidth,
+                child: Text('${row.count}', textAlign: TextAlign.center),
               ),
-            ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _rowCheckbox(String id) {
+    return SizedBox(
+      width: 40,
+      child: Checkbox(
+        value: widget.checkedIds.contains(id),
+        onChanged: widget.onCheckedChanged == null
+            ? null
+            : (value) => widget.onCheckedChanged!(id, value ?? false),
+      ),
+    );
+  }
+
+  Widget _textCell(
+    String text,
+    TextAlign alignment, {
+    required bool highlighted,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text(
+        text,
+        textAlign: alignment,
+        overflow: TextOverflow.ellipsis,
+        style: AppUiFonts.style(
+          AppFontRole.bookLists,
+          TextStyle(
+          color: Colors.black,
+          fontWeight: highlighted ? FontWeight.w600 : FontWeight.normal,
+          ),
+          fontWeight: highlighted ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
     );

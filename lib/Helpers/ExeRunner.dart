@@ -148,7 +148,7 @@ class ExeRunner {
       process = await Process.start(
         executablePath,
         processArgs,
-        runInShell: true,
+        runInShell: false,
       );
     } catch (e) {
       throw ExeRunnerException(

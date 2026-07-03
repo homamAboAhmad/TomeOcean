@@ -7,6 +7,8 @@ import 'package:golden_shamela/Models/BookMetadataOptions.dart';
 import 'package:golden_shamela/Models/Section.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
+import 'package:golden_shamela/Utils/AuthorDeathDateParser.dart';
 import 'package:path/path.dart' as p;
 
 class BatchMetadataInputDialog extends StatefulWidget {
@@ -23,6 +25,7 @@ class _BatchMetadataItem {
   final String filePath;
   final TextEditingController titleController;
   final TextEditingController authorController;
+  final TextEditingController deathYearController;
   Author? selectedAuthor;
   String? sectionId;
   String? bookType;
@@ -34,13 +37,17 @@ class _BatchMetadataItem {
     String initialAuthor = '',
     this.selectedAuthor,
     this.sectionId,
-    this.bookType,
+    this.bookType = BookMetadataOptions.book,
   }) : titleController = TextEditingController(text: initialTitle),
-       authorController = TextEditingController(text: initialAuthor);
+       authorController = TextEditingController(text: initialAuthor),
+       deathYearController = TextEditingController(
+         text: selectedAuthor?.deathYear ?? '',
+       );
 
   void dispose() {
     titleController.dispose();
     authorController.dispose();
+    deathYearController.dispose();
   }
 }
 
@@ -54,7 +61,7 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
   Author? _commonAuthor;
   final TextEditingController _commonAuthorController = TextEditingController();
   String? _commonSectionId;
-  String? _commonBookType;
+  String? _commonBookType = BookMetadataOptions.book;
 
   @override
   void initState() {
@@ -98,6 +105,7 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
       for (var item in _items) {
         item.selectedAuthor = _commonAuthor;
         item.authorController.text = _commonAuthorController.text;
+        item.deathYearController.text = _commonAuthor?.deathYear ?? '';
       }
     });
   }
@@ -165,6 +173,14 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
                     flex: 3,
                     child: Text(
                       'المؤلف',
+                      style: normalStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: Text(
+                      'وفاة المؤلف',
                       style: normalStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -330,20 +346,35 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
             child: _buildAuthorAutocomplete(
               controller: item.authorController,
               onSelected: (a) {
-                item.authorController.text = a.name;
-                item.selectedAuthor = a;
+                setState(() {
+                  item.authorController.text = a.name;
+                  item.selectedAuthor = a;
+                  item.deathYearController.text = a.deathYear ?? '';
+                });
               },
               onChanged: (v) {
-                item.authorController.text = v;
-                item.selectedAuthor = _allAuthors.firstWhere(
-                  (a) => a.name == v,
-                  orElse: () => Author(name: ''),
-                );
-                if (item.selectedAuthor!.name.isEmpty)
-                  item.selectedAuthor = null;
+                setState(() {
+                  item.authorController.text = v;
+                  final previous = item.selectedAuthor;
+                  item.selectedAuthor = _allAuthors.firstWhere(
+                    (a) => a.name == v,
+                    orElse: () => Author(name: ''),
+                  );
+                  if (item.selectedAuthor!.name.isEmpty) {
+                    item.selectedAuthor = null;
+                  }
+                  if (item.selectedAuthor != null) {
+                    item.deathYearController.text =
+                        item.selectedAuthor!.deathYear ?? '';
+                  } else if (previous != null) {
+                    item.deathYearController.clear();
+                  }
+                });
               },
             ),
           ),
+          const SizedBox(width: 12),
+          Expanded(flex: 2, child: _buildDeathYearField(item)),
           const SizedBox(width: 12),
           Expanded(
             flex: 2,
@@ -368,6 +399,32 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
           const Text('موافق'),
         ],
       ),
+    );
+  }
+
+  Widget _buildDeathYearField(_BatchMetadataItem item) {
+    final enabled =
+        item.selectedAuthor == null &&
+        item.authorController.text.trim().isNotEmpty;
+    return TextFormField(
+      controller: item.deathYearController,
+      enabled: enabled,
+      decoration: InputDecoration(
+        hintText: '545 أو معاصر',
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        suffixIcon: IconButton(
+          tooltip: AuthorDeathDateParser.contemporaryValue,
+          icon: const LibraryIcon(LibraryIconType.authors, size: 18),
+          onPressed: enabled
+              ? () => setState(() {
+                    item.deathYearController.text =
+                        AuthorDeathDateParser.contemporaryValue;
+                  })
+              : null,
+        ),
+      ),
+      style: normalStyle(fontSize: 14),
     );
   }
 
@@ -484,10 +541,17 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
       Author? author = item.selectedAuthor;
       if (author == null && item.authorController.text.isNotEmpty) {
         final name = item.authorController.text.trim();
+        final deathYear = item.deathYearController.text.trim();
+        if (deathYear.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('يرجى إدخال وفاة المؤلف: $name')),
+          );
+          return;
+        }
         if (consolidatedNewAuthors.containsKey(name)) {
           author = consolidatedNewAuthors[name];
         } else {
-          author = Author(name: name);
+          author = Author(name: name, deathYear: deathYear);
           consolidatedNewAuthors[name] = author!;
         }
       }
@@ -496,7 +560,7 @@ class _BatchMetadataInputDialogState extends State<BatchMetadataInputDialog> {
         title: item.titleController.text,
         authorId: author?.id ?? '',
         sectionId: item.sectionId ?? '',
-        bookType: item.bookType ?? '',
+        bookType: item.bookType ?? BookMetadataOptions.book,
         matchesPrinted: item.matchesPrinted,
       );
     }

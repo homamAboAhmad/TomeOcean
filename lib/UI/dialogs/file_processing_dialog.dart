@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Services/BookProcessingService.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 /// عرض ديالوج معالجة الملف
 Future<ProcessingResult?> showBookProcessingDialog(
@@ -15,7 +16,9 @@ Future<ProcessingResult?> showBookProcessingDialog(
     barrierDismissible: false,
     builder: (c) {
       return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppChrome.radiusLarge),
+        ),
         child: BookProcessingDialog(filePath, forceReprocess: forceReprocess),
       );
     },
@@ -182,12 +185,13 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
     return Container(
       width: 380,
       padding: const EdgeInsets.all(24),
+      decoration: AppChrome.surfaceDecoration(radius: AppChrome.radiusLarge),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(Icons.library_books, color: primaryColor, size: 28),
+              LibraryIcon.fromIcon(Icons.library_books, color: primaryColor, size: 28),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -201,7 +205,7 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
 
           Text(
             widget.filePath.split('\\').last.split('/').last,
-            style: normalStyle().copyWith(color: Colors.grey[600]),
+            style: normalStyle().copyWith(color: accentColor.withOpacity(0.68)),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -271,7 +275,7 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
               );
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
+              backgroundColor: actionColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -330,20 +334,20 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 20),
+          LibraryIcon.fromIcon(icon, color: iconColor, size: 20),
           const SizedBox(width: 12),
           Text(
             name,
             style: normalStyle().copyWith(
               color: status == StageStatus.pending
-                  ? Colors.grey[500]
-                  : Colors.black87,
+                  ? accentColor.withOpacity(0.52)
+                  : accentColor,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             ),
           ),
           const Spacer(),
           if (status == StageStatus.completed)
-            const Icon(Icons.done, color: Colors.green, size: 16),
+            const LibraryIcon(LibraryIconType.check, color: Colors.green, size: 16),
           if (isActive)
             SizedBox(
               width: 12,
@@ -389,8 +393,8 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
               return LinearProgressIndicator(
                 value: value,
                 minHeight: 10,
-                backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                backgroundColor: mutedColor,
+                valueColor: AlwaysStoppedAnimation<Color>(actionColor),
               );
             },
           ),
@@ -409,7 +413,7 @@ class _BookProcessingDialogState extends State<BookProcessingDialog> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: Colors.red, size: 20),
+          const LibraryIcon(LibraryIconType.warning, color: Colors.red, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

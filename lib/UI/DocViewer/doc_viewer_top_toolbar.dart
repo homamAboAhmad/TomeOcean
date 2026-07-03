@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:golden_shamela/Models/WordDocument.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 class DocViewerTopToolbar extends StatelessWidget {
   final WordDocument wordDocument;
@@ -43,14 +44,9 @@ class DocViewerTopToolbar extends StatelessWidget {
         height: 48,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              offset: const Offset(0, 2),
-              blurRadius: 8,
-            ),
-          ],
+          color: surfaceColor,
+          border: Border(bottom: AppChrome.borderSide(opacity: 0.65)),
+          boxShadow: AppChrome.topShadow,
         ),
         child: Directionality(
           textDirection: TextDirection.rtl,
@@ -105,7 +101,7 @@ class DocViewerTopToolbar extends StatelessWidget {
                   child: Text(
                     wordDocument.title,
                     style: normalStyle(
-                      color: primaryColor,
+                      color: accentColor,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -132,9 +128,9 @@ class DocViewerTopToolbar extends StatelessWidget {
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Icon(
+                      child: LibraryIcon.fromIcon(
                         Icons.search_rounded,
-                        color: Colors.grey[400],
+                        color: accentColor.withOpacity(0.40),
                         size: 16,
                       ),
                     ),
@@ -182,7 +178,7 @@ class DocViewerTopToolbar extends StatelessWidget {
   }
 
   Widget _buildDivider() {
-    return Container(width: 1, height: 32, color: Colors.grey[200]);
+    return Container(width: 1, height: 32, color: borderColor.withOpacity(0.55));
   }
 
   Widget _buildToolbarButton({
@@ -196,11 +192,11 @@ class DocViewerTopToolbar extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
           child: Container(
             width: 36,
             height: 36,
-            child: Icon(icon, color: accentColor, size: 20),
+            child: LibraryIcon.fromIcon(icon, color: accentColor, size: 20),
           ),
         ),
       ),
@@ -215,7 +211,7 @@ class DocViewerTopToolbar extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onToggleDiacritics,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
           child: Container(
             width: 36,
             height: 36,
@@ -223,7 +219,7 @@ class DocViewerTopToolbar extends StatelessWidget {
               color: isActive
                   ? primaryColor.withOpacity(0.1)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
             ),
             padding: const EdgeInsets.all(6),
             child: Image.asset(
@@ -244,7 +240,7 @@ class DocViewerTopToolbar extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onToggleNumerals,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
           child: Container(
             width: 36,
             height: 36,
@@ -252,7 +248,7 @@ class DocViewerTopToolbar extends StatelessWidget {
               color: isActive
                   ? primaryColor.withOpacity(0.1)
                   : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
             ),
             alignment: Alignment.center,
             child: Text(
@@ -276,11 +272,11 @@ class DocViewerTopToolbar extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onShowBookCard,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
           child: Container(
             width: 36,
             height: 36,
-            child: Icon(
+            child: LibraryIcon.fromIcon(
               Icons.info_outline_rounded,
               color: accentColor,
               size: 20,

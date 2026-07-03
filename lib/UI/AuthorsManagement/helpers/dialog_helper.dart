@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import '../../../Models/Author.dart';
 import '../../../Styles/TextSyles.dart';
+import '../../LibraryCommon/library_icon.dart';
 
 /// Helper class for showing dialogs
 class DialogHelper {
@@ -17,7 +18,7 @@ class DialogHelper {
         title: Row(
           textDirection: TextDirection.rtl,
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.grey.shade700),
+            LibraryIcon.fromIcon(Icons.warning_amber_rounded, color: Colors.grey.shade700),
             const SizedBox(width: 12),
             Text(
               'تأكيد الحذف',

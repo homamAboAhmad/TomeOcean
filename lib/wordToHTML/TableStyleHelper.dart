@@ -507,7 +507,6 @@ bool isTableBidiVisual(XmlElement tblXml) {
       .firstOrNull;
 
   if (tblPr == null) {
-    debugPrint('>>> BIDI: tblPr NOT FOUND in ${tblXml.name.qualified}, children: ${tblXml.childElements.map((e) => e.name.qualified).take(5).toList()}');
     return true; // Default to RTL for Arabic documents
   }
 
@@ -517,12 +516,10 @@ bool isTableBidiVisual(XmlElement tblXml) {
       .firstOrNull;
 
   if (bidi == null) {
-    debugPrint('>>> BIDI: bidiVisual NOT found in tblPr → defaulting to FALSE (per Word spec, default is LTR)');
     return false;
   }
 
   String? val = bidi.getAttribute('w:val') ?? bidi.getAttribute('val');
   bool result = val != '0' && val != 'false';
-  debugPrint('>>> BIDI: bidiVisual found, val=$val → result=$result');
   return result;
 }

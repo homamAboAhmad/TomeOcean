@@ -5,6 +5,9 @@ import 'package:golden_shamela/Services/AppStoragePaths.dart';
 import 'package:golden_shamela/Services/BookLibraryRepository.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
+import 'package:golden_shamela/UI/Settings/app_font_settings.dart';
+import 'package:golden_shamela/UI/LibraryPicker/library_import_actions.dart';
 import 'dialogs/file_processing_dialog.dart';
 import 'dialogs/batch_file_processing_dialog.dart';
 import 'dialogs/folder_import_preview_dialog.dart';
@@ -38,7 +41,7 @@ class _BooksDrawerState extends State<BooksDrawer> {
   Widget build(BuildContext context) {
     return Drawer(
       elevation: 0,
-      backgroundColor: const Color(0xFFF9FAFB),
+      backgroundColor: bgColor,
       child: Column(
         children: [
           _buildHeader(),
@@ -53,12 +56,12 @@ class _BooksDrawerState extends State<BooksDrawer> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
-      decoration: const BoxDecoration(
-        color: primaryColor,
+      decoration: BoxDecoration(
+        gradient: AppChrome.headerGradient,
         borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black12,
+            color: primaryColor.withOpacity(0.18),
             blurRadius: 10,
             offset: Offset(0, 5),
           ),
@@ -94,15 +97,15 @@ class _BooksDrawerState extends State<BooksDrawer> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            LibraryIcon.fromIcon(
               Icons.library_books_outlined,
               size: 48,
-              color: Colors.grey[400],
+              color: borderColor,
             ),
             const SizedBox(height: 12),
             Text(
               'لا توجد كتب حالياً',
-              style: normalStyle(color: Colors.grey[500]!),
+              style: normalStyle(color: accentColor.withOpacity(0.62)),
             ),
           ],
         ),
@@ -124,15 +127,10 @@ class _BooksDrawerState extends State<BooksDrawer> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppChrome.radius),
+        border: Border.fromBorderSide(AppChrome.borderSide()),
+        boxShadow: AppChrome.softShadow,
       ),
       child: ListTile(
         onTap: () {
@@ -143,23 +141,28 @@ class _BooksDrawerState extends State<BooksDrawer> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: primaryColor.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+            color: organicHighlightColor,
+            borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
           ),
-          child: const Icon(Icons.book_outlined, color: primaryColor, size: 20),
+          child: const LibraryIcon(LibraryIconType.books, color: actionColor, size: 20),
         ),
         title: Text(
           bookName,
-          style: normalStyle(color: Colors.black87, fontSize: 15),
+          style: AppUiFonts.style(
+            AppFontRole.bookLists,
+            normalStyle(color: accentColor, fontSize: 15),
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: const Icon(
+        trailing: LibraryIcon.fromIcon(
           Icons.arrow_forward_ios_rounded,
           size: 14,
-          color: Colors.grey,
+          color: borderColor,
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppChrome.radius),
+        ),
       ),
     );
   }
@@ -168,21 +171,16 @@ class _BooksDrawerState extends State<BooksDrawer> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
+        color: surfaceColor,
+        border: Border(top: AppChrome.borderSide()),
+        boxShadow: AppChrome.topShadow,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
+              backgroundColor: actionColor,
               foregroundColor: Colors.white,
               elevation: 2,
               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -194,15 +192,15 @@ class _BooksDrawerState extends State<BooksDrawer> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                LibraryIcon.fromIcon(
                   Icons.add_circle_outline_rounded,
-                  color: secondaryColor,
+                  color: Colors.white,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'إضافة كتب مختارة',
-                  style: normalStyle(color: secondaryColor, fontSize: 16),
+                  style: normalStyle(color: Colors.white, fontSize: 16),
                 ),
               ],
             ),
@@ -210,25 +208,51 @@ class _BooksDrawerState extends State<BooksDrawer> {
           const SizedBox(height: 12),
           OutlinedButton(
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: primaryColor, width: 1.5),
+              side: AppChrome.borderSide(opacity: 0.9),
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppChrome.radius),
+              ),
+            ),
+            onPressed: _pickMultipartBook,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                LibraryIcon.fromIcon(
+                  Icons.library_books_outlined,
+                  color: actionColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'إضافة كتاب من عدة أجزاء',
+                  style: normalStyle(color: accentColor, fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: AppChrome.borderSide(opacity: 0.9),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppChrome.radius),
               ),
             ),
             onPressed: _pickFolder,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                LibraryIcon.fromIcon(
                   Icons.folder_open_rounded,
-                  color: primaryColor,
+                  color: actionColor,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'استيراد مجلد كامل',
-                  style: normalStyle(color: primaryColor, fontSize: 16),
+                  style: normalStyle(color: accentColor, fontSize: 16),
                 ),
               ],
             ),
@@ -266,7 +290,6 @@ class _BooksDrawerState extends State<BooksDrawer> {
                 content: Text(
                   'لم يتم العثور على كتب docx في هذا المجلد',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'jreg'),
                 ),
                 backgroundColor: Colors.redAccent,
               ),
@@ -302,6 +325,12 @@ class _BooksDrawerState extends State<BooksDrawer> {
     }
   }
 
+  Future<void> _pickMultipartBook() async {
+    if (await LibraryImportActions.pickMultipartBook(context)) {
+      loadBooks();
+    }
+  }
+
   Future<void> _pickDocxFile() async {
     try {
       result = await FilePicker.platform.pickFiles(
@@ -311,21 +340,36 @@ class _BooksDrawerState extends State<BooksDrawer> {
       );
 
       if (result != null && result!.files.isNotEmpty) {
-        // Use the new World-Class Batch Dialog
         if (mounted) {
           final List<String> paths = result!.files.map((f) => f.path!).toList();
+          final selectedPaths = await showDialog<List<String>>(
+            context: context,
+            barrierDismissible: true,
+            builder: (context) => FolderImportPreviewDialog(
+              files: paths.map((path) => File(path)).toList(),
+              folderPath: '',
+              title: 'إضافة كتب مختارة',
+              subtitle: 'راجع الكتب التي سيتم إضافتها',
+              icon: Icons.library_books_outlined,
+              confirmLabel: 'بدء إضافة الكتب',
+            ),
+          );
+          if (!mounted || selectedPaths == null || selectedPaths.isEmpty) {
+            return;
+          }
 
           await showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (context) => BatchFileProcessingDialog(filePaths: paths),
+            builder: (context) =>
+                BatchFileProcessingDialog(filePaths: selectedPaths),
           );
 
           loadBooks();
 
           // Auto-select the last added book if success
           // Logic to find last added book:
-          final lastPath = paths.last;
+          final lastPath = selectedPaths.last;
           final bookId = AppStoragePaths.bookIdFromPath(lastPath);
           final bookFile = File(AppStoragePaths.bookSourcePath(bookId));
           if (await bookFile.exists()) {

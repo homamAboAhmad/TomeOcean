@@ -24,6 +24,9 @@ class AppStoragePaths {
   static String get sharedFontsPath =>
       p.join(systemStorePath, sharedFontsFolderName);
 
+  static String get windowsFontCatalogCachePath =>
+      p.join(systemStorePath, 'windows_font_catalog.json');
+
   static String get booksMetadataDbPath =>
       p.join(systemStorePath, 'books_metadata.db');
 
@@ -33,9 +36,33 @@ class AppStoragePaths {
   static String get shamelaSearchDbPath =>
       p.join(systemStorePath, 'shamela_search.db');
 
+  static String get pageCommentsDbPath =>
+      p.join(systemStorePath, 'page_comments.db');
+
   static String get meiliDataPath => p.join(systemStorePath, 'meili_data');
 
   static String get rootsDbPath => p.join(systemStorePath, 'roots_db');
+
+  static String get recitedTextStorePath =>
+      p.join(systemStorePath, 'recited_text');
+
+  static String get recitedTextBodyPath =>
+      p.join(recitedTextStorePath, 'body');
+
+  static String get recitedTextMetaPath =>
+      p.join(recitedTextStorePath, 'meta');
+
+  static String get recitedTextTafsirPath =>
+      p.join(recitedTextStorePath, 'tafsir');
+
+  static String get recitedTextPassagesPath =>
+      p.join(recitedTextBodyPath, 'passages.json');
+
+  static String get recitedTextChaptersPath =>
+      p.join(recitedTextMetaPath, 'chapters.json');
+
+  static String get recitedTextTafsirIndexPath =>
+      p.join(recitedTextTafsirPath, 'index.json');
 
   static Future<void> ensureBaseDirectories() async {
     await Directory(dataRootPath).create(recursive: true);
@@ -43,6 +70,9 @@ class AppStoragePaths {
     await Directory(systemStorePath).create(recursive: true);
     await _relocateSystemEntriesFromBooksStore();
     await Directory(sharedFontsPath).create(recursive: true);
+    await Directory(recitedTextBodyPath).create(recursive: true);
+    await Directory(recitedTextMetaPath).create(recursive: true);
+    await Directory(recitedTextTafsirPath).create(recursive: true);
   }
 
   static Future<void> _relocateSystemEntriesFromBooksStore() async {
@@ -116,6 +146,29 @@ class AppStoragePaths {
     return bookId == 'book' ? p.basenameWithoutExtension(filePath) : bookId;
   }
 
+  static Future<String?> resolvePortableStoredSourcePath(
+    String filePath,
+    {String? bookName}
+  ) async {
+    if (await File(filePath).exists()) return filePath;
+
+    if (p.basename(filePath).toLowerCase() == sourceDocxFileName) {
+      final parts = p.split(p.normalize(filePath));
+      final storeIndex = parts.lastIndexWhere(
+        (part) => part.toLowerCase() == booksStoreName.toLowerCase(),
+      );
+      if (storeIndex >= 0 && storeIndex + 1 < parts.length) {
+        final candidate = bookSourcePath(parts[storeIndex + 1]);
+        if (await File(candidate).exists()) return candidate;
+      }
+    }
+
+    final title = bookName?.trim();
+    if (title == null || title.isEmpty) return null;
+    final candidate = bookSourcePath(title);
+    return await File(candidate).exists() ? candidate : null;
+  }
+
   static String bookDirPath(String bookId) =>
       p.join(booksStorePath, bookIdFromTitle(bookId));
 
@@ -127,6 +180,21 @@ class AppStoragePaths {
 
   static String bookPagesDirPath(String bookId) =>
       p.join(bookDirPath(bookId), 'pages');
+
+  static String bookPartsDirPath(String bookId) =>
+      p.join(bookDirPath(bookId), 'parts');
+
+  static String bookPartDirPath(String bookId, int partNumber) =>
+      p.join(bookPartsDirPath(bookId), partNumber.toString());
+
+  static String bookPartSourcePath(String bookId, int partNumber) =>
+      p.join(bookPartDirPath(bookId, partNumber), sourceDocxFileName);
+
+  static String bookPartMetadataPath(String bookId, int partNumber) =>
+      p.join(bookPartDirPath(bookId, partNumber), 'metadata.json');
+
+  static String bookPartPagesDirPath(String bookId, int partNumber) =>
+      p.join(bookPartDirPath(bookId, partNumber), 'pages');
 
   static Future<void> deleteRebuildableCache(String bookId) async {
     final metadataFile = File(bookMetadataPath(bookId));

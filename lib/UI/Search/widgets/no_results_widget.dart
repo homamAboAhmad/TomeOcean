@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 /// A professional, premium "No Results Found" widget for search
 /// Designed to match the Islamic Library theme with empathetic guidance
@@ -45,14 +46,14 @@ class NoResultsWidget extends StatelessWidget {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.grey.shade200),
+                    color: organicHighlightColor,
+                    borderRadius: BorderRadius.circular(AppChrome.radiusLarge),
+                    border: Border.fromBorderSide(AppChrome.borderSide()),
                   ),
                   child: Text(
                     '« ${searchQueries.join(' | ')} »',
                     style: normalStyle(
-                      color: Colors.grey.shade700,
+                      color: accentColor,
                       fontSize: 15,
                     ),
                     textAlign: TextAlign.center,
@@ -64,7 +65,7 @@ class NoResultsWidget extends StatelessWidget {
               // Subtitle
               Text(
                 'لم نتمكن من العثور على ما تبحث عنه في المتن أو الحواشي',
-                style: normalStyle(color: Colors.grey.shade600, fontSize: 16),
+                style: normalStyle(color: accentColor.withOpacity(0.68), fontSize: 16),
                 textAlign: TextAlign.center,
               ),
 
@@ -110,7 +111,7 @@ class NoResultsWidget extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           // Book icon
-          Icon(
+          LibraryIcon.fromIcon(
             Icons.auto_stories_outlined,
             size: 50,
             color: primaryColor.withOpacity(0.7),
@@ -122,20 +123,20 @@ class NoResultsWidget extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: surfaceColor,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: primaryColor.withOpacity(0.12),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),
                 ],
               ),
-              child: Icon(
+              child: LibraryIcon.fromIcon(
                 Icons.search_off_rounded,
                 size: 22,
-                color: secondaryColor,
+                color: actionColor,
               ),
             ),
           ),
@@ -172,16 +173,10 @@ class NoResultsWidget extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 500),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppChrome.radius),
+        border: Border.fromBorderSide(AppChrome.borderSide()),
+        boxShadow: AppChrome.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -191,19 +186,19 @@ class NoResultsWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: secondaryColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  color: organicHighlightColor,
+                  borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
                 ),
-                child: Icon(
+                child: LibraryIcon.fromIcon(
                   Icons.lightbulb_outline_rounded,
-                  color: secondaryColor,
+                  color: actionColor,
                   size: 20,
                 ),
               ),
               const SizedBox(width: 12),
               Text(
                 'نصائح لتحسين البحث',
-                style: mediumStyle(fontSize: 17, color: primaryColor),
+                style: mediumStyle(fontSize: 17, color: accentColor),
               ),
             ],
           ),
@@ -223,12 +218,12 @@ class NoResultsWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
+              color: organicHighlightColor,
+              borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
             ),
-            child: Icon(
+            child: LibraryIcon.fromIcon(
               suggestion.icon,
-              color: primaryColor.withOpacity(0.7),
+              color: actionColor,
               size: 18,
             ),
           ),
@@ -241,13 +236,13 @@ class NoResultsWidget extends StatelessWidget {
                   suggestion.title,
                   style: normalStyle(
                     fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade800,
+                    color: accentColor,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   suggestion.subtitle,
-                  style: smallStyle(color: Colors.grey.shade600),
+                  style: smallStyle(color: accentColor.withOpacity(0.68)),
                 ),
               ],
             ),
@@ -272,7 +267,7 @@ class NoResultsWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: primaryColor.withOpacity(0.3),
+                color: actionColor.withOpacity(0.22),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -281,12 +276,12 @@ class NoResultsWidget extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search_rounded, color: secondaryColor, size: 20),
+              LibraryIcon.fromIcon(Icons.search_rounded, color: Colors.white, size: 20),
               const SizedBox(width: 10),
               Text(
                 'بحث جديد',
                 style: normalStyle(
-                  color: secondaryColor,
+                  color: Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),

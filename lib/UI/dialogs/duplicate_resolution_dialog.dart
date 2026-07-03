@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 enum DuplicateAction { replace, skip }
 
@@ -35,7 +36,7 @@ class _DuplicateResolutionDialogState extends State<DuplicateResolutionDialog> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            const LibraryIcon(LibraryIconType.warning, color: Colors.orange),
             const SizedBox(width: 8),
             Text("ملف موجود مسبقاً", style: bigStyle(fontSize: 18)),
           ],

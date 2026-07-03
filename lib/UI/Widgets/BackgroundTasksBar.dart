@@ -23,9 +23,14 @@ class BackgroundTasksBar extends StatelessWidget {
         );
         
         final service = BookProcessingService();
-        final totalTasks = service.currentBatchFiles.length;
+        final totalTasks = service.currentBatchFiles.isEmpty
+            ? tasks.length
+            : service.currentBatchFiles.length;
         // حساب المكتملين نجاحاً من السجل المPersistent
-        final completedTasks = service.batchResults.values.where((v) => v == ProcessingState.completed).length;
+        final completedTasks = service.batchResults.values
+            .where((v) => v == ProcessingState.completed)
+            .length
+            .clamp(0, totalTasks);
 
         return InkWell(
           onTap: () {
@@ -45,10 +50,10 @@ class BackgroundTasksBar extends StatelessWidget {
             width: double.infinity,
             height: 42,
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.95),
+              gradient: AppChrome.headerGradient,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: primaryColor.withOpacity(0.16),
                   offset: const Offset(0, -2),
                   blurRadius: 6,
                 ),
@@ -58,11 +63,12 @@ class BackgroundTasksBar extends StatelessWidget {
             child: Row(
               children: [
                 // Icon
-                const SizedBox(
+                SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
+                    value: activeTask.progress > 0 ? activeTask.progress : null,
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ),
@@ -75,7 +81,7 @@ class BackgroundTasksBar extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "جاري إضافة الكتب ($completedTasks/$totalTasks)",
+                        "جاري معالجة الكتب ($completedTasks/$totalTasks)",
                         style: normalStyle().copyWith(fontSize: 12, color: Colors.white),
                       ),
                       Text(
@@ -92,8 +98,8 @@ class BackgroundTasksBar extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
+                    color: Colors.white.withOpacity(0.22),
+                    borderRadius: BorderRadius.circular(AppChrome.radiusSmall),
                   ),
                   child: Text(
                     "تفاصيل",

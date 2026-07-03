@@ -10,6 +10,7 @@ import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/Models/Section.dart';
 import 'package:golden_shamela/Services/AppStoragePaths.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 // Data model for a single search result
 class ArabicSearchHit {
@@ -353,7 +354,7 @@ class _ArabicSearchDialogState extends State<ArabicSearchDialog> {
             border: OutlineInputBorder(),
             contentPadding: EdgeInsets.symmetric(horizontal: 10),
             suffixIcon: IconButton(
-              icon: Icon(Icons.search),
+              icon: const LibraryIcon(LibraryIconType.search),
               onPressed: _performSearch,
             ),
           ),
@@ -500,7 +501,7 @@ class _ArabicSearchDialogState extends State<ArabicSearchDialog> {
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
             child: TextButton.icon(
-              icon: Icon(Icons.clear, size: 16),
+              icon: const LibraryIcon(LibraryIconType.close, size: 16),
               label: Text('إزالة الفلترة', style: smallStyle()),
               onPressed: () {
                 setState(() {
@@ -653,7 +654,7 @@ class _ArabicSearchDialogState extends State<ArabicSearchDialog> {
             ),
             if (_selectedAuthorId != null || _selectedSectionId != null)
               TextButton.icon(
-                icon: Icon(Icons.clear, size: 16),
+                icon: const LibraryIcon(LibraryIconType.close, size: 16),
                 label: Text('إزالة الفلترة', style: smallStyle()),
                 onPressed: () {
                   setState(() {

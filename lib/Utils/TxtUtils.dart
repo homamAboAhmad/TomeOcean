@@ -34,7 +34,15 @@ String removeDiacritics(String input) {
   return input.replaceAll(RegExp(r'[\u064B-\u0652]'), '');
 }
 
-String shortenTitle(String title, {int maxLength = 15}) {
+String shortenTitle(String title, {int maxLength = 15, int? maxWords}) {
+  if (maxWords != null) {
+    final words = title.trim().split(RegExp(r'\s+'));
+    if (words.length > maxWords) {
+      return '${words.take(maxWords).join(' ')}...';
+    }
+    return title;
+  }
+
   if (title.length <= maxLength) return title;
 
   int keepChars = (maxLength ~/ 2) - 2; // عدد الأحرف من البداية والنهاية

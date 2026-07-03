@@ -2,15 +2,28 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 import 'package:path/path.dart' as p;
 
 class FolderImportPreviewDialog extends StatefulWidget {
   final List<File> files;
   final String folderPath;
+  final String? title;
+  final String? subtitle;
+  final IconData icon;
+  final String confirmLabel;
+  final bool allowReorder;
+  final int minSelectionCount;
 
   const FolderImportPreviewDialog({
     required this.files,
     required this.folderPath,
+    this.title,
+    this.subtitle,
+    this.icon = Icons.folder_open_rounded,
+    this.confirmLabel = 'بدء الاستيراد',
+    this.allowReorder = false,
+    this.minSelectionCount = 1,
     super.key,
   });
 
@@ -20,13 +33,15 @@ class FolderImportPreviewDialog extends StatefulWidget {
 }
 
 class _FolderImportPreviewDialogState extends State<FolderImportPreviewDialog> {
+  late List<File> _files;
   late Map<String, bool> _selectedFiles;
   bool _selectAll = true;
 
   @override
   void initState() {
     super.initState();
-    _selectedFiles = {for (var f in widget.files) f.path: true};
+    _files = List<File>.of(widget.files);
+    _selectedFiles = {for (var f in _files) f.path: true};
   }
 
   void _toggleSelectAll(bool? value) {
@@ -79,18 +94,19 @@ class _FolderImportPreviewDialogState extends State<FolderImportPreviewDialog> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.folder_open_rounded, color: Colors.white, size: 28),
+          LibraryIcon.fromIcon(widget.icon, color: Colors.white, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'استيراد من مجلد',
+                  widget.title ?? 'استيراد من مجلد',
                   style: bigStyle(color: Colors.white, fontSize: 18),
                 ),
                 Text(
-                  'تم العثور على ${widget.files.length} كتاب في ${p.basename(widget.folderPath)}',
+                  widget.subtitle ??
+                      'تم العثور على ${_files.length} كتاب في ${p.basename(widget.folderPath)}',
                   style: normalStyle(color: Colors.white70, fontSize: 13),
                 ),
               ],
@@ -127,44 +143,68 @@ class _FolderImportPreviewDialogState extends State<FolderImportPreviewDialog> {
 
   Widget _buildFilesList() {
     return Flexible(
-      child: ListView.separated(
-        shrinkWrap: true,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: widget.files.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final file = widget.files[index];
-          final fileName = p.basename(file.path);
-          final filePath = file.path;
-
-          return CheckboxListTile(
-            value: _selectedFiles[filePath],
-            activeColor: primaryColor,
-            title: Text(
-              fileName,
-              style: normalStyle(fontSize: 14),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+      child: widget.allowReorder
+          ? ReorderableListView.builder(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _files.length,
+              onReorder: _reorderFile,
+              itemBuilder: (context, index) => _buildFileTile(_files[index]),
+            )
+          : ListView.separated(
+              shrinkWrap: true,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _files.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) => _buildFileTile(_files[index]),
             ),
-            subtitle: Text(
-              p.relative(filePath, from: widget.folderPath),
-              style: smallStyle(fontSize: 11),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            onChanged: (value) {
-              setState(() {
-                _selectedFiles[filePath] = value ?? false;
-                _selectAll = _selectedFiles.values.every((v) => v);
-              });
-            },
-            controlAffinity: ListTileControlAffinity.leading,
-            dense: true,
-            contentPadding: EdgeInsets.zero,
-          );
-        },
-      ),
     );
+  }
+
+  Widget _buildFileTile(File file) {
+    final fileName = p.basename(file.path);
+    final filePath = file.path;
+    final subtitle = widget.folderPath.trim().isEmpty
+        ? p.dirname(filePath)
+        : p.relative(filePath, from: widget.folderPath);
+
+    return CheckboxListTile(
+      key: ValueKey(filePath),
+      value: _selectedFiles[filePath],
+      activeColor: primaryColor,
+      secondary: widget.allowReorder
+          ? const LibraryIcon(LibraryIconType.tune, color: Colors.grey)
+          : null,
+      title: Text(
+        fileName,
+        style: normalStyle(fontSize: 14),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Text(
+        subtitle,
+        style: smallStyle(fontSize: 11),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      onChanged: (value) {
+        setState(() {
+          _selectedFiles[filePath] = value ?? false;
+          _selectAll = _selectedFiles.values.every((v) => v);
+        });
+      },
+      controlAffinity: ListTileControlAffinity.leading,
+      dense: true,
+      contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  void _reorderFile(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) newIndex -= 1;
+      final file = _files.removeAt(oldIndex);
+      _files.insert(newIndex, file);
+    });
   }
 
   Widget _buildFooter(int selectedCount) {
@@ -179,9 +219,9 @@ class _FolderImportPreviewDialogState extends State<FolderImportPreviewDialog> {
           ),
           const SizedBox(width: 12),
           ElevatedButton(
-            onPressed: selectedCount > 0
+            onPressed: selectedCount >= widget.minSelectionCount
                 ? () {
-                    final selectedPaths = widget.files
+                    final selectedPaths = _files
                         .where((f) => _selectedFiles[f.path] == true)
                         .map((f) => f.path)
                         .toList();
@@ -196,7 +236,7 @@ class _FolderImportPreviewDialogState extends State<FolderImportPreviewDialog> {
               ),
             ),
             child: Text(
-              'بدء الاستيراد ($selectedCount)',
+              '${widget.confirmLabel} ($selectedCount)',
               style: normalStyle(color: Colors.white),
             ),
           ),

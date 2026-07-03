@@ -12,6 +12,7 @@ import 'package:golden_shamela/Models/BookCard.dart';
 import 'package:golden_shamela/Models/Author.dart';
 import 'package:golden_shamela/UI/dialogs/book_metadata_input_dialog.dart';
 import 'package:golden_shamela/UI/dialogs/batch_metadata_input_dialog.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 import 'package:golden_shamela/Helpers/AuthorStorage.dart';
 import 'package:golden_shamela/Helpers/SectionStorage.dart';
 import 'package:path/path.dart' as p;
@@ -19,10 +20,16 @@ import 'package:path/path.dart' as p;
 class BatchFileProcessingDialog extends StatefulWidget {
   final List<String> filePaths;
   final bool isResuming; // عند إعادة الفتح من الخلفية
+  final BookCard? multipartBookCard;
+  final String title;
+  final IconData icon;
 
   const BatchFileProcessingDialog({
     required this.filePaths,
     this.isResuming = false,
+    this.multipartBookCard,
+    this.title = 'إضافة كتب جديدة',
+    this.icon = Icons.library_add_check_rounded,
     super.key,
   });
 
@@ -56,6 +63,8 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
     // إذا كنا نستأنف من الخلفية، نعرض الحالة فقط
     if (widget.isResuming) {
       _syncWithActiveTasksIfResuming();
+    } else if (widget.multipartBookCard != null) {
+      _startMultipartProcessing();
     } else {
       // فحص قبل البدء
       _validateAndStart();
@@ -180,7 +189,7 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
           ),
           title: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+              const LibraryIcon(LibraryIconType.warning, color: Colors.orange),
               const SizedBox(width: 8),
               const Text("ملفات كبيرة الحجم"),
             ],
@@ -539,6 +548,95 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
     }
   }
 
+  void _startMultipartProcessing() async {
+    if (_isProcessing) return;
+    _isProcessing = true;
+    _isCancelled = false;
+
+    setState(() {
+      for (final item in _items) {
+        item.status = ProcessingStatus.pending;
+        item.message = "في الانتظار...";
+        item.progress = 0.0;
+      }
+    });
+
+    try {
+      await _processingService.processMultipartBook(
+        partPaths: widget.filePaths,
+        bookCard: widget.multipartBookCard!,
+        isCancelled: () => _isCancelled,
+        emit: (state, progress, message) {
+          if (!mounted) return;
+          setState(() {
+            _applyMultipartProgress(state, progress, message);
+          });
+        },
+      );
+      if (!mounted) return;
+      setState(() {
+        _isProcessing = false;
+        for (final item in _items) {
+          item.status = ProcessingStatus.completed;
+          item.message = "تمت الإضافة بنجاح";
+          item.progress = 1.0;
+        }
+      });
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) Navigator.pop(context, true);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isProcessing = false;
+        if (_isCancelled) {
+          for (final item in _items) {
+            if (item.status != ProcessingStatus.completed) {
+              item.status = ProcessingStatus.cancelled;
+              item.message = "تم الإلغاء";
+              item.progress = 0.0;
+            }
+          }
+        } else {
+          final item =
+              _items[_currentIndex.clamp(0, _items.length - 1).toInt()];
+          item.status = ProcessingStatus.failed;
+          item.message = e.toString().split('\n').first;
+          item.fullErrorMessage = e.toString();
+        }
+      });
+    }
+  }
+
+  void _applyMultipartProgress(
+    ProcessingState state,
+    double progress,
+    String message,
+  ) {
+    final total = _items.length;
+    if (total == 0) return;
+    final safeProgress = progress.clamp(0.0, 1.0).toDouble();
+    _currentIndex = (safeProgress * total).floor().clamp(0, total - 1).toInt();
+    for (var i = 0; i < total; i++) {
+      final item = _items[i];
+      if (i < _currentIndex) {
+        item.status = ProcessingStatus.completed;
+        item.message = "تمت معالجة الجزء";
+        item.progress = 1.0;
+      } else if (i == _currentIndex) {
+        item.status = state == ProcessingState.cancelled
+            ? ProcessingStatus.cancelled
+            : ProcessingStatus.processing;
+        item.message = message;
+        item.progress = (safeProgress * total - i).clamp(0.0, 1.0).toDouble();
+      } else {
+        item.status = ProcessingStatus.pending;
+        item.message = "في الانتظار...";
+        item.progress = 0.0;
+      }
+    }
+  }
+
   void _retryItem(int index) {
     // P0: منع الإعادة أثناء المعالجة النشطة
     if (_isProcessing) return;
@@ -613,7 +711,7 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.red),
+            const LibraryIcon(LibraryIconType.warning, color: Colors.red),
             const SizedBox(width: 8),
             Expanded(
               child: Text('تفاصيل الخطأ', style: bigStyle(fontSize: 18)),
@@ -762,8 +860,8 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
                   children: [
                     Row(
                       children: [
-                        const Icon(
-                          Icons.library_add_check_rounded,
+                        Icon(
+                          widget.icon,
                           color: Colors.white,
                           size: 28,
                         ),
@@ -773,7 +871,7 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'إضافة كتب جديدة',
+                                widget.title,
                                 style: bigStyle(
                                   color: Colors.white,
                                   fontSize: 18,
@@ -1066,12 +1164,12 @@ class _BatchFileProcessingDialogState extends State<BatchFileProcessingDialog> {
             if (item.status == ProcessingStatus.failed &&
                 item.fullErrorMessage.isNotEmpty)
               IconButton(
-                icon: const Icon(Icons.info_outline, color: Colors.grey),
+                icon: const LibraryIcon(LibraryIconType.info, color: Colors.grey),
                 onPressed: () => _showErrorDetails(item),
                 tooltip: "تفاصيل الخطأ",
               ),
             IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.orange),
+              icon: const LibraryIcon(LibraryIconType.history, color: Colors.orange),
               onPressed: () => _retryItem(index),
               tooltip: "إعادة المحاولة",
             ),

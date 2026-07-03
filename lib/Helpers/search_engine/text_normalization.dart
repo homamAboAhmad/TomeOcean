@@ -1,5 +1,9 @@
 /// Text normalization utilities for Arabic text processing
 class TextNormalization {
+  static final RegExp _arabicMarks = RegExp(
+    r'[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]',
+  );
+
   /// Extract Arabic words from text
   static List<String> extractArabicWords(String text) {
     RegExp arabicWordRegex = RegExp(
@@ -10,7 +14,7 @@ class TextNormalization {
 
   /// Check if a string contains Arabic diacritics
   static bool hasDiacritics(String text) {
-    return RegExp(r'[\u064B-\u0652]').hasMatch(text);
+    return _arabicMarks.hasMatch(text);
   }
 
   /// Normalize text based on options
@@ -23,11 +27,13 @@ class TextNormalization {
     String normalized = text;
 
     if (removeDiacritics) {
-      normalized = normalized.replaceAll(RegExp(r'[\u064B-\u0652]'), '');
+      normalized = normalized.replaceAll(_arabicMarks, '');
     }
 
+    normalized = normalized.replaceAll('\u0640', '');
+
     if (unifyHamzas) {
-      normalized = normalized.replaceAll(RegExp(r'[أإآ]'), 'ا');
+      normalized = normalized.replaceAll(RegExp(r'[أإآٱ]'), 'ا');
       normalized = normalized.replaceAll('ؤ', 'و');
       normalized = normalized.replaceAll('ئ', 'ي');
     }

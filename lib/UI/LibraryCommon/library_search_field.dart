@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'library_design_tokens.dart';
+import 'library_icon.dart';
 
 class LibrarySearchField extends StatelessWidget {
   final TextEditingController controller;
@@ -26,14 +28,11 @@ class LibrarySearchField extends StatelessWidget {
             textDirection: TextDirection.rtl,
             textAlign: TextAlign.right,
             textAlignVertical: TextAlignVertical.center,
-            style: const TextStyle(
-              fontFamily: LibraryDesignTokens.fontFamily,
-              fontSize: 15,
-            ),
+            style: normalStyle(fontSize: 15),
             decoration: InputDecoration(
               isDense: true,
               hintText: hint,
-              suffixIcon: const Icon(
+              suffixIcon: LibraryIcon.fromIcon(
                 Icons.search,
                 size: 20,
                 color: LibraryDesignTokens.primary,

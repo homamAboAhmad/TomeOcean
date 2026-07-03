@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:golden_shamela/Services/DebugLogService.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 class DebugConsoleScreen extends StatefulWidget {
   const DebugConsoleScreen({super.key});
@@ -102,7 +103,7 @@ class _DebugConsoleScreenState extends State<DebugConsoleScreen> {
           backgroundColor: const Color(0xFF2A2A3E),
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white70),
+            icon: const LibraryIcon(LibraryIconType.arrowLeft, color: Colors.white70),
             onPressed: () => Navigator.pop(context),
           ),
           title: Row(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:golden_shamela/UI/Settings/app_font_settings.dart';
 import 'library_design_tokens.dart';
 import 'library_icon.dart';
 
@@ -63,9 +64,10 @@ class LibrarySidebarTabs extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     tab.label,
-                    style: TextStyle(
-                      fontFamily: LibraryDesignTokens.fontFamily,
-                      fontSize: compact ? 11 : 12,
+                    style: AppUiFonts.style(
+                      AppFontRole.bookLists,
+                      TextStyle(fontSize: compact ? 11 : 12),
+                      sizeOffset: compact ? -3 : -2,
                     ),
                   ),
                 ],

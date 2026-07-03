@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Services/AppStoragePaths.dart';
@@ -10,11 +11,28 @@ import 'package:golden_shamela/UI/Search/widgets/bottom_bar.dart';
 import 'package:golden_shamela/UI/Search/widgets/middle_panel_content.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_state_manager.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_executor.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_results_author_sorter.dart';
 import 'package:golden_shamela/UI/Search/helpers/selected_books_manager.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_period_range.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_history_store.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_scope_selection.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_scope_item_ids.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_scope_items_merger.dart';
+import 'package:golden_shamela/UI/Search/helpers/search_sections_selection_rules.dart';
+import 'package:golden_shamela/UI/Search/helpers/fts_query_builder.dart';
+import 'package:golden_shamela/UI/Settings/app_other_settings.dart';
+import 'package:golden_shamela/UI/Search/models/search_history_record.dart';
+import 'package:golden_shamela/UI/Search/models/search_state_snapshot.dart';
 import 'package:golden_shamela/UI/Search/widgets/search_dialog_builder.dart';
 import 'package:golden_shamela/UI/Search/helpers/search_callbacks_helper.dart';
 import 'package:golden_shamela/Helpers/BooksMetadataDatabase.dart';
-import 'package:flutter/services.dart';
+
+List<TextEditingController> _newQueryControllers() {
+  return List.generate(
+    AppOtherSettings.instance.draft().searchFieldCount,
+    (_) => TextEditingController(),
+  );
+}
 
 class ShamelaSearchDialog extends StatefulWidget {
   final Function(String, int) onResultTapped;
@@ -52,9 +70,9 @@ class ShamelaSearchDialog extends StatefulWidget {
 
 class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
   final Map<String, List<TextEditingController>> _groupControllers = {
-    'and': List.generate(5, (_) => TextEditingController()),
-    'or': List.generate(5, (_) => TextEditingController()),
-    'not': List.generate(5, (_) => TextEditingController()),
+    'and': _newQueryControllers(),
+    'or': _newQueryControllers(),
+    'not': _newQueryControllers(),
   };
   bool _morphologicalSearch = false, _affixSearch = false;
   bool _considerHamzas = false,
@@ -64,7 +82,7 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
   final Map<String, bool> _searchSections = {
     'main': true,
     'footnote': true,
-    'comment': true,
+    'comment': false,
     'title': false,
   };
   String _searchGrouping = 'all';
@@ -75,13 +93,12 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
   String? _errorMessage;
   late Map<String, bool> _selectedBooks;
   List<Map<String, dynamic>> _filteredIndexedBooks = [];
-  Map<String, dynamic>? _previewedResult;
-  int? _previewedIndex;
-  double _previewFraction = 0.4; // نسبة ارتفاع لوحة المعاينة (قابلة للسحب)
   final SearchStateManager _stateManager = SearchStateManager();
   final SearchExecutor _searchExecutor = SearchExecutor();
   final SelectedBooksManager _selectedBooksManager = SelectedBooksManager();
   final BooksMetadataDatabase _metadataDb = BooksMetadataDatabase();
+  final SearchHistoryStore _historyStore = SearchHistoryStore();
+  late final SearchScopeBookResolver _scopeBookResolver;
   List<Author> _allAuthors = [];
   List<Section> _allSections = [];
   Set<String> _selectedAuthorIds = {}, _selectedSectionIds = {};
@@ -90,11 +107,13 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
   bool _isLoadingFilters = false;
   Map<String, int> _authorBookCounts = {};
   Map<String, String> _authorDeathYears = {};
+  Map<String, String> _bookAuthorMap = {};
   String _selectedSidebarTab = 'المؤلفون';
   final TextEditingController _booksSearchController = TextEditingController();
   final TextEditingController _selectedBooksSearchController =
       TextEditingController();
   List<Map<String, dynamic>> _selectedBooksForSearch = [];
+  int _scopeSyncRevision = 0;
 
   @override
   void initState() {
@@ -103,6 +122,7 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
     _selectedBooks = {
       for (var b in widget.indexedBooks) b['book_path'] as String: false,
     };
+    _scopeBookResolver = SearchScopeBookResolver(_metadataDb);
     _loadFilterData();
   }
 
@@ -117,6 +137,8 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
         _authorDeathYears = filterData.authorDeathYears;
         _isLoadingFilters = false;
       });
+      final bookAuthorMap = await _metadataDb.getAllBookAuthorMappings();
+      if (mounted) setState(() => _bookAuthorMap = bookAuthorMap);
     } catch (e) {
       print("ShamelaSearchDialog: Error loading filter data: $e");
       setState(() => _isLoadingFilters = false);
@@ -134,7 +156,7 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
         _filteredIndexedBooks = result.filteredBooks;
         // Initialize selectedBooks for new books, preserving existing selections
         final newSelectedBooks = <String, bool>{};
-        for (var b in _filteredIndexedBooks) {
+        for (var b in widget.indexedBooks) {
           final bookPath = b['book_path'] as String;
           newSelectedBooks[bookPath] = _selectedBooks[bookPath] ?? false;
         }
@@ -153,6 +175,7 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
       bookPaths,
       _allAuthors,
       _authorDeathYears,
+      widget.indexedBooks,
     );
     final filtered = newItems
         .where(
@@ -182,15 +205,9 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
       authorId,
       author,
       _authorDeathYears[authorId],
-      _filteredIndexedBooks,
     );
     setState(() => _selectedBooksForSearch.add(result['authorItem']));
-    final paths = result['bookPaths'] as List;
-    if (paths.isNotEmpty) {
-      _addBooksToSelectedList(paths.cast<String>());
-    } else {
-      _syncSelectedBooksWithSearchList();
-    }
+    _syncSelectedBooksWithSearchList();
   }
 
   void _removeFromSelectedList(List<int> indices) {
@@ -273,48 +290,63 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
     _syncSelectedBooksWithSearchList();
   }
 
+  void _addPeriodsToList(List<SearchPeriodRange> periods) {
+    if (periods.isEmpty) return;
+    setState(() {
+      for (final period in periods) {
+        if (_selectedBooksForSearch.any(
+          (item) => item['type'] == 'period' && item['periodId'] == period.id,
+        )) {
+          continue;
+        }
+        _selectedBooksForSearch.add(period.toSearchItem());
+      }
+    });
+    _syncSelectedBooksWithSearchList();
+  }
+
+  void _removePeriodsFromList(List<SearchPeriodRange> periods) {
+    final ids = periods.map((period) => period.id).toSet();
+    setState(() {
+      _selectedBooksForSearch.removeWhere(
+        (item) => item['type'] == 'period' && ids.contains(item['periodId']),
+      );
+    });
+    _syncSelectedBooksWithSearchList();
+  }
+
+  void _addScopeItemsToList(List<Map<String, dynamic>> items) {
+    if (items.isEmpty) return;
+    final merged = SearchScopeItemsMerger.merge(
+      currentItems: _selectedBooksForSearch,
+      incomingItems: items,
+    );
+    setState(() {
+      _selectedBooksForSearch = merged.items;
+      _selectedAuthorIds = merged.authorIds;
+      _selectedSectionIds = merged.sectionIds;
+    });
+    _syncSelectedBooksWithSearchList();
+  }
+
   /// Sync _selectedBooks with _selectedBooksForSearch
   /// Only books that are in _selectedBooksForSearch should be marked as selected
-  void _syncSelectedBooksWithSearchList() {
+  Future<void> _syncSelectedBooksWithSearchList() async {
+    final revision = ++_scopeSyncRevision;
+    final selection = SearchScopeSelection.fromItems(_selectedBooksForSearch);
+    final allBookPathsInSearch =
+        await _scopeBookResolver.selectedBookPathsForDisplay(
+      selection: selection,
+      filteredIndexedBooks: widget.indexedBooks,
+      bookAuthorMap: _bookAuthorMap,
+    );
+    if (!mounted || revision != _scopeSyncRevision) return;
     setState(() {
-      // Get all book paths from _selectedBooksForSearch
-      final bookPathsInSearch = _selectedBooksForSearch
-          .where((item) => item['type'] == 'book' && item['bookPath'] != null)
-          .map((item) => item['bookPath'] as String)
-          .toSet();
-
-      // Also get book paths from authors in _selectedBooksForSearch
-      final authorIdsInSearch = _selectedBooksForSearch
-          .where((item) => item['type'] == 'author' && item['authorId'] != null)
-          .map((item) => item['authorId'] as String)
-          .toSet();
-
-      // Get book paths from selected authors
-      final bookPathsFromAuthors = <String>{};
-      for (var book in _filteredIndexedBooks) {
-        final bookPath = book['book_path'] as String;
-        final authorId = book['authorId'] as String?;
-        if (authorId != null && authorIdsInSearch.contains(authorId)) {
-          bookPathsFromAuthors.add(bookPath);
-        }
-      }
-
-      // Note: Sections in _selectedBooksForSearch don't directly mark books as selected
-      // Books from sections will be included during search execution
-      // So we don't need to sync books from sections here
-
-      // Combine all sets
-      final allBookPathsInSearch = bookPathsInSearch.union(
-        bookPathsFromAuthors,
-      );
-
-      // Update _selectedBooks to only mark books that are in _selectedBooksForSearch
       for (var bookPath in _selectedBooks.keys) {
         _selectedBooks[bookPath] = allBookPathsInSearch.contains(bookPath);
       }
 
-      // Also update for new books in filtered list
-      for (var book in _filteredIndexedBooks) {
+      for (var book in widget.indexedBooks) {
         final bookPath = book['book_path'] as String;
         if (!_selectedBooks.containsKey(bookPath)) {
           _selectedBooks[bookPath] = allBookPathsInSearch.contains(bookPath);
@@ -334,53 +366,15 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
   }
 
   Future<List<String>?> _resolveBooksToSearch() async {
-    final sectionIdsFromSearch = _selectedBooksForSearch
-        .where((item) => item['type'] == 'section' && item['sectionId'] != null)
-        .map((item) => item['sectionId'] as String)
-        .toList();
-
-    List<String>? booksFromSections;
-    if (sectionIdsFromSearch.isNotEmpty) {
-      await _metadataDb.initialize();
-      final allBookPaths = <String>[];
-      for (var sectionId in sectionIdsFromSearch) {
-        final bookPaths = await _metadataDb.getBookPaths(sectionId: sectionId);
-        allBookPaths.addAll(bookPaths);
-      }
-      booksFromSections = allBookPaths
-          .where((p) => _filteredIndexedBooks.any((b) => b['book_path'] == p))
-          .toList();
+    final selection = SearchScopeSelection.fromItems(_selectedBooksForSearch);
+    if (!selection.isEmpty) {
+      final paths = await _scopeBookResolver.resolveBookPaths(
+        selection: selection,
+        filteredIndexedBooks: widget.indexedBooks,
+        bookAuthorMap: _bookAuthorMap,
+      );
+      return paths.toList();
     }
-
-    final bookPathsFromSearch = _selectedBooksForSearch
-        .where((item) => item['type'] == 'book' && item['bookPath'] != null)
-        .map((item) => item['bookPath'] as String)
-        .toList();
-
-    final authorIdsFromSearch = _selectedBooksForSearch
-        .where((item) => item['type'] == 'author' && item['authorId'] != null)
-        .map((item) => item['authorId'] as String)
-        .toSet();
-
-    List<String>? booksFromAuthors;
-    if (authorIdsFromSearch.isNotEmpty) {
-      await _metadataDb.initialize();
-      final allBookPaths = <String>[];
-      for (var authorId in authorIdsFromSearch) {
-        final bookPaths = await _metadataDb.getBookPaths(authorId: authorId);
-        allBookPaths.addAll(bookPaths);
-      }
-      booksFromAuthors = allBookPaths
-          .where((p) => _filteredIndexedBooks.any((b) => b['book_path'] == p))
-          .toList();
-    }
-
-    final Set<String> allBooks = {};
-    if (booksFromSections != null) allBooks.addAll(booksFromSections);
-    if (bookPathsFromSearch.isNotEmpty) allBooks.addAll(bookPathsFromSearch);
-    if (booksFromAuthors != null) allBooks.addAll(booksFromAuthors);
-
-    if (allBooks.isNotEmpty) return allBooks.toList();
 
     return _searchExecutor.determineBooksToSearch(
       filteredIndexedBooks: _filteredIndexedBooks,
@@ -390,14 +384,11 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
   }
 
   void _performSearch() async {
-    bool hasQueries = false;
-    for (var group in _groupControllers.values) {
-      if (group.any((c) => c.text.trim().isNotEmpty)) {
-        hasQueries = true;
-        break;
-      }
+    final validationMessage = _searchInputValidationMessage();
+    if (validationMessage != null) {
+      setState(() => _errorMessage = validationMessage);
+      return;
     }
-    if (!hasQueries) return;
 
     // التحقق من تحديد كتب للبحث
     if (_selectedBooksForSearch.isEmpty) {
@@ -412,6 +403,7 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
         groupControllersMap[key] = controllers.map((c) => c.text).toList();
       });
 
+      await _saveCurrentSearchHistory();
       Navigator.of(context).pop();
       widget.onDelegateSearch!(
         groupControllersMap,
@@ -459,6 +451,7 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
         sectionTypes: selectedSections.length < _searchSections.length
             ? selectedSections
             : null,
+        includeComments: _searchSections['comment'] == true,
         morphologicalSearch: _morphologicalSearch,
         affixSearch: _affixSearch,
         considerHamzas: _considerHamzas,
@@ -472,12 +465,18 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
         if (!mounted) break;
         setState(() {
           _results.addAll(batch.results);
+          SearchResultsAuthorSorter.sort(
+            _results,
+            bookAuthorMap: _bookAuthorMap,
+            authorDeathYears: _authorDeathYears,
+          );
           if (batch.totalCount > _totalCount) _totalCount = batch.totalCount;
         });
       }
 
       if (!mounted) return;
 
+      await _saveCurrentSearchHistory();
       if (widget.onSearchCompleted != null && _results.isNotEmpty) {
         Navigator.of(context).pop();
         widget.onSearchCompleted!(
@@ -495,6 +494,23 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
     }
   }
 
+  String? _searchInputValidationMessage() {
+    final hasQueries = _groupControllers.values.any(
+      (group) => group.any(
+        (controller) => FtsQueryBuilder.clean(controller.text).isNotEmpty,
+      ),
+    );
+    if (!hasQueries) return 'أدخل عبارة بحث واحدة على الأقل';
+
+    final hasSelectedSection = _searchSections.entries.any((entry) {
+      return entry.value &&
+          const {'main', 'footnote', 'title', 'comment'}.contains(entry.key);
+    });
+    if (!hasSelectedSection) return 'اختر نطاق بحث واحدًا على الأقل';
+
+    return null;
+  }
+
   void _addQueryField(String groupKey, int index) {
     setState(() {
       _groupControllers[groupKey]!.insert(index, TextEditingController());
@@ -510,11 +526,113 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
     });
   }
 
+  Future<void> _saveCurrentSearchHistory() {
+    return _historyStore.saveRecord(_currentHistoryRecord());
+  }
+
+  SearchHistoryRecord _currentHistoryRecord() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final snapshot = _currentSearchSnapshot();
+    return SearchHistoryRecord(
+      id: now.toString(),
+      createdAt: now,
+      groupQueries: snapshot.groupQueries,
+      searchGrouping: snapshot.searchGrouping,
+      scopeItems: _copyScopeItems(_selectedBooksForSearch),
+      searchSections: snapshot.searchSections,
+      options: snapshot.options,
+    );
+  }
+
+  SearchStateSnapshot _currentSearchSnapshot() {
+    return SearchStateSnapshot(
+      groupQueries: _buildGroupQueries(),
+      searchGrouping: _searchGrouping,
+      searchSections: Map<String, bool>.from(_searchSections),
+      options: {
+        'morphologicalSearch': _morphologicalSearch,
+        'affixSearch': _affixSearch,
+        'considerHamzas': _considerHamzas,
+        'considerDiacritics': _considerDiacritics,
+        'considerNumbers': _considerNumbers,
+        'allPhrasesRequired': _allPhrasesRequired,
+        'ordered': _ordered,
+        'proximity': _proximity,
+      },
+    );
+  }
+
+  Map<String, List<String>> _buildGroupQueries() {
+    return {
+      for (final entry in _groupControllers.entries)
+        entry.key: entry.value.map((controller) => controller.text).toList(),
+    };
+  }
+
+  Future<void> _applyHistoryRecord(
+    SearchHistoryRecord record, {
+    required bool runSearch,
+  }) async {
+    setState(() {
+      _replaceGroupControllers(record.groupQueries);
+      _searchGrouping = record.searchGrouping;
+      _selectedBooksForSearch = _copyScopeItems(record.scopeItems);
+      _selectedAuthorIds = searchScopeItemIds(
+        record.scopeItems,
+        type: 'author',
+        key: 'authorId',
+      );
+      _selectedSectionIds = searchScopeItemIds(
+        record.scopeItems,
+        type: 'section',
+        key: 'sectionId',
+      );
+      for (final key in _searchSections.keys.toList()) {
+        _searchSections[key] = record.searchSections[key] ?? false;
+      }
+      _morphologicalSearch = record.options['morphologicalSearch'] ?? false;
+      _affixSearch = record.options['affixSearch'] ?? false;
+      _considerHamzas = record.options['considerHamzas'] ?? false;
+      _considerDiacritics = record.options['considerDiacritics'] ?? false;
+      _considerNumbers = record.options['considerNumbers'] ?? true;
+      _allPhrasesRequired = record.options['allPhrasesRequired'] ?? false;
+      _ordered = record.options['ordered'] ?? false;
+      _proximity = record.options['proximity'] ?? false;
+    });
+    await _syncSelectedBooksWithSearchList();
+    if (runSearch) _performSearch();
+  }
+
+  void _replaceGroupControllers(Map<String, List<String>> groupQueries) {
+    for (final controllers in _groupControllers.values) {
+      for (final controller in controllers) {
+        controller.dispose();
+      }
+    }
+    for (final key in _groupControllers.keys.toList()) {
+      final queries = groupQueries[key] ?? const [];
+      final effectiveQueries = queries.isEmpty ? [''] : queries;
+      _groupControllers[key] = effectiveQueries
+          .map((query) => TextEditingController(text: query))
+          .toList();
+    }
+  }
+
+  List<Map<String, dynamic>> _copyScopeItems(
+    List<Map<String, dynamic>> items,
+  ) {
+    return items.map((item) => Map<String, dynamic>.from(item)).toList();
+  }
+
   Widget _buildSearchOptionsPanel() {
     return SearchOptionsPanel(
       searchSections: _searchSections,
       onSearchSectionChanged: (key, value) =>
-          setState(() => _searchSections[key] = value),
+          setState(() => SearchSectionsSelectionRules.apply(
+                _searchSections,
+                key,
+                value,
+              )),
       morphologicalSearch: _morphologicalSearch,
       affixSearch: _affixSearch,
       considerHamzas: _considerHamzas,
@@ -564,8 +682,8 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
   List<Map<String, dynamic>> _getFilteredBooks() {
     final q = _booksSearchController.text.toLowerCase();
     return q.isEmpty
-        ? _filteredIndexedBooks
-        : _filteredIndexedBooks
+        ? widget.indexedBooks
+        : widget.indexedBooks
               .where(
                 (b) => AppStoragePaths
                     .displayTitleFromPath(b['book_path'] as String)
@@ -596,10 +714,15 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
       booksSearchController: _booksSearchController,
       selectedAuthorIds: _selectedAuthorIds,
       selectedSectionIds: _selectedSectionIds,
+      selectedPeriods: SearchPeriodRange.fromSearchItems(
+        _selectedBooksForSearch,
+      ),
       authors: _allAuthors,
       sections: _allSections,
       authorBookCounts: _authorBookCounts,
       authorDeathYears: _authorDeathYears,
+      selectedBooksForSearch: _selectedBooksForSearch,
+      searchSnapshot: _currentSearchSnapshot(),
       isLoadingFilters: _isLoadingFilters,
       onAuthorToggled: (id) {},
       onClearAuthors: () {},
@@ -616,8 +739,13 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
       onBooksRemoved: _removeBooksFromList,
       onSectionsAdded: _addSectionsToList,
       onSectionsRemoved: _removeSectionsFromList,
+      onPeriodsAdded: _addPeriodsToList,
+      onPeriodsRemoved: _removePeriodsFromList,
+      onScopeItemsAdded: _addScopeItemsToList,
+      onHistoryRecordSelected: _applyHistoryRecord,
       viewedAuthorId: _viewedAuthorId,
       viewedSectionId: _viewedSectionId,
+      bookAuthorMap: _bookAuthorMap,
     );
   }
 
@@ -646,13 +774,10 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
         final ids = _selectedAuthorIds.toList();
         setState(() {
           _selectedAuthorIds.clear();
-          for (var id in ids) {
-            _selectedBooksForSearch.removeWhere(
-              (item) =>
-                  (item['type'] == 'author' || item['type'] == 'book') &&
-                  item['authorId'] == id,
-            );
-          }
+          _selectedBooksForSearch.removeWhere(
+            (item) =>
+                item['type'] == 'author' && ids.contains(item['authorId']),
+          );
         });
         _updateFilteredBooks();
       },
@@ -672,30 +797,6 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
     );
   }
 
-  void _handleSelectAll() {
-    switch (_selectedSidebarTab) {
-      case 'الكتب':
-        setState(() {
-          for (var book in _getFilteredBooks()) {
-            _selectedBooks[book['book_path'] as String] = true;
-          }
-        });
-        break;
-      case 'المؤلفون':
-        setState(() {
-          _selectedAuthorIds = _allAuthors.map((a) => a.id).toSet();
-        });
-        _updateFilteredBooks();
-        break;
-      case 'التصنيف':
-        setState(() {
-          _selectedSectionIds = _allSections.map((s) => s.id).toSet();
-        });
-        _updateFilteredBooks();
-        break;
-    }
-  }
-
   List<String> get _currentSearchQueries => _groupControllers.values
       .expand((group) => group.map((c) => c.text.trim()))
       .where((q) => q.isNotEmpty)
@@ -710,209 +811,59 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
     }
     if (_results.isEmpty) return const SizedBox.shrink();
 
-    final bool hasPreview = _previewedResult != null;
-
     return Container(
       height: 340,
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: Colors.grey.shade300)),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final totalHeight = constraints.maxHeight;
-          final previewHeight = hasPreview
-              ? (totalHeight * _previewFraction).clamp(60.0, totalHeight - 80.0)
-              : 0.0;
-          final dividerHeight = hasPreview ? 8.0 : 0.0;
-          final resultsHeight = totalHeight - previewHeight - dividerHeight;
-
-          return Column(
-            children: [
-              // Preview panel (top) — shows text of selected result
-              if (hasPreview)
-                SizedBox(
-                  height: previewHeight,
-                  child: _buildPreviewPanel(_previewedResult!),
-                ),
-
-              // Draggable divider
-              if (hasPreview)
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onVerticalDragUpdate: (details) {
-                    setState(() {
-                      _previewFraction += details.delta.dy / totalHeight;
-                      _previewFraction = _previewFraction.clamp(0.15, 0.75);
-                    });
-                  },
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.resizeRow,
-                    child: Container(
-                      height: dividerHeight,
-                      color: Colors.grey.shade200,
-                      child: Center(
-                        child: Container(
-                          width: 40,
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade400,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-
-              // Results list (bottom)
-              SizedBox(
-                height: resultsHeight,
-                child: SearchResultsView(
-                  results: _results,
-                  totalCount: _results.length,
-                  onResultTapped: (path, page) {
-                    widget.onResultTapped(path, page);
-                    Navigator.of(context).pop();
-                  },
-                  onResultPreviewed: (result) {
-                    setState(() {
-                      _previewedResult = result;
-                      _previewedIndex = _results.indexOf(result);
-                    });
-                  },
-                  onClose: () => setState(() {
-                    _results = [];
-                    _hasSearched = false;
-                    _previewedResult = null;
-                    _previewedIndex = null;
-                  }),
-                  searchQueries: _currentSearchQueries,
-                  morphologicalSearch: _morphologicalSearch,
-                  selectedIndex: _previewedIndex,
-                ),
-              ),
-            ],
-          );
+      child: SearchResultsView(
+        results: _results,
+        totalCount: _results.length,
+        onResultTapped: (path, page) {
+          widget.onResultTapped(path, page);
+          Navigator.of(context).pop();
         },
-      ),
-    );
-  }
-
-  Widget _buildPreviewPanel(Map<String, dynamic> result) {
-    final bookName = result['book_name'] as String? ?? '';
-    final pageNumber = (result['page_number'] as num?)?.toInt() ?? 0;
-    final bookPath = result['book_path'] as String? ?? '';
-    final rawContent = (result['raw_content'] as String? ??
-        result['content'] as String? ?? '')
-        .replaceAll(RegExp(r'\{\{PG:\d+\}\}'), '');
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            color: primaryColor.withOpacity(0.08),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '$bookName — ص ${pageNumber + 1}',
-                    style: normalStyle(
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                TextButton.icon(
-                  icon: const Icon(Icons.open_in_new, size: 14),
-                  label: const Text('فتح في تبويب'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: primaryColor,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    textStyle: const TextStyle(fontSize: 12),
-                  ),
-                  onPressed: () {
-                    widget.onResultTapped(bookPath, pageNumber);
-                    Navigator.of(context).pop();
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 16),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => setState(() {
-                    _previewedResult = null;
-                    _previewedIndex = null;
-                  }),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Scrollbar(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(12),
-                child: Directionality(
-                  textDirection: TextDirection.rtl,
-                  child: SelectableText(
-                    rawContent,
-                    style: normalStyle(fontSize: 14),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+        onClose: () => setState(() {
+          _results = [];
+          _hasSearched = false;
+        }),
+        searchQueries: _currentSearchQueries,
+        morphologicalSearch: _morphologicalSearch,
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Shortcuts(
-        shortcuts: {
-          LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyA):
-              const SelectAllIntent(),
-        },
-        child: Actions(
-          actions: {
-            SelectAllIntent: CallbackAction<SelectAllIntent>(
-              onInvoke: (_) {
-                _handleSelectAll();
-                return null;
-              },
-            ),
-          },
-          child: Focus(
-            autofocus: true,
-            child: Dialog(
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.95,
-                height: MediaQuery.of(context).size.height * 0.95,
-                child: Column(
-                  children: [
-                    SearchDialogBuilder.buildHeader(
-                      () => Navigator.of(context).pop(),
-                    ),
-                    SearchDialogBuilder.buildContent(
-                      selectedTab: _selectedSidebarTab,
-                      onTabSelected: (tab) =>
-                          setState(() => _selectedSidebarTab = tab),
-                      searchOptionsPanel: _buildSearchOptionsPanel(),
-                      middlePanelContent: _buildMiddlePanelContent(),
-                    ),
-                    _buildBottomBar(),
-                    if (_results.isNotEmpty || (_hasSearched && !_isLoading))
-                      _buildResultsArea(),
-                  ],
-                ),
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): () =>
+            Navigator.of(context).pop(),
+      },
+      child: Focus(
+        autofocus: true,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Dialog(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.95,
+              height: MediaQuery.of(context).size.height * 0.95,
+              child: Column(
+                children: [
+                  SearchDialogBuilder.buildHeader(
+                    () => Navigator.of(context).pop(),
+                  ),
+                  SearchDialogBuilder.buildContent(
+                    selectedTab: _selectedSidebarTab,
+                    onTabSelected: (tab) =>
+                        setState(() => _selectedSidebarTab = tab),
+                    searchOptionsPanel: _buildSearchOptionsPanel(),
+                    middlePanelContent: _buildMiddlePanelContent(),
+                  ),
+                  _buildBottomBar(),
+                  if (_results.isNotEmpty || (_hasSearched && !_isLoading))
+                    _buildResultsArea(),
+                ],
               ),
             ),
           ),
@@ -920,8 +871,4 @@ class _ShamelaSearchDialogState extends State<ShamelaSearchDialog> {
       ),
     );
   }
-}
-
-class SelectAllIntent extends Intent {
-  const SelectAllIntent();
 }

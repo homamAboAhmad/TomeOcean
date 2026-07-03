@@ -43,12 +43,34 @@ class IndexingOperations {
         removeDiacritics: false,
         unifyHamzas: true,
       );
+      final fullyPreserved = TextNormalization.normalizeText(
+        aggregatedContent,
+        removeDiacritics: false,
+        unifyHamzas: false,
+      );
 
-      // New: Normalized without numbers
       final normalizedNoNumbers = TextNormalization.normalizeText(
         aggregatedContent,
         removeDiacritics: true,
         unifyHamzas: true,
+        removeNumbers: true,
+      );
+      final hamzaPreservedNoNumbers = TextNormalization.normalizeText(
+        aggregatedContent,
+        removeDiacritics: true,
+        unifyHamzas: false,
+        removeNumbers: true,
+      );
+      final diacriticsPreservedNoNumbers = TextNormalization.normalizeText(
+        aggregatedContent,
+        removeDiacritics: false,
+        unifyHamzas: true,
+        removeNumbers: true,
+      );
+      final fullyPreservedNoNumbers = TextNormalization.normalizeText(
+        aggregatedContent,
+        removeDiacritics: false,
+        unifyHamzas: false,
         removeNumbers: true,
       );
 
@@ -71,9 +93,13 @@ class IndexingOperations {
         'normalized_content': normalized,
         'hamza_preserved_content': hamzaPreserved,
         'diacritics_preserved_content': diacriticsPreserved,
+        'fully_preserved_content': fullyPreserved,
         'no_diacritics_content': noDiacriticsContent ?? '',
         'morphological_content': morphological,
         'normalized_no_numbers_content': normalizedNoNumbers,
+        'hamza_preserved_no_numbers_content': hamzaPreservedNoNumbers,
+        'diacritics_preserved_no_numbers_content': diacriticsPreservedNoNumbers,
+        'fully_preserved_no_numbers_content': fullyPreservedNoNumbers,
       });
     }
 

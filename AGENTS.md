@@ -4,9 +4,6 @@
 
 ## قبل أي تعديل
 
-اقرأ أولًا:
-- `.agent/workflows/the-library-project-warnings.md`
-
 استعن بالمراجع المحلية:
 - `WordXmlDoumentation/key_sections.txt`
 - `WordXmlDoumentation/extracted_reference.txt`

@@ -29,11 +29,14 @@ class AppState {
   /// Search target: paragraph index within the page to scroll to (null = page only)
   int? searchTargetParagraphIndex;
 
+  bool openCommentPanelForSearchTarget = false;
+
   /// Clear search highlighting
   void clearSearchHighlight() {
     searchHighlightTerms = [];
     searchTargetPageIndex = null;
     searchTargetParagraphIndex = null;
+    openCommentPanelForSearchTarget = false;
   }
 
   /// Set search highlighting terms
@@ -42,8 +45,13 @@ class AppState {
   }
 
   /// Set the search scroll target (page + paragraph)
-  void setSearchTarget(int pageIndex, int? paragraphIndex) {
+  void setSearchTarget(
+    int pageIndex,
+    int? paragraphIndex, {
+    bool openCommentPanel = false,
+  }) {
     searchTargetPageIndex = pageIndex;
     searchTargetParagraphIndex = paragraphIndex;
+    openCommentPanelForSearchTarget = openCommentPanel;
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:golden_shamela/Styles/TextSyles.dart';
 import 'package:golden_shamela/Styles/AppResourses.dart';
+import 'package:golden_shamela/UI/LibraryCommon/library_icon.dart';
 
 /// Sidebar navigation widget for search dialog
 class SidebarNavigation extends StatelessWidget {
@@ -21,14 +22,14 @@ class SidebarNavigation extends StatelessWidget {
       {'id': 'المؤلفون', 'icon': Icons.person, 'label': 'المؤلفون'},
       {'id': 'فترة', 'icon': Icons.calendar_today, 'label': 'فترة'},
       {'id': 'المفضلة', 'icon': Icons.star, 'label': 'المفضلة'},
-      {'id': 'مؤخرا', 'icon': Icons.access_time, 'label': 'مؤخرا'},
+      {'id': 'مؤخرا', 'icon': Icons.access_time, 'label': 'مؤخراً'},
       {'id': 'التنزيلات', 'icon': Icons.download, 'label': 'التنزيلات'},
       {'id': 'المجالات', 'icon': Icons.description, 'label': 'المجالات'},
       {'id': 'السجلات', 'icon': Icons.search, 'label': 'السجلات'},
     ];
     
     return Container(
-      color: Colors.grey.shade100,
+      color: mutedColor,
       child: Column(
         children: [
           Expanded(
@@ -40,13 +41,18 @@ class SidebarNavigation extends StatelessWidget {
                 return InkWell(
                   onTap: () => onTabSelected(tab['id'] as String),
                   child: Container(
-                    color: isSelected ? primaryColor.withOpacity(0.1) : Colors.transparent,
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: isSelected ? organicHighlightColor : Colors.transparent,
+                      borderRadius: BorderRadius.circular(AppChrome.radius),
+                      border: isSelected ? Border.all(color: borderColor) : null,
+                    ),
                     child: Row(
                       children: [
-                        Icon(
+                        LibraryIcon.fromIcon(
                           tab['icon'] as IconData,
-                          color: isSelected ? primaryColor : Colors.grey.shade700,
+                          color: isSelected ? actionColor : accentColor.withOpacity(0.72),
                           size: 20,
                         ),
                         SizedBox(width: 12),
@@ -54,7 +60,7 @@ class SidebarNavigation extends StatelessWidget {
                           child: Text(
                             tab['label'] as String,
                             style: normalStyle(
-                              color: isSelected ? primaryColor : Colors.black87,
+                              color: isSelected ? primaryColor : accentColor,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),

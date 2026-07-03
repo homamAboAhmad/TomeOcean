@@ -55,6 +55,7 @@ dependencies:
   google_fonts: ^6.1.0
   arabic_reshaper: ^0.0.1
   super_clipboard: ^0.9.1
+  syncfusion_flutter_pdfviewer: ^31.1.21
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -81,12 +82,10 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/files/
     - assets/fonts/
     - assets/icons/
+    - assets/icons/library/
     - assets/exe/
-    - assets/books/ # Add this line
-    - test.xml # Add this line
     - assets/arabic_roots_database.db
 
 
@@ -105,6 +104,16 @@ flutter:
    - family: jreg
      fonts:
        - asset: assets/fonts/jregular.ttf
+   - family: IBMPlexSansArabic
+     fonts:
+       - asset: assets/fonts/IBMPlexSansArabic-Regular.ttf
+         weight: 400
+       - asset: assets/fonts/IBMPlexSansArabic-Medium.ttf
+         weight: 500
+       - asset: assets/fonts/IBMPlexSansArabic-SemiBold.ttf
+         weight: 600
+       - asset: assets/fonts/IBMPlexSansArabic-Bold.ttf
+         weight: 700
    - family: hamah
      fonts:
        - asset: assets/fonts/hamahRegular.otf
@@ -117,6 +126,18 @@ flutter:
    - family: aga_old
      fonts:
        - asset: assets/fonts/AGA Arabesque_old.ttf
+   - family: recited_amiri
+     fonts:
+       - asset: assets/fonts/Amiri-Regular.ttf
+   - family: recited_traditional
+     fonts:
+       - asset: assets/fonts/Traditional Arabic.ttf
+   - family: recited_complex
+     fonts:
+       - asset: assets/fonts/Hafs.ttf
+   - family: recited_mark_fallback
+     fonts:
+       - asset: assets/fonts/AmiriRecited.ttf
 
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

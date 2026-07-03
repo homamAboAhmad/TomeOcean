@@ -51,11 +51,9 @@ web/build/
 app.*.symbols
 app.*.map.json
 
-# Project-specific temporary or generated files
+# Project-specific runtime/local data
 ~$*.docx # Temporary Word files
-sa.rar # Archive, likely temporary
-test.xml # Likely temporary test data
-testH.html # Likely temporary test data
+TheLibraryBooks/
 
 # Large binary files
 assets/exe/meilisearch.exe
